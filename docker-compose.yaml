@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    build:
+      context: ./database  # <-- ¡Cambio clave! Construye la imagen desde la carpeta 'database'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=farmacruz_db
+      - POSTGRES_USER=farmacruz_user
+      - POSTGRES_PASSWORD=supersecretpassword
+    networks:
+      - backend-net
+    expose:
+      - "5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=farmacruz_db
+      - POSTGRES_USER=farmacruz_user
+      - POSTGRES_PASSWORD=supersecretpassword
+      - POSTGRES_HOST=db
+    networks:
+      - frontend-net
+      - backend-net
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - frontend-net
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
