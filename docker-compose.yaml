@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db:
     build:
-      context: ./database  # <-- ¡Cambio clave! Construye la imagen desde la carpeta 'database'
+      context: ./database
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
@@ -39,15 +39,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     ports:
-      - "5173:5173"
+      - "3000:80"   # Nginx sirve en puerto 80, mapeamos a 3000 en host
     networks:
       - frontend-net
-    stdin_open: true
-    tty: true
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
