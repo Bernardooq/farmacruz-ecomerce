@@ -15,7 +15,7 @@ const paths = {
 // Compilar SCSS a CSS
 export function styles() {
   return gulp
-    .src("scss/main.scss") // Archivo principal
+    .src("scss/styles.scss") // Archivo principal
     .pipe(sass().on("error", sass.logError))
     .pipe(gulp.dest(paths.scss.dest));
 }

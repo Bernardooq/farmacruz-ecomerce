@@ -306,3 +306,201 @@ template {
 [hidden] {
   display: none;
 }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Open Sans", sans-serif;
+  background: #4CB8B3;
+  color: #1A1A1A;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+button {
+  background-color: #4CB8B3;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+button:hover {
+  background-color: rgb(59.356, 149.644, 145.464);
+  transform: scale(1.03);
+}
+button:active {
+  transform: scale(0.98);
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 7rem;
+  background-color: rgba(26, 26, 26, 0.9);
+  color: #FFFFFF;
+  font-size: 0.9rem;
+  padding: 1rem 2rem;
+  box-shadow: 0 -5px 10px rgba(26, 26, 26, 0.3);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  footer {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+footer .pfooter {
+  margin: 0.2rem 0;
+}
+@media (min-width: 480px) {
+  footer .pfooter {
+    font-size: 0.9rem;
+  }
+}
+@media (min-width: 768px) {
+  footer .pfooter {
+    font-size: 1rem;
+  }
+}
+@media (min-width: 1200px) {
+  footer .pfooter {
+    font-size: 1.1rem;
+  }
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 95%;
+  margin: 0 auto;
+  gap: 3rem;
+}
+main .logologin {
+  margin-top: 5rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+main .logologin img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  width: 12rem;
+}
+@media (min-width: 768px) {
+  main .logologin img {
+    width: 22rem;
+  }
+}
+@media (min-width: 1200px) {
+  main .logologin img {
+    width: 44rem;
+  }
+}
+main .login {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(26, 26, 26, 0.2);
+  padding: 2rem;
+  width: 100%;
+  max-width: 30rem;
+  font-size: larger;
+  text-align: center;
+  animation: fadeIn 1.6s ease-in-out;
+}
+@media (min-width: 1200px) {
+  main .login {
+    max-width: 56rem;
+  }
+}
+@media (min-width: 768px) {
+  main .login {
+    max-width: 56rem;
+  }
+}
+main .login .logform {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+main .login .logform label {
+  font-weight: bold;
+  text-align: left;
+}
+@media (min-width: 768px) {
+  main .login .logform label {
+    font-size: 1.2rem;
+  }
+}
+@media (min-width: 1200px) {
+  main .login .logform label {
+    font-size: 1.3rem;
+  }
+}
+main .login .logform input {
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(204.5, 204.5, 204.5);
+  transition: border-color 0.2s ease;
+}
+main .login .logform input:focus {
+  outline: none;
+  border-color: #4CB8B3;
+}
+main .login .logform .show-password {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+main .login .logform .show-password label {
+  font-size: 0.9rem;
+}
+@media (min-width: 768px) {
+  main .login .logform .show-password label {
+    font-size: 1rem;
+  }
+}
+main .login .minibutton {
+  margin-top: 1.2rem;
+  width: 100%;
+  background-color: #F53756;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+main .login .minibutton:hover {
+  background-color: rgb(237.1428571429, 11.8571428571, 48.6142857143);
+  transform: scale(1.03);
+}
+main .login .minibutton:active {
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
