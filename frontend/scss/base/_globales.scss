@@ -1,7 +1,6 @@
 @use "variables" as v;
 @use "mixins" as m;
 
-// Reset y base
 * {
   margin: 0;
   padding: 0;
@@ -12,14 +11,29 @@ body {
   font-family: v.$fuente_principal;
   background: v.$primario;
   color: v.$negro;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+}
+
+// Logo global
+.logo {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+
+  img {
+    width: 12rem;
+    height: auto;
+    @include m.telefono { width: 15rem; }
+    @include m.tablet { width: 18rem; }
+    @include m.desktop { width: 20rem; }
+  }
 }
 
 // Botones globales
 button {
-  background-color: v.$primario;
+  background-color: v.$acento;
   color: v.$blanco;
   border: none;
   border-radius: 0.5rem;
@@ -28,14 +42,8 @@ button {
   cursor: pointer;
   transition: all 0.25s ease;
 
-  &:hover {
-    background-color: darken(v.$primario, 10%);
-    transform: scale(1.03);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
+  &:hover { background-color: darken(v.$acento, 10%); transform: scale(1.03); }
+  &:active { transform: scale(0.98); }
 }
 
 // Footer global
@@ -44,13 +52,10 @@ footer {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 7rem;
   background-color: rgba(v.$negro, 0.9);
   color: v.$blanco;
-  font-size: 0.9rem;
   padding: 1rem 2rem;
   box-shadow: 0 -5px 10px rgba(v.$negro, 0.3);
-
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
@@ -63,9 +68,51 @@ footer {
 
   .pfooter {
     margin: 0.2rem 0;
-
+    text-decoration: none;
+    color: v.$blanco;
     @include m.telefono { font-size: 0.9rem; }
     @include m.tablet { font-size: 1rem; }
     @include m.desktop { font-size: 1.1rem; }
+  }
+}
+
+
+.headernav{ 
+  .nav{
+    background-color: v.$negro;
+    top: 0;
+    left: 0;
+    display: flex;
+    height: 5rem;
+    display: flex;
+    gap: 2rem;
+    justify-content: space-between;
+    align-items: center;
+
+    .navcolumn{
+      padding: 3rem;
+      
+      .navelements{
+          list-style: none;
+          display: flex;
+          flex-direction: row;
+          gap: 2rem;
+            .navelement{
+              a{
+                text-decoration: none;
+                color: v.$blanco;
+                font-size: 2rem;
+                
+              }
+            }
+        } 
+    .aloginlink{
+          text-decoration: none;
+          color: v.$blanco;
+          font-size: 1rem;
+          text-align: right;
+        }
+    }
+    
   }
 }

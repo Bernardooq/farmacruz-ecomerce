@@ -1,0 +1,19 @@
+@use 'base/variables';
+@use 'base/mixins';
+
+.index-page{
+
+    .index{
+        .bgimage{
+            background-image: url('../images/almacen.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            max-width: 100%;
+            height: 40rem;
+            padding-top: 10rem;
+            background-position: center 30%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+    }
+}

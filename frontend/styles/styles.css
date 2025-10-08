@@ -317,13 +317,38 @@ body {
   font-family: "Open Sans", sans-serif;
   background: #4CB8B3;
   color: #1A1A1A;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+.logo img {
+  width: 12rem;
+  height: auto;
+}
+@media (min-width: 480px) {
+  .logo img {
+    width: 15rem;
+  }
+}
+@media (min-width: 768px) {
+  .logo img {
+    width: 18rem;
+  }
+}
+@media (min-width: 1200px) {
+  .logo img {
+    width: 20rem;
+  }
 }
 
 button {
-  background-color: #4CB8B3;
+  background-color: #F53756;
   color: #FFFFFF;
   border: none;
   border-radius: 0.5rem;
@@ -333,7 +358,7 @@ button {
   transition: all 0.25s ease;
 }
 button:hover {
-  background-color: rgb(59.356, 149.644, 145.464);
+  background-color: rgb(237.1428571429, 11.8571428571, 48.6142857143);
   transform: scale(1.03);
 }
 button:active {
@@ -345,10 +370,8 @@ footer {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 7rem;
   background-color: rgba(26, 26, 26, 0.9);
   color: #FFFFFF;
-  font-size: 0.9rem;
   padding: 1rem 2rem;
   box-shadow: 0 -5px 10px rgba(26, 26, 26, 0.3);
   display: grid;
@@ -364,6 +387,8 @@ footer {
 }
 footer .pfooter {
   margin: 0.2rem 0;
+  text-decoration: none;
+  color: #FFFFFF;
 }
 @media (min-width: 480px) {
   footer .pfooter {
@@ -381,37 +406,47 @@ footer .pfooter {
   }
 }
 
-main {
+.headernav .nav {
+  background-color: #1A1A1A;
+  top: 0;
+  left: 0;
+  display: flex;
+  height: 5rem;
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+  align-items: center;
+}
+.headernav .nav .navcolumn {
+  padding: 3rem;
+}
+.headernav .nav .navcolumn .navelements {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
+.headernav .nav .navcolumn .navelements .navelement a {
+  text-decoration: none;
+  color: #FFFFFF;
+  font-size: 2rem;
+}
+.headernav .nav .navcolumn .aloginlink {
+  text-decoration: none;
+  color: #FFFFFF;
+  font-size: 1rem;
+  text-align: right;
+}
+
+.login-page {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 95%;
-  margin: 0 auto;
-  gap: 3rem;
+  gap: 1rem;
+  padding: 1rem;
 }
-main .logologin {
-  margin-top: 5rem;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-main .logologin img {
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
-  width: 12rem;
-}
-@media (min-width: 768px) {
-  main .logologin img {
-    width: 22rem;
-  }
-}
-@media (min-width: 1200px) {
-  main .logologin img {
-    width: 44rem;
-  }
-}
-main .login {
+.login-page .login {
   background-color: rgba(255, 255, 255, 0.95);
   border-radius: 1.5rem;
   box-shadow: 0 10px 25px rgba(26, 26, 26, 0.2);
@@ -420,78 +455,68 @@ main .login {
   max-width: 30rem;
   font-size: larger;
   text-align: center;
-  animation: fadeIn 1.6s ease-in-out;
-}
-@media (min-width: 1200px) {
-  main .login {
-    max-width: 56rem;
-  }
+  animation: fadeIn 1s ease-in-out;
 }
 @media (min-width: 768px) {
-  main .login {
-    max-width: 56rem;
+  .login-page .login {
+    max-width: 32rem;
   }
 }
-main .login .logform {
+@media (min-width: 1200px) {
+  .login-page .login {
+    max-width: 35rem;
+  }
+}
+.login-page .login .logform {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-main .login .logform label {
+.login-page .login .logform label {
   font-weight: bold;
   text-align: left;
 }
 @media (min-width: 768px) {
-  main .login .logform label {
+  .login-page .login .logform label {
     font-size: 1.2rem;
   }
 }
 @media (min-width: 1200px) {
-  main .login .logform label {
+  .login-page .login .logform label {
     font-size: 1.3rem;
   }
 }
-main .login .logform input {
+.login-page .login .logform input {
   padding: 0.8rem;
   border-radius: 0.5rem;
   border: 1px solid rgb(204.5, 204.5, 204.5);
   transition: border-color 0.2s ease;
 }
-main .login .logform input:focus {
+.login-page .login .logform input:focus {
   outline: none;
   border-color: #4CB8B3;
 }
-main .login .logform .show-password {
+.login-page .login .logform .show-password {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-main .login .logform .show-password label {
+.login-page .login .logform .show-password label {
   font-size: 0.9rem;
 }
 @media (min-width: 768px) {
-  main .login .logform .show-password label {
+  .login-page .login .logform .show-password label {
     font-size: 1rem;
   }
 }
-main .login .minibutton {
-  margin-top: 1.2rem;
+.login-page .login .forgot-password {
+  margin-top: 1rem;
+  background: transparent;
+  color: #F53756;
   width: 100%;
-  background-color: #F53756;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.8rem 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.25s ease;
 }
-main .login .minibutton:hover {
-  background-color: rgb(237.1428571429, 11.8571428571, 48.6142857143);
-  transform: scale(1.03);
-}
-main .login .minibutton:active {
-  transform: scale(0.98);
+.login-page .login .forgot-password:hover {
+  color: rgb(237.1428571429, 11.8571428571, 48.6142857143);
 }
 
 @keyframes fadeIn {
@@ -503,4 +528,67 @@ main .login .minibutton:active {
     opacity: 1;
     transform: translateY(0);
   }
+}
+.logo-textual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  margin-top: 5rem;
+}
+.logo-textual h1 {
+  color: #ffffff;
+  font-size: 2.5rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 0;
+}
+@media (min-width: 480px) {
+  .logo-textual h1 {
+    font-size: 3rem;
+  }
+}
+@media (min-width: 768px) {
+  .logo-textual h1 {
+    font-size: 3.5rem;
+  }
+}
+@media (min-width: 1200px) {
+  .logo-textual h1 {
+    font-size: 4rem;
+  }
+}
+.logo-textual .subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  margin-top: 0.3rem;
+}
+@media (min-width: 480px) {
+  .logo-textual .subtitle {
+    font-size: 1.2rem;
+  }
+}
+@media (min-width: 768px) {
+  .logo-textual .subtitle {
+    font-size: 1.3rem;
+  }
+}
+@media (min-width: 1200px) {
+  .logo-textual .subtitle {
+    font-size: 1.5rem;
+  }
+}
+.logo-textual {
+  margin-bottom: 5rem;
+}
+
+.index-page .index .bgimage {
+  background-image: url("../images/almacen.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  max-width: 100%;
+  height: 40rem;
+  padding-top: 10rem;
+  background-position: center 30%;
+  background-color: rgba(0, 0, 0, 0.4);
 }
