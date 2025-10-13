@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Vendedor - Farmacruz</title>
+  <link rel="stylesheet" href="../styles/styles.css">
+  <script src="https://kit.fontawesome.com/f3be37cda0.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <header class="header">
+    <nav class="nav">
+      <a href="./page.html" class="nav__logo">Farmacruz</a>
+      <div class="nav__user-info">
+        <span>Bienvenido, <strong>Manuel Saenz</strong> (Admin)</span>
+      </div>
+      <a class="nav__logout-link" href="./login.html">Salir</a>
+    </nav>
+  </header>
+
+  <main class="dashboard-page">
+    <div class="container">
+        <h1 class="dashboard-page__title">Panel de Administrador</h1>
+
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title">Análisis de Ventas</h2>
+                <div class="date-filter">
+                <label for="dateRange">Rango de Fechas:</label>
+                <input type="date" id="startDate">
+                <span>-</span>
+                <input type="date" id="endDate">
+                <button class="btn-primary">Filtrar</button>
+                </div>
+            </div>
+            <div class="summary-cards">
+                <div class="card">
+                <div class="card__icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="card__info"><span class="card__value">$1,250,800</span><span class="card__label">Ventas Totales (Periodo)</span></div>
+                </div>
+                <div class="card">
+                <div class="card__icon"><i class="fas fa-receipt"></i></div>
+                <div class="card__info"><span class="card__value">152</span><span class="card__label">Pedidos Totales</span></div>
+                </div>
+                <div class="card">
+                <div class="card__icon"><i class="fas fa-chart-line"></i></div>
+                <div class="card__info"><span class="card__value">$8,228</span><span class="card__label">Ticket Promedio</span></div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <img src="../images/sales-chart-placeholder.png" alt="Gráfica de ventas del periodo" style="width:100%; height:auto;">
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title">Gestión de Clientes</h2>
+                <button class="btn-action"><i class="fas fa-user-plus"></i> Añadir Cliente</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                <thead>
+                    <tr>
+                    <th>Cliente</th>
+                    <th>Password</th>
+                    <th>Último Pedido</th>
+                    <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    <td data-label="Cliente">
+                        <div class="user-cell">
+                        <i class="fas fa-user-circle user-cell__avatar"></i>
+                        <div class="user-cell__info">
+                            <span class="user-cell__name"><b>Farmacia del Sol</b></span>
+                            <span class="user-cell__email">contacto@farmaciadelsol.com</span>
+                            <span class="user-cell__phone">3344553454</span>
+                        </div>
+                        </div>
+                    </td>
+                    <td data-label="Password">SDHJKRBFIOUOAFE</td>
+                    <td data-label="Último Pedido">12 de Octubre, 2025</td>
+                    <td data-label="Acciones" class="actions-cell">
+                        <button class="btn-icon btn--edit" aria-label="Editar"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn-icon btn--delete" aria-label="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title">Gestión de Vendedores</h2>
+                <button class="btn-action"><i class="fas fa-user-tie-plus"></i>Añadir Vendedor</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                <thead>
+                    <tr>
+                    <th>Vendedor</th>
+                    <th>Password</th>
+                    <th>Ventas</th>
+                    <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    <td data-label="Vendedor">
+                        <div class="user-cell">
+                        <i class="fas fa-user-circle user-cell__avatar"></i>
+                        <div class="user-cell__info">
+                            <span class="user-cell__name">Israel Saenz</span>
+                            <span class="user-cell__phone">3315996933</span>
+                        </div>
+                        </div>
+                    </td>
+                    <td data-label="Password">SDHJKRBFIOUOAFE</td>
+                    <td data-label="Ventas">$ 345,000</td>
+                    <td data-label="Acciones" class="actions-cell">
+                        <button class="btn-icon btn--edit" aria-label="Editar"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn-icon btn--delete" aria-label="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="summary-cards">
+            <div class="card">
+                <div class="card__icon"><i class="fas fa-inbox"></i></div>
+                <div class="card__info"><span class="card__value">8</span><span class="card__label">Pedidos Pendientes</span></div>
+            </div>
+            <div class="card">
+                <div class="card__icon"><i class="fas fa-box-open"></i></div>
+                <div class="card__info"><span class="card__value">1,250</span><span class="card__label">Productos en Catálogo</span></div>
+            </div>
+            <div class="card">
+                <div class="card__icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="card__info"><span class="card__value">32</span><span class="card__label">Productos con Bajo Stock</span></div>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <h2 class="section-title">Pedidos Pendientes de Validación</h2>
+            <div class="table-container">
+                <table class="data-table">
+                <thead>
+                    <tr>
+                    <th>Cliente</th>
+                    <th>N° Pedido</th>
+                    <th>Fecha</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    <td data-label="Cliente">Farmacia del Sol</td>
+                    <td data-label="N° Pedido">FC-2025-003</td>
+                    <td data-label="Fecha">12 de Octubre, 2025</td>
+                    <td data-label="Items">5</td>
+                    <td data-label="Total">$22,100.00</td>
+                    <td data-label="Acciones" class="actions-cell">
+                        <button class="btn-icon btn--approve" aria-label="Aprobar"><i class="fas fa-check"></i></button>
+                        <button class="btn-icon btn--reject" aria-label="Rechazar"><i class="fas fa-times"></i></button>
+                        <button class="btn-icon btn--view" aria-label="Ver Detalles"><i class="fas fa-eye"></i></button>
+                    </td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title">Gestión de Inventario</h2>
+                <button class="btn-action" id="addProductBtn"><i class="fas fa-plus"></i> Añadir Nuevo Producto</button>
+            </div>
+
+            <div class="inventory-controls">
+                <div class="search-bar">
+                <input type="search" placeholder="Buscar por nombre o SKU...">
+                <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="filter-group">
+                <label for="filterCategory">Categoría:</label>
+                <select id="filterCategory">
+                    <option value="">Todas</option>
+                    <option value="analgesicos">Analgésicos</option>
+                    <option value="vitaminas">Vitaminas</option>
+                    <option value="antigripales">Antigripales</option>
+                </select>
+                </div>
+                <div class="filter-group">
+                <label for="filterStock">Stock:</label>
+                <select id="filterStock">
+                    <option value="">Todos</option>
+                    <option value="ok">En Stock</option>
+                    <option value="low">Bajo Stock</option>
+                    <option value="out">Agotado</option>
+                </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                <thead>
+                    <tr>
+                    <th>Producto</th>
+                    <th>SKU</th>
+                    <th>Categoría</th>
+                    <th>Stock Actual</th>
+                    <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    <td data-label="Producto">Medicamento A</td>
+                    <td data-label="SKU">MA-001</td>
+                    <td data-label="Categoría">Analgésicos</td>
+                    <td data-label="Stock Actual"><span class="stock-level stock--ok">150</span></td>
+                    <td data-label="Acciones" class="actions-cell">
+                        <button class="btn-icon btn--edit" aria-label="Editar Producto"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn-icon btn--delete" aria-label="Eliminar Producto"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                    </tr>
+                    <tr>
+                    <td data-label="Producto">Suplemento B</td>
+                    <td data-label="SKU">SB-002</td>
+                    <td data-label="Categoría">Vitaminas</td>
+                    <td data-label="Stock Actual"><span class="stock-level stock--low">25</span></td>
+                    <td data-label="Acciones" class="actions-cell">
+                        <button class="btn-icon btn--edit" aria-label="Editar Producto"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn-icon btn--delete" aria-label="Eliminar Producto"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                    </tr>
+                    <tr>
+                    <td data-label="Producto">Jarabe C</td>
+                    <td data-label="SKU">JC-003</td>
+                    <td data-label="Categoría">Antigripales</td>
+                    <td data-label="Stock Actual"><span class="stock-level stock--out">0</span></td>
+                    <td data-label="Acciones" class="actions-cell">
+                        <button class="btn-icon btn--edit" aria-label="Editar Producto"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn-icon btn--delete" aria-label="Eliminar Producto"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <h2 id="modalTitle">Añadir Nuevo Producto</h2>
+      <form class="modal-form">
+        <div class="form-group">
+          <label for="prodName">Nombre del Producto</label>
+          <input type="text" id="prodName" required>
+        </div>
+        <div class="form-group">
+          <label for="prodSKU">SKU</label>
+          <input type="text" id="prodSKU" required>
+        </div>
+        <div class="form-group">
+          <label for="prodCategory">Categoría</label>
+          <select id="prodCategory" required>
+            <option value="analgesicos">Analgésicos</option>
+            <option value="vitaminas">Vitaminas</option>
+            <option value="antigripales">Antigripales</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="prodStock">Stock</label>
+          <input type="number" id="prodStock" min="0" required>
+        </div>
+        <button type="submit">Guardar Cambios</button>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

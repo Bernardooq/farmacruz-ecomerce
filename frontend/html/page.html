@@ -1,62 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Page</title>
+  <title>Farmacruz - Distribuidora Farmacéutica</title>
   <link rel="stylesheet" href="../styles/styles.css">
+  <script src="https://kit.fontawesome.com/f3be37cda0.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-  <header class=" headernav">
-      <div class="nav">
-        <div class="navcolumn">   
-          <ol class="navelements">
-            <li class="navelement"><a href="http://">Inicio</a></li>
-            <li class="navelement"><a href="http://">Nosotros</a></li>
-            <li class="navelement"><a href="http://">Contacto</a></li>
-          </ol>
-        </div>
-      <div class="navcolumn">      
-        <div class="aloginlink" href="./login.html">user</a>
+  <header class="header">
+    <nav class="nav">
+      <a href="./page.html" class="nav__logo">Farmacruz</a>
+      <ul class="nav__menu">
+        <li class="nav__item"><a href="#" class="nav__link">Inicio</a></li>
+        <li class="nav__item"><a href="#" class="nav__link">Nosotros</a></li>
+        <li class="nav__item"><a href="#" class="nav__link">Contacto</a></li>
+      </ul>
+      <a class="nav__login-link" href="./login.html">Acceder</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero__bg-image"></div>
+      <div class="hero__content">
+        <h1 class="hero__title">Farmacruz</h1>
+        <p class="hero__subtitle">Tu socio confiable en distribución farmacéutica</p>
       </div>
-    </div>
-</header>
+    </section>
 
-  <main class="index-page"> 
-    <div class="index">
-        <div class="bgimage">
-            <div class="title">
-                Farmacruz
+    <section class="intro-text">
+      <div class="container">
+        <p>Más de 20 años de experiencia nos respaldan, ofreciendo un servicio de distribución eficiente y seguro para farmacias en todo el país. Calidad, confianza y puntualidad son nuestro compromiso.</p>
+      </div>
+    </section>
+
+    <section class="featured-products">
+      <div class="container">
+        <h2 class="section-title">Productos Destacados</h2>
+        <div class="products-grid">
+          <div class="product-card">
+            <img src="../images/producto1.jpg" alt="Producto 1" class="product-card__image">
+            <div class="product-card__info">
+              <h3 class="product-card__name">Medicamento A</h3>
+              <p class="product-card__category">Analgésicos</p>
             </div>
+          </div>
+          <div class="product-card">
+            <img src="../images/producto2.jpg" alt="Producto 2" class="product-card__image">
+            <div class="product-card__info">
+              <h3 class="product-card__name">Suplemento B</h3>
+              <p class="product-card__category">Vitaminas</p>
+            </div>
+          </div>
+          <div class="product-card">
+            <img src="../images/producto3.jpg" alt="Producto 3" class="product-card__image">
+            <div class="product-card__info">
+              <h3 class="product-card__name">Jarabe C</h3>
+              <p class="product-card__category">Antigripales</p>
+            </div>
+          </div>
+          <div class="product-card">
+            <img src="../images/producto4.jpg" alt="Producto 4" class="product-card__image">
+            <div class="product-card__info">
+              <h3 class="product-card__name">Crema D</h3>
+              <p class="product-card__category">Dermatología</p>
+            </div>
+          </div>
         </div>
+      </div>
+    </section>
 
-    <div class="text">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores ipsam officia maxime ullam vero et consequuntur cumque, minus quo delectus praesentium necessitatibus magnam dignissimos deleniti debitis veritatis! Laudantium, provident aliquam.
-    </div>
-    <div class="carousel">
+    <section class="advantages">
+      <div class="container">
+        <h2 class="section-title">¿Por Qué Elegirnos?</h2>
+        <div class="advantages-grid">
+          <div class="advantage-item">
+            <i class="fas fa-truck-fast advantage-item__icon"></i>
+            <h3 class="advantage-item__title">Entregas Rápidas</h3>
+            <p>Logística optimizada para recibir tus pedidos en tiempo récord.</p>
+          </div>
+          <div class="advantage-item">
+            <i class="fas fa-box-open advantage-item__icon"></i>
+            <h3 class="advantage-item__title">Amplio Catálogo</h3>
+            <p>Miles de productos de los laboratorios más reconocidos.</p>
+          </div>
+          <div class="advantage-item">
+            <i class="fas fa-headset advantage-item__icon"></i>
+            <h3 class="advantage-item__title">Soporte Dedicado</h3>
+            <p>Atención personalizada para resolver todas tus dudas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    </div>
-
-    <div class="textcolumns">
-        <P class="pcol">Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, quia ducimus obcaecati voluptatibus nostrum vero quo molestias laudantium, at tempora, maxime voluptatum officia reprehenderit? Saepe, fugiat. Sit incidunt vero hic.</P>
-        <P class="pcol">Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, quia ducimus obcaecati voluptatibus nostrum vero quo molestias laudantium, at tempora, maxime voluptatum officia reprehenderit? Saepe, fugiat. Sit incidunt vero hic.</P>
-        <P class="pcol">Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, quia ducimus obcaecati voluptatibus nostrum vero quo molestias laudantium, at tempora, maxime voluptatum officia reprehenderit? Saepe, fugiat. Sit incidunt vero hic.</P>
-
-    </div>
-
-    <div class="contact">
-
-    </div>
-
-    </div>
   </main>
 
-  <footer>
-    <a href="" class="pfooter">Lorem</a>
-    <a href="" class="pfooter">Ipsum</a>
-    <a href="" class="pfooter">Dolor</a>
-    <a href="" class="pfooter">Sit</a>
+  <footer class="footer">
+    <a href="#" class="footer__link">Términos y Condiciones</a>
+    <a href="#" class="footer__link">Aviso de Privacidad</a>
+    <a href="#" class="footer__link">Contacto</a>
+    <p class="footer__copy">&copy; 2025 Farmacruz. Todos los derechos reservados.</p>
   </footer>
 
 </body>

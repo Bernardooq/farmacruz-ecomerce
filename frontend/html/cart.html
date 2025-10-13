@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrito de Compras - Farmacruz</title>
+  <link rel="stylesheet" href="../styles/styles.css">
+  <script src="https://kit.fontawesome.com/f3be37cda0.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <header class="header">
+    <nav class="nav">
+      <a href="./page.html" class="nav__logo">Farmacruz</a>
+      <ul class="nav__menu">
+        <li class="nav__item"><a href="./page.html" class="nav__link">Inicio</a></li>
+        <li class="nav__item"><a href="./products.html" class="nav__link">Productos</a></li>
+        <li class="nav__item"><a href="./cliente.html" class="nav__link">Mis Pedidos</a></li>
+      </ul>
+      <a class="nav__logout-link" href="./login.html">Salir</a>
+    </nav>
+  </header>
+
+  <main class="cart-page">
+    <div class="container">
+      <h1 class="cart-page__title">Tu Carrito de Compras</h1>
+
+      <div class="cart-layout">
+        <section class="cart-items-container">
+          <div class="cart-items-header">
+            <span class="header-product">Producto</span>
+            <span class="header-quantity">Cantidad</span>
+            <span class="header-total">Total</span>
+          </div>
+
+          <div class="cart-items-list">
+            <article class="cart-item">
+              <div class="cart-item__product">
+                <img src="../images/producto1.jpg" alt="Producto Analgésico" class="cart-item__image">
+                <div class="cart-item__details">
+                  <h3 class="cart-item__name">Medicamento A</h3>
+                  <p class="cart-item__price">$150.00 MXN</p>
+                </div>
+              </div>
+              <div class="cart-item__quantity">
+                <div class="quantity-selector">
+                  <button class="quantity-selector__btn">-</button>
+                  <input type="number" value="2" min="1" aria-label="Cantidad">
+                  <button class="quantity-selector__btn">+</button>
+                </div>
+              </div>
+              <p class="cart-item__total">$300.00</p>
+              <button class="cart-item__remove-btn" aria-label="Eliminar item">
+                <i class="fas fa-times"></i>
+              </button>
+            </article>
+            <article class="cart-item">
+              <img src="../images/producto2.jpg" alt="Suplemento Vitamínico" class="cart-item__image">
+              <div class="cart-item__product">
+                <img src="../images/producto2.jpg" alt="Suplemento B" class="cart-item__image">
+                <div class="cart-item__details">
+                  <h3 class="cart-item__name">Suplemento B</h3>
+                  <p class="cart-item__price">$220.50 MXN</p>
+                </div>
+              </div>
+              <div class="cart-item__quantity">
+                <div class="quantity-selector">
+                  <button class="quantity-selector__btn">-</button>
+                  <input type="number" value="1" min="1" aria-label="Cantidad">
+                  <button class="quantity-selector__btn">+</button>
+                </div>
+              </div>
+              <p class="cart-item__total">$220.50</p>
+              <button class="cart-item__remove-btn" aria-label="Eliminar item">
+                <i class="fas fa-times"></i>
+              </button>
+            </article>
+          </div>
+        </section>
+
+        <aside class="cart-summary">
+          <h2 class="cart-summary__title">Resumen del Pedido</h2>
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span>$520.50</span>
+          </div>
+          <div class="summary-row">
+            <span>Envío:</span>
+            <span>A calcular</span>
+          </div>
+          <hr>
+          <div class="summary-row total">
+            <span>Total Estimado:</span>
+            <span>$520.50</span>
+          </div>
+          <button class="btn-checkout">Finalizar Pedido</button>
+        </aside>
+      </div>
+
+      </div>
+  </main>
+
+  <footer class="footer">
+    <a href="#" class="footer__link">Términos y Condiciones</a>
+    <a href="#" class="footer__link">Aviso de Privacidad</a>
+    <p class="footer__copy">&copy; 2025 Farmacruz. Todos los derechos reservados.</p>
+  </footer>
+
+</body>
+</html>

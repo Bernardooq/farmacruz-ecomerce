@@ -1,0 +1,70 @@
+@use "../base/variables" as v;
+@use "../base/mixins" as m;
+
+// Hereda todos los estilos de dashboard de vendedor
+@import 'seller-dashboard';
+
+
+// Filtro de fecha
+.date-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: lighten(v.$negro, 95%);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+
+  label {
+    font-weight: bold;
+  }
+  
+  input[type="date"] {
+    border: 1px solid lighten(v.$negro, 80%);
+    padding: 0.4rem;
+    border-radius: 0.5rem;
+  }
+  
+  // Botón primario, reutiliza el estilo global de 'button'
+  .btn-primary {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+// Contenedor para la gráfica
+.chart-container {
+  margin-top: 2rem;
+  // Estilos para la gráfica real irían aquí
+}
+
+// Celdas de tabla con información de usuario
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  &__avatar {
+    font-size: 2.5rem;
+    color: lighten(v.$negro, 70%);
+  }
+  
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  &__name {
+    font-weight: bold;
+  }
+  
+  &__email {
+    font-size: 0.9rem;
+    color: lighten(v.$negro, 40%);
+  }
+}
+
+// Icono específico para el admin en el header
+.header .user-profile__avatar .fa-user-shield {
+  color: v.$amarillo; // Color distintivo para el admin
+}
