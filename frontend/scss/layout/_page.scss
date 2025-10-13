@@ -8,7 +8,7 @@
   margin: 0 auto;
 }
 
-// Título de sección reutilizable
+// Titulo
 .section-title {
   text-align: center;
   font-size: 2rem;
@@ -52,7 +52,7 @@
   }
 
   &__content {
-    position: relative; // Para que esté por encima del overlay
+    position: relative; // Para que este por encima del overlay
     z-index: 2;
   }
 
@@ -73,7 +73,7 @@
   }
 }
 
-// --- Texto de Introducción ---
+// Texto Introductorio
 .intro-text {
   padding: 3rem 0;
   background-color: v.$blanco;
@@ -90,10 +90,10 @@
   }
 }
 
-// --- Productos Destacados ---
+// Prods destacados
 .featured-products {
   padding: 3rem 0;
-  background-color: #f9f9f9; // Un gris muy claro para diferenciar
+  background-color: #f9f9f9; 
 }
 
 .products-grid {
@@ -144,6 +144,7 @@
 }
 
 
+// Ventajas de comprar con nosotros
 .advantages {
   padding: 3rem 0;
   background-color: v.$blanco;

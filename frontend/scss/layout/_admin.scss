@@ -21,20 +21,19 @@
     border-radius: 0.5rem;
   }
   
-  // Botón primario, reutiliza el estilo global de 'button'
   .btn-primary {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
 }
 
-// Contenedor para la gráfica
+// Contenedor para la grafica
 .chart-container {
   margin-top: 2rem;
-  // Estilos para la gráfica real irían aquí
+  // Estilos para la grafica
 }
 
-// Celdas de tabla con información de usuario
+// Celdas de tabla con info del user
 .user-cell {
   display: flex;
   align-items: center;
@@ -60,7 +59,7 @@
   }
 }
 
-// Icono específico para el admin en el header
+
 .header .user-profile__avatar .fa-user-shield {
   color: v.$amarillo; // Color distintivo para el admin
 }

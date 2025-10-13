@@ -111,7 +111,7 @@
   &.btn--delete { color: v.$acento; &:hover { background-color: lighten(v.$acento, 30%); } }
 }
 
-// Estilos para la Tabla de Inventario
+// Estilos para tablas de Inventario
 .stock-level {
   font-weight: bold;
   padding: 0.3rem 0.6rem;
@@ -133,6 +133,8 @@
   border-bottom: 1px solid lighten(v.$negro, 90%);
 }
 
+
+// Search Bar
 .search-bar {
   display: flex;
   flex-grow: 1; 
@@ -170,6 +172,8 @@
   }
 }
 
+
+// Filtros Busqueda
 .filter-group {
   display: flex;
   align-items: center;

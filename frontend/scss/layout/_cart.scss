@@ -25,7 +25,7 @@
 
 // Columna de Items del Carrito
 .cart-items-header {
-  display: none; // Ocultamos los encabezados en móvil
+  display: none; // Ocultamos los encabezados en movil
   @include m.tablet {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr auto;
