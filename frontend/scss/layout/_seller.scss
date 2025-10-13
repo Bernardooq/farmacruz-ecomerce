@@ -4,7 +4,7 @@
 .dashboard-page {
   padding: 2rem 0 4rem 0;
   flex: 1;
-  background-color: lighten(v.$primario, 38%);
+  background-color: v.$primario;
 
   &__title {
     color: v.$negro;

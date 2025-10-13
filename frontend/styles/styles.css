@@ -537,6 +537,57 @@ button:active {
   margin-top: 4rem;
 }
 
+.date-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+}
+.date-filter label {
+  font-weight: bold;
+}
+.date-filter input[type=date] {
+  border: 1px solid #e6e6e6;
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+}
+.date-filter .btn-primary {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.chart-container {
+  margin-top: 2rem;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.user-cell__avatar {
+  font-size: 2.5rem;
+  color: rgb(204.5, 204.5, 204.5);
+}
+.user-cell__info {
+  display: flex;
+  flex-direction: column;
+}
+.user-cell__name {
+  font-weight: bold;
+}
+.user-cell__email {
+  font-size: 0.9rem;
+  color: gray;
+}
+
+.header .user-profile__avatar .fa-user-shield {
+  color: #FFDD00;
+}
+
 .cart-page {
   padding: 2rem 0 4rem 0;
   flex: 1;
@@ -812,7 +863,7 @@ button:active {
 
 .header-login {
   padding: 2rem 0;
-  color: #FFFFFF;
+  color: #1A1A1A;
 }
 
 .logo-textual {
@@ -1273,7 +1324,7 @@ button:active {
 .dashboard-page {
   padding: 2rem 0 4rem 0;
   flex: 1;
-  background-color: white;
+  background-color: #add7d5;
 }
 .dashboard-page__title {
   color: #1A1A1A;

@@ -1,10 +1,6 @@
 @use "../base/variables" as v;
 @use "../base/mixins" as m;
 
-// Hereda todos los estilos de dashboard de vendedor
-@import 'seller-dashboard';
-
-
 // Filtro de fecha
 .date-filter {
   display: flex;
