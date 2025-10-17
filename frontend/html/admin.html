@@ -58,6 +58,18 @@
                 <h2 class="section-title">Gestión de Clientes</h2>
                 <button class="btn-action"><i class="fas fa-user-plus"></i> Añadir Cliente</button>
             </div>
+
+            <div class="table-container">
+                <div class="dashboard-controls">
+                <div class="search-bar">
+                <input type="search" id="nombre-cliente" placeholder="Buscar por nombre del Cliente...">
+                <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="filter-group">
+                <label for="filterStock">Stock:</label>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="data-table">
                 <thead>
@@ -98,6 +110,15 @@
                 <h2 class="section-title">Gestión de Vendedores</h2>
                 <button class="btn-action"><i class="fas fa-user-tie-plus"></i>Añadir Vendedor</button>
             </div>
+
+            <div class="table-container">
+                <div class="dashboard-controls">
+                <div class="search-bar">
+                <input type="search" id="nombre-vendedor" placeholder="Buscar por nombre de Vendedor...">
+                <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="data-table">
                 <thead>
@@ -149,6 +170,22 @@
         <section class="dashboard-section">
             <h2 class="section-title">Pedidos Pendientes de Validación</h2>
             <div class="table-container">
+                <div class="dashboard-controls">
+                <div class="search-bar">
+                <input type="search" id="numero-pedido" placeholder="Buscar por numero depedido...">
+                <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="filter-group">
+                <label for="filterCategory">Cliente:</label>
+                <select id="filterCategory">
+                    <option value="">Farmacias Similares</option>
+                    <option value="analgesicos">Farmacias Guadalajara</option>
+                    <option value="vitaminas">Lab C.A de C.V</option>
+                    <option value="antigripales">FarmacoLabs</option>
+                </select>
+                </div>
+            </div>
+            <div class="table-container">
                 <table class="data-table">
                 <thead>
                     <tr>
@@ -184,10 +221,14 @@
                 <button class="btn-action" id="addProductBtn"><i class="fas fa-plus"></i> Añadir Nuevo Producto</button>
             </div>
 
-            <div class="inventory-controls">
+            <div class="dashboard-controls">
                 <div class="search-bar">
-                <input type="search" placeholder="Buscar por nombre o SKU...">
-                <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+                <input type="search" placeholder="Buscar por nombre...">
+                <button type="submit" id="nombre-producto" aria-label="Buscar"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-bar">
+                <input type="search" placeholder="Buscar por SKU...">
+                <button type="submit" id="sku-producto" aria-label="Buscar"><i class="fas fa-search"></i></button>
                 </div>
                 <div class="filter-group">
                 <label for="filterCategory">Categoría:</label>

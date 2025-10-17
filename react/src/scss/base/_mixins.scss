@@ -35,3 +35,28 @@
     grid-template-columns: repeat($columnas, 1fr);
     gap:$gap;
 }
+
+@mixin maxtelefono{
+    @media (max-width: v.$telefono) {
+        @content;
+    }
+}
+
+
+@mixin maxtablet{
+    @media (max-width: v.$tablet) {
+        @content;
+    }
+}
+
+@mixin maxdesktop{
+    @media (max-width: v.$desktop) {
+        @content;
+    }
+}
+
+@mixin maxdesktopXL{
+    @media (max-width: v.$desktopXL) {
+        @content;
+    }
+}

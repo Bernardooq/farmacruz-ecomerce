@@ -1,0 +1,180 @@
+@use 'base/variables' as v;
+@use 'base/mixins' as m;
+
+// Contenedor general para centrar el contenido
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Titulo
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: v.$negro;
+  @include m.tablet {
+    font-size: 2.5rem;
+  }
+}
+
+
+// Hero
+.hero {
+  position: relative;
+  height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: v.$blanco;
+
+  &__bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../images/almacen.png');
+    background-size: cover;
+    background-position: center;
+    // Overlay oscuro para mejorar legibilidad del texto
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(v.$negro, 0.5);
+    }
+  }
+
+  &__content {
+    position: relative; // Para que este por encima del overlay
+    z-index: 2;
+  }
+
+  &__title {
+    font-size: 3rem;
+    margin: 0;
+    @include m.tablet {
+      font-size: 5rem;
+    }
+  }
+
+  &__subtitle {
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+    @include m.tablet {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+// Texto Introductorio
+.intro-text {
+  padding: 3rem 0;
+  background-color: v.$blanco;
+  text-align: center;
+  
+  p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto;
+    @include m.tablet {
+      font-size: 1.3rem;
+    }
+  }
+}
+
+// Prods destacados
+.featured-products {
+  padding: 3rem 0;
+  background-color: #f9f9f9; 
+}
+
+.products-grid {
+  display: grid;
+  gap: 1.5rem;
+  // Responsive Grid
+  grid-template-columns: repeat(1, 1fr);
+  @include m.telefono {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @include m.desktop {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.product-card {
+  background-color: v.$blanco;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(v.$negro, 0.08);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(v.$negro, 0.15);
+  }
+
+  &__image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+
+  &__info {
+    padding: 1rem;
+  }
+
+  &__name {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+  }
+
+  &__category {
+    margin: 0;
+    color: lighten(v.$negro, 40%);
+    font-size: 0.9rem;
+  }
+}
+
+
+// Ventajas de comprar con nosotros
+.advantages {
+  padding: 3rem 0;
+  background-color: v.$blanco;
+}
+
+.advantages-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(1, 1fr);
+  @include m.tablet {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.advantage-item {
+  text-align: center;
+  
+  &__icon {
+    font-size: 3rem;
+    color: v.$acento;
+    margin-bottom: 1rem;
+  }
+  
+  &__title {
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem 0;
+  }
+  
+  p {
+    line-height: 1.5;
+  }
+}
+
