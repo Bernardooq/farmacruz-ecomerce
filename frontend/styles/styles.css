@@ -315,7 +315,7 @@ template {
 
 body {
   font-family: "Open Sans", sans-serif;
-  background: #add7d5;
+  background: #63c1a5;
   color: #1A1A1A;
   min-height: 100vh;
   display: flex;
@@ -413,7 +413,7 @@ button:active {
   transition: color 0.2s ease-in-out;
 }
 .nav__link:hover {
-  color: #add7d5;
+  color: #63c1a5;
 }
 .nav__login-link {
   background-color: #F53756;
@@ -450,7 +450,7 @@ button:active {
   cursor: pointer;
 }
 .nav__search-bar button:hover {
-  background-color: rgb(241.5573770492, 248.4426229508, 248.1147540984);
+  background-color: rgb(171.9908256881, 222.0091743119, 207.1100917431);
   transform: none;
 }
 
@@ -523,7 +523,7 @@ button:active {
 
 #modal-body h2 {
   margin-top: 0;
-  color: #add7d5;
+  color: #63c1a5;
 }
 #modal-body ul {
   padding-left: 20px;
@@ -591,7 +591,7 @@ button:active {
 .cart-page {
   padding: 2rem 0 4rem 0;
   flex: 1;
-  background-color: #add7d5;
+  background-color: #63c1a5;
 }
 .cart-page__title {
   text-align: center;
@@ -733,7 +733,7 @@ button:active {
 .quantity-selector__btn:hover {
   background: none;
   transform: none;
-  color: #add7d5;
+  color: #63c1a5;
 }
 .quantity-selector input {
   width: 40px;
@@ -830,8 +830,8 @@ button:active {
 }
 .login-form .form-group input:focus {
   outline: none;
-  border-color: #add7d5;
-  box-shadow: 0 0 0 3px rgba(173, 215, 213, 0.2);
+  border-color: #63c1a5;
+  box-shadow: 0 0 0 3px rgba(99, 193, 165, 0.2);
 }
 .login-form .form-options {
   display: flex;
@@ -858,7 +858,7 @@ button:active {
 }
 .forgot-password-link:hover {
   text-decoration: underline;
-  color: rgb(138.7213114754, 198.2786885246, 195.4426229508);
+  color: rgb(68.5412844037, 172.4587155963, 141.504587156);
 }
 
 .header-login {
@@ -892,8 +892,8 @@ button:active {
 .products-page__title {
   text-align: center;
   margin-bottom: 2rem;
-  font-size: 2.5rem;
-  color: #1A1A1A;
+  font-size: 3.5rem;
+  color: #FFFFFF;
 }
 
 .filters-bar {
@@ -1220,7 +1220,7 @@ button:active {
 }
 .profile-card__avatar {
   font-size: 4rem;
-  color: #add7d5;
+  color: #63c1a5;
 }
 .profile-card__name {
   margin: 0;
@@ -1296,7 +1296,7 @@ button:active {
   transition: all 0.2s ease-in-out;
 }
 .order-table .btn-secondary:hover {
-  background-color: #add7d5;
+  background-color: #63c1a5;
 }
 @media (max-width: 768px) {
   .order-table thead {
@@ -1305,7 +1305,7 @@ button:active {
   .order-table tr {
     display: block;
     margin-bottom: 1rem;
-    border-bottom: 2px solid #add7d5;
+    border-bottom: 2px solid #63c1a5;
   }
   .order-table td {
     display: flex;
@@ -1324,7 +1324,7 @@ button:active {
 .dashboard-page {
   padding: 2rem 0 4rem 0;
   flex: 1;
-  background-color: #add7d5;
+  background-color: #63c1a5;
 }
 .dashboard-page__title {
   color: #1A1A1A;
@@ -1368,7 +1368,7 @@ button:active {
 }
 .card__icon {
   font-size: 2.5rem;
-  color: #add7d5;
+  color: #63c1a5;
 }
 .card__info {
   display: flex;
@@ -1505,10 +1505,10 @@ button:active {
   background-color: rgb(210.8181818182, 172.6363636364, 229.3636363636);
 }
 .btn-icon.btn--edit {
-  color: #add7d5;
+  color: #63c1a5;
 }
 .btn-icon.btn--edit:hover {
-  background-color: white;
+  background-color: rgb(208.4862385321, 236.5137614679, 228.1651376147);
 }
 .btn-icon.btn--delete {
   color: #F53756;
@@ -1561,8 +1561,8 @@ button:active {
   transition: all 0.2s ease;
 }
 .search-bar input[type=search]:focus {
-  border-color: #add7d5;
-  box-shadow: 0 0 0 3px rgba(173, 215, 213, 0.2);
+  border-color: #63c1a5;
+  box-shadow: 0 0 0 3px rgba(99, 193, 165, 0.2);
 }
 .search-bar button {
   background-color: white;
@@ -1573,10 +1573,10 @@ button:active {
   cursor: pointer;
 }
 .search-bar button:hover {
-  background-color: #add7d5;
+  background-color: #63c1a5;
   color: #FFFFFF;
   transform: none;
-  border-color: #add7d5;
+  border-color: #63c1a5;
 }
 
 .filter-group {
