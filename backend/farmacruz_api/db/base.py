@@ -16,10 +16,10 @@ class UserRole(str, enum.Enum):
     customer = "customer"
 
 class OrderStatus(str, enum.Enum):
-    cart = "cart"
     pending_validation = "pending_validation"
     approved = "approved"
     shipped = "shipped"
+    delivered="delivered"
     cancelled = "cancelled"
 
 # --------------------------
@@ -41,6 +41,7 @@ class User(Base):
     customer_info = relationship("CustomerInfo", back_populates="user", uselist=False)
     orders_created = relationship("Order", back_populates="customer", foreign_keys="[Order.user_id]")
     orders_validated = relationship("Order", back_populates="seller", foreign_keys="[Order.seller_id]")
+    cart_cache = relationship("CartCache", back_populates="user", cascade="all, delete")
 
 class Category(Base):
     __tablename__ = "categories"
@@ -68,6 +69,7 @@ class Product(Base):
     # Relationships
     category = relationship("Category", back_populates="products")
     order_items = relationship("OrderItem", back_populates="product")
+    cart_entries = relationship("CartCache", back_populates="product")
 
 class CustomerInfo(Base):
     __tablename__ = "customerinfo"
@@ -95,7 +97,7 @@ class Order(Base):
     # Relationships
     customer = relationship("User", back_populates="orders_created", foreign_keys=[user_id])
     seller = relationship("User", back_populates="orders_validated", foreign_keys=[seller_id])
-    items = relationship("OrderItem", back_populates="order")
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
 class OrderItem(Base):
     __tablename__ = "orderitems"
@@ -109,3 +111,21 @@ class OrderItem(Base):
     # Relationships
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="order_items")
+
+# --------------------------
+# CART CACHE (nuevo)
+# --------------------------
+class CartCache(Base):
+    __tablename__ = "cartcache"
+
+    cart_cache_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.product_id"), nullable=False, index=True)
+    quantity = Column(Integer, nullable=False, default=1)
+    price_at_addition = Column(Numeric(10, 2), nullable=False)
+    added_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), onupdate=func.now(), server_default=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="cart_cache")
+    product = relationship("Product", back_populates="cart_entries")
