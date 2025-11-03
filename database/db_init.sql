@@ -88,20 +88,6 @@
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
   );
 
-  -- Tabla para almacenar temporalmente el carrito de los usuarios si abandonan la sesión
-  CREATE TABLE CartCache (
-    cart_cache_id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,                        -- Usuario propietario del carrito
-    product_id INTEGER NOT NULL,                     -- Producto agregado al carrito
-    quantity INTEGER NOT NULL DEFAULT 1,             -- Cantidad seleccionada
-    price_at_addition NUMERIC(10, 2) NOT NULL,       -- Precio del producto al momento de agregarlo
-    added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),  -- Fecha de agregado
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),-- Ultima modificación
-    
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES Products(product_id)
-  );
-
 
   -- --- 3. CREACION DE INDICES ---
   -- Mayor velocidad en las busquedas
@@ -109,5 +95,3 @@
   CREATE INDEX idx_orders_user_id ON Orders(user_id);
   CREATE INDEX idx_orders_seller_id ON Orders(seller_id);
   CREATE INDEX idx_orderitems_order_id ON OrderItems(order_id);
-  CREATE INDEX idx_cartcache_user_id ON CartCache(user_id);
-  CREATE INDEX idx_cartcache_product_id ON CartCache(product_id);

@@ -14,5 +14,6 @@ class CategoryUpdate(CategoryBase):
 class Category(CategoryBase):
     category_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+        }

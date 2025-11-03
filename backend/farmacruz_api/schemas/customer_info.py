@@ -15,5 +15,6 @@ class CustomerInfo(CustomerInfoBase):
     customer_info_id: int
     user_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+        }

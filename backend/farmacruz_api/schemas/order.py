@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
 
-from farmacruz_api.db.base import OrderStatus
+from db.base import OrderStatus
 from .product import Product
 
 # Order Item Schemas 
@@ -19,8 +19,9 @@ class OrderItem(OrderItemBase):
     price_at_purchase: Decimal
 
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+        }
 
 # --- Order Schemas ---
 class OrderBase(BaseModel):
@@ -43,5 +44,6 @@ class Order(OrderBase):
     validated_at: Optional[datetime] = None
     items: List[OrderItem] = [] 
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+        }

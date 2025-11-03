@@ -8,13 +8,14 @@ app = FastAPI(title=config.PROJECT_NAME)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[config.FRONTEND_URL], # Solo permite frontend
+    allow_origins=[config.FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"], 
+    allow_headers=["*"],
 )
 
 app.include_router(api_router, prefix=config.API_V1_STR)
+
 @app.get("/")
 def read_root():
     try:

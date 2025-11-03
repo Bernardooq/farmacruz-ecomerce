@@ -21,6 +21,7 @@ class OrderStatus(str, enum.Enum):
     shipped = "shipped"
     delivered="delivered"
     cancelled = "cancelled"
+    cart="cart"
 
 # --------------------------
 # MODELS

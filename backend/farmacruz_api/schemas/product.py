@@ -27,5 +27,6 @@ class ProductUpdate(BaseModel):
 class Product(ProductBase):
     product_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+        }
