@@ -88,6 +88,20 @@
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
   );
 
+  -- Tabla para cachear los productos añadidos al carrtio de cada usuario
+
+  CREATE TABLE CartCache(
+    cart_cache_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    price_at_addition NUMERIC(10, 2) NOT NULL,
+    added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES Products(product_id)    
+  );
 
   -- --- 3. CREACION DE INDICES ---
   -- Mayor velocidad en las busquedas

@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from dependencies import get_db, get_current_user, get_current_seller_user
+from dependencies import get_db, get_current_user, get_current_seller_user, get_current_customer_user
 from schemas.order import Order, OrderUpdate
 from db.base import OrderStatus, User
 from crud.crud_order import (
@@ -44,7 +44,7 @@ def read_cart(
 @router.post("/cart")
 def add_item_to_cart(
     item: CartItemAdd,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -68,7 +68,7 @@ def add_item_to_cart(
 def update_cart_item_quantity(
     cart_id: int,
     item: CartItemUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -85,7 +85,7 @@ def update_cart_item_quantity(
 @router.delete("/cart/{cart_id}")
 def delete_cart_item(
     cart_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -101,7 +101,7 @@ def delete_cart_item(
 
 @router.delete("/cart")
 def clear_user_cart(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer_user),
     db: Session = Depends(get_db)
 ):
     """

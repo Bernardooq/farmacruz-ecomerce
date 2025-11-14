@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from dependencies import get_db, get_current_user
+from dependencies import get_db, get_current_user, get_current_admin_user
 from core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from core.security import create_access_token
 from crud.crud_user import authenticate_user, create_user, get_user_by_username, get_user_by_email
@@ -20,7 +20,7 @@ class TokenData(BaseModel):
     username: str | None = None
 
 @router.post("/register", response_model=User)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+def register(user: UserCreate, db: Session = Depends(get_db), current_admin=Depends(get_current_admin_user)):
     """
     Registra un nuevo usuario
     """

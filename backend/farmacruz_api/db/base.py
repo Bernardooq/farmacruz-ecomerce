@@ -114,7 +114,7 @@ class OrderItem(Base):
     product = relationship("Product", back_populates="order_items")
 
 # --------------------------
-# CART CACHE (nuevo)
+# CART CACHE 
 # --------------------------
 class CartCache(Base):
     __tablename__ = "cartcache"

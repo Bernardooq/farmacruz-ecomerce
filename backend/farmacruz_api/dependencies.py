@@ -69,6 +69,19 @@ async def get_current_admin_user(
         )
     return current_user
 
+
+async def get_current_customer_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Verifica que el usuario sea administrador"""
+    if current_user.role != UserRole.customer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="El usuario no es un cliente"
+        )
+    return current_user
+
+
 async def get_current_seller_user(
     current_user: User = Depends(get_current_user)
 ) -> User:

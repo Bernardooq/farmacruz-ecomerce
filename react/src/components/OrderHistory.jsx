@@ -1,0 +1,27 @@
+import OrderRow from './OrderRow';
+
+export default function OrderHistory({ orders, onSelectOrder }) {
+  return (
+    <section className="order-history">
+      <h2 className="section-title">Historial de Pedidos Recientes</h2>
+      <div className="order-table-container">
+        <table className="order-table">
+          <thead>
+            <tr>
+              <th>N° de Pedido</th>
+              <th>Fecha</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map(order => (
+              <OrderRow key={order.id} order={order} onSelect={() => onSelectOrder(order)} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
