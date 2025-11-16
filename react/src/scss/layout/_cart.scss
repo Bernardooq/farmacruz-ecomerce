@@ -15,6 +15,25 @@
   }
 }
 
+.empty-cart {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: v.$blanco;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(v.$negro, 0.08);
+  
+  p {
+    font-size: 1.5rem;
+    color: lighten(v.$negro, 40%);
+    margin-bottom: 2rem;
+  }
+  
+  .btn-primary {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
+}
+
 .cart-layout {
   display: grid;
   align-items: flex-start;

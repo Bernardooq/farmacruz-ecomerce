@@ -6,7 +6,9 @@ export default function FiltersBar({ categories, selectedCategory, onCategoryCha
         <select id="category" value={selectedCategory} onChange={e => onCategoryChange(e.target.value)}>
           <option value="">Todas</option>
           {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option key={cat.category_id || cat} value={cat.category_id || cat}>
+              {cat.name || cat}
+            </option>
           ))}
         </select>
       </div>

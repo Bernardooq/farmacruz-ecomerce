@@ -16,9 +16,14 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
     """Obtiene un usuario por email"""
     return db.query(User).filter(User.email == email).first()
 
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    """Obtiene lista de usuarios"""
-    return db.query(User).offset(skip).limit(limit).all()
+def get_users(db: Session, skip: int = 0, limit: int = 100, role: Optional[UserRole] = None):
+    """Obtiene lista de usuarios con filtro opcional por rol"""
+    query = db.query(User)
+    
+    if role:
+        query = query.filter(User.role == role)
+    
+    return query.offset(skip).limit(limit).all()
 
 def create_user(db: Session, user: UserCreate) -> User:
     """Crea un nuevo usuario"""
@@ -43,6 +48,12 @@ def update_user(db: Session, user_id: int, user: UserUpdate) -> Optional[User]:
         return None
     
     update_data = user.dict(exclude_unset=True)
+    
+    # Si se está actualizando la contraseña, hashearla
+    if 'password' in update_data and update_data['password']:
+        update_data['password_hash'] = get_password_hash(update_data['password'])
+        del update_data['password']
+    
     for field, value in update_data.items():
         setattr(db_user, field, value)
     

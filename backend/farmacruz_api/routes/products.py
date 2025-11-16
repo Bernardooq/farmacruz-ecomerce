@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from dependencies import get_db, get_current_admin_user, get_current_user
 from schemas.product import ProductCreate, ProductUpdate, Product
@@ -17,10 +18,13 @@ from crud.crud_product import (
 
 router = APIRouter()
 
+class StockUpdate(BaseModel):
+    quantity: int
+
 @router.get("/", response_model=List[Product])
 def read_products(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 1000000000,
     category_id: Optional[int] = None,
     is_active: Optional[bool] = True,
     search: Optional[str] = None,
@@ -124,14 +128,14 @@ def delete_existing_product(
 @router.patch("/{product_id}/stock", response_model=Product)
 def adjust_product_stock(
     product_id: int,
-    quantity: int = Query(..., description="Cantidad a agregar o restar (puede ser negativa)"),
+    stock_update: StockUpdate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
     """
     Ajusta el stock de un producto (solo administradores)
     """
-    db_product = update_stock(db, product_id=product_id, quantity=quantity)
+    db_product = update_stock(db, product_id=product_id, quantity=stock_update.quantity)
     if not db_product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

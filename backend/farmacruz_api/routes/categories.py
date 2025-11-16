@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from dependencies import get_db, get_current_seller_user
+from dependencies import get_db, get_current_admin_user
 from schemas.category import CategoryCreate, CategoryUpdate, Category
 from crud.crud_category import (
     get_categories, 
@@ -50,10 +50,10 @@ def read_category(category_id: int, db: Session = Depends(get_db)):
 def create_new_category(
     category: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_seller_user)
+    current_user = Depends(get_current_admin_user)
 ):
     """
-    Crea una nueva categoría (seller o admin)
+    Crea una nueva categoría (solo admin)
     """
     # Verificar que el nombre no exista
     db_category = get_category_by_name(db, name=category.name)
@@ -70,10 +70,10 @@ def update_existing_category(
     category_id: int,
     category: CategoryUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_seller_user)
+    current_user = Depends(get_current_admin_user)
 ):
     """
-    Actualiza una categoría existente (seller o admin)
+    Actualiza una categoría existente (solo admin)
     """
     # Si se está actualizando el nombre, verificar que no exista
     if category.name:
@@ -96,10 +96,10 @@ def update_existing_category(
 def delete_existing_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_seller_user)
+    current_user = Depends(get_current_admin_user)
 ):
     """
-    Elimina una categoría (seller o admin)
+    Elimina una categoría (solo admin)
     """
     # Verificar si tiene productos asociados
     product_count = count_products_in_category(db, category_id)

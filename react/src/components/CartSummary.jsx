@@ -1,5 +1,8 @@
-export default function CartSummary({ items }) {
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+export default function CartSummary({ items, onCheckout, processingCheckout = false }) {
+  const subtotal = items.reduce((sum, item) => {
+    const price = item.price_at_addition || item.product?.price || 0;
+    return sum + price * item.quantity;
+  }, 0).toFixed(2);
 
   return (
     <aside className="cart-summary">
@@ -17,7 +20,13 @@ export default function CartSummary({ items }) {
         <span>Total Estimado:</span>
         <span>${subtotal}</span>
       </div>
-      <button className="btn-checkout">Finalizar Pedido</button>
+      <button 
+        className="btn-checkout" 
+        onClick={onCheckout}
+        disabled={processingCheckout || items.length === 0}
+      >
+        {processingCheckout ? 'Procesando...' : 'Finalizar Pedido'}
+      </button>
     </aside>
   );
 }

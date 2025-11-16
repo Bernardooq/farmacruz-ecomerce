@@ -12,10 +12,14 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
     role: UserRole
+    is_active: Optional[bool] = True
 
 class UserUpdate(BaseModel):
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
     full_name: Optional[str] = Field(None, max_length=255)
+    password: Optional[str] = Field(None, min_length=8)
+    role: Optional[UserRole] = None
     is_active: Optional[bool] = None
 
 class UserInDBBase(UserBase):

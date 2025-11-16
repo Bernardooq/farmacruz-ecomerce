@@ -19,9 +19,8 @@ class OrderStatus(str, enum.Enum):
     pending_validation = "pending_validation"
     approved = "approved"
     shipped = "shipped"
-    delivered="delivered"
+    delivered = "delivered"
     cancelled = "cancelled"
-    cart="cart"
 
 # --------------------------
 # MODELS
@@ -90,7 +89,7 @@ class Order(Base):
     order_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, index=True)
     seller_id = Column(Integer, ForeignKey("users.user_id"), index=True)
-    status = Column(SQLAlchemyEnum(OrderStatus), nullable=False, default=OrderStatus.cart)
+    status = Column(SQLAlchemyEnum(OrderStatus), nullable=False, default=OrderStatus.pending_validation)
     total_amount = Column(Numeric(12, 2), default=0.00)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     validated_at = Column(TIMESTAMP(timezone=True))

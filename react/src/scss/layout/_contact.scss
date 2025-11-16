@@ -1,0 +1,296 @@
+@use "../base/variables" as v;
+@use "../base/mixins" as m;
+
+.contact-page {
+  padding: 3rem 0 5rem;
+  min-height: 70vh;
+  background: linear-gradient(to bottom, lighten(v.$negro, 98%) 0%, white 50%);
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+
+    @media (max-width: 768px) {
+      padding: 0 1rem;
+    }
+  }
+}
+
+.contact-header {
+  text-align: center;
+  margin-bottom: 4rem;
+
+  @media (max-width: 768px) {
+    margin-bottom: 3rem;
+  }
+
+  h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: v.$negro;
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+
+    @media (max-width: 968px) {
+      font-size: 2.5rem;
+    }
+
+    @media (max-width: 768px) {
+      font-size: 2rem;
+      letter-spacing: -0.3px;
+    }
+  }
+
+  p {
+    font-size: 1.15rem;
+    color: lighten(v.$negro, 30%);
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.6;
+
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+  }
+}
+
+.contact-content {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 3rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2.5rem;
+  }
+
+  @media (max-width: 968px) {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.info-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  border: 1px solid lighten(v.$negro, 92%);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    border-color: lighten(v.$primario, 35%);
+
+    .info-icon {
+      transform: scale(1.1);
+    }
+  }
+
+  .info-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: v.$negro;
+    margin-bottom: 0.65rem;
+    letter-spacing: -0.2px;
+  }
+
+  p {
+    color: lighten(v.$negro, 30%);
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.75rem;
+
+    .info-icon {
+      font-size: 2.25rem;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+    }
+
+    p {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.contact-form-container {
+  background: white;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid lighten(v.$negro, 92%);
+
+  @media (max-width: 768px) {
+    padding: 2rem 1.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: v.$negro;
+    margin-bottom: 2rem;
+    letter-spacing: -0.3px;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid lighten(v.$negro, 90%);
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+      margin-bottom: 1.75rem;
+    }
+  }
+}
+
+.contact-form {
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 0;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: v.$negro;
+      font-size: 0.9rem;
+      letter-spacing: 0.2px;
+
+      @media (max-width: 768px) {
+        font-size: 0.875rem;
+      }
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1px solid lighten(v.$negro, 85%);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      background-color: white;
+
+      &:hover {
+        border-color: lighten(v.$primario, 35%);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: v.$primario;
+        box-shadow: 0 0 0 3px rgba(v.$primario, 0.1);
+      }
+
+      &:disabled {
+        background-color: lighten(v.$negro, 96%);
+        cursor: not-allowed;
+        opacity: 0.6;
+        border-color: lighten(v.$negro, 90%);
+      }
+
+      @media (max-width: 768px) {
+        padding: 0.75rem 0.9rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 140px;
+      line-height: 1.6;
+    }
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: v.$primario;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+    letter-spacing: 0.3px;
+
+    &:hover:not(:disabled) {
+      background: darken(v.$primario, 8%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(v.$primario, 0.3);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+      padding: 0.9rem 1.75rem;
+      font-size: 0.95rem;
+    }
+  }
+}
+
+.success-message {
+  background: lighten(v.$terciario, 48%);
+  color: darken(v.$terciario, 20%);
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+  border-left: 3px solid v.$terciario;
+  animation: slideIn 0.3s ease;
+  font-size: 0.95rem;
+
+  @media (max-width: 768px) {
+    padding: 0.9rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

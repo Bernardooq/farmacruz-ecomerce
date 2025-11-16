@@ -1,6 +1,6 @@
 import OrderRow from './OrderRow';
 
-export default function OrderHistory({ orders, onSelectOrder }) {
+export default function OrderHistory({ orders, onSelectOrder, onCancelOrder }) {
   return (
     <section className="order-history">
       <h2 className="section-title">Historial de Pedidos Recientes</h2>
@@ -17,7 +17,12 @@ export default function OrderHistory({ orders, onSelectOrder }) {
           </thead>
           <tbody>
             {orders.map(order => (
-              <OrderRow key={order.id} order={order} onSelect={() => onSelectOrder(order)} />
+              <OrderRow 
+                key={order.id} 
+                order={order} 
+                onSelect={() => onSelectOrder(order)}
+                onCancel={onCancelOrder}
+              />
             ))}
           </tbody>
         </table>

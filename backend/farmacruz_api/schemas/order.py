@@ -6,6 +6,17 @@ from decimal import Decimal
 from db.base import OrderStatus
 from .product import Product
 
+# Simple User schema for order display
+class OrderUser(BaseModel):
+    user_id: int
+    username: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+
+    model_config = {
+        "from_attributes": True
+    }
+
 # Order Item Schemas 
 class OrderItemBase(BaseModel):
     product_id: int
@@ -17,7 +28,7 @@ class OrderItemCreate(OrderItemBase):
 class OrderItem(OrderItemBase):
     order_item_id: int
     price_at_purchase: Decimal
-
+    product: Optional[Product] = None
 
     model_config = {
         "from_attributes": True
@@ -25,7 +36,7 @@ class OrderItem(OrderItemBase):
 
 # --- Order Schemas ---
 class OrderBase(BaseModel):
-    status: OrderStatus = OrderStatus.cart
+    status: OrderStatus = OrderStatus.pending_validation
 
 class OrderCreate(OrderBase):
     pass 
@@ -42,7 +53,9 @@ class Order(OrderBase):
     total_amount: Decimal
     created_at: datetime
     validated_at: Optional[datetime] = None
-    items: List[OrderItem] = [] 
+    items: List[OrderItem] = []
+    customer: Optional[OrderUser] = None  # Customer information
+    seller: Optional[OrderUser] = None    # Seller information
 
     model_config = {
         "from_attributes": True

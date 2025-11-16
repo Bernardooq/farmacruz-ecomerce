@@ -2,11 +2,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 
 export default function CartItem({ item, onQuantityChange, onRemove }) {
-  const { image, name, price, quantity, stock } = item;
+  // Extract data from backend structure
+  const product = item.product || {};
+  const image = product.image_url || '';
+  const name = product.name || 'Producto';
+  const price = item.price_at_addition || product.price || 0;
+  const quantity = item.quantity || 1;
+  const stock = product.stock_count || 0;
+  
+  // Auto-remove if out of stock
   if (stock < 1) {
-      onRemove(item);
-      // Fetch para eliminarlo del carrito
+    onRemove(item);
   }
+  
   const total = (price * quantity).toFixed(2);
 
   const handleInputChange = (e) => {

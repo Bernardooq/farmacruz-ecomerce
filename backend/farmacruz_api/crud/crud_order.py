@@ -1,13 +1,17 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from datetime import datetime
 from db.base import Order, OrderItem, OrderStatus, Product, CartCache
 from schemas.order import OrderCreate, OrderUpdate, OrderItemCreate
 
 def get_order(db: Session, order_id: int) -> Optional[Order]:
-    """Obtiene un pedido por ID"""
-    return db.query(Order).filter(Order.order_id == order_id).first()
+    """Obtiene un pedido por ID con items, productos y usuarios"""
+    return db.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.product),
+        joinedload(Order.customer),
+        joinedload(Order.seller)
+    ).filter(Order.order_id == order_id).first()
 
 def get_orders_by_user(
     db: Session, 
@@ -16,13 +20,17 @@ def get_orders_by_user(
     limit: int = 100,
     status: Optional[OrderStatus] = None
 ) -> List[Order]:
-    """Obtiene los pedidos de un usuario"""
-    query = db.query(Order).filter(Order.user_id == user_id)
+    """Obtiene los pedidos de un usuario con items, productos y usuarios"""
+    query = db.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.product),
+        joinedload(Order.customer),
+        joinedload(Order.seller)
+    ).filter(Order.user_id == user_id)
     
     if status:
         query = query.filter(Order.status == status)
     
-    return query.offset(skip).limit(limit).all()
+    return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
 def get_orders(
     db: Session, 
@@ -30,8 +38,12 @@ def get_orders(
     limit: int = 100,
     status: Optional[OrderStatus] = None
 ) -> List[Order]:
-    """Obtiene todos los pedidos (admin/seller)"""
-    query = db.query(Order)
+    """Obtiene todos los pedidos (admin/seller) con items, productos y usuarios"""
+    query = db.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.product),
+        joinedload(Order.customer),
+        joinedload(Order.seller)
+    )
     
     if status:
         query = query.filter(Order.status == status)
@@ -133,8 +145,10 @@ def cancel_order(db: Session, order_id: int) -> Optional[Order]:
 # --- Cart Cache Functions ---
 
 def get_cart(db: Session, user_id: int) -> List[CartCache]:
-    """Obtiene el carrito de un usuario"""
-    return db.query(CartCache).filter(CartCache.user_id == user_id).all()
+    """Obtiene el carrito de un usuario con información del producto"""
+    return db.query(CartCache).options(
+        joinedload(CartCache.product)
+    ).filter(CartCache.user_id == user_id).all()
 
 def add_to_cart(db: Session, user_id: int, product_id: int, quantity: int) -> CartCache:
     """Agrega un producto al carrito"""

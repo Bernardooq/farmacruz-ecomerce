@@ -58,11 +58,33 @@
   margin-bottom: 1.5rem;
 }
 
-.section-title { margin: 0; }
+.section-title { 
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: v.$negro;
+  letter-spacing: -0.5px;
+}
+
 .btn-action {
-  background-color: v.$secundario;
-  display: flex; align-items: center; gap: 0.5rem;
-  &:hover { background-color: darken(v.$secundario, 10%); }
+  background: linear-gradient(135deg, v.$secundario 0%, darken(v.$secundario, 10%) 100%);
+  display: flex; 
+  align-items: center; 
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(v.$secundario, 0.3);
+  transition: all 0.2s ease;
+  
+  &:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(v.$secundario, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 // Tabla Datos Responsiva
@@ -95,20 +117,70 @@
   }
 }
 
-.actions-cell { display: flex; gap: 0.5rem; }
+.actions-cell { 
+  display: flex; 
+  gap: 0.5rem; 
+  justify-content: center;
+}
+
 .btn-icon {
-  background: none; border: none; font-size: 1.2rem;
-  cursor: pointer; padding: 0.5rem; border-radius: 50%;
-  width: 35px; height: 35px;
-  display: inline-flex; justify-content: center; align-items: center;
-  transition: background-color 0.2s ease;
-  &:hover { transform: none; }
+  background: lighten(v.$negro, 95%); 
+  border: none; 
+  font-size: 1.1rem;
+  cursor: pointer; 
+  padding: 0.5rem; 
+  border-radius: 8px;
+  width: 38px; 
+  height: 38px;
+  display: inline-flex; 
+  justify-content: center; 
+  align-items: center;
+  transition: all 0.2s ease;
   
-  &.btn--approve { color: v.$terciario; &:hover { background-color: lighten(v.$terciario, 40%); } }
-  &.btn--reject { color: v.$acento; &:hover { background-color: lighten(v.$acento, 30%); } }
-  &.btn--view { color: v.$secundario; &:hover { background-color: lighten(v.$secundario, 40%); } }
-  &.btn--edit { color: v.$primario; &:hover { background-color: lighten(v.$primario, 30%); } }
-  &.btn--delete { color: v.$acento; &:hover { background-color: lighten(v.$acento, 30%); } }
+  &:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  &.btn--approve { 
+    color: v.$terciario; 
+    &:hover { 
+      background-color: v.$terciario;
+      color: white;
+    } 
+  }
+  
+  &.btn--reject { 
+    color: v.$acento; 
+    &:hover { 
+      background-color: v.$acento;
+      color: white;
+    } 
+  }
+  
+  &.btn--view { 
+    color: v.$secundario; 
+    &:hover { 
+      background-color: v.$secundario;
+      color: white;
+    } 
+  }
+  
+  &.btn--edit { 
+    color: v.$primario; 
+    &:hover { 
+      background-color: v.$primario;
+      color: white;
+    } 
+  }
+  
+  &.btn--delete { 
+    color: v.$acento; 
+    &:hover { 
+      background-color: v.$acento;
+      color: white;
+    } 
+  }
 }
 
 // Estilos para tablas de Inventario
@@ -121,6 +193,24 @@
   &.stock--ok { color: v.$terciario; background-color: lighten(v.$terciario, 45%); }
   &.stock--low { color: darken(v.$amarillo, 20%); background-color: lighten(v.$amarillo, 25%); }
   &.stock--out { color: v.$acento; background-color: lighten(v.$acento, 35%); }
+}
+
+// Status Badge
+.status-badge {
+  font-weight: bold;
+  padding: 0.3rem 0.8rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  display: inline-block;
+  
+  &.status--active { 
+    color: v.$terciario; 
+    background-color: lighten(v.$terciario, 45%); 
+  }
+  &.status--inactive { 
+    color: lighten(v.$negro, 40%); 
+    background-color: lighten(v.$negro, 90%); 
+  }
 }
 
 .dashboard-controls {
@@ -189,5 +279,87 @@
     border-radius: 0.5rem;
     border: 1px solid lighten(v.$negro, 80%);
     background-color: v.$blanco;
+  }
+}
+
+// Modal Form Styles
+.modal-body {
+  .form-group {
+    margin-bottom: 1.2rem;
+    text-align: left;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      color: v.$negro;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid lighten(v.$negro, 70%);
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: v.$primario;
+        box-shadow: 0 0 0 3px rgba(v.$primario, 0.2);
+      }
+
+      &:disabled {
+        background-color: lighten(v.$negro, 95%);
+        cursor: not-allowed;
+      }
+    }
+
+    input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid lighten(v.$negro, 90%);
+
+    button {
+      padding: 0.8rem 1.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s ease;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-primary {
+      background-color: v.$primario;
+      color: v.$blanco;
+
+      &:hover:not(:disabled) {
+        background-color: darken(v.$primario, 10%);
+      }
+    }
+
+    .btn-secondary {
+      background-color: lighten(v.$negro, 90%);
+      color: v.$negro;
+
+      &:hover:not(:disabled) {
+        background-color: lighten(v.$negro, 80%);
+      }
+    }
   }
 }

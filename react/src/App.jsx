@@ -1,26 +1,66 @@
 import { Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './routes/ProtectedRoute';
 import Login from './pages/Login';
 import Home from './pages/Home'; 
 import Products from './pages/Products';
 import Cart from './pages/Cart';
 import Profile from './pages/Profile';
 import SellerDashboard from './pages/SellerDashboard';
-import AdminDashboard from './pages/AdminDashboard'
+import AdminDashboard from './pages/AdminDashboard';
+import Contact from './pages/Contact';
+import AboutUs from './pages/AboutUs';
+import TermsAndConditions from './pages/TermsAndConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function App() {
-  const handleLoginSuccess = (userData) => {
-    console.log("Usuario logueado:", userData);
-  };
-
   return (
     <Routes>
-      <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
       <Route path="/" element={<Home />} />
       <Route path="/products" element={<Products />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/sellerdash" element={<SellerDashboard />} />
-      <Route path='/admindash' element={<AdminDashboard/>} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/terms" element={<TermsAndConditions />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+
+      {/* Protected routes - require authentication */}
+      <Route
+        path="/cart"
+        element={
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Seller routes */}
+      <Route
+        path="/sellerdash"
+        element={
+          <ProtectedRoute allowedRoles={['seller', 'admin']}>
+            <SellerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin routes */}
+      <Route
+        path="/admindash"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

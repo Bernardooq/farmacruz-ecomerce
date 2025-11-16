@@ -8,8 +8,10 @@ class CustomerInfoBase(BaseModel):
 
 class CustomerInfoCreate(CustomerInfoBase):
     user_id: int 
-class CustomerInfoUpdate(CustomerInfoBase):
-    pass 
+class CustomerInfoUpdate(BaseModel):
+    business_name: Optional[str] = Field(None, max_length=255)
+    address: Optional[str] = None
+    rfc: Optional[str] = Field(None, max_length=13) 
 
 class CustomerInfo(CustomerInfoBase):
     customer_info_id: int

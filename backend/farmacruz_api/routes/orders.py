@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from dependencies import get_db, get_current_user, get_current_seller_user, get_current_customer_user
 from schemas.order import Order, OrderUpdate
+from schemas.cart import CartItem
 from db.base import OrderStatus, User
 from crud.crud_order import (
     get_order,
@@ -31,15 +32,40 @@ class CartItemAdd(BaseModel):
 class CartItemUpdate(BaseModel):
     quantity: int
 
-@router.get("/cart", response_model=List)
+@router.get("/cart")
 def read_cart(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene el carrito del usuario actual
+    Obtiene el carrito del usuario actual con información de productos
     """
-    return get_cart(db, user_id=current_user.user_id)
+    cart_items = get_cart(db, user_id=current_user.user_id)
+    
+    # Enriquecer con información del producto en formato anidado
+    result = []
+    for item in cart_items:
+        cart_data = {
+            "cart_cache_id": item.cart_cache_id,
+            "user_id": item.user_id,
+            "product_id": item.product_id,
+            "quantity": item.quantity,
+            "price_at_addition": float(item.price_at_addition),
+            "added_at": item.added_at,
+            "updated_at": item.updated_at,
+            "product": {
+                "product_id": item.product.product_id,
+                "name": item.product.name,
+                "sku": item.product.sku,
+                "price": float(item.product.price),
+                "image_url": item.product.image_url,
+                "stock_count": item.product.stock_count,
+                "is_active": item.product.is_active
+            } if item.product else None
+        }
+        result.append(cart_data)
+    
+    return result
 
 @router.post("/cart")
 def add_item_to_cart(

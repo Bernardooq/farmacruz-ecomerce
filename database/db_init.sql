@@ -9,10 +9,10 @@
 
   -- Estados de pedido permitidos
   CREATE TYPE order_status AS ENUM (
-    'cart',                   -- El pedido esta en el carrito del cliente, no es visible para el vendedor.
     'pending_validation',     -- El cliente ha enviado el pedido, esperando aprobacion del vendedor.
     'approved',               -- El vendedor ha aprobado el pedido.
     'shipped',                -- El pedido ha sido enviado.
+    'delivered',              -- El pedido ha sido entregado al cliente.
     'cancelled'               -- El pedido ha sido cancelado (por el admin o vendedor).
   );
 
@@ -67,7 +67,7 @@
     order_id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL, -- El cliente que hizo el pedido
     seller_id INTEGER, -- El vendedor que debe validar
-    status order_status NOT NULL DEFAULT 'cart',
+    status order_status NOT NULL DEFAULT 'pending_validation',
     total_amount NUMERIC(12, 2) DEFAULT 0.00,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     validated_at TIMESTAMP WITH TIME ZONE, -- Se llena cuando el vendedor aprueba

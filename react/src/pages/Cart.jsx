@@ -1,43 +1,71 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import SearchBar from '../layout/SearchBar';
 import Footer from '../layout/Footer';
 import CartItemList from '../components/CartItemList';
 import CartSummary from '../components/CartSummary';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ErrorMessage from '../components/ErrorMessage';
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState([]);
+  const { items, loading, updateQuantity, removeItem, checkout } = useCart();
+  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [processingCheckout, setProcessingCheckout] = useState(false);
 
-  useEffect(() => {
-    // Simulación de carga desde el servidor
-    setCartItems([
-      {
-        image: 'https://boticacentral.com/wp-content/uploads/2021/01/6802.jpeg',    
-        name: 'Medicamento A',
-        price: 150.0,
-        quantity: 2,
-        stock: 0
-      },
-      {
-        image: '../images/producto2.jpg',
-        name: 'Suplemento B',
-        price: 220.5,
-        quantity: 1,
-        stock: 2
-      },
-    ]);
-  }, []);
-
-  const handleQuantityChange = (item, newQty) => {
+  const handleQuantityChange = async (item, newQty) => {
     if (newQty < 1) return;
-    setCartItems(prev =>
-      prev.map(p => (p.name === item.name ? { ...p, quantity: newQty } : p))
-    );
+    
+    // Validate stock availability
+    if (newQty > item.product.stock_count) {
+      setError(`Solo hay ${item.product.stock_count} unidades disponibles de ${item.product.name}`);
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    
+    try {
+      setError(null);
+      await updateQuantity(item.cart_cache_id, newQty);
+    } catch (err) {
+      setError('Error al actualizar cantidad. Intenta de nuevo.');
+      console.error('Failed to update quantity:', err);
+    }
   };
 
-  const handleRemove = item => {
-    setCartItems(prev => prev.filter(p => p.name !== item.name));
-    // fetch to remove item
+  const handleRemove = async (item) => {
+    try {
+      setError(null);
+      await removeItem(item.cart_cache_id);
+    } catch (err) {
+      setError('Error al eliminar producto. Intenta de nuevo.');
+      console.error('Failed to remove item:', err);
+    }
   };
+
+  const handleCheckout = async () => {
+    try {
+      setError(null);
+      setProcessingCheckout(true);
+      await checkout();
+      navigate('/profile');
+    } catch (err) {
+      setError('Error al procesar el pedido. Intenta de nuevo.');
+      console.error('Checkout failed:', err);
+    } finally {
+      setProcessingCheckout(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <SearchBar />
+        <LoadingSpinner message="Cargando carrito..." />
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -45,14 +73,33 @@ export default function Cart() {
       <main className="cart-page">
         <div className="container">
           <h1 className="cart-page__title">Tu Carrito de Compras</h1>
-          <div className="cart-layout">
-            <CartItemList
-              items={cartItems}
-              onQuantityChange={handleQuantityChange}
-              onRemove={handleRemove}
-            />
-            <CartSummary items={cartItems} />
-          </div>
+          
+          {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
+          
+          {items.length === 0 ? (
+            <div className="empty-cart">
+              <p>Tu carrito está vacío</p>
+              <button 
+                className="btn-primary" 
+                onClick={() => navigate('/products')}
+              >
+                Ir a Productos
+              </button>
+            </div>
+          ) : (
+            <div className="cart-layout">
+              <CartItemList
+                items={items}
+                onQuantityChange={handleQuantityChange}
+                onRemove={handleRemove}
+              />
+              <CartSummary 
+                items={items} 
+                onCheckout={handleCheckout}
+                processingCheckout={processingCheckout}
+              />
+            </div>
+          )}
         </div>
       </main>
       <Footer />

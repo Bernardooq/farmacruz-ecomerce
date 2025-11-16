@@ -101,6 +101,13 @@
     color: lighten(v.$negro, 40%);
     font-size: 0.9rem;
   }
+
+  &__price {
+    margin: 0.5rem 0 0 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: v.$primario;
+  }
   
   &__stock {
     margin-top: 1rem;
@@ -109,6 +116,17 @@
     strong {
       color: v.$negro;
     }
+  }
+
+  &__message {
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    text-align: center;
+    border-radius: 0.5rem;
+    background-color: lighten(v.$primario, 45%);
+    color: darken(v.$primario, 20%);
+    font-weight: 500;
   }
   
   &__button {
