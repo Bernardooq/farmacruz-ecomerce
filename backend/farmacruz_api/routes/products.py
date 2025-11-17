@@ -24,7 +24,7 @@ class StockUpdate(BaseModel):
 @router.get("/", response_model=List[Product])
 def read_products(
     skip: int = 0,
-    limit: int = 1000000000,
+    limit: int = 100000,
     category_id: Optional[int] = None,
     is_active: Optional[bool] = True,
     search: Optional[str] = None,

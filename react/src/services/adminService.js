@@ -5,7 +5,7 @@ export const adminService = {
 
   // Obtener las estadísticas del dashboard
   async getDashboardStats() {
-    return apiService.get('/admin/dashboard')
+    return apiService.get('/admindash/dashboard')
   },
 
   // ==================== Gestión de usuarios ====================
@@ -39,7 +39,7 @@ export const adminService = {
 
   // Obtener reporte de ventas por rango de fechas
   async getSalesReport(startDate, endDate) {
-    return apiService.get('/admin/reports/sales', {
+    return apiService.get('/admindash/reports/sales', {
       start_date: startDate,
       end_date: endDate
     })
