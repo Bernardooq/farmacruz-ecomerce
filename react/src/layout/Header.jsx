@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 // Header para Home (público) - muestra Inicio, Nosotros, Contacto
 export default function Header() {
@@ -14,11 +14,11 @@ export default function Header() {
   return (
     <header className="header">
       <nav className="nav">
-        <a href="/" className="nav__logo">Farmacruz</a>
+        <Link to="/" className="nav__logo">Farmacruz</Link>
         <ul className="nav__menu">
-          <li className="nav__item"><a href="/" className="nav__link">Inicio</a></li>
-          <li className="nav__item"><a href="/about" className="nav__link">Nosotros</a></li>
-          <li className="nav__item"><a href="/contact" className="nav__link">Contacto</a></li>
+          <li className="nav__item"><Link to="/" className="nav__link">Inicio</Link></li>
+          <li className="nav__item"><Link to="/about" className="nav__link">Nosotros</Link></li>
+          <li className="nav__item"><Link to="/contact" className="nav__link">Contacto</Link></li>
         </ul>
         {isAuthenticated ? (
           <div className="nav__user-section">
@@ -26,7 +26,7 @@ export default function Header() {
             <button className="nav__logout-link" onClick={handleLogout}>Salir</button>
           </div>
         ) : (
-          <a className="nav__login-link" href="/login">Acceder</a>
+          <Link to="/login" className="nav__login-link">Acceder</Link>
         )}
       </nav>
     </header>

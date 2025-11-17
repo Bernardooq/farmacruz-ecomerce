@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 // Header para Admin/Seller Dashboard - solo muestra Inicio y Dashboard
 export default function Header2() {
@@ -30,12 +30,12 @@ export default function Header2() {
   return (
     <header className="header">
       <nav className="nav">
-        <a href="/" className="nav__logo" onClick={handleLogoClick}>Farmacruz</a>
+        <Link to="/" className="nav__logo" onClick={handleLogoClick}>Farmacruz</Link>
         <ul className="nav__menu">
           <li className="nav__item">
-            <a href={getDashboardLink()} className="nav__link" onClick={handleInicioClick}>
+            <Link to={getDashboardLink()} className="nav__link" onClick={handleInicioClick}>
               Inicio
-            </a>
+            </Link>
           </li>
         </ul>
         <div className="nav__user-section">

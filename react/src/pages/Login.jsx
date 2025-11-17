@@ -8,9 +8,9 @@ function Login() {
     <div className="page-container">
       <main className="login-page">
         <div className="login-card">
+          <img src="../images/almacen.png" alt="" />
           <h2>Acceso de Clientes</h2>
           <LoginForm />
-          <a className="forgot-password-link" href="">¿Olvidaste tu contraseña?</a>
         </div>
       </main>
       <Footer />

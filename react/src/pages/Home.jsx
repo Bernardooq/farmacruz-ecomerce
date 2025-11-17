@@ -5,8 +5,9 @@ import SearchBar from '../layout/SearchBar';
 import Footer from '../layout/Footer';
 import Hero from '../components/Hero';
 import IntroText from '../components/IntroText';
-import FeaturedProducts from '../components/FeaturedProducts';
+import Featured from '../components/Featured';
 import Advantages from '../components/Advantages';
+import Labs from '../components/Labs';
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -30,8 +31,9 @@ export default function Home() {
       <main>
         <Hero />
         <IntroText />
-        <FeaturedProducts />
+        <Featured />
         <Advantages />
+        <Labs/>
       </main>
       <Footer />
     </>

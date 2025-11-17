@@ -3,6 +3,7 @@ import Header from '../layout/Header';
 import Header2 from '../layout/Header2';
 import SearchBar from '../layout/SearchBar';
 import Footer from '../layout/Footer';
+import { Link } from 'react-router-dom';
 
 export default function AboutUs() {
   const { isAuthenticated, user } = useAuth();
@@ -37,10 +38,7 @@ export default function AboutUs() {
               <div className="about-text">
                 <h2>Nuestra Historia</h2>
                 <p>
-                  Farmacruz nació en 2004 con una visión clara: facilitar el acceso a productos farmacéuticos 
-                  de calidad para farmacias y distribuidores en todo México. Lo que comenzó como una pequeña 
-                  distribuidora en Guadalajara, hoy se ha convertido en una de las plataformas B2B más confiables 
-                  del sector farmacéutico.
+                  Proveedora farmacéutica Cruz, es una empresa mexicana constituida en el año 2000, siendo en la actualidad, uno de los principales distribuidores de medicamentos, con una confiabilidad y solidez reconocida por nuestros clientes, proveedores y colaboradores.
                 </p>
                 <p>
                   A lo largo de estos años, hemos construido relaciones sólidas con fabricantes líderes y 
@@ -62,8 +60,7 @@ export default function AboutUs() {
                 <div className="mission-card__icon">🎯</div>
                 <h3>Misión</h3>
                 <p>
-                  Proporcionar a nuestros clientes acceso rápido y confiable a productos farmacéuticos 
-                  de calidad, con un servicio excepcional que impulse el crecimiento de su negocio.
+                  Ponernos a la cabeza como líderes en la distribución de medicamentos y equipo médico de alta calidad a nivel nacional.
                 </p>
               </div>
 
@@ -95,7 +92,7 @@ export default function AboutUs() {
                 <div className="stat-card__label">Años de Experiencia</div>
               </div>
               <div className="stat-card">
-                <div className="stat-card__number">500+</div>
+                <div className="stat-card__number">50+</div>
                 <div className="stat-card__label">Clientes Activos</div>
               </div>
               <div className="stat-card">
@@ -147,10 +144,9 @@ export default function AboutUs() {
 
           <section className="about-cta">
             <h2>¿Listo para Trabajar con Nosotros?</h2>
-            <p>Únete a cientos de farmacias que confían en Farmacruz para sus necesidades de abastecimiento.</p>
+            <p>Únete a decenas de clientes que confían en Farmacruz para sus necesidades de abastecimiento.</p>
             <div className="cta-buttons">
-              <a href="/contact" className="btn btn-primary">Contáctanos</a>
-              <a href="/products" className="btn btn-secondary">Ver Catálogo</a>
+              <Link to="/contact" className="btn btn-primary">Contáctanos</Link>
             </div>
           </section>
         </div>

@@ -109,7 +109,7 @@ export default function PrivacyPolicy() {
               <li>Retirar su consentimiento en cualquier momento</li>
             </ul>
             <p>
-              Para ejercer estos derechos, contáctenos en: privacidad@farmacruz.com
+              Para ejercer estos derechos, contáctenos en la página de contacto
             </p>
           </section>
 
@@ -143,9 +143,7 @@ export default function PrivacyPolicy() {
               Si tiene preguntas sobre esta política de privacidad, puede contactarnos en:
             </p>
             <ul>
-              <li>Email: privacidad@farmacruz.com</li>
-              <li>Teléfono: +52 33 1234 5678</li>
-              <li>Dirección: Av. Principal #123, Guadalajara, Jalisco, México</li>
+              <li>Información de contacto disponible en la página de Contacto.</li>
             </ul>
           </section>
         </div>

@@ -2111,7 +2111,7 @@ html, body, #root {
 
 .container {
   width: 90%;
-  max-width: 1200px;
+  max-width: 95%;
   margin: 0 auto;
 }
 
@@ -2251,8 +2251,8 @@ html, body, #root {
   border-color: rgb(226.7339449541, 243.7660550459, 238.6926605505);
 }
 .product-card__image {
-  width: 100%;
-  height: 220px;
+  min-width: 100%;
+  height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
@@ -2393,6 +2393,80 @@ html, body, #root {
 }
 .access-denied a:active {
   transform: scale(0.98);
+}
+
+.labs-section {
+  padding: 4rem 0;
+  background: #1A1A1A;
+  text-align: center;
+  border-color: #FFFFFF;
+  border-radius: 20px;
+  margin: 1%;
+}
+
+.labs-grid {
+  display: grid;
+  gap: 2rem;
+  padding: 0 2rem;
+  margin-top: 3rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 480px) {
+  .labs-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 768px) {
+  .labs-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 1200px) {
+  .labs-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.lab-item {
+  padding: 1rem;
+  border: 1px solid white;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  background-color: #FFFFFF;
+}
+.lab-item img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  filter: grayscale(50%) opacity(0.7);
+  transition: filter 0.3s ease;
+}
+.lab-item img:hover {
+  filter: grayscale(0%) opacity(1);
+}
+
+.white-header {
+  color: #FFFFFF;
+  font-size: 1rem;
+  font-weight: bold;
+}
+@media (min-width: 768px) {
+  .white-header {
+    font-size: 2rem;
+  }
+}
+@media (min-width: 1200px) {
+  .white-header {
+    font-size: 2.5rem;
+  }
+}
+@media (min-width: 1400px) {
+  .white-header {
+    font-size: 3rem;
+  }
 }
 
 .profile-page {

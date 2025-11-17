@@ -88,13 +88,25 @@ export default function Contact() {
               <div className="info-card">
                 <div className="info-icon">📍</div>
                 <h3>Dirección</h3>
-                <p>Av. Principal #123<br />Guadalajara, Jalisco<br />México</p>
+                <p>Calle Belén No 967 <br/>Col. Barranquitas C.P. 44270<br />Guadalajara, Jalisco<br />México <br/>Entre Calles Silvestre Revueltas y Gonzalo Curiel</p>
               </div>
 
               <div className="info-card">
                 <div className="info-icon">📞</div>
-                <h3>Teléfono</h3>
-                <p>+52 33 1234 5678<br />Lun - Vie: 9:00 AM - 6:00 PM</p>
+                <h3>Teléfonos</h3>
+                <p>
+                  <>
+                    33-36-14-67-70<br />
+                    33-36-14-67-60<br />
+                    33-36-14-67-71<br />
+                    33-36-14-67-78<br />
+                    33-36-14-67-80<br />
+                    33-36-14-67-79<br />
+                    33-36-58-49-13<br />
+                    33-36-58-02-50<br />
+                  </>
+                  <br />Lun - Vie: 8:00 AM - 6:00 PM
+                </p>
               </div>
 
               <div className="info-card">
