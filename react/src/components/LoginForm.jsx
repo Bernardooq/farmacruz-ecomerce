@@ -45,7 +45,7 @@ export default function LoginForm() {
           type="text"
           id="username"
           name="username"
-          placeholder="ejemplo@farmacia.com"
+          placeholder="ejemplo.usuario"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
