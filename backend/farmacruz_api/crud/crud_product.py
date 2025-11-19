@@ -16,9 +16,11 @@ def get_products(
     skip: int = 0, 
     limit: int = 100,
     category_id: Optional[int] = None,
-    is_active: Optional[bool] = None
+    is_active: Optional[bool] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc"
 ) -> List[Product]:
-    """Obtiene lista de productos con filtros opcionales"""
+    """Obtiene lista de productos con filtros opcionales y ordenamiento"""
     query = db.query(Product)
     
     if category_id is not None:
@@ -26,6 +28,21 @@ def get_products(
     
     if is_active is not None:
         query = query.filter(Product.is_active == is_active)
+    
+    # Aplicar ordenamiento
+    if sort_by == "price":
+        if sort_order == "desc":
+            query = query.order_by(Product.price.desc())
+        else:
+            query = query.order_by(Product.price.asc())
+    elif sort_by == "name":
+        if sort_order == "desc":
+            query = query.order_by(Product.name.desc())
+        else:
+            query = query.order_by(Product.name.asc())
+    else:
+        # Orden por defecto: por ID (más recientes primero)
+        query = query.order_by(Product.product_id.desc())
     
     return query.offset(skip).limit(limit).all()
 

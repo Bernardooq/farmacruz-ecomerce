@@ -50,20 +50,34 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Validaciones adicionales
+    const price = parseFloat(formData.price);
+    
+    if (price < 0) {
+      setError('El precio no puede ser negativo');
+      return;
+    }
+    
+    if (price === 0) {
+      setError('El precio debe ser mayor a 0');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       // Convert numeric fields
       const productData = {
         ...formData,
-        price: parseFloat(formData.price),
+        price: price,
         category_id: parseInt(formData.category_id)
       };
 
       await onSubmit(product.product_id, productData);
       onClose();
     } catch (err) {
-      setError(err.detail || 'Error al actualizar el producto');
+      setError(err.message || err.detail || 'Error al actualizar el producto');
     } finally {
       setLoading(false);
     }
@@ -74,13 +88,13 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="modal-body">
           <h2>Editar Producto</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="modal-form">
-          {error && <div className="error-message">{error}</div>}
+          
+          <form onSubmit={handleSubmit}>
+            {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
             <label htmlFor="sku">SKU *</label>
@@ -183,24 +197,25 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
             </label>
           </div>
 
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
-          </div>
-        </form>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading}
+              >
+                {loading ? 'Guardando...' : 'Guardar Cambios'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -58,14 +58,23 @@ export default function SellerManagement() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    setPage(0); // Reset page when searching
     try {
       setLoading(true);
       setError(null);
-      const users = await adminService.getUsers({ 
-        role: 'seller',
-        search: searchTerm 
-      });
-      setSellers(users);
+      
+      if (searchTerm.trim()) {
+        // Si hay término de búsqueda, buscar sin paginación
+        const users = await adminService.getUsers({ 
+          role: 'seller',
+          search: searchTerm 
+        });
+        setSellers(users);
+        setHasMore(false); // Deshabilitar paginación en búsqueda
+      } else {
+        // Si no hay término, cargar normalmente con paginación
+        loadSellers();
+      }
     } catch (err) {
       setError('Error al buscar vendedores.');
       console.error('Search failed:', err);

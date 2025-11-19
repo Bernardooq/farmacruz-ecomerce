@@ -36,9 +36,17 @@ def get_orders(
     db: Session, 
     skip: int = 0, 
     limit: int = 100,
-    status: Optional[OrderStatus] = None
+    status: Optional[OrderStatus] = None,
+    search: Optional[str] = None
 ) -> List[Order]:
-    """Obtiene todos los pedidos (admin/seller) con items, productos y usuarios"""
+    """Obtiene todos los pedidos (admin/seller) con items, productos y usuarios
+    
+    Args:
+        search: Busca por número de pedido o nombre completo del cliente
+    """
+    from db.base import User
+    from sqlalchemy import or_
+    
     query = db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product),
         joinedload(Order.customer),
@@ -47,6 +55,29 @@ def get_orders(
     
     if status:
         query = query.filter(Order.status == status)
+    
+    # Búsqueda por número de pedido o nombre del cliente
+    if search:
+        query = query.join(Order.customer)
+        
+        # Si es un número, buscar por order_id
+        if search.isdigit():
+            query = query.filter(
+                or_(
+                    Order.order_id == int(search),
+                    User.full_name.ilike(f"%{search}%"),
+                    User.username.ilike(f"%{search}%")
+                )
+            )
+        else:
+            # Si no es número, buscar solo por nombre
+            search_term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    User.full_name.ilike(search_term),
+                    User.username.ilike(search_term)
+                )
+            )
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 

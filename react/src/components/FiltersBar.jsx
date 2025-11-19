@@ -15,9 +15,11 @@ export default function FiltersBar({ categories, selectedCategory, onCategoryCha
       <div className="form-group">
         <label htmlFor="sort">Ordenar por:</label>
         <select id="sort" value={sortOrder} onChange={e => onSortChange(e.target.value)}>
-          <option value="relevance">Relevancia</option>
-          <option value="price-asc">Precio: Menor a Mayor</option>
-          <option value="price-desc">Precio: Mayor a Menor</option>
+          <option value="relevance">Más Recientes</option>
+          <option value="price_asc">Precio: Menor a Mayor</option>
+          <option value="price_desc">Precio: Mayor a Menor</option>
+          <option value="name_asc">Nombre: A-Z</option>
+          <option value="name_desc">Nombre: Z-A</option>
         </select>
       </div>
     </section>

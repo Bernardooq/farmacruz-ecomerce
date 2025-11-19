@@ -180,13 +180,15 @@ def read_all_orders(
     skip: int = 0,
     limit: int = 100,
     status: Optional[OrderStatus] = None,
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
 ):
     """
     Obtiene todos los pedidos (solo vendedores y administradores)
+    Parámetro search: busca por número de pedido o nombre de cliente
     """
-    orders = get_orders(db, skip=skip, limit=limit, status=status)
+    orders = get_orders(db, skip=skip, limit=limit, status=status, search=search)
     return orders
 
 @router.get("/{order_id}", response_model=Order)
@@ -224,22 +226,110 @@ def update_order_status_route(
     db: Session = Depends(get_db)
 ):
     """
-    Actualiza el estado de un pedido (solo vendedores y administradores)
+    Actualiza el estado de un pedido con validación de transiciones (solo vendedores y administradores)
     """
-    order = update_order_status(
-        db,
-        order_id=order_id,
-        status=order_update.status,
-        seller_id=current_user.user_id if order_update.status == OrderStatus.approved else None
-    )
-    
+    # Obtener el pedido actual
+    order = get_order(db, order_id=order_id)
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Pedido no encontrado"
         )
     
-    return order
+    current_status = order.status
+    new_status = order_update.status
+    
+    # Definir el flujo válido de estados
+    # pending_validation -> approved -> shipped -> delivered
+    # Solo admin puede cancelar después de pending_validation
+    
+    from db.base import UserRole
+    is_admin = current_user.role == UserRole.admin
+    
+    # Transiciones base (sin cancelación)
+    valid_transitions = {
+        OrderStatus.pending_validation: [OrderStatus.approved],
+        OrderStatus.approved: [OrderStatus.shipped],
+        OrderStatus.shipped: [OrderStatus.delivered],
+        OrderStatus.delivered: [],  # Estado final, no se puede cambiar
+        OrderStatus.cancelled: []   # Estado final, no se puede cambiar
+    }
+    
+    # Agregar opción de cancelar según el rol y estado
+    if new_status == OrderStatus.cancelled:
+        if current_status == OrderStatus.delivered:
+            # Nadie puede cancelar un pedido entregado
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se puede cancelar un pedido que ya ha sido entregado"
+            )
+        elif current_status == OrderStatus.pending_validation:
+            # Cualquiera (seller/admin) puede cancelar en pending_validation
+            valid_transitions[OrderStatus.pending_validation].append(OrderStatus.cancelled)
+        elif current_status in [OrderStatus.approved, OrderStatus.shipped]:
+            # Solo admin puede cancelar después de pending_validation
+            if is_admin:
+                valid_transitions[current_status].append(OrderStatus.cancelled)
+            else:
+                status_labels = {
+                    OrderStatus.approved: "aprobado",
+                    OrderStatus.shipped: "enviado"
+                }
+                current_label = status_labels.get(current_status, current_status.value)
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Solo los administradores pueden cancelar pedidos que ya han sido {current_label}"
+                )
+    
+    # Validar que la transición sea válida
+    if new_status not in valid_transitions.get(current_status, []):
+        status_labels = {
+            OrderStatus.pending_validation: "Pendiente de Validación",
+            OrderStatus.approved: "Aprobado",
+            OrderStatus.shipped: "Enviado",
+            OrderStatus.delivered: "Entregado",
+            OrderStatus.cancelled: "Cancelado"
+        }
+        
+        current_label = status_labels.get(current_status, current_status.value)
+        new_label = status_labels.get(new_status, new_status.value)
+        
+        # Mensajes específicos para casos comunes
+        if current_status == OrderStatus.delivered:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se puede modificar un pedido que ya ha sido entregado"
+            )
+        elif current_status == OrderStatus.cancelled:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se puede modificar un pedido que ya ha sido cancelado"
+            )
+        elif current_status == OrderStatus.shipped and new_status == OrderStatus.approved:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se puede regresar un pedido de 'Enviado' a 'Aprobado'. El pedido ya está en tránsito."
+            )
+        elif current_status == OrderStatus.approved and new_status == OrderStatus.pending_validation:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se puede regresar un pedido de 'Aprobado' a 'Pendiente'. El pedido ya fue validado."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Transición de estado inválida: no se puede cambiar de '{current_label}' a '{new_label}'"
+            )
+    
+    # Si la validación pasa, actualizar el estado
+    updated_order = update_order_status(
+        db,
+        order_id=order_id,
+        status=new_status,
+        seller_id=current_user.user_id if new_status == OrderStatus.approved else None
+    )
+    
+    return updated_order
 
 @router.post("/{order_id}/cancel", response_model=Order)
 def cancel_order_route(
@@ -248,7 +338,7 @@ def cancel_order_route(
     db: Session = Depends(get_db)
 ):
     """
-    Cancela un pedido
+    Cancela un pedido (solo si está en pending_validation)
     """
     order = get_order(db, order_id=order_id)
     if not order:
@@ -264,6 +354,36 @@ def cancel_order_route(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso para cancelar este pedido"
+            )
+    
+    # VALIDACIÓN CRÍTICA: Verificar si se puede cancelar según el estado y rol
+    from db.base import UserRole
+    is_admin = current_user.role == UserRole.admin
+    
+    # No se puede cancelar si ya está entregado o cancelado
+    if order.status == OrderStatus.delivered:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede cancelar un pedido que ya ha sido entregado"
+        )
+    
+    if order.status == OrderStatus.cancelled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este pedido ya está cancelado"
+        )
+    
+    # Si el pedido ya fue aprobado o enviado, solo admin puede cancelar
+    if order.status in [OrderStatus.approved, OrderStatus.shipped]:
+        if not is_admin:
+            status_labels = {
+                OrderStatus.approved: "aprobado",
+                OrderStatus.shipped: "enviado"
+            }
+            current_status = status_labels.get(order.status, order.status.value)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Solo los administradores pueden cancelar pedidos que ya han sido {current_status}"
             )
     
     try:

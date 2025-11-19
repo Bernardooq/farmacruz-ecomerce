@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
 import SearchBar from '../layout/SearchBar';
@@ -11,6 +12,10 @@ import ErrorMessage from '../components/ErrorMessage';
 import ModalProductDetails from '../components/ModalProductDetails';
 
 export default function Products() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const searchQuery = searchParams.get('search') || '';
+  
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortOrder, setSortOrder] = useState('relevance');
@@ -28,7 +33,7 @@ export default function Products() {
 
   useEffect(() => {
     loadProducts();
-  }, [selectedCategory, page]);
+  }, [selectedCategory, sortOrder, page, searchQuery]);
 
   const loadCategories = async () => {
     try {
@@ -47,8 +52,25 @@ export default function Products() {
         skip: page * limit,
         limit,
         ...(selectedCategory && { category_id: selectedCategory }),
+        ...(searchQuery && { search: searchQuery }),
         is_active: true
       };
+      
+      // Agregar parámetros de ordenamiento
+      if (sortOrder === 'price_asc') {
+        params.sort_by = 'price';
+        params.sort_order = 'asc';
+      } else if (sortOrder === 'price_desc') {
+        params.sort_by = 'price';
+        params.sort_order = 'desc';
+      } else if (sortOrder === 'name_asc') {
+        params.sort_by = 'name';
+        params.sort_order = 'asc';
+      } else if (sortOrder === 'name_desc') {
+        params.sort_by = 'name';
+        params.sort_order = 'desc';
+      }
+      
       const data = await productService.getProducts(params);
       setProducts(data);
     } catch (err) {
@@ -62,6 +84,11 @@ export default function Products() {
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId);
     setPage(0); // Reset to first page when filter changes
+  };
+
+  const handleSortChange = (newSortOrder) => {
+    setSortOrder(newSortOrder);
+    setPage(0); // Reset to first page when sort changes
   };
 
   const handleProductClick = (product) => {
@@ -89,16 +116,32 @@ export default function Products() {
       <SearchBar />
       <main className="products-page">
         <div className="container">
-          <h1 className="products-page__title">Nuestro Catálogo</h1>
+          <h1 className="products-page__title">
+            {searchQuery ? `Resultados para: "${searchQuery}"` : 'Nuestro Catálogo'}
+          </h1>
           
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
+          
+          {searchQuery && (
+            <div className="search-results-banner">
+              <span className="search-results-banner__text">
+                Mostrando {products.length} resultado(s) para "{searchQuery}"
+              </span>
+              <button 
+                onClick={() => navigate('/products')}
+                className="search-results-banner__clear-btn"
+              >
+                Limpiar búsqueda
+              </button>
+            </div>
+          )}
           
           <FiltersBar
             categories={categories}
             selectedCategory={selectedCategory}
             onCategoryChange={handleCategoryChange}
             sortOrder={sortOrder}
-            onSortChange={setSortOrder}
+            onSortChange={handleSortChange}
           />
           <ProductGrid products={products} onProductClick={handleProductClick} />
         </div>

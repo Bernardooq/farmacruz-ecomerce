@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import orderService from '../services/orderService';
-import OrderRowAdmin from './OrderRowAdmin';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ModalOrderDetails from './ModalOrderDetails';
@@ -20,12 +19,12 @@ export default function AllOrders() {
   const itemsPerPage = 10;
   
   // Filters
-  const [searchOrderId, setSearchOrderId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     loadOrders();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, searchTerm]);
 
   const loadOrders = async () => {
     try {
@@ -41,6 +40,10 @@ export default function AllOrders() {
         params.status = statusFilter;
       }
       
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+      
       const data = await orderService.getAllOrders(params);
       
       // Verificar si hay más páginas
@@ -48,14 +51,7 @@ export default function AllOrders() {
       setHasMore(hasMorePages);
       
       // Tomar solo los items de la página actual
-      let pageOrders = hasMorePages ? data.slice(0, itemsPerPage) : data;
-      
-      // Filtrar por ID si hay búsqueda
-      if (searchOrderId) {
-        pageOrders = pageOrders.filter(order => 
-          order.order_id.toString().includes(searchOrderId)
-        );
-      }
+      const pageOrders = hasMorePages ? data.slice(0, itemsPerPage) : data;
       
       setOrders(pageOrders);
     } catch (err) {
@@ -69,7 +65,7 @@ export default function AllOrders() {
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(0);
-    loadOrders();
+    // loadOrders se ejecutará automáticamente por el useEffect cuando searchTerm cambie
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -173,9 +169,9 @@ export default function AllOrders() {
         <form className="search-bar" onSubmit={handleSearch}>
           <input 
             type="search" 
-            placeholder="Buscar por N° de Pedido..." 
-            value={searchOrderId}
-            onChange={(e) => setSearchOrderId(e.target.value)}
+            placeholder="Buscar por N° de Pedido o Nombre de Cliente..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button type="submit" aria-label="Buscar">
             <FontAwesomeIcon icon={faSearch} />

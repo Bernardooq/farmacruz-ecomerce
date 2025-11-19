@@ -64,14 +64,23 @@ export default function ClientManagement() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    setPage(0); // Reset page when searching
     try {
       setLoading(true);
       setError(null);
-      const users = await adminService.getUsers({ 
-        role: 'customer',
-        search: searchTerm 
-      });
-      setClients(users);
+      
+      if (searchTerm.trim()) {
+        // Si hay término de búsqueda, buscar sin paginación
+        const users = await adminService.getUsers({ 
+          role: 'customer',
+          search: searchTerm 
+        });
+        setClients(users);
+        setHasMore(false); // Deshabilitar paginación en búsqueda
+      } else {
+        // Si no hay término, cargar normalmente con paginación
+        loadClients();
+      }
     } catch (err) {
       setError('Error al buscar clientes.');
       console.error('Search failed:', err);

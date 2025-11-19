@@ -8,15 +8,24 @@ export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product })
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    const quantityNum = parseInt(quantity);
+    const newStock = product.stock_count + quantityNum;
+    
+    // Validar que el stock resultante no sea negativo
+    if (newStock < 0) {
+      setError(`No puedes restar ${Math.abs(quantityNum)} unidades. Stock actual: ${product.stock_count}`);
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      const quantityNum = parseInt(quantity);
       await onSubmit(product.product_id, quantityNum);
       setQuantity('');
       onClose();
     } catch (err) {
-      setError(err.detail || 'Error al actualizar el stock');
+      setError(err.message || err.detail || 'Error al actualizar el stock');
     } finally {
       setLoading(false);
     }
@@ -27,13 +36,13 @@ export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product })
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content modal-content--small" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="modal-body">
           <h2>Actualizar Stock</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="modal-form">
-          {error && <div className="error-message">{error}</div>}
+          
+          <form onSubmit={handleSubmit}>
+            {error && <div className="error-message">{error}</div>}
 
           <div className="product-info">
             <p><strong>Producto:</strong> {product.name}</p>
@@ -66,24 +75,25 @@ export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product })
             </div>
           )}
 
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Actualizando...' : 'Actualizar Stock'}
-            </button>
-          </div>
-        </form>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading}
+              >
+                {loading ? 'Actualizando...' : 'Actualizar Stock'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

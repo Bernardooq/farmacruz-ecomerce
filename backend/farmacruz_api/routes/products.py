@@ -24,14 +24,16 @@ class StockUpdate(BaseModel):
 @router.get("/", response_model=List[Product])
 def read_products(
     skip: int = 0,
-    limit: int = 100000,
+    limit: int = 100,
     category_id: Optional[int] = None,
     is_active: Optional[bool] = True,
     search: Optional[str] = None,
+    sort_by: Optional[str] = Query(None, description="Campo para ordenar: price"),
+    sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene lista de productos con filtros opcionales
+    Obtiene lista de productos con filtros opcionales y ordenamiento
     """
     if search:
         products = search_products(db, search=search, skip=skip, limit=limit)
@@ -41,7 +43,9 @@ def read_products(
             skip=skip, 
             limit=limit, 
             category_id=category_id,
-            is_active=is_active
+            is_active=is_active,
+            sort_by=sort_by,
+            sort_order=sort_order
         )
     return products
 
@@ -80,6 +84,26 @@ def create_new_product(
     """
     Crea un nuevo producto (solo administradores)
     """
+    # Validar precio
+    if product.price < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El precio no puede ser negativo"
+        )
+    
+    if product.price == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El precio debe ser mayor a 0"
+        )
+    
+    # Validar stock
+    if product.stock_count < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El stock no puede ser negativo"
+        )
+    
     # Verificar que el SKU no exista
     db_product = get_product_by_sku(db, sku=product.sku)
     if db_product:
@@ -100,6 +124,19 @@ def update_existing_product(
     """
     Actualiza un producto existente (solo administradores)
     """
+    # Validar precio si se está actualizando
+    if product.price is not None:
+        if product.price < 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El precio no puede ser negativo"
+            )
+        if product.price == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El precio debe ser mayor a 0"
+            )
+    
     db_product = update_product(db, product_id=product_id, product=product)
     if not db_product:
         raise HTTPException(
@@ -135,17 +172,24 @@ def adjust_product_stock(
     """
     Ajusta el stock de un producto (solo administradores)
     """
-    db_product = update_stock(db, product_id=product_id, quantity=stock_update.quantity)
-    if not db_product:
+    # Obtener el producto actual para validar
+    current_product = get_product(db, product_id=product_id)
+    if not current_product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Producto no encontrado"
         )
     
-    if db_product.stock_count < 0:
+    # Calcular el nuevo stock
+    new_stock = current_product.stock_count + stock_update.quantity
+    
+    # Validar que el stock resultante no sea negativo
+    if new_stock < 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El stock no puede ser negativo"
+            detail=f"No se puede restar {abs(stock_update.quantity)} unidades. Stock actual: {current_product.stock_count}"
         )
+    
+    db_product = update_stock(db, product_id=product_id, quantity=stock_update.quantity)
     
     return db_product

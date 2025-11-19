@@ -150,3 +150,56 @@
     &:hover { background-color: darken(v.$negro, 10%); transform: scale(1.03); color: v.$blanco;}
   }
 }
+
+// Ban
+ner de resultados de búsqueda
+.search-results-banner {
+  margin-bottom: 2rem;
+  padding: 1rem 1.5rem;
+  background-color: #e3f2fd;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  @include m.telefono {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &__text {
+    font-size: 1rem;
+    color: #1565c0;
+    font-weight: 500;
+
+    @include m.telefono {
+      text-align: center;
+    }
+  }
+
+  &__clear-btn {
+    padding: 0.5rem 1.5rem;
+    background-color: #2196f3;
+    color: v.$blanco;
+    border: none;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+      background-color: #1976d2;
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    @include m.telefono {
+      width: 100%;
+    }
+  }
+}

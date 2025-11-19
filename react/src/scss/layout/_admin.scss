@@ -79,6 +79,19 @@
   z-index: 1000;
   padding: 1.5rem;
   animation: fadeIn 0.2s ease;
+  overflow-y: auto;
+
+  // Responsive padding
+  @media (max-width: 768px) {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.5rem;
+    padding-top: 1rem;
+  }
 }
 
 @keyframes fadeIn {
@@ -112,6 +125,8 @@
   position: relative;
   animation: slideUp 0.3s ease;
   border: 1px solid lighten(v.$negro, 90%);
+  display: flex;
+  flex-direction: column;
 
   &--small {
     max-width: 450px;
@@ -119,6 +134,27 @@
 
   &--large {
     max-width: 950px;
+  }
+
+  // Responsive adjustments
+  @media (max-width: 1024px) {
+    max-width: 90vw;
+    max-height: 85vh;
+    
+    &--large {
+      max-width: 90vw;
+    }
+  }
+
+  @media (max-width: 768px) {
+    max-width: 95vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    
+    &--small,
+    &--large {
+      max-width: 95vw;
+    }
   }
 
   // Scrollbar personalizado
@@ -143,7 +179,18 @@
 .modal-body {
   padding: 2.5rem;
   overflow-y: auto;
-  max-height: calc(90vh - 80px);
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+
+  // Responsive padding
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1rem;
+  }
 
   h2 {
     margin: 0 0 2rem 0;
@@ -153,6 +200,7 @@
     letter-spacing: -0.8px;
     position: relative;
     padding-bottom: 1rem;
+    padding-right: 3rem; // Espacio para el botón de cerrar
 
     &::after {
       content: '';
@@ -163,6 +211,17 @@
       height: 4px;
       background: linear-gradient(90deg, v.$primario 0%, v.$amarillo 100%);
       border-radius: 2px;
+    }
+
+    // Responsive font size
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
     }
   }
 
@@ -260,6 +319,16 @@
     margin-top: 2.5rem;
     padding-top: 2rem;
     border-top: 2px solid lighten(v.$negro, 92%);
+    flex-wrap: wrap;
+
+    // Responsive: botones en columna en móviles
+    @media (max-width: 480px) {
+      flex-direction: column-reverse;
+      
+      button {
+        width: 100%;
+      }
+    }
 
     button {
       padding: 1rem 2.5rem;
@@ -371,6 +440,23 @@
   &:active {
     transform: rotate(90deg) scale(0.95);
   }
+
+  // Responsive: botón más pequeño en móviles
+  @media (max-width: 768px) {
+    top: 1rem;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.25rem;
+  }
 }
 
 .modal-form {
@@ -417,6 +503,11 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+
+    // Responsive: una columna en móviles
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   .form-hint {
@@ -543,6 +634,11 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
+
+    // Responsive: una columna en móviles
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   &__item {

@@ -41,15 +41,35 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Validaciones adicionales
+    const price = parseFloat(formData.price);
+    const stock = parseInt(formData.stock_count);
+    
+    if (price < 0) {
+      setError('El precio no puede ser negativo');
+      return;
+    }
+    
+    if (stock < 0) {
+      setError('El stock no puede ser negativo');
+      return;
+    }
+    
+    if (price === 0) {
+      setError('El precio debe ser mayor a 0');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       // Convert numeric fields
       const productData = {
         ...formData,
-        price: parseFloat(formData.price),
+        price: price,
         category_id: parseInt(formData.category_id),
-        stock_count: parseInt(formData.stock_count),
+        stock_count: stock,
         is_active: true  // Asegurar que el producto esté activo por defecto
       };
 
@@ -67,7 +87,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
       });
       onClose();
     } catch (err) {
-      setError(err.detail || 'Error al crear el producto');
+      setError(err.message || err.detail || 'Error al crear el producto');
     } finally {
       setLoading(false);
     }
@@ -78,13 +98,13 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="modal-body">
           <h2>Añadir Nuevo Producto</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="modal-form">
-          {error && <div className="error-message">{error}</div>}
+          
+          <form onSubmit={handleSubmit}>
+            {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
             <label htmlFor="sku">SKU *</label>
@@ -188,24 +208,25 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
             />
           </div>
 
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Creando...' : 'Crear Producto'}
-            </button>
-          </div>
-        </form>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading}
+              >
+                {loading ? 'Creando...' : 'Crear Producto'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

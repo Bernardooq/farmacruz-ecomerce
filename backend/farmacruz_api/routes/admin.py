@@ -48,11 +48,12 @@ def read_all_users(
     skip: int = 0,
     limit: int = 100,
     role: str = None,
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene todos los usuarios con filtro opcional por rol (solo administradores)
+    Obtiene todos los usuarios con filtro opcional por rol y búsqueda por nombre (solo administradores)
     """
     from db.base import UserRole
     
@@ -67,7 +68,7 @@ def read_all_users(
                 detail=f"Invalid role: {role}"
             )
     
-    users = get_users(db, skip=skip, limit=limit, role=role_filter)
+    users = get_users(db, skip=skip, limit=limit, role=role_filter, search=search)
     return users
 
 @router.post("/users", response_model=UserSchema)

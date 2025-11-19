@@ -21,12 +21,24 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
     """Obtiene un usuario por email"""
     return db.query(User).filter(User.email == email).first()
 
-def get_users(db: Session, skip: int = 0, limit: int = 100, role: Optional[UserRole] = None):
-    """Obtiene lista de usuarios con filtro opcional por rol"""
+def get_users(db: Session, skip: int = 0, limit: int = 100, role: Optional[UserRole] = None, search: Optional[str] = None):
+    """Obtiene lista de usuarios con filtro opcional por rol y búsqueda por nombre"""
+    from sqlalchemy import or_
+    
     query = db.query(User)
     
-    if role and role!='admin':
+    if role and role != 'admin':
         query = query.filter(User.role == role)
+    
+    # Búsqueda por nombre completo o username
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                User.full_name.ilike(search_term),
+                User.username.ilike(search_term)
+            )
+        )
     
     return query.offset(skip).limit(limit).all()
 
