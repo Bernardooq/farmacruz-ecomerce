@@ -9,7 +9,7 @@ function Login() {
       <main className="login-page">
         <div className="login-card">
           <img src="../images/almacen.png" alt="" />
-          <h2>Acceso de Clientes</h2>
+          <h2>Accede a tu cuenta</h2>
           <LoginForm />
         </div>
       </main>
