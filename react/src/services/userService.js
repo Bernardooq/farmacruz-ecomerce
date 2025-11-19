@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_BASE } from '../config/api'
+
+const API_URL=API_BASE;
 
 export const userService = {
   // Obtener perfil del usuario actual
