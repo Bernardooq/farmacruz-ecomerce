@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { orderService } from '../services/orderService';
+import { productService } from '../services/productService';
 import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
@@ -36,8 +37,54 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
+      // Verificar si el producto ya está en el carrito
+      const existingItem = items.find(item => item.product?.product_id === productId);
+      const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
+
+      // Obtener el stock disponible
+      let stockAvailable;
+      if (existingItem) {
+        stockAvailable = existingItem.product?.stock_count || 0;
+      } else {
+        // Si no está en el carrito, obtener el producto para verificar stock
+        try {
+          const product = await productService.getProductById(productId);
+          stockAvailable = product.stock_count || 0;
+        } catch (err) {
+          // Si falla, intentar agregar de todos modos (el backend validará)
+          await orderService.addToCart(productId, quantity);
+          await loadCart();
+          return;
+        }
+      }
+
+      // Si ya tiene el máximo stock en el carrito, no agregar nada
+      if (currentQuantityInCart >= stockAvailable) {
+        throw new Error(`Ya tienes el máximo disponible (${stockAvailable} unidades) de este producto en tu carrito`);
+      }
+
+      // Calcular la nueva cantidad total que tendría en el carrito
+      const newTotalQuantity = currentQuantityInCart + quantity;
+
+      // Si la nueva cantidad excede el stock, ajustar a lo máximo disponible
+      if (newTotalQuantity > stockAvailable) {
+        const maxCanAdd = stockAvailable - currentQuantityInCart;
+
+        // Agregar solo lo que se puede
+        await orderService.addToCart(productId, maxCanAdd);
+        await loadCart();
+
+        // Mostrar advertencia como mensaje de error (pero sí se agregó)
+        const warningMsg = `Se agregaron ${maxCanAdd} unidades (máximo disponible). Ya tenías ${currentQuantityInCart} en el carrito. Stock total: ${stockAvailable}`;
+        console.warn(warningMsg);
+        // Lanzar como advertencia, no como error crítico
+        const warning = new Error(warningMsg);
+        warning.isWarning = true;
+        throw warning;
+      }
+
+      // Si hay suficiente stock, agregar la cantidad solicitada
       await orderService.addToCart(productId, quantity);
-      // Recargar el carrito completo para obtener la estructura correcta
       await loadCart();
     } catch (error) {
       console.error('Failed to add to cart:', error);
@@ -77,9 +124,9 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const checkout = async () => {
+  const checkout = async (shippingAddressNumber = 1) => {
     try {
-      const order = await orderService.checkout();
+      const order = await orderService.checkout(shippingAddressNumber);
       setItems([]);
       return order;
     } catch (error) {
@@ -93,7 +140,7 @@ export const CartProvider = ({ children }) => {
   const total = items.reduce((sum, item) => {
     const price = item.price_at_addition || item.product?.price || 0;
     const quantity = item.quantity || 0;
-    return sum + (price * quantity);
+    return sum + (price * quantity)
   }, 0);
 
   const value = {

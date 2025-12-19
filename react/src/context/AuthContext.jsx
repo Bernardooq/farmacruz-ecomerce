@@ -22,9 +22,26 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
-      setIsAuthenticated(true);
+      // Decode token to get role info
+      const tokenParts = storedToken.split('.');
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+
+        // Fetch user data from backend
+        const userData = await authService.getCurrentUser();
+
+        // Merge token data with user data (role is in token)
+        const completeUserData = {
+          ...userData,
+          role: payload.role,
+          user_type: payload.user_type
+        };
+
+        setUser(completeUserData);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error('Invalid token format');
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('token');
@@ -37,16 +54,28 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     const data = await authService.login(username, password);
     const accessToken = data.access_token;
-    
+
     localStorage.setItem('token', accessToken);
     setToken(accessToken);
-    
+
+    // Decode token to get role info
+    const tokenParts = accessToken.split('.');
+    const payload = JSON.parse(atob(tokenParts[1]));
+
     // Fetch user data
     const userData = await authService.getCurrentUser();
-    setUser(userData);
+
+    // Merge token data with user data
+    const completeUserData = {
+      ...userData,
+      role: payload.role,
+      user_type: payload.user_type
+    };
+
+    setUser(completeUserData);
     setIsAuthenticated(true);
-    
-    return userData;
+
+    return completeUserData;
   };
 
   const logout = () => {

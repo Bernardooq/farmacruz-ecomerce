@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import SearchBar from '../layout/SearchBar';
 import Footer from '../layout/Footer';
 import OrderHistory from '../components/OrderHistory';
@@ -8,6 +10,8 @@ import { userService } from '../services/userService';
 import orderService from '../services/orderService';
 
 export default function Profile() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [customerInfo, setCustomerInfo] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -19,6 +23,20 @@ export default function Profile() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const ordersPerPage = 10;
+
+  // Bloquear acceso a usuarios internos (admin/seller/marketing)
+  useEffect(() => {
+    if (user && user.role !== 'customer') {
+      // Redirigir a su dashboard respectivo
+      if (user.role === 'admin') {
+        navigate('/admindash');
+      } else if (user.role === 'seller') {
+        navigate('/sellerdash');
+      } else if (user.role === 'marketing') {
+        navigate('/marketingdash');
+      }
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     loadProfileData();
@@ -35,14 +53,16 @@ export default function Profile() {
         userService.getCurrentUser(),
         userService.getCurrentUserCustomerInfo().catch(() => null), // Si no tiene customer info, devolver null
       ]);
-      
+
       setProfile(userData);
       setCustomerInfo(customerData);
       setEditData({
         full_name: userData.full_name || '',
         email: userData.email || '',
         business_name: customerData?.business_name || '',
-        address: customerData?.address || '',
+        address_1: customerData?.address_1 || '',
+        address_2: customerData?.address_2 || '',
+        address_3: customerData?.address_3 || '',
         rfc: customerData?.rfc || '',
       });
     } catch (err) {
@@ -60,16 +80,17 @@ export default function Profile() {
         skip: page * ordersPerPage,
         limit: ordersPerPage + 1 // Pedir uno más para saber si hay más páginas
       });
-      
+
       // Verificar si hay más páginas
       const hasMorePages = ordersData.length > ordersPerPage;
       setHasMore(hasMorePages);
-      
+
       // Tomar solo los items de la página actual
       const pageOrders = hasMorePages ? ordersData.slice(0, ordersPerPage) : ordersData;
-      
+
       // Mapear órdenes a formato esperado
-      const completedOrders = pageOrders.map(order => ({
+      const completedOrders = pageOrders.map(order => {
+        return {
           id: `FC-${order.order_id}`,
           orderId: order.order_id,
           date: new Date(order.created_at).toLocaleDateString('es-MX', {
@@ -82,10 +103,12 @@ export default function Profile() {
           status: getStatusLabel(order.status),
           statusClass: getStatusClass(order.status),
           rawStatus: order.status,
-          items: (order.items || []).map(item => 
-            `${item.product?.name || 'Producto'} - ${item.quantity} unidades ($${parseFloat(item.price_at_purchase).toFixed(2)} c/u)`
+          shippingAddress: order.shipping_address || 'No especificada',  // From backend
+          items: (order.items || []).map(item =>
+            `${item.product?.name || 'Producto'} - ${item.quantity} unidades ($${parseFloat(item.final_price).toFixed(2)} c/u)`
           )
-        }));
+        };
+      });
       setOrders(completedOrders);
     } catch (err) {
       console.error('Error loading orders:', err);
@@ -123,7 +146,9 @@ export default function Profile() {
         full_name: profile.full_name || '',
         email: profile.email || '',
         business_name: customerInfo?.business_name || '',
-        address: customerInfo?.address || '',
+        address_1: customerInfo?.address_1 || '',
+        address_2: customerInfo?.address_2 || '',
+        address_3: customerInfo?.address_3 || '',
         rfc: customerInfo?.rfc || '',
       });
     }
@@ -141,17 +166,19 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
-      
+
       // Actualizar datos de usuario
       const userUpdateData = {
         full_name: editData.full_name,
         email: editData.email,
       };
-      
+
       // Actualizar datos de customer info
       const customerInfoUpdateData = {
         business_name: editData.business_name,
-        address: editData.address,
+        address_1: editData.address_1,
+        address_2: editData.address_2,
+        address_3: editData.address_3,
         rfc: editData.rfc,
       };
 
@@ -224,21 +251,21 @@ export default function Profile() {
       <main className="profile-page">
         <div className="container">
           <h1 className="profile-page__title">Panel de Cliente</h1>
-          
+
           {/* Sección de Perfil */}
           <div className="profile-section">
             <div className="profile-header">
               <h2>Información del Perfil</h2>
-              <button 
-                className="btn-edit" 
+              <button
+                className="btn-edit"
                 onClick={isEditing ? handleSaveProfile : handleEditToggle}
                 disabled={loading}
               >
                 {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
               </button>
               {isEditing && (
-                <button 
-                  className="btn-cancel" 
+                <button
+                  className="btn-cancel"
                   onClick={handleEditToggle}
                   disabled={loading}
                 >
@@ -250,20 +277,20 @@ export default function Profile() {
             <div className="profile-form">
               <div className="form-group">
                 <label>Usuario:</label>
-                <input 
-                  type="text" 
-                  value={profile?.username || ''} 
-                  disabled 
+                <input
+                  type="text"
+                  value={profile?.username || ''}
+                  disabled
                   className="input-disabled"
                 />
               </div>
 
               <div className="form-group">
                 <label>Nombre Completo:</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   name="full_name"
-                  value={editData.full_name} 
+                  value={editData.full_name}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -271,10 +298,10 @@ export default function Profile() {
 
               <div className="form-group">
                 <label>Email:</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   name="email"
-                  value={editData.email} 
+                  value={editData.email}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -284,32 +311,57 @@ export default function Profile() {
                 <>
                   <div className="form-group">
                     <label>Nombre del Negocio:</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="business_name"
-                      value={editData.business_name} 
+                      value={editData.business_name}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label>Dirección:</label>
-                    <textarea 
-                      name="address"
-                      value={editData.address} 
+                    <label>Dirección 1 (Principal):</label>
+                    <input
+                      type="text"
+                      name="address_1"
+                      value={editData.address_1}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      rows="3"
+                      placeholder="Calle, número, colonia"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Dirección 2 (Opcional):</label>
+                    <input
+                      type="text"
+                      name="address_2"
+                      value={editData.address_2}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Dirección alternativa"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Dirección 3 (Opcional):</label>
+                    <input
+                      type="text"
+                      name="address_3"
+                      value={editData.address_3}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Dirección alternativa"
                     />
                   </div>
 
                   <div className="form-group">
                     <label>RFC:</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="rfc"
-                      value={editData.rfc} 
+                      value={editData.rfc}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       maxLength="13"
@@ -321,12 +373,12 @@ export default function Profile() {
           </div>
 
           {/* Historial de Pedidos */}
-          <OrderHistory 
-            orders={orders} 
+          <OrderHistory
+            orders={orders}
             onSelectOrder={setSelectedOrder}
             onCancelOrder={handleCancelOrder}
           />
-          
+
           {/* Paginación */}
           {orders.length > 0 && (
             <PaginationButtons

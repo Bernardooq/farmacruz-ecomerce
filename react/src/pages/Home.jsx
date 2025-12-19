@@ -17,11 +17,11 @@ export default function Home() {
     if (!isAuthenticated) {
       return <Header />; // Usuario no autenticado - Header público
     }
-    
-    if (user?.role === 'admin' || user?.role === 'seller') {
-      return <Header2 />; // Admin o Seller - Header con Dashboard
+
+    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
+      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
     }
-    
+
     return <SearchBar />; // Cliente - Header con búsqueda y carrito
   };
 
@@ -33,7 +33,7 @@ export default function Home() {
         <IntroText />
         <Featured />
         <Advantages />
-        <Labs/>
+        <Labs />
       </main>
       <Footer />
     </>

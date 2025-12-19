@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { productService } from '../services/productService';
+import catalogService from '../services/catalogService';
 import { categoryService } from '../services/categoryService';
+import { useAuth } from '../context/AuthContext';
 import SearchBar from '../layout/SearchBar';
 import Footer from '../layout/Footer';
 import FiltersBar from '../components/FiltersBar';
@@ -14,8 +16,9 @@ import ModalProductDetails from '../components/ModalProductDetails';
 export default function Products() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const searchQuery = searchParams.get('search') || '';
-  
+
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortOrder, setSortOrder] = useState('relevance');
@@ -27,13 +30,17 @@ export default function Products() {
   const [showModal, setShowModal] = useState(false);
   const limit = 12;
 
+  // Determine if user is a customer
+  const isCustomer = user && user.role === 'customer';
+  const isInternalUser = user && ['admin', 'seller', 'marketing'].includes(user.role);
+
   useEffect(() => {
     loadCategories();
   }, []);
 
   useEffect(() => {
     loadProducts();
-  }, [selectedCategory, sortOrder, page, searchQuery]);
+  }, [selectedCategory, sortOrder, page, searchQuery, isCustomer, isInternalUser]);
 
   const loadCategories = async () => {
     try {
@@ -45,6 +52,14 @@ export default function Products() {
   };
 
   const loadProducts = async () => {
+    // Don't load if user is not authenticated
+    if (!user) {
+      setProducts([]);
+      setLoading(false);
+      setError('Debes iniciar sesión para ver el catálogo de productos.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -52,30 +67,59 @@ export default function Products() {
         skip: page * limit,
         limit,
         ...(selectedCategory && { category_id: selectedCategory }),
-        ...(searchQuery && { search: searchQuery }),
-        is_active: true
+        ...(searchQuery && { search: searchQuery })
       };
-      
-      // Agregar parámetros de ordenamiento
-      if (sortOrder === 'price_asc') {
-        params.sort_by = 'price';
-        params.sort_order = 'asc';
-      } else if (sortOrder === 'price_desc') {
-        params.sort_by = 'price';
-        params.sort_order = 'desc';
-      } else if (sortOrder === 'name_asc') {
-        params.sort_by = 'name';
-        params.sort_order = 'asc';
-      } else if (sortOrder === 'name_desc') {
-        params.sort_by = 'name';
-        params.sort_order = 'desc';
+
+      // Determine which service to use
+      let data;
+      if (isCustomer) {
+        // Customers use catalog service (validates price list)
+        data = await catalogService.getProducts(params);
+      } else if (isInternalUser) {
+        // Admin, seller, marketing use product service
+        params.is_active = true;
+
+        // Agregar parámetros de ordenamiento
+        if (sortOrder === 'price_asc') {
+          params.sort_by = 'price';
+          params.sort_order = 'asc';
+        } else if (sortOrder === 'price_desc') {
+          params.sort_by = 'price';
+          params.sort_order = 'desc';
+        } else if (sortOrder === 'name_asc') {
+          params.sort_by = 'name';
+          params.sort_order = 'asc';
+        } else if (sortOrder === 'name_desc') {
+          params.sort_by = 'name';
+          params.sort_order = 'desc';
+        }
+
+        data = await productService.getProducts(params);
+      } else {
+        // Unknown role
+        setError('Tu tipo de cuenta no tiene acceso al catálogo.');
+        setLoading(false);
+        return;
       }
-      
-      const data = await productService.getProducts(params);
+
       setProducts(data);
     } catch (err) {
-      setError('No se pudieron cargar los productos. Intenta de nuevo.');
-      console.error(err);
+      console.error('Full error:', err);
+      console.error('Error response:', err.response);
+
+      // Extract specific error message
+      let errorMsg = 'No se pudieron cargar los productos. Intenta de nuevo.';
+
+      if (err.response?.data?.detail) {
+        errorMsg = err.response.data.detail;
+      } else if (err.detail) {
+        errorMsg = err.detail;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+
+      setError(errorMsg);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -119,15 +163,15 @@ export default function Products() {
           <h1 className="products-page__title">
             {searchQuery ? `Resultados para: "${searchQuery}"` : 'Nuestro Catálogo'}
           </h1>
-          
+
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
-          
+
           {searchQuery && (
             <div className="search-results-banner">
               <span className="search-results-banner__text">
                 Mostrando {products.length} resultado(s) para "{searchQuery}"
               </span>
-              <button 
+              <button
                 onClick={() => navigate('/products')}
                 className="search-results-banner__clear-btn"
               >
@@ -135,7 +179,7 @@ export default function Products() {
               </button>
             </div>
           )}
-          
+
           <FiltersBar
             categories={categories}
             selectedCategory={selectedCategory}

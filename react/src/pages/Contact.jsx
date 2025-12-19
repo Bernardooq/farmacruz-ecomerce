@@ -28,7 +28,7 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSending(true);
-    
+
     try {
       const response = await fetch('http://localhost:8000/api/v1/contact/send', {
         method: 'POST',
@@ -50,7 +50,7 @@ export default function Contact() {
         subject: '',
         message: ''
       });
-      
+
       setTimeout(() => setSent(false), 5000);
     } catch (error) {
       console.error('Error:', error);
@@ -65,11 +65,11 @@ export default function Contact() {
     if (!isAuthenticated) {
       return <Header />; // Usuario no autenticado - Header público
     }
-    
-    if (user?.role === 'admin' || user?.role === 'seller') {
-      return <Header2 />; // Admin o Seller - Header con Dashboard
+
+    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
+      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
     }
-    
+
     return <SearchBar />; // Cliente - Header con búsqueda y carrito
   };
 
@@ -88,7 +88,7 @@ export default function Contact() {
               <div className="info-card">
                 <div className="info-icon">📍</div>
                 <h3>Dirección</h3>
-                <p>Calle Belén No 967 <br/>Col. Barranquitas C.P. 44270<br />Guadalajara, Jalisco<br />México <br/>Entre Calles Silvestre Revueltas y Gonzalo Curiel</p>
+                <p>Calle Belén No 967 <br />Col. Barranquitas C.P. 44270<br />Guadalajara, Jalisco<br />México <br />Entre Calles Silvestre Revueltas y Gonzalo Curiel</p>
               </div>
 
               <div className="info-card">
@@ -124,7 +124,7 @@ export default function Contact() {
 
             <div className="contact-form-container">
               <h2>Envíanos un Mensaje</h2>
-              
+
               {sent && (
                 <div className="success-message">
                   ✓ ¡Mensaje enviado con éxito! Te responderemos pronto.

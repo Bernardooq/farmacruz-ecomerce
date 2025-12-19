@@ -15,6 +15,8 @@ def leer_dbf_auto(dbf_path, encoding="latin-1"):
             table = DBF(dbf_path, load=True, ignore_missing_memofile=True, encoding=encoding)
 
         df = pd.DataFrame(iter(table))
+        # Guardar el DataFrame en un archivo CSV
+        df.to_csv(dbf_path.with_suffix(".csv"), index=False)
         print(f"Leídas {len(df)} filas y {len(df.columns)} columnas.")
         return df, df.columns
 
@@ -22,7 +24,7 @@ def leer_dbf_auto(dbf_path, encoding="latin-1"):
         print(f"Error leyendo {dbf_path.name}: {e}")
         return pd.DataFrame() 
 if __name__ == "__main__":
-    archivo_especifico = Path(r"C:\Users\berna\Downloads\desarrollo\clientes.dbf")
+    archivo_especifico = Path(r"C:\Users\berna\Downloads\desarrollo\producto.dbf")
     
     df, cols = leer_dbf_auto(archivo_especifico)
     print(cols)

@@ -5,6 +5,7 @@
   padding: 2rem 0;
   flex: 1;
   min-height: 100%;
+  background: v.$blanco;
 
   &__title {
     text-align: center;
@@ -14,17 +15,35 @@
   }
 }
 
+.products-page__title {
+  color: v.$negro;
+  font-size: 2rem;
+
+  @include m.telefono {
+    font-size: 2.5rem;
+  }
+
+  @include m.tablet {
+    font-size: 3rem;
+  }
+
+  @include m.desktop {
+    font-size: 3.5rem;
+  }
+}
+
 // Barra de filtros
 .filters-bar {
-  background-color: v.$blanco;
-  padding: 1rem 1.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 5px 15px rgba(v.$negro, 0.1);
+  background: v.$blanco;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
   margin-bottom: 2rem;
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
   align-items: center;
+  border: 1px solid rgba(v.$negro, 0.06);
 
   .form-group {
     display: flex;
@@ -32,15 +51,29 @@
     gap: 0.5rem;
 
     label {
-      font-weight: bold;
-      white-space: nowrap; 
+      font-weight: 700;
+      white-space: nowrap;
+      color: v.$negro;
     }
 
     select {
-      padding: 0.5rem;
-      border: 1px solid lighten(v.$negro, 70%);
-      border-radius: 0.5rem;
+      padding: 0.65rem 1rem;
+      border: 1px solid rgba(v.$negro, 0.15);
+      border-radius: 6px;
       background-color: v.$blanco;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+
+      &:hover {
+        border-color: v.$primario;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: v.$primario;
+        box-shadow: 0 0 0 1px v.$primario;
+      }
     }
   }
 }
@@ -52,30 +85,35 @@
 
 .products-grid {
   @include m.grid(1, 1.5rem);
+
   @include m.telefono {
     @include m.grid(2, 1.5rem);
   }
+
   @include m.tablet {
     @include m.grid(3, 1.5rem);
   }
+
   @include m.desktop {
-    @include m.grid(4, 1.5rem); 
+    @include m.grid(4, 1.5rem);
   }
 }
 
 // Tarjeta de Producto
 .product-card {
   background-color: v.$blanco;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(v.$negro, 0.08);
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(v.$negro, 0.06);
 
   &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 25px rgba(v.$negro, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(v.$negro, 0.12);
+    border-color: v.$primario;
   }
 
   &__image {
@@ -85,112 +123,131 @@
   }
 
   &__info {
-    padding: 1rem;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
-    flex-grow: 1; 
+    flex-grow: 1;
   }
 
   &__name {
     margin: 0 0 0.5rem 0;
     font-size: 1.2rem;
+    font-weight: 700;
+    color: v.$negro;
   }
 
   &__category {
     margin: 0;
-    color: lighten(v.$negro, 40%);
+    color: rgba(v.$negro, 0.6);
     font-size: 0.9rem;
+    font-weight: 500;
   }
 
   &__price {
-    margin: 0.5rem 0 0 0;
-    font-size: 1.3rem;
-    font-weight: bold;
+    margin: 0.75rem 0 0 0;
+    font-size: 1.5rem;
+    font-weight: 800;
     color: v.$primario;
   }
-  
+
   &__stock {
     margin-top: 1rem;
     font-size: 0.9rem;
-    color: v.$terciario;
+    color: v.$success;
+    font-weight: 600;
+
     strong {
       color: v.$negro;
     }
   }
 
   &__message {
-    margin: 0.5rem 0;
-    padding: 0.5rem;
-    font-size: 0.85rem;
+    margin: 0.75rem 0;
+    padding: 0.65rem;
+    font-size: 0.875rem;
     text-align: center;
-    border-radius: 0.5rem;
-    background-color: lighten(v.$primario, 45%);
-    color: darken(v.$primario, 20%);
-    font-weight: 500;
+    border-radius: 6px;
+    background: rgba(v.$primario, 0.1);
+    color: v.$primario;
+    font-weight: 600;
+    border: 1px solid v.$primario;
   }
-  
+
   &__button {
     margin-top: auto;
-    padding: 0.6rem;
-    font-size: 0.9rem;
+    padding: 0.75rem;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    background: v.$primario;
 
     &:disabled {
-      background-color: lighten(v.$negro, 60%);
+      background: rgba(v.$negro, 0.3);
       cursor: not-allowed;
       transform: none;
+
+      &:hover {
+        background: rgba(v.$negro, 0.3);
+      }
     }
   }
 
-  &-details__button{
+  &-details__button {
     margin-top: auto;
-    padding: 0.6rem;
-    font-size: 0.9rem;
+    padding: 0.75rem;
+    font-size: 0.95rem;
     color: v.$negro;
     background-color: transparent;
-    &:hover { background-color: darken(v.$negro, 10%); transform: scale(1.03); color: v.$blanco;}
+    border: 1px solid v.$negro;
+    border-radius: 6px;
+
+    &:hover {
+      background: v.$negro;
+      color: v.$blanco;
+      border-color: v.$negro;
+    }
   }
 }
 
-// Ban
-ner de resultados de búsqueda
+// Banner de resultados de búsqueda
 .search-results-banner {
   margin-bottom: 2rem;
-  padding: 1rem 1.5rem;
-  background-color: #e3f2fd;
-  border-radius: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(v.$primario, 0.08);
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  border: 1px solid v.$primario;
 
-  @include m.telefono {
+  @include m.maxtelefono {
     flex-direction: column;
     align-items: stretch;
   }
 
   &__text {
     font-size: 1rem;
-    color: #1565c0;
-    font-weight: 500;
+    color: v.$primario;
+    font-weight: 600;
 
-    @include m.telefono {
+    @include m.maxtelefono {
       text-align: center;
     }
   }
 
   &__clear-btn {
-    padding: 0.5rem 1.5rem;
-    background-color: #2196f3;
+    padding: 0.65rem 1.75rem;
+    background: v.$primario;
     color: v.$blanco;
     border: none;
-    border-radius: 0.3rem;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-weight: 600;
+    transition: all 0.2s ease;
 
     &:hover {
-      background-color: #1976d2;
+      background: darken(v.$primario, 8%);
       transform: translateY(-2px);
     }
 
@@ -198,7 +255,7 @@ ner de resultados de búsqueda
       transform: translateY(0);
     }
 
-    @include m.telefono {
+    @include m.maxtelefono {
       width: 100%;
     }
   }

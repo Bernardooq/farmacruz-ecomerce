@@ -1,25 +1,42 @@
+"""
+Configuración global de la aplicación FARMACRUZ
+
+Este módulo centraliza todas las variables de configuración que se cargan
+desde variables de entorno (archivo .env). Incluye configuración de:
+- Base de datos
+- Seguridad y autenticación
+- API y CORS
+- Email/SMTP
+"""
+
 import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
-# Carga variables de entorno desde el archivo .env
+# Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
 class Settings(BaseSettings):
-    # Database
+    """
+    Clase de configuración usando Pydantic para validación
+    Los valores se obtienen de variables de entorno
+    """
+    
+    # === CONFIGURACIÓN DE BASE DE DATOS ===
     DATABASE_URL: str = os.getenv("DATABASE_URL")
     
-    # Security
+    # === CONFIGURACIÓN DE SEGURIDAD Y JWT ===
     SECRET_KEY: str = os.getenv("SECRET_KEY")
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ALGORITHM: str = "HS256"  # Algoritmo para firmar tokens JWT
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Duración de tokens de acceso
     
-    # API
+    # === CONFIGURACIÓN DE LA API ===
     PROJECT_NAME: str = "Farmacruz API"
     API_V1_STR: str = "/api/v1"
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
     
-    # Email Configuration
+    # === CONFIGURACIÓN DE EMAIL (SMTP) ===
+    # Se usa para enviar correos de contacto y notificaciones
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: str = os.getenv("SMTP_USER", "")
@@ -29,9 +46,11 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
 
+# Instancia global de configuración
 settings = Settings()
 
-# Mantener compatibilidad con código existente
+# === VARIABLES DE COMPATIBILIDAD ===
+# Mantener estas variables para código legacy que las use directamente
 DATABASE_URL = settings.DATABASE_URL
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM

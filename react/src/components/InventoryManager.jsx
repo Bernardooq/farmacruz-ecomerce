@@ -17,36 +17,36 @@ export default function InventoryManager() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Filters
   const [searchName, setSearchName] = useState('');
   const [searchSku, setSearchSku] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [stockFilter, setStockFilter] = useState('');
-  
+
   // Pagination
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const itemsPerPage = 10;
-  
+
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  console.log('InventoryManager state:', { showAddModal, showEditModal, showStockModal, selectedProduct });
+
+  // Load categories on mount
   useEffect(() => {
     loadCategories();
   }, []);
 
-  useEffect(() => {
-    setPage(0); // Reset page when filters change
-    loadProducts();
-  }, [selectedCategory, stockFilter]);
-
+  // Load products when page or filters change
   useEffect(() => {
     loadProducts();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, selectedCategory, stockFilter]);
 
   const loadCategories = async () => {
     try {
@@ -61,35 +61,42 @@ export default function InventoryManager() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1
       };
-      if (selectedCategory) params.category_id = selectedCategory;
-      
+      if (selectedCategory) params.category_id = parseInt(selectedCategory);
+
       const data = await productService.getProducts(params);
-      
+
+      if (!Array.isArray(data)) {
+        console.error('Products data is not an array:', data);
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
       // Verificar si hay más páginas
       const hasMorePages = data.length > itemsPerPage;
       setHasMore(hasMorePages);
-      
+
       // Tomar solo los items de la página actual
       let pageProducts = hasMorePages ? data.slice(0, itemsPerPage) : data;
-      
+
       // Apply client-side filters (para búsqueda y stock)
       if (searchName) {
-        pageProducts = pageProducts.filter(p => 
-          p.name.toLowerCase().includes(searchName.toLowerCase())
+        pageProducts = pageProducts.filter(p =>
+          p.name && p.name.toLowerCase().includes(searchName.toLowerCase())
         );
       }
-      
+
       if (searchSku) {
-        pageProducts = pageProducts.filter(p => 
-          p.sku.toLowerCase().includes(searchSku.toLowerCase())
+        pageProducts = pageProducts.filter(p =>
+          p.sku && p.sku.toLowerCase().includes(searchSku.toLowerCase())
         );
       }
-      
+
       if (stockFilter) {
         pageProducts = pageProducts.filter(p => {
           if (stockFilter === 'out') return p.stock_count === 0;
@@ -98,11 +105,12 @@ export default function InventoryManager() {
           return true;
         });
       }
-      
+
       setProducts(pageProducts);
     } catch (err) {
       setError('No se pudieron cargar los productos. Intenta de nuevo.');
-      console.error(err);
+      console.error('Error loading products:', err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -142,6 +150,29 @@ export default function InventoryManager() {
     loadProducts();
   };
 
+  // Error boundary fallback
+  if (error && products.length === 0 && !loading) {
+    return (
+      <section className="dashboard-section">
+        <div className="section-header">
+          <h2 className="section-title">Gestión de Inventario</h2>
+        </div>
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <p style={{ color: '#e74c3c', marginBottom: '1rem' }}>{error}</p>
+          <button
+            className="btn-action"
+            onClick={() => {
+              setError(null);
+              loadProducts();
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="dashboard-section">
       <div className="section-header">
@@ -149,6 +180,9 @@ export default function InventoryManager() {
         {isAdmin && (
           <button className="btn-action" onClick={() => {
             console.log('Opening add product modal...');
+            setShowEditModal(false);
+            setShowStockModal(false);
+            setSelectedProduct(null);
             setShowAddModal(true);
           }}>
             <i className="fas fa-plus"></i> Añadir Nuevo Producto
@@ -160,9 +194,9 @@ export default function InventoryManager() {
 
       <div className="dashboard-controls">
         <form className="search-bar" onSubmit={handleSearch}>
-          <input 
-            type="search" 
-            placeholder="Buscar por nombre..." 
+          <input
+            type="search"
+            placeholder="Buscar por nombre..."
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
           />
@@ -170,11 +204,11 @@ export default function InventoryManager() {
             <i className="fas fa-search"></i>
           </button>
         </form>
-        
+
         <form className="search-bar" onSubmit={handleSearch}>
-          <input 
-            type="search" 
-            placeholder="Buscar por SKU..." 
+          <input
+            type="search"
+            placeholder="Buscar por SKU..."
             value={searchSku}
             onChange={(e) => setSearchSku(e.target.value)}
           />
@@ -182,10 +216,10 @@ export default function InventoryManager() {
             <i className="fas fa-search"></i>
           </button>
         </form>
-        
+
         <div className="filter-group">
           <label htmlFor="filterCategory">Categoría:</label>
-          <select 
+          <select
             id="filterCategory"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -198,10 +232,10 @@ export default function InventoryManager() {
             ))}
           </select>
         </div>
-        
+
         <div className="filter-group">
           <label htmlFor="filterStock">Stock:</label>
-          <select 
+          <select
             id="filterStock"
             value={stockFilter}
             onChange={(e) => setStockFilter(e.target.value)}
@@ -221,9 +255,13 @@ export default function InventoryManager() {
           <table className="data-table">
             <thead>
               <tr>
+                <th>ID</th>
                 <th>Producto</th>
                 <th>SKU</th>
                 <th>Categoría</th>
+                <th>Precio Base</th>
+                <th>IVA</th>
+                <th>Precio Final</th>
                 <th>Stock Actual</th>
                 <th>Acciones</th>
               </tr>
@@ -231,21 +269,27 @@ export default function InventoryManager() {
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '2rem' }}>
                     No se encontraron productos
                   </td>
                 </tr>
               ) : (
                 products.map((product) => (
-                  <ProductRow 
-                    key={product.product_id} 
+                  <ProductRow
+                    key={product.product_id}
                     product={product}
                     onEdit={(p) => {
+                      console.log('Opening edit modal for:', p);
+                      setShowAddModal(false);
+                      setShowStockModal(false);
                       setSelectedProduct(p);
                       setShowEditModal(true);
                     }}
                     onDelete={handleDeleteProduct}
                     onUpdateStock={(p) => {
+                      console.log('Opening stock modal for:', p);
+                      setShowAddModal(false);
+                      setShowEditModal(false);
                       setSelectedProduct(p);
                       setShowStockModal(true);
                     }}
@@ -258,31 +302,37 @@ export default function InventoryManager() {
         </div>
       )}
 
-      <ModalAddProduct
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSubmit={handleAddProduct}
-      />
+      {showAddModal && (
+        <ModalAddProduct
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddProduct}
+        />
+      )}
 
-      <ModalEditProduct
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedProduct(null);
-        }}
-        onSubmit={handleEditProduct}
-        product={selectedProduct}
-      />
+      {showEditModal && (
+        <ModalEditProduct
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedProduct(null);
+          }}
+          onSubmit={handleEditProduct}
+          product={selectedProduct}
+        />
+      )}
 
-      <ModalUpdateStock
-        isOpen={showStockModal}
-        onClose={() => {
-          setShowStockModal(false);
-          setSelectedProduct(null);
-        }}
-        onSubmit={handleUpdateStock}
-        product={selectedProduct}
-      />
+      {showStockModal && (
+        <ModalUpdateStock
+          isOpen={showStockModal}
+          onClose={() => {
+            setShowStockModal(false);
+            setSelectedProduct(null);
+          }}
+          onSubmit={handleUpdateStock}
+          product={selectedProduct}
+        />
+      )}
 
       {/* Paginación */}
       {products.length > 0 && (

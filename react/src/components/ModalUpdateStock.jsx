@@ -5,6 +5,8 @@ export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product })
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  console.log('ModalUpdateStock render - isOpen:', isOpen, 'product:', product);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

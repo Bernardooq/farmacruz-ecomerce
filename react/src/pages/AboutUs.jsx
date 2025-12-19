@@ -13,11 +13,11 @@ export default function AboutUs() {
     if (!isAuthenticated) {
       return <Header />; // Usuario no autenticado - Header público
     }
-    
-    if (user?.role === 'admin' || user?.role === 'seller') {
-      return <Header2 />; // Admin o Seller - Header con Dashboard
+
+    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
+      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
     }
-    
+
     return <SearchBar />; // Cliente - Header con búsqueda y carrito
   };
 
@@ -41,8 +41,8 @@ export default function AboutUs() {
                   Proveedora farmacéutica Cruz, es una empresa mexicana constituida en el año 2000, siendo en la actualidad, uno de los principales distribuidores de medicamentos, con una confiabilidad y solidez reconocida por nuestros clientes, proveedores y colaboradores.
                 </p>
                 <p>
-                  A lo largo de estos años, hemos construido relaciones sólidas con fabricantes líderes y 
-                  hemos desarrollado una red de distribución eficiente que garantiza entregas puntuales y 
+                  A lo largo de estos años, hemos construido relaciones sólidas con fabricantes líderes y
+                  hemos desarrollado una red de distribución eficiente que garantiza entregas puntuales y
                   productos de la más alta calidad.
                 </p>
               </div>
@@ -68,7 +68,7 @@ export default function AboutUs() {
                 <div className="mission-card__icon">👁️</div>
                 <h3>Visión</h3>
                 <p>
-                  Ser la plataforma B2B líder en México para la distribución farmacéutica, reconocida 
+                  Ser la plataforma B2B líder en México para la distribución farmacéutica, reconocida
                   por nuestra innovación tecnológica y compromiso con la excelencia.
                 </p>
               </div>
@@ -77,7 +77,7 @@ export default function AboutUs() {
                 <div className="mission-card__icon">⭐</div>
                 <h3>Valores</h3>
                 <p>
-                  Integridad, calidad, confianza, innovación y compromiso con nuestros clientes y 
+                  Integridad, calidad, confianza, innovación y compromiso con nuestros clientes y
                   la salud de la comunidad.
                 </p>
               </div>

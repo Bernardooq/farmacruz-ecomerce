@@ -4,9 +4,9 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: '2-digit', 
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit'
@@ -33,15 +33,15 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
   // Generate PDF
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
-    const itemsHTML = order.items && order.items.length > 0 
+    const itemsHTML = order.items && order.items.length > 0
       ? order.items.map((item, i) => `
         <tr>
           <td>${i + 1}</td>
           <td>${item.product?.name || 'N/A'}</td>
           <td>${item.product?.sku || 'N/A'}</td>
           <td>${item.quantity}</td>
-          <td>${formatCurrency(item.price_at_purchase)}</td>
-          <td>${formatCurrency(item.quantity * item.price_at_purchase)}</td>
+          <td>${formatCurrency(item.final_price)}</td>
+          <td>${formatCurrency(item.quantity * item.final_price)}</td>
         </tr>
       `).join('')
       : '<tr><td colspan="6" style="text-align: center;">No hay items en este pedido</td></tr>';
@@ -163,10 +163,10 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
             </div>
             ` : ''}
           </div>
-          ${order.customerInfo?.address ? `
+          ${order.shippingAddress ? `
           <div class="info-item" style="margin-top: 10px;">
-            <span class="info-label">Dirección:</span>
-            <span>${order.customerInfo.address}</span>
+            <span class="info-label">Dirección de Envío:</span>
+            <span>${order.shippingAddress}</span>
           </div>
           ` : ''}
         </div>
@@ -217,14 +217,14 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
       </body>
       </html>
     `;
-    
+
     printWindow.document.write(content);
     printWindow.document.close();
   };
 
   return (
     <div className={`modal-overlay ${visible ? 'enable' : 'disable'}`}>
-      <div 
+      <div
         className="modal-content modal-content--large"
         style={{
           maxWidth: '95%',
@@ -237,7 +237,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
         <h2 style={{ fontSize: window.innerWidth <= 768 ? '1.5rem' : '2rem' }}>
           Detalles del Pedido #{order.order_id}
         </h2>
-        
+
         <div className="order-details">
           <div className="order-details__section">
             <h3>Información del Cliente</h3>
@@ -263,10 +263,10 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                 </div>
               )}
             </div>
-            {order.customerInfo?.address && (
+            {order.shippingAddress && (
               <div className="order-details__item order-details__item--full">
-                <strong>Dirección de Entrega:</strong>
-                <span>{order.customerInfo.address}</span>
+                <strong>Dirección de Envío:</strong>
+                <span>{order.shippingAddress}</span>
               </div>
             )}
           </div>
@@ -311,8 +311,8 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                         <td data-label="Producto">{item.product?.name || 'N/A'}</td>
                         <td data-label="SKU">{item.product?.sku || 'N/A'}</td>
                         <td data-label="Cantidad">{item.quantity}</td>
-                        <td data-label="Precio Unit.">{formatCurrency(item.price_at_purchase)}</td>
-                        <td data-label="Subtotal">{formatCurrency(item.quantity * item.price_at_purchase)}</td>
+                        <td data-label="Precio Unit.">{formatCurrency(item.final_price)}</td>
+                        <td data-label="Subtotal">{formatCurrency(item.quantity * item.final_price)}</td>
                       </tr>
                     ))
                   ) : (
@@ -333,7 +333,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
           </div>
         </div>
 
-        <div 
+        <div
           className="modal-actions"
           style={{
             display: 'flex',
@@ -344,8 +344,8 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
             padding: '15px 0'
           }}
         >
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={handleDownloadPDF}
             style={{
               flex: window.innerWidth <= 768 ? '1 1 100%' : '0 1 auto',
@@ -354,8 +354,8 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
           >
             📄 Descargar PDF
           </button>
-          <button 
-            className="btn-secondary" 
+          <button
+            className="btn-secondary"
             onClick={onClose}
             style={{
               flex: window.innerWidth <= 768 ? '1 1 100%' : '0 1 auto',

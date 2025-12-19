@@ -3,10 +3,12 @@ import { categoryService } from '../services/categoryService';
 
 export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
+    product_id: '',
     sku: '',
     name: '',
     description: '',
     price: '',
+    iva_percentage: '16.00',
     category_id: '',
     stock_count: '',
     image_url: ''
@@ -14,6 +16,8 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  console.log('ModalAddProduct render - isOpen:', isOpen);
 
   useEffect(() => {
     if (isOpen) {
@@ -41,46 +45,53 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     // Validaciones adicionales
     const price = parseFloat(formData.price);
     const stock = parseInt(formData.stock_count);
-    
+
     if (price < 0) {
       setError('El precio no puede ser negativo');
       return;
     }
-    
+
     if (stock < 0) {
       setError('El stock no puede ser negativo');
       return;
     }
-    
+
     if (price === 0) {
       setError('El precio debe ser mayor a 0');
       return;
     }
-    
+
     setLoading(true);
 
     try {
       // Convert numeric fields
       const productData = {
         ...formData,
-        price: price,
+        product_id: parseInt(formData.product_id),
+        base_price: parseFloat(formData.price),  // El backend espera base_price, no price
+        iva_percentage: parseFloat(formData.iva_percentage),
         category_id: parseInt(formData.category_id),
         stock_count: stock,
         is_active: true  // Asegurar que el producto esté activo por defecto
       };
 
+      // Remover el campo 'price' si existe
+      delete productData.price;
+
       await onSubmit(productData);
-      
+
       // Reset form
       setFormData({
+        product_id: '',
         sku: '',
         name: '',
         description: '',
         price: '',
+        iva_percentage: '16.00',
         category_id: '',
         stock_count: '',
         image_url: ''
@@ -99,114 +110,149 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
-        
-        <div className="modal-body">
+
+        <div className="modal-body" style={{ padding: '2rem' }}>
           <h2>Añadir Nuevo Producto</h2>
-          
+
           <form onSubmit={handleSubmit}>
             {error && <div className="error-message">{error}</div>}
 
-          <div className="form-group">
-            <label htmlFor="sku">SKU *</label>
-            <input
-              type="text"
-              id="sku"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="name">Nombre *</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Descripción *</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-              disabled={loading}
-              rows="3"
-            />
-          </div>
-
-          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="price">Precio *</label>
+              <label htmlFor="product_id">ID del Producto *</label>
               <input
                 type="number"
-                id="price"
-                name="price"
-                value={formData.price}
+                id="product_id"
+                name="product_id"
+                value={formData.product_id}
                 onChange={handleChange}
-                step="0.01"
-                min="0"
+                required
+                disabled={loading}
+                placeholder="Ingrese el ID único del producto"
+                min="1"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="sku">SKU *</label>
+              <input
+                type="text"
+                id="sku"
+                name="sku"
+                value={formData.sku}
+                onChange={handleChange}
                 required
                 disabled={loading}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="stock_count">Stock Inicial *</label>
+              <label htmlFor="name">Nombre *</label>
               <input
-                type="number"
-                id="stock_count"
-                name="stock_count"
-                value={formData.stock_count}
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
-                min="0"
                 required
                 disabled={loading}
               />
             </div>
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="category_id">Categoría *</label>
-            <select
-              id="category_id"
-              name="category_id"
-              value={formData.category_id}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            >
-              <option value="">Seleccionar categoría</option>
-              {categories.map(cat => (
-                <option key={cat.category_id} value={cat.category_id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="form-group">
+              <label htmlFor="description">Descripción *</label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                rows="3"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="image_url">URL de Imagen</label>
-            <input
-              type="url"
-              id="image_url"
-              name="image_url"
-              value={formData.image_url}
-              onChange={handleChange}
-              disabled={loading}
-              placeholder="https://ejemplo.com/imagen.jpg"
-            />
-          </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="price">Precio Base *</label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  step="0.01"
+                  min="0"
+                  required
+                  disabled={loading}
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="iva_percentage">IVA (%) *</label>
+                <input
+                  type="number"
+                  id="iva_percentage"
+                  name="iva_percentage"
+                  value={formData.iva_percentage}
+                  onChange={handleChange}
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  required
+                  disabled={loading}
+                  placeholder="16.00"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="stock_count">Stock Inicial *</label>
+                <input
+                  type="number"
+                  id="stock_count"
+                  name="stock_count"
+                  value={formData.stock_count}
+                  onChange={handleChange}
+                  min="0"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="category_id">Categoría *</label>
+              <select
+                id="category_id"
+                name="category_id"
+                value={formData.category_id}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              >
+                <option value="">Seleccionar categoría</option>
+                {categories.map(cat => (
+                  <option key={cat.category_id} value={cat.category_id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="image_url">URL de Imagen</label>
+              <input
+                type="url"
+                id="image_url"
+                name="image_url"
+                value={formData.image_url}
+                onChange={handleChange}
+                disabled={loading}
+                placeholder="https://ejemplo.com/imagen.jpg"
+              />
+            </div>
 
             <div className="form-actions">
               <button

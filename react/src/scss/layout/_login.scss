@@ -1,5 +1,5 @@
-@use "base/variables" as v;
-@use "base/mixins" as m;
+@use "../base/variables" as v;
+@use "../base/mixins" as m;
 
 .login-page {
   flex: 1;
@@ -7,30 +7,30 @@
   justify-content: center;
   align-items: center;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, lighten(v.$primario, 48%) 0%, lighten(v.$primario, 50%) 100%);
+  background: lighten(v.$negro, 97%);
   min-height: calc(100vh - 200px);
 }
 
 // Div principal
 .login-card {
   background: v.$blanco;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(v.$negro, 0.1);
   padding: 2.5rem;
   width: 100%;
   max-width: 28rem;
   text-align: center;
-  border: 1px solid lighten(v.$negro, 92%);
+  border: 1px solid rgba(v.$negro, 0.06);
 
-  @include m.tablet { 
-    padding: 3rem; 
+  @include m.tablet {
+    padding: 3rem;
   }
 
   h2 {
     margin-top: 0;
     margin-bottom: 2rem;
     font-size: 2rem;
-    font-weight: 700;
+    font-weight: 800;
     color: v.$negro;
     letter-spacing: -0.5px;
   }
@@ -44,37 +44,37 @@
 
   .form-group {
     text-align: left;
-    
+
     label {
       display: block;
       margin-bottom: 0.65rem;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.9rem;
       color: v.$negro;
       letter-spacing: 0.2px;
     }
-    
+
     input {
       width: 100%;
       padding: 0.9rem 1.1rem;
-      border-radius: 8px;
-      border: 1px solid lighten(v.$negro, 85%);
+      border-radius: 6px;
+      border: 1px solid rgba(v.$negro, 0.15);
       font-size: 0.95rem;
       transition: all 0.2s ease;
       background: v.$blanco;
 
       &:hover {
-        border-color: lighten(v.$primario, 35%);
+        border-color: v.$primario;
       }
 
       &:focus {
         outline: none;
         border-color: v.$primario;
-        box-shadow: 0 0 0 3px rgba(v.$primario, 0.1);
+        box-shadow: 0 0 0 1px v.$primario;
       }
-      
+
       &::placeholder {
-        color: lighten(v.$negro, 60%);
+        color: rgba(v.$negro, 0.4);
       }
     }
   }
@@ -85,16 +85,18 @@
     gap: 0.65rem;
     font-size: 0.9rem;
     margin-top: -0.5rem;
-    
+
     input[type="checkbox"] {
       width: auto;
       cursor: pointer;
+      accent-color: v.$primario;
     }
-    
+
     label {
       font-weight: 500;
       margin-bottom: 0;
       cursor: pointer;
+      color: rgba(v.$negro, 0.8);
     }
   }
 
@@ -104,8 +106,8 @@
     font-size: 1rem;
     font-weight: 600;
     background: v.$primario;
-    border-radius: 8px;
-    
+    border-radius: 6px;
+
     &:hover {
       background: darken(v.$primario, 8%);
     }
@@ -113,14 +115,14 @@
 }
 
 .forgot-password-link {
-  margin-top: 1.5rem; 
+  margin-top: 1.5rem;
   display: inline-block;
   background: none;
   color: v.$primario;
   text-decoration: none;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s ease;
 
   &:hover {
@@ -132,31 +134,31 @@
 // Header para la pag de login
 .header-login {
   padding: 2.5rem 0;
-  background: linear-gradient(135deg, v.$negro 0%, lighten(v.$negro, 8%) 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  background: v.$negro;
+  box-shadow: 0 2px 4px rgba(v.$negro, 0.1);
+  border-bottom: 1px solid rgba(v.$primario, 0.2);
 }
 
 .logo-textual {
   text-align: center;
-  
+
   h1 {
     font-size: 2.75rem;
     margin: 0;
     font-weight: 800;
     letter-spacing: -0.5px;
     color: v.$blanco;
-    
-    @include m.tablet { 
-      font-size: 3.5rem; 
+
+    @include m.tablet {
+      font-size: 3.5rem;
     }
   }
-  
+
   .subtitle {
     font-size: 1.05rem;
-    color: lighten(v.$negro, 70%);
+    color: rgba(v.$blanco, 0.7);
     margin-top: 0.5rem;
     font-weight: 500;
     letter-spacing: 0.3px;
   }
 }
-

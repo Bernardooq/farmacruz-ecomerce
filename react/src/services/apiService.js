@@ -100,7 +100,11 @@ class ApiService {
         throw new Error(errorMessage)
       }
 
-      // Respuesta correcta → regresamos el JSON
+      // Respuesta correcta → regresamos el JSON (si hay contenido)
+      // 204 No Content no tiene body, así que retornamos null
+      if (response.status === 204) {
+        return null
+      }
       return await response.json()
 
     } catch (error) {

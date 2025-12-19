@@ -1,28 +1,54 @@
+"""
+Schemas para Dashboards y Reportes
+
+Define la estructura de datos para:
+- Dashboard de administrador (estadísticas generales)
+- Reporte de ventas (con desglose de pedidos)
+"""
+
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
+
 class DashboardStats(BaseModel):
-    total_users: int
-    total_products: int
-    total_orders: int
-    pending_orders: int
-    total_revenue: float
-    low_stock_count: int
-    total_customers: int
-    total_sellers: int
+    """
+    Estadísticas generales para el dashboard de administrador
+    
+    Muestra métricas clave del negocio en tiempo real.
+    """
+    total_users: int  # Total de usuarios internos (admin, marketing, seller)
+    total_customers: int  # Total de clientes registrados
+    total_sellers: int  # Total de vendedores activos
+    total_products: int  # Total de productos en catálogo
+    total_orders: int  # Total de pedidos históricos
+    pending_orders: int  # Pedidos pendientes de asignación
+    total_revenue: float  # Ingresos totales (pedidos completados)
+    low_stock_count: int  # Productos con bajo inventario (< 10 unidades)
+
 
 class SalesReportItem(BaseModel):
-    order_id: int
-    customer_name: str
-    customer_email: str
-    order_date: str
-    status: str
-    total_amount: float
-    items_count: int
+    """
+    Item individual en el reporte de ventas
+    
+    Representa un pedido con información resumida del cliente.
+    """
+    order_id: int  # ID del pedido
+    customer_name: str  # Nombre completo del cliente
+    customer_email: str  # Email del cliente
+    order_date: str  # Fecha del pedido (formato: "YYYY-MM-DD HH:MM")
+    status: str  # Estado actual del pedido
+    total_amount: float  # Monto total del pedido
+    items_count: int  # Número de productos en el pedido
+
 
 class SalesReport(BaseModel):
-    start_date: str
-    end_date: str
-    total_orders: int
-    total_revenue: float
-    orders: List[SalesReportItem]
+    """
+    Reporte completo de ventas con totales y desglose
+    
+    Incluye estadísticas agregadas y lista detallada de pedidos.
+    """
+    start_date: str  # Fecha inicial del reporte (formato: "YYYY-MM-DD")
+    end_date: str  # Fecha final del reporte (formato: "YYYY-MM-DD")
+    total_orders: int  # Número total de pedidos en el periodo
+    total_revenue: float  # Ingresos totales en el periodo
+    orders: List[SalesReportItem]  # Lista de pedidos con detalles

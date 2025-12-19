@@ -12,11 +12,11 @@ export default function PrivacyPolicy() {
     if (!isAuthenticated) {
       return <Header />; // Usuario no autenticado - Header público
     }
-    
-    if (user?.role === 'admin' || user?.role === 'seller') {
-      return <Header2 />; // Admin o Seller - Header con Dashboard
+
+    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
+      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
     }
-    
+
     return <SearchBar />; // Cliente - Header con búsqueda y carrito
   };
 
@@ -31,7 +31,7 @@ export default function PrivacyPolicy() {
           <section className="legal-section">
             <h2>1. Introducción</h2>
             <p>
-              En Farmacruz, respetamos su privacidad y estamos comprometidos con la protección de sus datos personales. 
+              En Farmacruz, respetamos su privacidad y estamos comprometidos con la protección de sus datos personales.
               Esta política de privacidad explica cómo recopilamos, usamos, compartimos y protegemos su información.
             </p>
           </section>
@@ -116,7 +116,7 @@ export default function PrivacyPolicy() {
           <section className="legal-section">
             <h2>7. Cookies</h2>
             <p>
-              Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestra plataforma. 
+              Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestra plataforma.
               Puede configurar su navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio.
             </p>
           </section>
@@ -124,7 +124,7 @@ export default function PrivacyPolicy() {
           <section className="legal-section">
             <h2>8. Retención de Datos</h2>
             <p>
-              Conservamos sus datos personales durante el tiempo necesario para cumplir con los fines descritos en esta política, 
+              Conservamos sus datos personales durante el tiempo necesario para cumplir con los fines descritos en esta política,
               a menos que la ley requiera o permita un período de retención más largo.
             </p>
           </section>
@@ -132,7 +132,7 @@ export default function PrivacyPolicy() {
           <section className="legal-section">
             <h2>9. Cambios a esta Política</h2>
             <p>
-              Podemos actualizar esta política de privacidad periódicamente. Le notificaremos sobre cambios significativos 
+              Podemos actualizar esta política de privacidad periódicamente. Le notificaremos sobre cambios significativos
               publicando la nueva política en nuestra plataforma y actualizando la fecha de "última actualización".
             </p>
           </section>

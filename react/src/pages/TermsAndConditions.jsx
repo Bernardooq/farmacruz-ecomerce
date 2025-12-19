@@ -12,11 +12,11 @@ export default function TermsAndConditions() {
     if (!isAuthenticated) {
       return <Header />; // Usuario no autenticado - Header público
     }
-    
-    if (user?.role === 'admin' || user?.role === 'seller') {
-      return <Header2 />; // Admin o Seller - Header con Dashboard
+
+    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
+      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
     }
-    
+
     return <SearchBar />; // Cliente - Header con búsqueda y carrito
   };
 
@@ -31,7 +31,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>1. Aceptación de los Términos</h2>
             <p>
-              Al acceder y utilizar la plataforma de Farmacruz, usted acepta estar sujeto a estos términos y condiciones de uso. 
+              Al acceder y utilizar la plataforma de Farmacruz, usted acepta estar sujeto a estos términos y condiciones de uso.
               Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestros servicios.
             </p>
           </section>
@@ -39,7 +39,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>2. Descripción del Servicio</h2>
             <p>
-              Farmacruz es una plataforma B2B (Business to Business) que facilita la compra y venta de productos farmacéuticos 
+              Farmacruz es una plataforma B2B (Business to Business) que facilita la compra y venta de productos farmacéuticos
               entre empresas autorizadas. Nuestros servicios incluyen:
             </p>
             <ul>
@@ -91,7 +91,7 @@ export default function TermsAndConditions() {
               <li>Confirmación por parte de nuestro equipo de ventas</li>
             </ul>
             <p>
-              Los precios mostrados en la plataforma pueden estar sujetos a cambios sin previo aviso. 
+              Los precios mostrados en la plataforma pueden estar sujetos a cambios sin previo aviso.
               El precio aplicable será el vigente al momento de la confirmación del pedido.
             </p>
           </section>
@@ -115,7 +115,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>7. Devoluciones y Reembolsos</h2>
             <p>
-              Las devoluciones de productos farmacéuticos están sujetas a regulaciones estrictas. 
+              Las devoluciones de productos farmacéuticos están sujetas a regulaciones estrictas.
               Solo se aceptarán devoluciones en los siguientes casos:
             </p>
             <ul>
@@ -131,7 +131,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>8. Propiedad Intelectual</h2>
             <p>
-              Todo el contenido de la plataforma, incluyendo pero no limitado a textos, gráficos, logos, imágenes, 
+              Todo el contenido de la plataforma, incluyendo pero no limitado a textos, gráficos, logos, imágenes,
               y software, es propiedad de Farmacruz o sus licenciantes y está protegido por las leyes de propiedad intelectual.
             </p>
           </section>
@@ -152,7 +152,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>10. Privacidad y Protección de Datos</h2>
             <p>
-              El uso de sus datos personales está regido por nuestra Política de Privacidad. 
+              El uso de sus datos personales está regido por nuestra Política de Privacidad.
               Al utilizar nuestros servicios, usted acepta el procesamiento de sus datos según lo descrito en dicha política.
             </p>
           </section>
@@ -160,7 +160,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>11. Modificaciones</h2>
             <p>
-              Farmacruz se reserva el derecho de modificar estos términos y condiciones en cualquier momento. 
+              Farmacruz se reserva el derecho de modificar estos términos y condiciones en cualquier momento.
               Las modificaciones entrarán en vigor inmediatamente después de su publicación en la plataforma.
             </p>
           </section>
@@ -168,7 +168,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>12. Terminación</h2>
             <p>
-              Farmacruz se reserva el derecho de suspender o terminar su acceso a la plataforma en cualquier momento, 
+              Farmacruz se reserva el derecho de suspender o terminar su acceso a la plataforma en cualquier momento,
               sin previo aviso, por violación de estos términos o por cualquier otra razón que consideremos apropiada.
             </p>
           </section>
@@ -176,7 +176,7 @@ export default function TermsAndConditions() {
           <section className="legal-section">
             <h2>13. Ley Aplicable y Jurisdicción</h2>
             <p>
-              Estos términos se regirán e interpretarán de acuerdo con las leyes de México. 
+              Estos términos se regirán e interpretarán de acuerdo con las leyes de México.
               Cualquier disputa relacionada con estos términos estará sujeta a la jurisdicción exclusiva de los tribunales de Guadalajara, Jalisco.
             </p>
           </section>

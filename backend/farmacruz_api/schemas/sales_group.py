@@ -1,0 +1,138 @@
+"""
+Schemas para Grupos de Ventas (SalesGroups)
+
+Los grupos de ventas organizan la estructura comercial:
+- Múltiples marketing managers pueden administrar un grupo
+- Múltiples sellers pueden atender un grupo
+- Múltiples customers pertenecen a un grupo
+
+Esto permite segmentar clientes y asignar equipos específicos.
+"""
+
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import datetime
+
+
+# ==========================================
+# SALES GROUPS (Grupos de Ventas)
+# ==========================================
+
+class SalesGroupBase(BaseModel):
+    """Schema base con campos comunes de grupo de ventas"""
+    group_name: str = Field(..., max_length=255)  # Nombre del grupo (ej: "Farmacias Zona Norte")
+    description: Optional[str] = None  # Descripción del grupo
+
+
+class SalesGroupCreate(SalesGroupBase):
+    """
+    Schema para crear un nuevo grupo de ventas
+    
+    Por defecto se crea activo.
+    """
+    is_active: Optional[bool] = True  # Activo por defecto
+
+
+class SalesGroupUpdate(BaseModel):
+    """
+    Schema para actualizar un grupo existente
+    
+    Todos los campos son opcionales.
+    """
+    group_name: Optional[str] = Field(None, max_length=255)
+    description: Optional[str] = None
+    is_active: Optional[bool] = None  # Activar/desactivar grupo
+
+
+class SalesGroupInDBBase(SalesGroupBase):
+    """Schema base de grupo en la base de datos"""
+    sales_group_id: int  # ID único del grupo
+    is_active: bool  # Estado del grupo
+    created_at: datetime  # Fecha de creación
+
+    model_config = {"from_attributes": True}
+
+
+class SalesGroup(SalesGroupInDBBase):
+    """Schema completo de grupo para responses"""
+    pass
+
+
+# ==========================================
+# GROUP MARKETING MANAGERS (N:M Relationship)
+# ==========================================
+
+class GroupMarketingManagerBase(BaseModel):
+    """
+    Relación entre un grupo y un marketing manager
+    
+    Permite que un manager esté en múltiples grupos.
+    """
+    sales_group_id: int  # ID del grupo
+    marketing_id: int  # ID del usuario marketing
+
+
+class GroupMarketingManagerCreate(GroupMarketingManagerBase):
+    """Schema para asignar un marketing manager a un grupo"""
+    pass
+
+
+class GroupMarketingManagerInDBBase(GroupMarketingManagerBase):
+    """Schema de relación en base de datos"""
+    group_marketing_id: int  # ID único de la relación
+    assigned_at: datetime  # Cuándo se asignó
+
+    model_config = {"from_attributes": True}
+
+
+class GroupMarketingManager(GroupMarketingManagerInDBBase):
+    """Schema completo de la relación para responses"""
+    pass
+
+
+# ==========================================
+# GROUP SELLERS (N:M Relationship)
+# ==========================================
+
+class GroupSellerBase(BaseModel):
+    """
+    Relación entre un grupo y un vendedor
+    
+    Permite que un seller esté en múltiples grupos.
+    """
+    sales_group_id: int  # ID del grupo
+    seller_id: int  # ID del usuario seller
+
+
+class GroupSellerCreate(GroupSellerBase):
+    """Schema para asignar un seller a un grupo"""
+    pass
+
+
+class GroupSellerInDBBase(GroupSellerBase):
+    """Schema de relación en base de datos"""
+    group_seller_id: int  # ID único de la relación
+    assigned_at: datetime  # Cuándo se asignó
+
+    model_config = {"from_attributes": True}
+
+
+class GroupSeller(GroupSellerInDBBase):
+    """Schema completo de la relación para responses"""
+    pass
+
+
+# ==========================================
+# SCHEMAS EXTENDIDOS
+# ==========================================
+
+class SalesGroupWithMembers(SalesGroupInDBBase):
+    """
+    Grupo con contadores de miembros
+    
+    Útil para mostrar estadísticas del grupo sin cargar todos los miembros.
+    Muestra cuántos marketing managers, sellers y customers tiene el grupo.
+    """
+    marketing_count: Optional[int] = 0  # Número de marketing managers
+    seller_count: Optional[int] = 0  # Número de sellers
+    customer_count: Optional[int] = 0  # Número de customers

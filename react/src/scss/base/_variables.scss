@@ -1,12 +1,31 @@
 $fuente_principal: "Open Sans", sans-serif;
 
-$primario: #63c1a5;   // Verde agua
+// Colores principales
+$primario: #63c1a5; // Verde agua (principal)
 $secundario: #752F97; // Morado
-$terciario: #095511; // Verde fuerte
-$acento: #F53756;     // Rosa fuerte
-$amarillo: #FFDD00;   // Amarillo acento
+$terciario: #095511; // Verde fuerte (para gradientes con primario)
+$acento: #F53756; // Rosa fuerte (para alertas/eliminar)
+$amarillo: #FFDD00; // Amarillo acento
 $negro: #1A1A1A;
 $blanco: #FFFFFF;
+
+// Colores de estado (usando la paleta existente)
+$success: $primario; // Verde para éxito
+$warning: $amarillo; // Amarillo para advertencias  
+$danger: $acento; // Rosa/rojo para peligro
+$info: $secundario; // Morado para información
+
+// Backgrounds de estado (versiones claras)
+$success-light: rgba($primario, 0.1);
+$warning-light: rgba($amarillo, 0.1);
+$danger-light: rgba($acento, 0.1);
+$info-light: rgba($secundario, 0.1);
+
+// Texto de estado (versiones oscuras)
+$success-dark: darken($primario, 20%);
+$warning-dark: darken($amarillo, 40%);
+$danger-dark: darken($acento, 15%);
+$info-dark: darken($secundario, 15%);
 
 // Media queries
 $telefono: 480px;

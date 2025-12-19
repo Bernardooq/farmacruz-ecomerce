@@ -4,14 +4,14 @@
 .about-page {
   padding: 3rem 0 5rem;
   min-height: 70vh;
-  background: linear-gradient(to bottom, lighten(v.$negro, 98%) 0%, white 50%);
+  background: v.$blanco;
 
   .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1.5rem;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       padding: 0 1rem;
     }
   }
@@ -22,7 +22,7 @@
   margin-bottom: 5rem;
   padding: 3rem 0;
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     margin-bottom: 3rem;
     padding: 2rem 0;
   }
@@ -34,23 +34,19 @@
     margin-bottom: 1.5rem;
     letter-spacing: -0.5px;
 
-    @media (max-width: 968px) {
-      font-size: 2.75rem;
-    }
-
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 2.25rem;
     }
   }
 
   &__subtitle {
     font-size: 1.35rem;
-    color: lighten(v.$negro, 30%);
+    color: rgba(v.$negro, 0.7);
     max-width: 700px;
     margin: 0 auto;
     line-height: 1.6;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 1.15rem;
     }
   }
@@ -59,7 +55,7 @@
 .about-section {
   margin-bottom: 5rem;
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     margin-bottom: 3.5rem;
   }
 }
@@ -70,7 +66,7 @@
   gap: 4rem;
   align-items: center;
 
-  @media (max-width: 968px) {
+  @include m.maxtablet {
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
@@ -79,23 +75,23 @@
 .about-text {
   h2 {
     font-size: 2.5rem;
-    font-weight: 700;
+    font-weight: 800;
     color: v.$negro;
     margin-bottom: 1.5rem;
     letter-spacing: -0.3px;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 2rem;
     }
   }
 
   p {
-    color: lighten(v.$negro, 25%);
+    color: rgba(v.$negro, 0.75);
     line-height: 1.8;
     font-size: 1.05rem;
     margin-bottom: 1.25rem;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 1rem;
       line-height: 1.7;
     }
@@ -108,16 +104,17 @@
 
 .about-image {
   &__placeholder {
-    background: linear-gradient(135deg, lighten(v.$primario, 45%) 0%, lighten(v.$primario, 48%) 100%);
+    background: rgba(v.$primario, 0.08);
     border-radius: 16px;
     aspect-ratio: 4/3;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 8rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(v.$negro, 0.08);
+    border: 1px solid rgba(v.$negro, 0.06);
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 6rem;
     }
   }
@@ -126,10 +123,10 @@
 .about-mission {
   margin-bottom: 5rem;
   padding: 4rem 0;
-  background: white;
+  background: v.$blanco;
   border-radius: 16px;
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     margin-bottom: 3.5rem;
     padding: 2.5rem 1.5rem;
   }
@@ -140,7 +137,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 2.5rem;
 
-  @media (max-width: 968px) {
+  @include m.maxtablet {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
@@ -151,13 +148,13 @@
   padding: 2.5rem 2rem;
   background: lighten(v.$negro, 98%);
   border-radius: 12px;
-  transition: all 0.3s ease;
-  border: 1px solid lighten(v.$negro, 92%);
+  transition: all 0.2s ease;
+  border: 1px solid rgba(v.$negro, 0.06);
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    border-color: lighten(v.$primario, 35%);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(v.$negro, 0.1);
+    border-color: v.$primario;
   }
 
   &__icon {
@@ -173,12 +170,12 @@
   }
 
   p {
-    color: lighten(v.$negro, 30%);
+    color: rgba(v.$negro, 0.7);
     line-height: 1.7;
     font-size: 1rem;
   }
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     padding: 2rem 1.5rem;
 
     &__icon {
@@ -199,18 +196,18 @@
   margin-bottom: 5rem;
   text-align: center;
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     margin-bottom: 3.5rem;
   }
 
   h2 {
     font-size: 2.5rem;
-    font-weight: 700;
+    font-weight: 800;
     color: v.$negro;
     margin-bottom: 3rem;
     letter-spacing: -0.3px;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 2rem;
       margin-bottom: 2rem;
     }
@@ -222,26 +219,27 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 2rem;
 
-  @media (max-width: 968px) {
+  @include m.maxtablet {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (max-width: 568px) {
+  @include m.maxtelefono {
     grid-template-columns: 1fr;
   }
 }
 
 .stat-card {
-  background: white;
+  background: v.$blanco;
   padding: 2.5rem 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid lighten(v.$negro, 92%);
-  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
+  border: 1px solid rgba(v.$negro, 0.06);
+  transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(v.$negro, 0.1);
+    border-color: v.$primario;
   }
 
   &__number {
@@ -251,17 +249,17 @@
     margin-bottom: 0.5rem;
     line-height: 1;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 3rem;
     }
   }
 
   &__label {
     font-size: 1rem;
-    color: lighten(v.$negro, 30%);
+    color: rgba(v.$negro, 0.7);
     font-weight: 600;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 0.95rem;
     }
   }
@@ -270,19 +268,19 @@
 .about-why {
   margin-bottom: 5rem;
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     margin-bottom: 3.5rem;
   }
 
   h2 {
     font-size: 2.5rem;
-    font-weight: 700;
+    font-weight: 800;
     color: v.$negro;
     margin-bottom: 3rem;
     text-align: center;
     letter-spacing: -0.3px;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 2rem;
       margin-bottom: 2rem;
     }
@@ -294,27 +292,27 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
 
-  @media (max-width: 968px) {
+  @include m.maxtablet {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (max-width: 568px) {
+  @include m.maxtelefono {
     grid-template-columns: 1fr;
   }
 }
 
 .why-item {
-  background: white;
+  background: v.$blanco;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid lighten(v.$negro, 92%);
-  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
+  border: 1px solid rgba(v.$negro, 0.06);
+  transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    border-color: lighten(v.$primario, 35%);
+    box-shadow: 0 4px 16px rgba(v.$negro, 0.1);
+    border-color: v.$primario;
   }
 
   &__icon {
@@ -332,12 +330,12 @@
   }
 
   p {
-    color: lighten(v.$negro, 30%);
+    color: rgba(v.$negro, 0.7);
     line-height: 1.6;
     font-size: 0.95rem;
   }
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     padding: 1.75rem;
 
     &__icon {
@@ -356,36 +354,37 @@
 
 .about-cta {
   text-align: center;
-  background: linear-gradient(135deg, lighten(v.$primario, 48%) 0%, lighten(v.$primario, 50%) 100%);
+  background: rgba(v.$primario, 0.05);
   padding: 4rem 3rem;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(v.$negro, 0.08);
+  border: 1px solid rgba(v.$primario, 0.2);
 
-  @media (max-width: 768px) {
+  @include m.maxtablet {
     padding: 3rem 2rem;
   }
 
   h2 {
     font-size: 2.5rem;
-    font-weight: 700;
+    font-weight: 800;
     color: v.$negro;
     margin-bottom: 1rem;
     letter-spacing: -0.3px;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 2rem;
     }
   }
 
   p {
     font-size: 1.15rem;
-    color: lighten(v.$negro, 25%);
+    color: rgba(v.$negro, 0.75);
     margin-bottom: 2.5rem;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       font-size: 1rem;
       margin-bottom: 2rem;
     }
@@ -400,14 +399,14 @@
 
   .btn {
     padding: 1rem 2.5rem;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.2s ease;
     letter-spacing: 0.3px;
 
-    @media (max-width: 768px) {
+    @include m.maxtablet {
       padding: 0.9rem 2rem;
       font-size: 0.95rem;
     }
@@ -415,25 +414,23 @@
 
   .btn-primary {
     background: v.$primario;
-    color: white;
+    color: v.$blanco;
 
     &:hover {
       background: darken(v.$primario, 8%);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(v.$primario, 0.3);
     }
   }
 
   .btn-secondary {
-    background: white;
+    background: v.$blanco;
     color: v.$negro;
-    border: 2px solid v.$negro;
+    border: 1px solid v.$negro;
 
     &:hover {
       background: v.$negro;
-      color: white;
+      color: v.$blanco;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
   }
 }

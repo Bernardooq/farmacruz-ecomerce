@@ -1,7 +1,6 @@
 """
 Script para crear los 4 usuarios administradores iniciales de Farmacruz
-Uso (desde la carpeta backend): python -m create_initial_admins
-O: cd farmacruz_api && python ../create_initial_admins.py
+Uso (desde la carpeta backend): python create_initial_admins.py
 """
 import sys
 import os
@@ -9,10 +8,20 @@ import os
 # Agregar el directorio farmacruz_api al path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'farmacruz_api'))
 
-from sqlalchemy.orm import Session
-from db.session import SessionLocal
-from db.base import User, UserRole
-from core.security import get_password_hash
+try:
+    from sqlalchemy.orm import Session
+    from sqlalchemy import text
+    from db.session import SessionLocal
+    from db.base import User, UserRole
+    from core.security import get_password_hash
+    from core.config import DATABASE_URL
+except ImportError as e:
+    print(f"❌ Error al importar módulos: {e}")
+    print("\nAsegúrate de:")
+    print("1. Estar en la carpeta 'backend'")
+    print("2. Tener el entorno virtual activado")
+    print("3. Haber instalado las dependencias: pip install -r requirements.txt")
+    sys.exit(1)
 
 # Definir los 4 administradores
 ADMINS = [
@@ -78,38 +87,44 @@ def create_admin_users():
     
     try:
         for admin_data in ADMINS:
-            # Verificar si el usuario ya existe
-            existing_user = db.query(User).filter(
-                User.username == admin_data["username"]
-            ).first()
-            
-            if existing_user:
-                print(f"⚠️  Usuario '{admin_data['username']}' ya existe - OMITIDO")
-                skipped_count += 1
+            try:
+                # Verificar si el usuario ya existe
+                existing_user = db.query(User).filter(
+                    User.username == admin_data["username"]
+                ).first()
+                
+                if existing_user:
+                    print(f"⚠️  Usuario '{admin_data['username']}' ya existe - OMITIDO")
+                    skipped_count += 1
+                    continue
+                
+                # Crear el usuario
+                hashed_password = get_password_hash(admin_data["password"])
+                new_admin = User(
+                    username=admin_data["username"],
+                    email=admin_data["email"],
+                    password_hash=hashed_password,
+                    full_name=admin_data["full_name"],
+                    role=UserRole.admin,
+                    is_active=True
+                )
+                
+                db.add(new_admin)
+                db.commit()
+                db.refresh(new_admin)
+                
+                print(f"✅ Usuario '{admin_data['username']}' creado exitosamente")
+                print(f"   Email: {admin_data['email']}")
+                print(f"   Nombre: {admin_data['full_name']}")
+                print(f"   ID: {new_admin.user_id}")
+                print()
+                
+                created_count += 1
+                
+            except Exception as user_error:
+                print(f"❌ Error al crear '{admin_data['username']}': {user_error}")
+                db.rollback()
                 continue
-            
-            # Crear el usuario
-            hashed_password = get_password_hash(admin_data["password"])
-            new_admin = User(
-                username=admin_data["username"],
-                email=admin_data["email"],
-                password_hash=hashed_password,
-                full_name=admin_data["full_name"],
-                role=UserRole.admin,
-                is_active=True
-            )
-            
-            db.add(new_admin)
-            db.commit()
-            db.refresh(new_admin)
-            
-            print(f"✅ Usuario '{admin_data['username']}' creado exitosamente")
-            print(f"   Email: {admin_data['email']}")
-            print(f"   Nombre: {admin_data['full_name']}")
-            print(f"   ID: {new_admin.user_id}")
-            print()
-            
-            created_count += 1
         
         print("=" * 70)
         print(f"  RESUMEN:")
@@ -139,14 +154,26 @@ def create_admin_users():
 def verify_database_connection():
     """Verifica que la conexión a la base de datos funcione"""
     try:
-        from sqlalchemy import text
+        print(f"🔍 Intentando conectar a la base de datos...")
+        print(f"   URL: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'configurada'}\n")
+        
         db: Session = SessionLocal()
         db.execute(text("SELECT 1"))
+        
+        # Verificar que la tabla Users existe
+        result = db.execute(text("SELECT COUNT(*) FROM users"))
+        count = result.scalar()
+        print(f"✅ Conexión exitosa - {count} usuarios existentes en la base de datos\n")
+        
         db.close()
-        print("✅ Conexión a la base de datos exitosa\n")
         return True
     except Exception as e:
-        print(f"❌ Error de conexión a la base de datos: {e}\n")
+        print(f"❌ Error de conexión a la base de datos:")
+        print(f"   {type(e).__name__}: {e}\n")
+        print("Verifica que:")
+        print("1. PostgreSQL esté corriendo (docker-compose up)")
+        print("2. Las credenciales en .env sean correctas")
+        print("3. La base de datos esté inicializada")
         return False
 
 def main():

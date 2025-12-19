@@ -27,7 +27,7 @@ export default function SalesReport() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const report = await adminService.getSalesReport(startDate, endDate);
       setReportData(report);
     } catch (err) {
@@ -76,7 +76,7 @@ export default function SalesReport() {
 
     const dates = Object.keys(salesByDate).sort();
     const values = dates.map(date => salesByDate[date]);
-    
+
     if (dates.length === 0) return;
 
     // Chart dimensions
@@ -108,13 +108,13 @@ export default function SalesReport() {
     for (let i = 0; i <= ySteps; i++) {
       const y = height - padding - (chartHeight / ySteps) * i;
       const value = (maxValue / ySteps) * i;
-      
+
       // Grid line
       ctx.beginPath();
       ctx.moveTo(padding, y);
       ctx.lineTo(width - padding, y);
       ctx.stroke();
-      
+
       // Label
       ctx.fillText(`$${value.toFixed(0)}`, padding - 10, y + 4);
     }
@@ -133,7 +133,7 @@ export default function SalesReport() {
       const gradient = ctx.createLinearGradient(x, y, x, height - padding);
       gradient.addColorStop(0, '#3498db');
       gradient.addColorStop(1, '#2980b9');
-      
+
       ctx.fillStyle = gradient;
       ctx.fillRect(x, y, barWidth, barHeight);
 
@@ -284,7 +284,7 @@ export default function SalesReport() {
       </head>
       <body>
         <div class="header">
-          <h1>📊 Reporte de Ventas</h1>
+          <h1>Reporte de Ventas</h1>
           <div class="date-range">
             Período: ${report.start_date} al ${report.end_date}
           </div>
@@ -322,12 +322,12 @@ export default function SalesReport() {
         
         <div class="footer">
           <p>Reporte generado el ${new Date().toLocaleDateString('es-MX', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}</p>
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}</p>
         </div>
         
         <script>
@@ -354,47 +354,36 @@ export default function SalesReport() {
 
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-      <div style={{ 
-        backgroundColor: '#f8f9fa', 
-        padding: '20px', 
-        borderRadius: '8px',
-        marginBottom: '20px'
-      }}>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr 1fr auto', 
-          gap: '15px',
-          alignItems: 'end'
-        }}>
-          <div className="form-group" style={{ margin: 0 }}>
+      <div className="report-filters">
+        <div className="report-filters__grid">
+          <div className="form-group form-group--no-margin">
             <label htmlFor="start-date">Fecha de Inicio</label>
             <input
               type="date"
               id="start-date"
+              className="form-input form-input--full-width"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               disabled={loading}
-              style={{ width: '100%' }}
             />
           </div>
 
-          <div className="form-group" style={{ margin: 0 }}>
+          <div className="form-group form-group--no-margin">
             <label htmlFor="end-date">Fecha de Fin</label>
             <input
               type="date"
               id="end-date"
+              className="form-input form-input--full-width"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               disabled={loading}
-              style={{ width: '100%' }}
             />
           </div>
 
-          <button 
-            className="btn-action" 
+          <button
+            className="btn-action btn-action--fit-content"
             onClick={handleGenerateReport}
             disabled={loading}
-            style={{ height: 'fit-content' }}
           >
             {loading ? (
               'Generando...'
@@ -406,12 +395,7 @@ export default function SalesReport() {
           </button>
         </div>
 
-        <p style={{ 
-          marginTop: '15px', 
-          marginBottom: 0, 
-          color: '#7f8c8d', 
-          fontSize: '0.9em' 
-        }}>
+        <p className="report-filters__hint">
           💡 El reporte incluye solo pedidos aprobados, enviados y entregados
         </p>
       </div>
@@ -421,38 +405,21 @@ export default function SalesReport() {
       {reportData && (
         <>
           {/* Summary Cards */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div style={{
-              backgroundColor: '#fff',
-              padding: '20px',
-              borderRadius: '8px',
-              border: '1px solid #e0e0e0',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <div style={{ color: '#7f8c8d', fontSize: '0.9em', marginBottom: '10px' }}>
+          <div className="summary-grid">
+            <div className="summary-card__graph">
+              <div className="summary-card__label">
                 Total de Pedidos
               </div>
-              <div style={{ fontSize: '2.5em', fontWeight: 'bold', color: '#3498db' }}>
+              <div className="summary-card__value summary-card__value--primary">
                 {reportData.total_orders}
               </div>
             </div>
-            
-            <div style={{
-              backgroundColor: '#fff',
-              padding: '20px',
-              borderRadius: '8px',
-              border: '1px solid #e0e0e0',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <div style={{ color: '#7f8c8d', fontSize: '0.9em', marginBottom: '10px' }}>
+
+            <div className="summary-card__graph">
+              <div className="summary-card__label">
                 Ingresos Totales
               </div>
-              <div style={{ fontSize: '2.5em', fontWeight: 'bold', color: '#27ae60' }}>
+              <div className="summary-card__value summary-card__value--success">
                 {new Intl.NumberFormat('es-MX', {
                   style: 'currency',
                   currency: 'MXN'
@@ -462,28 +429,20 @@ export default function SalesReport() {
           </div>
 
           {/* Chart */}
-          <div style={{
-            backgroundColor: '#fff',
-            padding: '20px',
-            borderRadius: '8px',
-            border: '1px solid #e0e0e0',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            marginBottom: '20px'
-          }}>
-            <canvas 
-              ref={canvasRef} 
-              width={1000} 
+          <div className="chart-container">
+            <canvas
+              ref={canvasRef}
+              width={1000}
               height={400}
-              style={{ width: '100%', height: 'auto' }}
+              className="chart-container__canvas"
             />
           </div>
 
           {/* Download PDF Button */}
-          <div style={{ textAlign: 'center' }}>
-            <button 
-              className="btn-primary" 
+          <div className="download-section">
+            <button
+              className="btn-primary btn-primary--large"
               onClick={() => generatePDF(reportData)}
-              style={{ fontSize: '1.1em', padding: '12px 30px' }}
             >
               <FontAwesomeIcon icon={faFileDownload} /> Descargar Reporte Completo en PDF
             </button>

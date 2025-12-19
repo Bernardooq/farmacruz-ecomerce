@@ -1,4 +1,10 @@
-@forward 'admin';
+@forward 'admin-tabs';
+@forward 'admin-components';
+@forward 'admin-modals';
+@forward 'sales-report';
+@forward 'sales-team';
+@forward 'marketing-groups';
+@forward 'product-modal';
 @forward 'cart';
 @forward 'login';
 @forward 'products';
@@ -8,5 +14,4 @@
 @forward 'contact';
 @forward 'about';
 @forward 'legal';
-
-
+@forward 'price-lists';

@@ -8,7 +8,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -19,12 +19,14 @@ export default function LoginForm() {
 
     try {
       const user = await login(username, password);
-      
+
       // Redirect based on role
       if (user.role === 'admin') {
         navigate('/admindash');
       } else if (user.role === 'seller') {
         navigate('/sellerdash');
+      } else if (user.role === 'marketing') {
+        navigate('/marketingdash');
       } else {
         navigate('/products');
       }
@@ -38,7 +40,7 @@ export default function LoginForm() {
   return (
     <form className="login-form" onSubmit={handleSubmit}>
       {error && <div className="error-message">{error}</div>}
-      
+
       <div className="form-group">
         <label htmlFor="username">Usuario:</label>
         <input

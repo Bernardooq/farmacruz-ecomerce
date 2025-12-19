@@ -1,63 +1,55 @@
+"""
+Routes de Administración de Usuarios Internos
+
+Endpoints CRUD para gestión de usuarios del sistema:
+- GET /users - Lista de usuarios con filtros
+- POST /users - Crear usuario
+- GET /users/{id} - Detalle de usuario
+- PUT /users/{id} - Actualizar usuario
+- DELETE /users/{id} - Eliminar usuario
+
+Permisos: Solo administradores
+
+Nota: Este módulo gestiona usuarios INTERNOS (admin, marketing, seller).
+Para clientes, ver routes/customers.py
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import datetime
 
 from dependencies import get_db, get_current_admin_user
-from db.base import User, Order, Product, OrderStatus, CustomerInfo
+from db.base import User, UserRole
 from schemas.user import User as UserSchema, UserUpdate, UserCreate
-from schemas.customer_info import CustomerInfo as CustomerInfoSchema, CustomerInfoUpdate
-from crud.crud_user import get_users, get_user, update_user, delete_user, create_user, get_user_by_username, get_user_by_email
-from pydantic import BaseModel
+from crud.crud_user import (
+    get_users, get_user, update_user, delete_user,
+    create_user, get_user_by_username, get_user_by_email
+)
 
 router = APIRouter()
 
-# --- Modelos para estadísticas ---
-
-class DashboardStats(BaseModel):
-    total_users: int
-    total_products: int
-    total_orders: int
-    pending_orders: int
-    total_revenue: float
-    low_stock_count: int
-    total_customers: int
-    total_sellers: int
-
-class SalesReportItem(BaseModel):
-    order_id: int
-    customer_name: str
-    customer_email: str
-    order_date: str
-    status: str
-    total_amount: float
-    items_count: int
-
-class SalesReport(BaseModel):
-    start_date: str
-    end_date: str
-    total_orders: int
-    total_revenue: float
-    orders: List[SalesReportItem]
-
-# --- Gestión de Usuarios ---
 
 @router.get("/users", response_model=List[UserSchema])
 def read_all_users(
-    skip: int = 0,
-    limit: int = 100,
-    role: str = None,
-    search: Optional[str] = None,
+    skip: int = Query(0, ge=0, description="Registros a saltar"),
+    limit: int = Query(100, ge=1, le=200, description="Máximo de registros"),
+    role: Optional[str] = Query(None, description="Filtrar por rol: admin, marketing, seller"),
+    search: Optional[str] = Query(None, description="Buscar por nombre o username"),
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene todos los usuarios con filtro opcional por rol y búsqueda por nombre (solo administradores)
-    """
-    from db.base import UserRole
+    Lista de usuarios internos con filtros
     
-    # Convertir string a enum si se proporciona
+    Búsqueda por nombre completo o username.
+    Filtrado por rol (admin, marketing, seller).
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        400: Rol inválido
+    """
+    # === CONVERTIR ROLE STRING A ENUM ===
     role_filter = None
     if role:
         try:
@@ -65,22 +57,35 @@ def read_all_users(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid role: {role}"
+                detail=f"Rol inválido: '{role}'. Roles válidos: admin, marketing, seller"
             )
     
     users = get_users(db, skip=skip, limit=limit, role=role_filter, search=search)
     return users
 
-@router.post("/users", response_model=UserSchema)
+
+@router.post("/users", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 def create_new_user(
     user: UserCreate,
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """
-    Crea un nuevo usuario (solo administradores)
+    Crea un nuevo usuario interno
+    
+    Validaciones:
+    - Username único
+    - Email único (si se proporciona)
+    - Role válido
+    
+    La contraseña se hashea con Argon2.
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        400: Username o email ya existe
     """
-    # Verificar si el username ya existe
+    # === VALIDAR USERNAME ÚNICO ===
     db_user = get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(
@@ -88,7 +93,7 @@ def create_new_user(
             detail="El nombre de usuario ya está registrado"
         )
     
-    # Verificar si el email ya existe
+    # === VALIDAR EMAIL ÚNICO ===
     if user.email:
         db_user = get_user_by_email(db, email=user.email)
         if db_user:
@@ -99,6 +104,7 @@ def create_new_user(
     
     return create_user(db=db, user=user)
 
+
 @router.get("/users/{user_id}", response_model=UserSchema)
 def read_user_by_id(
     user_id: int,
@@ -106,7 +112,12 @@ def read_user_by_id(
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene un usuario específico por ID (solo administradores)
+    Detalle de un usuario específico
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        404: Usuario no encontrado
     """
     user = get_user(db, user_id=user_id)
     if not user:
@@ -115,6 +126,7 @@ def read_user_by_id(
             detail="Usuario no encontrado"
         )
     return user
+
 
 @router.put("/users/{user_id}", response_model=UserSchema)
 def update_user_info(
@@ -124,7 +136,19 @@ def update_user_info(
     db: Session = Depends(get_db)
 ):
     """
-    Actualiza información de un usuario (solo administradores)
+    Actualiza información de un usuario
+    
+    Campos actualizables:
+    - email
+    - full_name
+    - password (se hashea automáticamente)
+    - role
+    - is_active
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        404: Usuario no encontrado
     """
     user = update_user(db, user_id=user_id, user=user_update)
     if not user:
@@ -134,6 +158,7 @@ def update_user_info(
         )
     return user
 
+
 @router.delete("/users/{user_id}")
 def delete_user_account(
     user_id: int,
@@ -141,82 +166,62 @@ def delete_user_account(
     db: Session = Depends(get_db)
 ):
     """
-    Elimina un usuario (solo administradores)
+    Elimina un usuario (hard delete)
+    
+    Validaciones:
+    - No puede eliminarse a sí mismo
+    - No puede tener pedidos asignados
+    - Si tiene pedidos, debe desactivarse (is_active=False)
+    
+    Warning:
+        Esto elimina permanentemente el usuario y sus asignaciones a grupos.
+        Consider desactivar (is_active=False) en su lugar para mantener historial.
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        400: Intento de auto-eliminación o usuario con pedidos asignados
+        404: Usuario no encontrado
     """
+    from db.base import Order
+    
+    # === PREVENIR AUTO-ELIMINACIÓN ===
     if user_id == current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No puedes eliminar tu propia cuenta"
         )
     
+    # === VERIFICAR SI TIENE PEDIDOS ASIGNADOS ===
+    # Contar pedidos donde el usuario es vendedor asignado
+    assigned_orders = db.query(Order).filter(
+        Order.assigned_seller_id == user_id
+    ).count()
+    
+    # Contar pedidos donde el usuario hizo la asignación
+    assigned_by_orders = db.query(Order).filter(
+        Order.assigned_by_user_id == user_id
+    ).count()
+    
+    total_orders = assigned_orders + assigned_by_orders
+    
+    if total_orders > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"No se puede eliminar el usuario porque tiene {total_orders} pedido(s) asociado(s) "
+                f"({assigned_orders} como vendedor asignado, {assigned_by_orders} como asignador). "
+                "Para mantener el historial de pedidos, desactiva el usuario en su lugar "
+                "(establecer is_active=False)."
+            )
+        )
+    
+    # === ELIMINAR SI NO TIENE PEDIDOS ===
     user = delete_user(db, user_id=user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado"
         )
+    
     return {"message": "Usuario eliminado exitosamente"}
-
-# --- Gestión de Customer Info ---
-
-@router.get("/users/{user_id}/customer-info", response_model=CustomerInfoSchema)
-def read_user_customer_info(
-    user_id: int,
-    current_user: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Obtiene la información de cliente de un usuario específico (solo administradores)
-    """
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.user_id == user_id
-    ).first()
-    
-    if not customer_info:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Información de cliente no encontrada"
-        )
-    
-    return customer_info
-
-@router.put("/users/{user_id}/customer-info", response_model=CustomerInfoSchema)
-def update_user_customer_info(
-    user_id: int,
-    customer_info_update: CustomerInfoUpdate,
-    current_user: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Actualiza o crea la información de cliente de un usuario específico (solo administradores)
-    """
-    # Verificar que el usuario existe
-    user = get_user(db, user_id=user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
-        )
-    
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.user_id == user_id
-    ).first()
-    
-    if not customer_info:
-        # Crear nuevo registro si no existe
-        customer_info = CustomerInfo(
-            user_id=user_id,
-            business_name=customer_info_update.business_name or '',
-            address=customer_info_update.address,
-            rfc=customer_info_update.rfc
-        )
-        db.add(customer_info)
-    else:
-        # Actualizar campos existentes
-        update_data = customer_info_update.dict(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(customer_info, field, value)
-    
-    db.commit()
-    db.refresh(customer_info)
-    return customer_info

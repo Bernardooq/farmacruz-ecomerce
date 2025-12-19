@@ -1,6 +1,6 @@
 export default function OrderModal({ order, onClose }) {
   if (!order) return null;
-  
+
   const handleDownloadPDF = () => {
     // Create a printable version
     const printWindow = window.open('', '_blank');
@@ -77,6 +77,12 @@ export default function OrderModal({ order, onClose }) {
             <span class="info-label">Estado:</span>
             <span>${order.status}</span>
           </div>
+          ${order.shippingAddress ? `
+          <div class="info-row">
+            <span class="info-label">Dirección de Envío:</span>
+            <span>${order.shippingAddress}</span>
+          </div>
+          ` : ''}
         </div>
         
         <h2>Artículos del Pedido</h2>
@@ -88,15 +94,15 @@ export default function OrderModal({ order, onClose }) {
             </tr>
           </thead>
           <tbody>
-            ${order.items && order.items.length > 0 
-              ? order.items.map((item, i) => `
+            ${order.items && order.items.length > 0
+        ? order.items.map((item, i) => `
                 <tr>
                   <td>${i + 1}</td>
                   <td>${item}</td>
                 </tr>
               `).join('')
-              : '<tr><td colspan="2">No hay artículos en este pedido</td></tr>'
-            }
+        : '<tr><td colspan="2">No hay artículos en este pedido</td></tr>'
+      }
           </tbody>
         </table>
         
@@ -112,11 +118,11 @@ export default function OrderModal({ order, onClose }) {
       </body>
       </html>
     `;
-    
+
     printWindow.document.write(content);
     printWindow.document.close();
   };
-  
+
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -128,6 +134,9 @@ export default function OrderModal({ order, onClose }) {
           <p><strong>Número de Pedido:</strong> {order.id}</p>
           <p><strong>Fecha:</strong> {order.date}</p>
           <p><strong>Estado:</strong> <span className={`status status--${order.statusClass}`}>{order.status}</span></p>
+          {order.shippingAddress && (
+            <p><strong>Dirección de Envío:</strong> {order.shippingAddress}</p>
+          )}
           <p><strong>Total:</strong> ${order.totalAmount?.toFixed(2) || order.total} MXN</p>
           <hr style={{ margin: '20px 0' }} />
           <h3>Artículos:</h3>
@@ -142,17 +151,17 @@ export default function OrderModal({ order, onClose }) {
           ) : (
             <p>No hay artículos en este pedido</p>
           )}
-          
-          <div style={{ 
-            marginTop: '20px', 
-            display: 'flex', 
-            justifyContent: 'flex-end', 
+
+          <div style={{
+            marginTop: '20px',
+            display: 'flex',
+            justifyContent: 'flex-end',
             gap: '10px',
             paddingTop: '20px',
             borderTop: '1px solid #eee'
           }}>
-            <button 
-              className="btn-primary" 
+            <button
+              className="btn-primary"
               onClick={handleDownloadPDF}
             >
               📄 Descargar PDF

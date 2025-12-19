@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import orderService from '../services/orderService';
+import { userService } from '../services/userService';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ModalOrderDetails from './ModalOrderDetails';
+import ModalAssignSeller from './ModalAssignSeller';
 import PaginationButtons from './PaginationButtons';
+import { useAuth } from '../context/AuthContext';
 
 export default function AllOrders() {
+  const { user } = useAuth();  // 🔥 Usar AuthContext
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,10 +21,15 @@ export default function AllOrders() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const itemsPerPage = 10;
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Assignment modal
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [orderToAssign, setOrderToAssign] = useState(null);
+  const [availableSellers, setAvailableSellers] = useState([]);
 
   useEffect(() => {
     loadOrders();
@@ -30,29 +39,29 @@ export default function AllOrders() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1
       };
-      
+
       if (statusFilter) {
         params.status = statusFilter;
       }
-      
+
       if (searchTerm) {
         params.search = searchTerm;
       }
-      
+
       const data = await orderService.getAllOrders(params);
-      
+
       // Verificar si hay más páginas
       const hasMorePages = data.length > itemsPerPage;
       setHasMore(hasMorePages);
-      
+
       // Tomar solo los items de la página actual
       const pageOrders = hasMorePages ? data.slice(0, itemsPerPage) : data;
-      
+
       setOrders(pageOrders);
     } catch (err) {
       setError('No se pudieron cargar los pedidos. Intenta de nuevo.');
@@ -122,18 +131,22 @@ export default function AllOrders() {
     try {
       setActionLoading(orderId);
       const orderDetails = await orderService.getOrderById(orderId);
-      
+
       // Cargar información adicional del cliente si existe
-      if (orderDetails.customer?.user_id) {
+      if (orderDetails.customer?.customer_id || orderDetails.customer?.user_id) {
         try {
           const { userService } = await import('../services/userService');
-          const customerInfo = await userService.getUserCustomerInfo(orderDetails.customer.user_id);
+          const customerId = orderDetails.customer.customer_id || orderDetails.customer.user_id;
+          const customerInfo = await userService.getUserCustomerInfo(customerId);
           orderDetails.customerInfo = customerInfo;
         } catch (err) {
-          console.log('No customer info available');
+          console.log('No customer info available', err);
         }
       }
-      
+
+      // Use shipping_address from backend (already calculated)
+      orderDetails.shippingAddress = orderDetails.shipping_address || 'No especificada';
+
       setSelectedOrder(orderDetails);
       setShowModal(true);
     } catch (err) {
@@ -149,6 +162,36 @@ export default function AllOrders() {
     setSelectedOrder(null);
   };
 
+  const handleAssignClick = async (order) => {
+    try {
+      // Load available sellers
+      const sellers = await userService.getAvailableSellers();
+      setAvailableSellers(sellers);
+      setOrderToAssign(order);
+      setShowAssignModal(true);
+    } catch (err) {
+      setError('Error al cargar vendedores');
+      console.error('Failed to load sellers:', err);
+    }
+  };
+
+  const handleAssign = async (sellerId, notes) => {
+    try {
+      await orderService.assignOrderToSeller(orderToAssign.order_id, sellerId, notes);
+      // Reload orders after assignment
+      await loadOrders();
+      setShowAssignModal(false);
+      setOrderToAssign(null);
+    } catch (err) {
+      throw new Error(err.message || 'Error al asignar vendedor');
+    }
+  };
+
+  const handleCloseAssignModal = () => {
+    setShowAssignModal(false);
+    setOrderToAssign(null);
+  };
+
   if (loading && orders.length === 0) {
     return (
       <section className="dashboard-section">
@@ -161,15 +204,15 @@ export default function AllOrders() {
   return (
     <section className="dashboard-section">
       <h2 className="section-title">Gestión de Pedidos</h2>
-      
+
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
-      
+
       {/* Filters */}
       <div className="dashboard-controls">
         <form className="search-bar" onSubmit={handleSearch}>
-          <input 
-            type="search" 
-            placeholder="Buscar por N° de Pedido o Nombre de Cliente..." 
+          <input
+            type="search"
+            placeholder="Buscar por N° de Pedido o Nombre de Cliente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -180,7 +223,7 @@ export default function AllOrders() {
 
         <div className="filter-group">
           <label htmlFor="status-filter">Estado:</label>
-          <select 
+          <select
             id="status-filter"
             value={statusFilter}
             onChange={(e) => {
@@ -190,6 +233,7 @@ export default function AllOrders() {
           >
             <option value="">Todos</option>
             <option value="pending_validation">Pendiente de Validación</option>
+            <option value="assigned">Asignado</option>
             <option value="approved">Aprobado</option>
             <option value="shipped">Enviado</option>
             <option value="delivered">Entregado</option>
@@ -197,7 +241,7 @@ export default function AllOrders() {
           </select>
         </div>
       </div>
-      
+
       {orders.length === 0 ? (
         <p className="no-data-message">No hay pedidos que mostrar.</p>
       ) : (
@@ -211,6 +255,7 @@ export default function AllOrders() {
                 <th>Fecha</th>
                 <th>Items</th>
                 <th>Total</th>
+                <th>Vendedor</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -224,7 +269,9 @@ export default function AllOrders() {
                   onShip={handleShip}
                   onDeliver={handleDeliver}
                   onCancel={handleCancel}
+                  onAssign={handleAssignClick}
                   onViewDetails={handleViewDetails}
+                  userRole={user?.role}
                   isLoading={actionLoading === order.order_id}
                 />
               ))}
@@ -248,18 +295,26 @@ export default function AllOrders() {
         order={selectedOrder}
         onClose={handleCloseModal}
       />
+
+      <ModalAssignSeller
+        visible={showAssignModal}
+        order={orderToAssign}
+        availableSellers={availableSellers}
+        onAssign={handleAssign}
+        onClose={handleCloseAssignModal}
+      />
     </section>
   );
 }
 
 // Component for rendering each order row with status-specific actions
-function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onViewDetails, isLoading }) {
+function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAssign, onViewDetails, userRole, isLoading }) {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit' 
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
     });
   };
 
@@ -270,6 +325,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onVi
   const getStatusLabel = (status) => {
     const labels = {
       'pending_validation': 'Pendiente',
+      'assigned': 'Asignado',
       'approved': 'Aprobado',
       'shipped': 'Enviado',
       'delivered': 'Entregado',
@@ -281,6 +337,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onVi
   const getStatusClass = (status) => {
     const classes = {
       'pending_validation': 'pending',
+      'assigned': 'assigned',
       'approved': 'approved',
       'shipped': 'shipped',
       'delivered': 'delivered',
@@ -292,6 +349,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onVi
   const clientName = order.customer?.full_name || order.customer?.username || 'N/A';
   const clientContact = order.customer?.email || 'N/A';
   const itemCount = order.items?.length || 0;
+  const sellerName = order.assigned_seller?.full_name || 'Sin asignar';
 
   return (
     <tr>
@@ -301,6 +359,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onVi
       <td data-label="Fecha">{formatDate(order.created_at)}</td>
       <td data-label="Items">{itemCount}</td>
       <td data-label="Total">{formatCurrency(order.total_amount)}</td>
+      <td data-label="Vendedor">{sellerName}</td>
       <td data-label="Estado">
         <span className={`status status--${getStatusClass(order.status)}`}>
           {getStatusLabel(order.status)}
@@ -312,8 +371,17 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onVi
         ) : (
           <div className="action-buttons">
             {order.status === 'pending_validation' && (
-              <button 
-                className="btn-action btn-action--approve" 
+              <button
+                className="btn-action btn-action--approve"
+                onClick={() => onApprove(order.order_id)}
+                title="Aprobar"
+              >
+                Aprobar
+              </button>
+            )}
+            {order.status === 'assigned' && (
+              <button
+                className="btn-action btn-action--approve"
                 onClick={() => onApprove(order.order_id)}
                 title="Aprobar"
               >
@@ -321,8 +389,8 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onVi
               </button>
             )}
             {order.status === 'approved' && (
-              <button 
-                className="btn-action btn-action--ship" 
+              <button
+                className="btn-action btn-action--ship"
                 onClick={() => onShip(order.order_id)}
                 title="Marcar como Enviado"
               >
@@ -330,25 +398,38 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onVi
               </button>
             )}
             {order.status === 'shipped' && (
-              <button 
-                className="btn-action btn-action--deliver" 
+              <button
+                className="btn-action btn-action--deliver"
                 onClick={() => onDeliver(order.order_id)}
                 title="Marcar como Entregado"
               >
                 Entregar
               </button>
             )}
-            {(order.status === 'pending_validation' || order.status === 'approved') && (
-              <button 
-                className="btn-action btn-action--cancel" 
+            {(order.status === 'pending_validation' || order.status === 'assigned' || order.status === 'approved') && (
+              <button
+                className="btn-action btn-action--cancel"
                 onClick={() => onCancel(order.order_id)}
                 title="Cancelar Pedido"
               >
                 Cancelar
               </button>
             )}
-            <button 
-              className="btn-action btn-action--view" 
+
+            {/* Botón Asignar solo para admin y marketing */}
+            {order.status !== 'cancelled' && order.status !== 'delivered' && (userRole === 'admin' || userRole === 'marketing') && (
+              <button
+                className="btn-action btn-action--assign"
+                onClick={() => onAssign(order)}
+                title="Asignar/Reasignar Vendedor"
+                style={{ backgroundColor: '#8e44ad', color: 'white' }}
+              >
+                Asignar
+              </button>
+            )}
+
+            <button
+              className="btn-action btn-action--view"
               onClick={() => onViewDetails(order.order_id)}
               title="Ver Detalles"
             >

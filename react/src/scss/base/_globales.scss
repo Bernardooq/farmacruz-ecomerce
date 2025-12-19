@@ -11,10 +11,10 @@ html {
   scroll-behavior: smooth;
 }
 
-// Body
+// Body - MINIMALISTA
 body {
   font-family: v.$fuente_principal;
-  background: lighten(v.$negro, 98%);
+  background: v.$blanco;
   color: v.$negro;
   display: flex;
   flex-direction: column;
@@ -23,9 +23,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-// Botones globales
+// Botones globales - MÁS SUTILES
 button {
-  background-color: v.$primario;
+  background: v.$primario;
   color: v.$blanco;
   border: none;
   border-radius: 8px;
@@ -36,13 +36,16 @@ button {
   transition: all 0.2s ease;
   letter-spacing: 0.3px;
 
-  &:hover { 
-    background-color: darken(v.$primario, 8%); 
+  &:hover {
+    background: darken(v.$primario, 8%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(v.$primario, 0.3);
+    box-shadow: 0 2px 8px rgba(v.$negro, 0.15);
   }
-  &:active { transform: translateY(0); }
-  
+
+  &:active {
+    transform: translateY(0);
+  }
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -53,15 +56,14 @@ button {
 // Footer global
 .footer {
   margin-top: auto;
-  background: linear-gradient(135deg, darken(v.$negro, 5%) 0%, v.$negro 100%);
+  background: v.$negro;
   color: v.$blanco;
   padding: 3rem 2rem 2rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  border-top: 3px solid v.$primario;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(v.$primario, 0.2);
 
   @include m.tablet {
     flex-direction: row;
@@ -69,32 +71,17 @@ button {
     gap: 3rem;
     padding: 3rem 2rem 2.5rem;
   }
-  
+
   &__link {
-    color: lighten(v.$negro, 75%);
+    color: rgba(v.$blanco, 0.7);
     text-decoration: none;
     font-weight: 500;
     font-size: 0.95rem;
     transition: all 0.2s ease;
     position: relative;
-    
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: v.$primario;
-      transition: width 0.3s ease;
-    }
-    
+
     &:hover {
       color: v.$primario;
-      
-      &::after {
-        width: 100%;
-      }
     }
   }
 
@@ -102,10 +89,10 @@ button {
     width: 100%;
     margin-top: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid lighten(v.$negro, 20%);
+    border-top: 1px solid rgba(v.$blanco, 0.1);
     font-size: 0.875rem;
-    color: lighten(v.$negro, 50%);
-    
+    color: rgba(v.$blanco, 0.5);
+
     @include m.tablet {
       margin-top: 2rem;
       padding-top: 2rem;
@@ -113,7 +100,9 @@ button {
   }
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -122,20 +111,19 @@ html, body, #root {
 .page-container {
   display: flex;
   flex-direction: column;
-  min-height: 100%; 
+  min-height: 100%;
 }
-
 
 // Header y Nav Styles
 .header {
-  background: linear-gradient(135deg, v.$negro 0%, lighten(v.$negro, 8%) 100%);
+  background: v.$negro;
   padding: 1rem 0;
   position: sticky;
   top: 0;
   z-index: 100;
   width: 100%;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  border-bottom: 2px solid v.$primario;
+  box-shadow: 0 2px 4px rgba(v.$negro, 0.1);
+  border-bottom: 1px solid rgba(v.$primario, 0.2);
 }
 
 // Nav
@@ -146,9 +134,9 @@ html, body, #root {
   width: 90%;
   max-width: 1200px;
   margin: 0 auto;
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
   gap: 2rem;
-  
+
   &__logo {
     color: v.$blanco;
     font-size: 1.75rem;
@@ -156,10 +144,9 @@ html, body, #root {
     text-decoration: none;
     letter-spacing: -0.5px;
     transition: all 0.2s ease;
-    
+
     &:hover {
       color: v.$primario;
-      transform: scale(1.05);
     }
   }
 
@@ -167,14 +154,14 @@ html, body, #root {
     list-style: none;
     display: flex;
     gap: 0.5rem;
-    
+
     @include m.telefono {
       gap: 1rem;
     }
   }
 
   &__link {
-    color: lighten(v.$negro, 75%);
+    color: rgba(v.$blanco, 0.8);
     text-decoration: none;
     font-size: 0.95rem;
     font-weight: 500;
@@ -182,10 +169,10 @@ html, body, #root {
     border-radius: 6px;
     transition: all 0.2s ease;
     position: relative;
-    
+
     &:hover {
       color: v.$primario;
-      background: rgba(v.$primario, 0.1);
+      background: rgba(v.$blanco, 0.05);
     }
   }
 
@@ -198,11 +185,10 @@ html, body, #root {
     font-weight: 600;
     font-size: 0.95rem;
     transition: all 0.2s ease;
-    
+
     &:hover {
       background: darken(v.$primario, 8%);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(v.$primario, 0.3);
     }
   }
 
@@ -213,7 +199,7 @@ html, body, #root {
   }
 
   &__user-name {
-    color: lighten(v.$negro, 70%);
+    color: rgba(v.$blanco, 0.7);
     font-size: 0.9rem;
     font-weight: 500;
     white-space: nowrap;
@@ -229,11 +215,10 @@ html, body, #root {
     padding: 0.5rem;
     border-radius: 8px;
     transition: all 0.2s ease;
-    
+
     &:hover {
       color: v.$primario;
-      background: rgba(v.$primario, 0.1);
-      transform: scale(1.1);
+      background: rgba(v.$blanco, 0.05);
     }
   }
 
@@ -241,7 +226,7 @@ html, body, #root {
     position: absolute;
     top: -4px;
     right: -4px;
-    background: linear-gradient(135deg, v.$acento 0%, darken(v.$acento, 10%) 100%);
+    background: v.$primario;
     color: v.$blanco;
     border-radius: 50%;
     width: 22px;
@@ -251,18 +236,16 @@ html, body, #root {
     justify-content: center;
     font-size: 0.7rem;
     font-weight: 700;
-    box-shadow: 0 2px 8px rgba(v.$acento, 0.4);
     border: 2px solid v.$negro;
   }
 }
 
-// Nav Searchbar
+// Nav Searchbar  
 .nav__search-bar {
-  flex-grow: 1; 
+  flex-grow: 1;
   margin: 0 2rem;
   display: flex;
   max-width: 500px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 24px;
   overflow: hidden;
 
@@ -275,13 +258,13 @@ html, body, #root {
     font-size: 0.95rem;
     background: v.$blanco;
     transition: all 0.2s ease;
-    
+
     &:focus {
       box-shadow: inset 0 0 0 2px v.$primario;
     }
-    
+
     &::placeholder {
-      color: lighten(v.$negro, 60%);
+      color: rgba(v.$negro, 0.4);
     }
   }
 
@@ -293,7 +276,7 @@ html, body, #root {
     border-radius: 0 24px 24px 0;
     cursor: pointer;
     transition: all 0.2s ease;
-    
+
     &:hover {
       background: darken(v.$primario, 8%);
       transform: none;
@@ -301,48 +284,44 @@ html, body, #root {
   }
 }
 
+// BOTÓN DE LOGOUT MEJORADO Y MINIMALISTA
 .nav__logout-link {
   background-color: transparent;
-  color: v.$acento;
-  border: 2px solid v.$acento;
-  padding: 0.65rem 1.25rem;
-  border-radius: 8px;
+  color: rgba(v.$blanco, 0.8);
+  border: 1px solid rgba(v.$blanco, 0.25);
+  padding: 0.6rem 1.15rem;
+  border-radius: 6px;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.9rem;
   white-space: nowrap;
   transition: all 0.2s ease;
   cursor: pointer;
 
   &:hover {
-    background-color: v.$acento;
+    background-color: rgba(v.$blanco, 0.1);
     color: v.$blanco;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(v.$acento, 0.3);
+    border-color: rgba(v.$blanco, 0.4);
   }
-  
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.98);
   }
 }
 
-
-
-
-
-// 
+// Modal
 .modal-overlay {
-  position: fixed; 
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(v.$negro, 0.7); 
+  background-color: rgba(v.$negro, 0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; 
-
+  z-index: 1000;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -360,12 +339,11 @@ html, body, #root {
 .modal-content {
   background-color: v.$blanco;
   padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 5px 20px rgba(v.$negro, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(v.$negro, 0.2);
   width: 90%;
-  max-width: 500px; 
+  max-width: 500px;
   position: relative;
-  
   transform: scale(0.9);
   transition: transform 0.3s ease;
 }
@@ -377,12 +355,13 @@ html, body, #root {
   background: none;
   border: none;
   font-size: 2.5rem;
-  color: lighten(v.$negro, 60%);
+  color: rgba(v.$negro, 0.4);
   cursor: pointer;
-  
+  transition: all 0.2s ease;
+
   &:hover {
     background: none;
-    transform: none;
+    transform: rotate(90deg);
     color: v.$negro;
   }
 }
@@ -390,57 +369,59 @@ html, body, #root {
 #modal-body {
   h2 {
     margin-top: 0;
-    color: v.$primario;
+    color: v.$negro;
+    font-weight: 700;
   }
+
   ul {
     padding-left: 20px;
   }
 }
 
-
-// Flechas Buttons
-.navigation-buttons{
-    display: flex;
-    max-width: 100%;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 4rem;
+// Navigation Buttons
+.navigation-buttons {
+  display: flex;
+  max-width: 100%;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 4rem;
 }
 
-// Error Messages
+// Error Messages - MÁS SUTILES
 .error-banner {
-  background-color: #f44336;
-  color: v.$blanco;
+  background: rgba(v.$acento, 0.1);
+  color: v.$acento;
   padding: 1rem;
-  border-radius: 0.5rem;
+  border-radius: 8px;
+  border-left: 4px solid v.$acento;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(#f44336, 0.3);
-  
+
   &__close {
     background: none;
     border: none;
-    color: v.$blanco;
+    color: v.$acento;
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0 0.5rem;
-    
+    transition: opacity 0.2s ease;
+
     &:hover {
       background: none;
       transform: none;
-      opacity: 0.8;
+      opacity: 0.7;
     }
   }
 }
 
 .error-message {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: rgba(v.$acento, 0.1);
+  color: darken(v.$acento, 15%);
   padding: 0.75rem;
-  border-radius: 0.5rem;
-  border-left: 4px solid #f44336;
+  border-radius: 8px;
+  border-left: 4px solid v.$acento;
   margin-bottom: 1rem;
   font-size: 0.95rem;
 }

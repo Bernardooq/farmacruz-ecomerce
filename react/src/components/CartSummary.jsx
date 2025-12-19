@@ -1,6 +1,8 @@
 export default function CartSummary({ items, onCheckout, processingCheckout = false }) {
   const subtotal = items.reduce((sum, item) => {
-    const price = item.price_at_addition || item.product?.price || 0;
+    const product = item.product || {};
+    // Backend already calculated final_price
+    const price = product.final_price || product.base_price || 0;
     return sum + price * item.quantity;
   }, 0).toFixed(2);
 
@@ -20,8 +22,8 @@ export default function CartSummary({ items, onCheckout, processingCheckout = fa
         <span>Total Estimado:</span>
         <span>${subtotal}</span>
       </div>
-      <button 
-        className="btn-checkout" 
+      <button
+        className="btn-checkout"
         onClick={onCheckout}
         disabled={processingCheckout || items.length === 0}
       >

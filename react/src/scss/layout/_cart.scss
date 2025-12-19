@@ -4,30 +4,31 @@
 .cart-page {
   padding: 2rem 0 4rem 0;
   flex: 1;
-  background-color: v.$primario;
+  background: lighten(v.$negro, 97%);
   min-height: 100%;
-
-  &__title {
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 2.5rem;
-    color: v.$negro; 
-  }
 }
 
 .empty-cart {
   text-align: center;
   padding: 4rem 2rem;
   background-color: v.$blanco;
-  border-radius: 1rem;
-  box-shadow: 0 4px 20px rgba(v.$negro, 0.08);
-  
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
+  border: 1px solid rgba(v.$negro, 0.06);
+
   p {
     font-size: 1.5rem;
-    color: lighten(v.$negro, 40%);
+    color: rgba(v.$negro, 0.6);
     margin-bottom: 2rem;
+
+    &::before {
+      content: "🛒";
+      display: block;
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
   }
-  
+
   .btn-primary {
     padding: 1rem 2rem;
     font-size: 1.1rem;
@@ -38,6 +39,7 @@
   display: grid;
   align-items: flex-start;
   gap: 2rem;
+
   @include m.desktop {
     grid-template-columns: 2fr 1fr;
   }
@@ -45,15 +47,15 @@
 
 // Columna de Items del Carrito
 .cart-items-header {
-  display: none; // Ocultamos los encabezados en movil
+  display: none;
+
   @include m.tablet {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr auto;
     gap: 1rem;
     padding: 0 1rem 0.5rem 1rem;
-    border-bottom: 2px solid lighten(v.$negro, 80%);
-    color: lighten(v.$negro, 40%);
-    font-weight: bold;
+    color: v.$negro;
+    font-weight: 700;
   }
 }
 
@@ -65,22 +67,28 @@
 
 .cart-item {
   background-color: v.$blanco;
-  border-radius: 1rem;
+  border-radius: 12px;
   padding: 1.5rem;
   display: grid;
-  grid-template-columns: auto 1fr; // Columna para imagen y el resto
-  grid-template-areas:
-    "image product"
-    "quantity total";
-  align-items: center;
-  gap: 1rem 1.5rem;
-  box-shadow: 0 4px 20px rgba(v.$negro, 0.08);
+  align-items: start;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
+  border: 1px solid rgba(v.$negro, 0.06);
+  transition: all 0.2s ease;
 
-  // Layout para pantallas grandes
+  &:hover {
+    box-shadow: 0 4px 12px rgba(v.$negro, 0.1);
+  }
+
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "product remove"
+  "quantity total";
+
   @include m.tablet {
     grid-template-columns: 2fr 1fr 1fr auto;
     grid-template-areas: "product quantity total remove";
     padding: 1rem;
+    align-items: center;
   }
 
   &__product {
@@ -94,7 +102,9 @@
     width: 60px;
     height: 60px;
     object-fit: cover;
-    border-radius: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid rgba(v.$negro, 0.1);
+
     @include m.tablet {
       width: 80px;
       height: 80px;
@@ -104,90 +114,199 @@
   &__name {
     margin: 0 0 0.25rem 0;
     font-size: 1.1rem;
+    font-weight: 700;
+    color: v.$negro;
   }
-  
+
   &__price {
-    color: lighten(v.$negro, 40%);
+    color: rgba(v.$negro, 0.6);
+    font-weight: 600;
   }
 
   &__quantity {
     grid-area: quantity;
     justify-self: start;
-    @include m.tablet { justify-self: center; }
+
+    @include m.tablet {
+      justify-self: center;
+    }
   }
 
   &__total {
     grid-area: total;
-    font-weight: bold;
+    font-weight: 800;
     font-size: 1.2rem;
     text-align: right;
-    @include m.tablet { text-align: center; }
+    align-self: center;
+    color: v.$primario;
+
+    @include m.tablet {
+      text-align: center;
+    }
   }
 
   &__remove-btn {
-    grid-area: product; 
+    grid-area: remove;
     justify-self: end;
-    background: none; border: none; font-size: 1.2rem;
-    color: lighten(v.$negro, 60%); cursor: pointer; padding: 0.5rem;
-    @include m.tablet { grid-area: remove; } // Vuelve a su columna en desktop
-    &:hover { background: none; transform: none; color: v.$acento; }
+    align-self: start;
+    background: rgba(v.$acento, 0.1);
+    border: none;
+    font-size: 1.2rem;
+    color: v.$acento;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: v.$acento;
+      color: v.$blanco;
+    }
   }
 }
 
 .quantity-selector {
   display: flex;
   align-items: center;
-  border: 1px solid lighten(v.$negro, 80%);
-  border-radius: 50px; // Bordes redondeados
-  
+  border: 1px solid rgba(v.$negro, 0.15);
+  border-radius: 6px;
+  width: fit-content;
+  background: v.$blanco;
+
   &__btn {
-    background: none; border: none; font-size: 1.2rem;
-    padding: 0.2rem 0.8rem; cursor: pointer; color: v.$negro;
-    &:hover { background: none; transform: none; color: v.$primario; }
+    background: none;
+    border: none;
+    font-size: 1rem;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    color: v.$primario;
+    font-weight: 700;
+    transition: all 0.2s ease;
+
+    @include m.tablet {
+      font-size: 1.2rem;
+      padding: 0.2rem 0.8rem;
+    }
+
+    &:hover {
+      background: rgba(v.$primario, 0.1);
+    }
   }
-  
+
   input {
-    width: 40px; text-align: center; border: none;
-    font-size: 1.1rem; font-weight: bold;
+    width: 35px;
+    text-align: center;
+    border: none;
+    font-size: 1rem;
+    font-weight: 800;
+    background: transparent;
+    color: v.$negro;
+
+    @include m.tablet {
+      width: 40px;
+      font-size: 1.1rem;
+    }
+
+    &:focus {
+      outline: none;
+      background: rgba(v.$primario, 0.05);
+    }
+
+    // Remove arrows from number input
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    appearance: textfield;
+    -moz-appearance: textfield;
   }
 }
 
-
 // Resumen Carrito
 .cart-summary {
-  background-color: v.$blanco;
+  background: v.$blanco;
   padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 20px rgba(v.$negro, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
+  border: 1px solid rgba(v.$negro, 0.06);
   position: sticky;
   top: 100px;
-  
-  &__title { margin-top: 0; }
-  
+
+  &__title {
+    margin-top: 0;
+    color: v.$negro;
+    font-weight: 800;
+  }
+
   .summary-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 1rem;
+    font-weight: 600;
+    color: rgba(v.$negro, 0.7);
   }
-  
+
   .total {
-    font-weight: bold;
+    font-weight: 800;
     font-size: 1.5rem;
-    color: v.$negro;
+    color: v.$primario;
   }
-  
+
   hr {
     border: 0;
-    border-top: 1px solid lighten(v.$negro, 90%);
+    border-top: 1px solid rgba(v.$negro, 0.1);
     margin: 1.5rem 0;
   }
-  
+
   .btn-checkout {
     width: 100%;
     padding: 1rem;
     font-size: 1.2rem;
-    background-color: v.$terciario; // Verde para el botón de finalizar
-    &:hover { background-color: darken(v.$terciario, 10%); }
+    background: v.$primario;
+
+    &:hover {
+      background: darken(v.$primario, 8%);
+    }
   }
 }
 
+// ============================================
+// MODAL DE CONFIRMACIÓN DE PEDIDO
+// ============================================
+
+.confirm-message {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: v.$negro;
+}
+
+.address-box {
+  background-color: rgba(v.$primario, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid v.$primario;
+  margin-bottom: 1rem;
+
+  &__label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: v.$negro;
+  }
+
+  &__address {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: v.$primario;
+    margin: 0;
+  }
+}
+
+.address-warning {
+  color: v.$acento;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}

@@ -1,19 +1,54 @@
+"""
+Routes para Gestión de Pedidos y Carrito
+
+Endpoints para el ciclo completo de pedidos:
+
+CARRITO (Clientes):
+- GET /cart - Ver carrito
+- POST /cart - Agregar producto
+- PUT /cart/{id} - Actualizar cantidad
+- DELETE /cart/{id} - Eliminar item
+- DELETE /cart - Vaciar carrito
+
+PEDIDOS (Clientes):
+- POST /checkout - Crear pedido desde carrito
+- GET / - Ver mis pedidos
+- GET /{id} - Ver detalle de pedido
+- POST /{id}/cancel - Cancelar pedido
+
+PEDIDOS (Admin/Marketing/Seller):
+- GET /all - Ver todos los pedidos (según permisos)
+- PUT /{id}/status - Actualizar estado
+- POST /{id}/assign - Asignar vendedor
+
+Sistema de Permisos:
+- Clientes: Solo sus propios pedidos
+- Sellers: Pedidos asignados a ellos
+- Marketing: Pedidos de clientes en sus grupos
+- Admin: Todos los pedidos
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from dependencies import get_db, get_current_user, get_current_seller_user, get_current_customer_user
-from schemas.order import Order, OrderUpdate
+from dependencies import get_db, get_current_user, get_current_seller_user
+from schemas.order import Order, OrderUpdate, OrderWithAddress, OrderAssign
 from schemas.cart import CartItem
 from db.base import OrderStatus, User
+
 from crud.crud_order import (
     get_order,
-    get_orders_by_user,
+    get_orders_by_customer,
     get_orders,
+    get_orders_for_user_groups,
     create_order_from_cart,
     update_order_status,
-    cancel_order,
+    cancel_order
+)
+
+from crud.crud_cart import (
     get_cart,
     add_to_cart,
     update_cart_item,
@@ -21,9 +56,11 @@ from crud.crud_order import (
     clear_cart
 )
 
+from crud.crud_sales_group import user_can_manage_order
+
 router = APIRouter()
 
-# --- Carrito de Compras ---
+# === CARRITO DE COMPRAS ===
 
 class CartItemAdd(BaseModel):
     product_id: int
@@ -34,30 +71,75 @@ class CartItemUpdate(BaseModel):
 
 @router.get("/cart")
 def read_cart(
-    current_user: User = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Obtiene el carrito del usuario actual con información de productos
     """
-    cart_items = get_cart(db, user_id=current_user.user_id)
+    from db.base import Customer
+    
+    # Get customer_id based on user type
+    if isinstance(current_user, Customer):
+        customer_id = current_user.customer_id
+    else:
+        # For backwards compatibility with old User-based customers
+        customer_id = getattr(current_user, 'user_id', None)
+    
+    if not customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se pudo identificar el cliente"
+        )
+    
+    cart_items = get_cart(db, customer_id=customer_id)
+    
+    # Get customer's price list to calculate final prices
+    from db.base import Customer, CustomerInfo, PriceListItem
+    from decimal import Decimal
+    
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
     
     # Enriquecer con información del producto en formato anidado
     result = []
     for item in cart_items:
+        # Calculate final price based on customer's price list
+        final_price = None
+        markup_percentage = 0.0
+        
+        if customer_info and customer_info.price_list_id and item.product:
+            # Get markup from price list
+            price_item = db.query(PriceListItem).filter(
+                PriceListItem.price_list_id == customer_info.price_list_id,
+                PriceListItem.product_id == item.product_id
+            ).first()
+            
+            if price_item:
+                base_price = Decimal(str(item.product.base_price or 0))
+                markup = Decimal(str(price_item.markup_percentage or 0))
+                iva = Decimal(str(item.product.iva_percentage or 0))
+                
+                price_with_markup = base_price * (1 + markup / 100)
+                final_price = float(price_with_markup * (1 + iva / 100))
+                markup_percentage = float(markup)
+        
         cart_data = {
             "cart_cache_id": item.cart_cache_id,
-            "user_id": item.user_id,
+            "customer_id": item.customer_id,
             "product_id": item.product_id,
             "quantity": item.quantity,
-            "price_at_addition": float(item.price_at_addition),
             "added_at": item.added_at,
             "updated_at": item.updated_at,
             "product": {
                 "product_id": item.product.product_id,
                 "name": item.product.name,
                 "sku": item.product.sku,
-                "price": float(item.product.price),
+                "base_price": float(item.product.base_price) if item.product.base_price else 0.0,
+                "iva_percentage": float(item.product.iva_percentage) if item.product.iva_percentage else 16.0,
+                "final_price": final_price,
+                "markup_percentage": markup_percentage,
                 "image_url": item.product.image_url,
                 "stock_count": item.product.stock_count,
                 "is_active": item.product.is_active
@@ -70,16 +152,30 @@ def read_cart(
 @router.post("/cart")
 def add_item_to_cart(
     item: CartItemAdd,
-    current_user: User = Depends(get_current_customer_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Agrega un producto al carrito
     """
+    from db.base import Customer
+    
+    # Get customer_id based on user type
+    if isinstance(current_user, Customer):
+        customer_id = current_user.customer_id
+    else:
+        customer_id = getattr(current_user, 'user_id', None)
+    
+    if not customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se pudo identificar el cliente"
+        )
+    
     try:
         cart_item = add_to_cart(
             db,
-            user_id=current_user.user_id,
+            customer_id=customer_id,
             product_id=item.product_id,
             quantity=item.quantity
         )
@@ -94,13 +190,34 @@ def add_item_to_cart(
 def update_cart_item_quantity(
     cart_id: int,
     item: CartItemUpdate,
-    current_user: User = Depends(get_current_customer_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Actualiza la cantidad de un item en el carrito
+    Actualiza la cantidad de un producto en el carrito
     """
-    cart_item = update_cart_item(db, cart_id=cart_id, quantity=item.quantity)
+    from db.base import Customer
+    
+    # Get customer_id based on user type
+    if isinstance(current_user, Customer):
+        customer_id = current_user.customer_id
+    else:
+        customer_id = getattr(current_user, 'user_id', None)
+    
+    if not customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se pudo identificar el cliente"
+        )
+    
+    # Note: update_cart_item doesn't validate customer_id, but that's ok
+    # since cart_id is unique and user can only access their own cart items
+    cart_item = update_cart_item(
+        db,
+        cart_id=cart_id,
+        quantity=item.quantity
+    )
+    
     if not cart_item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -111,7 +228,7 @@ def update_cart_item_quantity(
 @router.delete("/cart/{cart_id}")
 def delete_cart_item(
     cart_id: int,
-    current_user: User = Depends(get_current_customer_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -127,27 +244,64 @@ def delete_cart_item(
 
 @router.delete("/cart")
 def clear_user_cart(
-    current_user: User = Depends(get_current_customer_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Limpia el carrito del usuario
     """
-    clear_cart(db, user_id=current_user.user_id)
+    from db.base import Customer
+    
+    # Get customer_id based on user type
+    if isinstance(current_user, Customer):
+        customer_id = current_user.customer_id
+    else:
+        customer_id = getattr(current_user, 'user_id', None)
+    
+    if not customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se pudo identificar el cliente"
+        )
+    
+    clear_cart(db, customer_id=customer_id)
     return {"message": "Carrito limpiado"}
 
 # --- Pedidos ---
 
+class CheckoutRequest(BaseModel):
+    shipping_address_number: int = 1  # Default to address 1
+
 @router.post("/checkout", response_model=Order)
 def checkout_cart(
-    current_user: User = Depends(get_current_user),
+    checkout_data: CheckoutRequest,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Crea un pedido desde el carrito actual
+    Calcula precios en el servidor basándose en la lista de precios del cliente
     """
+    from db.base import Customer
+    
+    # Get customer_id based on user type
+    if isinstance(current_user, Customer):
+        customer_id = current_user.customer_id
+    else:
+        customer_id = getattr(current_user, 'user_id', None)
+    
+    if not customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se pudo identificar el cliente"
+        )
+    
     try:
-        order = create_order_from_cart(db, user_id=current_user.user_id)
+        order = create_order_from_cart(
+            db, 
+            customer_id=customer_id,
+            shipping_address_number=checkout_data.shipping_address_number
+        )
         return order
     except ValueError as e:
         raise HTTPException(
@@ -155,24 +309,57 @@ def checkout_cart(
             detail=str(e)
         )
 
-@router.get("/", response_model=List[Order])
+@router.get("/", response_model=List[OrderWithAddress])
 def read_orders(
     skip: int = 0,
     limit: int = 100,
     status: Optional[OrderStatus] = None,
-    current_user: User = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Obtiene los pedidos del usuario actual
     """
-    orders = get_orders_by_user(
+    from db.base import Customer, CustomerInfo
+    
+    # Get customer_id based on user type
+    if isinstance(current_user, Customer):
+        customer_id = current_user.customer_id
+    else:
+        customer_id = getattr(current_user, 'user_id', None)
+    
+    if not customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se pudo identificar el cliente"
+        )
+    
+    orders = get_orders_by_customer(
         db,
-        user_id=current_user.user_id,
+        customer_id=customer_id,
         skip=skip,
         limit=limit,
         status=status
     )
+    
+    # Calculate shipping_address for each order
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
+    
+    for order in orders:
+        if order.shipping_address_number and customer_info:
+            address_key = f"address_{order.shipping_address_number}"
+            shipping_address = getattr(customer_info, address_key, None)
+            
+            if not shipping_address:
+                # Fallback to address_1
+                shipping_address = customer_info.address_1 or customer_info.address_2 or customer_info.address_3
+            
+            order.shipping_address = shipping_address or "No especificada"
+        else:
+            order.shipping_address = "No especificada"
+    
     return orders
 
 @router.get("/all", response_model=List[Order])
@@ -185,21 +372,38 @@ def read_all_orders(
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene todos los pedidos (solo vendedores y administradores)
+    Obtiene pedidos según permisos del usuario:
+    - Admin: todos los pedidos
+    - Marketing/Seller: solo pedidos de clientes en sus grupos
+    
     Parámetro search: busca por número de pedido o nombre de cliente
     """
-    orders = get_orders(db, skip=skip, limit=limit, status=status, search=search)
+    orders = get_orders_for_user_groups(
+        db=db,
+        user_id=current_user.user_id,
+        user_role=current_user.role,
+        skip=skip,
+        limit=limit,
+        status=status,
+        search=search
+    )
     return orders
 
-@router.get("/{order_id}", response_model=Order)
+@router.get("/{order_id}", response_model=OrderWithAddress)
 def read_order(
     order_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene un pedido específico
+    Obtiene un pedido específico.
+    Permisos:
+    - Cliente: solo sus propios pedidos
+    - Marketing/Seller: pedidos de clientes en sus grupos
+    - Admin: todos los pedidos
     """
+    from db.base import CustomerInfo
+    
     order = get_order(db, order_id=order_id)
     if not order:
         raise HTTPException(
@@ -207,14 +411,53 @@ def read_order(
             detail="Pedido no encontrado"
         )
     
-    # Verificar que el usuario tenga permiso para ver el pedido
-    from db.base import UserRole
-    if current_user.role not in [UserRole.admin, UserRole.seller]:
-        if order.user_id != current_user.user_id:
+    # Verificar permisos
+    from db.base import UserRole, Customer
+    
+    # Get current user's identifier
+    if isinstance(current_user, Customer):
+        current_user_id = current_user.customer_id
+        user_role = None
+    else:
+        current_user_id = current_user.user_id
+        user_role = current_user.role
+    
+    # Si es el cliente dueño del pedido, puede verlo
+    if order.customer_id == current_user_id:
+        pass  # Permitir
+    # Si es marketing/seller/admin, verificar permisos por grupo
+    elif user_role and user_role in [UserRole.admin, UserRole.seller, UserRole.marketing]:
+        if not user_can_manage_order(db, current_user_id, order.customer_id, user_role):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso para ver este pedido"
             )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permiso para ver este pedido"
+        )
+    
+    # Calculate shipping address
+    if order.shipping_address_number:
+        customer_info = db.query(CustomerInfo).filter(
+            CustomerInfo.customer_id == order.customer_id
+        ).first()
+        
+        if customer_info:
+            address_key = f"address_{order.shipping_address_number}"
+            shipping_address = getattr(customer_info, address_key, None)
+            
+            if not shipping_address:
+                # Fallback to address_1
+                shipping_address = customer_info.address_1 or customer_info.address_2 or customer_info.address_3
+            
+            # Add as attribute (won't be in DB, just for response)
+            order.shipping_address = shipping_address or "No especificada"
+        else:
+            order.shipping_address = "No especificada"
+    else:
+        order.shipping_address = "No especificada"
     
     return order
 
@@ -226,7 +469,10 @@ def update_order_status_route(
     db: Session = Depends(get_db)
 ):
     """
-    Actualiza el estado de un pedido con validación de transiciones (solo vendedores y administradores)
+    Actualiza el estado de un pedido con validación de transiciones.
+    Permisos:
+    - Admin: puede gestionar todos los pedidos
+    - Marketing/Seller: solo pedidos de clientes en sus grupos
     """
     # Obtener el pedido actual
     order = get_order(db, order_id=order_id)
@@ -236,6 +482,17 @@ def update_order_status_route(
             detail="Pedido no encontrado"
         )
     
+    from db.base import UserRole
+    is_admin = current_user.role == UserRole.admin
+    
+    # Verificar permisos por grupo (si no es admin)
+    if not is_admin:
+        if not user_can_manage_order(db, current_user.user_id, order.customer_id, current_user.role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para gestionar este pedido. El cliente no pertenece a sus grupos."
+            )
+    
     current_status = order.status
     new_status = order_update.status
     
@@ -243,12 +500,10 @@ def update_order_status_route(
     # pending_validation -> approved -> shipped -> delivered
     # Solo admin puede cancelar después de pending_validation
     
-    from db.base import UserRole
-    is_admin = current_user.role == UserRole.admin
-    
     # Transiciones base (sin cancelación)
     valid_transitions = {
-        OrderStatus.pending_validation: [OrderStatus.approved],
+        OrderStatus.pending_validation: [OrderStatus.assigned, OrderStatus.approved],  # Puede asignarse o aprobarse directamente
+        OrderStatus.assigned: [OrderStatus.approved],  # Después de asignar, debe aprobarse
         OrderStatus.approved: [OrderStatus.shipped],
         OrderStatus.shipped: [OrderStatus.delivered],
         OrderStatus.delivered: [],  # Estado final, no se puede cambiar
@@ -331,6 +586,117 @@ def update_order_status_route(
     
     return updated_order
 
+@router.post("/{order_id}/assign", response_model=Order)
+def assign_order_to_seller(
+    order_id: int,
+    assign_data: OrderAssign,
+    current_user: User = Depends(get_current_seller_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Asigna un vendedor a un pedido.
+    Permisos:
+    - Admin: puede asignar pedidos de cualquier cliente, pero solo a vendedores del mismo grupo que el cliente
+    - Marketing: solo puede asignar pedidos de clientes en sus grupos a vendedores de sus grupos
+    
+    En ambos casos, el vendedor debe pertenecer al grupo de ventas del cliente.
+    """
+    from db.base import UserRole
+    from datetime import datetime
+    
+    # Obtener la orden
+    order = get_order(db, order_id=order_id)
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    
+    # Verificar que la orden NO esté cancelada o entregada
+    if order.status in [OrderStatus.cancelled, OrderStatus.delivered]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No se puede asignar un pedido en estado '{order.status.value}'."
+        )
+    
+    # Obtener el vendedor a asignar
+    seller = db.query(User).filter(User.user_id == assign_data.assigned_seller_id).first()
+    if not seller:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendedor no encontrado"
+        )
+    
+    # Verificar que el usuario a asignar sea un vendedor
+    if seller.role != UserRole.seller:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El usuario seleccionado no es un vendedor (rol: {seller.role.value})"
+        )
+    
+    # Verificar permisos según el rol del usuario que asigna
+    from crud.crud_sales_group import get_user_groups
+    from db.base import CustomerInfo
+    
+    # Obtener el grupo del cliente del pedido
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == order.customer_id
+    ).first()
+    
+    if not customer_info or not customer_info.sales_group_id:
+        # Cliente sin grupo - solo admin puede gestionar, pero no puede asignar
+        # porque no hay vendedores disponibles sin grupo
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El cliente no pertenece a ningún grupo de ventas. Asigne el cliente a un grupo primero."
+        )
+    
+    customer_group_id = customer_info.sales_group_id
+    
+    # Obtener los grupos del vendedor a asignar
+    seller_groups = get_user_groups(db, seller.user_id)
+    
+    # Verificar que el vendedor pertenezca al mismo grupo que el cliente
+    if customer_group_id not in seller_groups:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No puede asignar este vendedor. El vendedor no pertenece al grupo de ventas del cliente."
+        )
+    
+    # Si es marketing, verificar permisos adicionales
+    if current_user.role == UserRole.marketing:
+        # Marketing solo puede asignar pedidos de clientes en sus grupos
+        if not user_can_manage_order(db, current_user.user_id, order.customer_id, current_user.role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para asignar este pedido. El cliente no pertenece a sus grupos."
+            )
+        
+        # Marketing solo puede asignar a vendedores de sus grupos
+        marketing_groups = get_user_groups(db, current_user.user_id)
+        
+        if not any(group in seller_groups for group in marketing_groups):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No puede asignar a este vendedor. El vendedor no pertenece a sus grupos."
+            )
+    # Admin puede asignar pedidos de cualquier grupo, pero debe respetar 
+    # la restricción de que el vendedor pertenezca al grupo del cliente
+    
+    # Asignar el vendedor
+    order.assigned_seller_id = assign_data.assigned_seller_id
+    order.assigned_by_user_id = current_user.user_id
+    order.assigned_at = datetime.utcnow()
+    order.status = OrderStatus.assigned
+    
+    if assign_data.assignment_notes:
+        order.assignment_notes = assign_data.assignment_notes
+    
+    db.commit()
+    db.refresh(order)
+    
+    return order
+
 @router.post("/{order_id}/cancel", response_model=Order)
 def cancel_order_route(
     order_id: int,
@@ -338,7 +704,11 @@ def cancel_order_route(
     db: Session = Depends(get_db)
 ):
     """
-    Cancela un pedido (solo si está en pending_validation)
+    Cancela un pedido.
+    Permisos:
+    - Cliente: solo sus propios pedidos en estado pending_validation
+    - Marketing/Seller: pedidos de clientes en sus grupos
+    - Admin: todos los pedidos
     """
     order = get_order(db, order_id=order_id)
     if not order:
@@ -347,18 +717,39 @@ def cancel_order_route(
             detail="Pedido no encontrado"
         )
     
-    # Solo el cliente o admin/seller pueden cancelar
-    from db.base import UserRole
-    if current_user.role not in [UserRole.admin, UserRole.seller]:
-        if order.user_id != current_user.user_id:
+    from db.base import UserRole, Customer
+    
+    # Get current user's identifier
+    if isinstance(current_user, Customer):
+        current_user_id = current_user.customer_id
+        is_customer = True
+        user_role = None  # Customers don't have roles
+    else:
+        current_user_id = current_user.user_id
+        is_customer = False
+        user_role = current_user.role
+    
+    # Verificar permisos
+    is_owner = order.customer_id == current_user_id
+    is_admin = user_role == UserRole.admin if user_role else False
+    
+    # Si es el cliente dueño, puede cancelar
+    if is_owner:
+        pass  # Permitir, validaciones de estado más abajo
+    # Si es marketing/seller/admin, verificar permisos por grupo
+    elif user_role and user_role in [UserRole.admin, UserRole.seller, UserRole.marketing]:
+        if not user_can_manage_order(db, current_user_id, order.customer_id, user_role):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para cancelar este pedido"
+                detail="No tiene permiso para cancelar este pedido. El cliente no pertenece a sus grupos."
             )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permiso para cancelar este pedido"
+        )
     
     # VALIDACIÓN CRÍTICA: Verificar si se puede cancelar según el estado y rol
-    from db.base import UserRole
-    is_admin = current_user.role == UserRole.admin
     
     # No se puede cancelar si ya está entregado o cancelado
     if order.status == OrderStatus.delivered:

@@ -14,6 +14,7 @@ export default function Header2() {
   const getDashboardLink = () => {
     if (user?.role === 'admin') return '/admindash';
     if (user?.role === 'seller') return '/sellerdash';
+    if (user?.role === 'marketing') return '/marketingdash';
     return '/products';
   };
 

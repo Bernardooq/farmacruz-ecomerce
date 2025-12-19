@@ -1,9 +1,28 @@
+"""
+Routes para Administración de Productos
+
+Endpoints CRUD para gestión de productos del catálogo:
+- GET / - Lista de productos con filtros
+- GET /{id} - Detalle de producto
+- GET /sku/{sku} - Buscar por SKU
+- POST / - Crear producto
+- PUT /{id} - Actualizar producto
+- DELETE /{id} - Eliminar producto (soft delete)
+- PATCH /{id}/stock - Ajustar inventario
+
+Permisos:
+- GET: Todos los usuarios
+- POST/PUT/DELETE/PATCH: Solo administradores
+
+Nota: Los precios finales para clientes se calculan en /catalog
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from dependencies import get_db, get_current_admin_user, get_current_user
+from dependencies import get_db, get_current_admin_user
 from schemas.product import ProductCreate, ProductUpdate, Product
 from crud.crud_product import (
     get_products, 
@@ -18,22 +37,36 @@ from crud.crud_product import (
 
 router = APIRouter()
 
+
 class StockUpdate(BaseModel):
+    """
+    Schema para ajustar inventario
+    
+    quantity puede ser:
+    - Positivo: Agregar stock (recepción)
+    - Negativo: Reducir stock (ajuste)
+    """
     quantity: int
+
 
 @router.get("/", response_model=List[Product])
 def read_products(
-    skip: int = 0,
-    limit: int = 100,
-    category_id: Optional[int] = None,
-    is_active: Optional[bool] = True,
-    search: Optional[str] = None,
-    sort_by: Optional[str] = Query(None, description="Campo para ordenar: price"),
+    skip: int = Query(0, ge=0, description="Registros a saltar"),
+    limit: int = Query(100, ge=1, le=200, description="Máximo de registros"),
+    category_id: Optional[int] = Query(None, description="Filtrar por categoría"),
+    is_active: Optional[bool] = Query(True, description="Filtrar por estado"),
+    search: Optional[str] = Query(None, description="Buscar por nombre/descripción"),
+    sort_by: Optional[str] = Query(None, description="Ordenar por: price, name"),
     sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene lista de productos con filtros opcionales y ordenamiento
+    Lista de productos con filtros y ordenamiento
+    
+    Si search está presente, ignora otros filtros.
+    
+    Returns:
+        Lista de productos con categorías precargadas
     """
     if search:
         products = search_products(db, search=search, skip=skip, limit=limit)
@@ -49,10 +82,16 @@ def read_products(
         )
     return products
 
+
 @router.get("/{product_id}", response_model=Product)
 def read_product(product_id: int, db: Session = Depends(get_db)):
     """
-    Obtiene un producto específico por su ID
+    Detalle de un producto específico
+    
+    Incluye categoría precargada.
+    
+    Raises:
+        404: Si el producto no existe
     """
     product = get_product(db, product_id=product_id)
     if not product:
@@ -62,10 +101,16 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
         )
     return product
 
+
 @router.get("/sku/{sku}", response_model=Product)
 def read_product_by_sku(sku: str, db: Session = Depends(get_db)):
     """
-    Obtiene un producto por su SKU
+    Buscar producto por SKU (código único)
+    
+    Útil para validaciones y búsquedas por código de barras.
+    
+    Raises:
+        404: Si el SKU no existe
     """
     product = get_product_by_sku(db, sku=sku)
     if not product:
@@ -75,44 +120,64 @@ def read_product_by_sku(sku: str, db: Session = Depends(get_db)):
         )
     return product
 
-@router.post("/", response_model=Product)
+
+@router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
 def create_new_product(
     product: ProductCreate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
     """
-    Crea un nuevo producto (solo administradores)
+    Crea un nuevo producto
+    
+    Validaciones:
+    - base_price > 0
+    - iva_percentage entre 0 y 100
+    - stock_count >= 0
+    - SKU único
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        400: Validaciones fallidas o SKU duplicado
     """
-    # Validar precio
-    if product.price < 0:
+    # === VALIDAR PRECIO BASE ===
+    if product.base_price < 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El precio no puede ser negativo"
+            detail="El precio base no puede ser negativo"
         )
     
-    if product.price == 0:
+    if product.base_price == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El precio debe ser mayor a 0"
+            detail="El precio base debe ser mayor a 0"
         )
     
-    # Validar stock
+    # === VALIDAR IVA ===
+    if product.iva_percentage < 0 or product.iva_percentage > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El porcentaje de IVA debe estar entre 0 y 100"
+        )
+    
+    # === VALIDAR STOCK ===
     if product.stock_count < 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El stock no puede ser negativo"
         )
     
-    # Verificar que el SKU no exista
+    # === VERIFICAR SKU ÚNICO ===
     db_product = get_product_by_sku(db, sku=product.sku)
     if db_product:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El SKU ya está registrado"
+            detail=f"El SKU '{product.sku}' ya está registrado"
         )
     
     return create_product(db=db, product=product)
+
 
 @router.put("/{product_id}", response_model=Product)
 def update_existing_product(
@@ -122,19 +187,39 @@ def update_existing_product(
     current_user = Depends(get_current_admin_user)
 ):
     """
-    Actualiza un producto existente (solo administradores)
+    Actualiza un producto existente
+    
+    Solo actualiza campos proporcionados (partial update).
+    
+    Validaciones (si el campo se proporciona):
+    - base_price > 0
+    - iva_percentage entre 0 y 100
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        400: Validaciones fallidas
+        404: Producto no encontrado
     """
-    # Validar precio si se está actualizando
-    if product.price is not None:
-        if product.price < 0:
+    # === VALIDAR PRECIO BASE ===
+    if product.base_price is not None:
+        if product.base_price < 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El precio no puede ser negativo"
+                detail="El precio base no puede ser negativo"
             )
-        if product.price == 0:
+        if product.base_price == 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El precio debe ser mayor a 0"
+                detail="El precio base debe ser mayor a 0"
+            )
+    
+    # === VALIDAR IVA ===
+    if product.iva_percentage is not None:
+        if product.iva_percentage < 0 or product.iva_percentage > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El porcentaje de IVA debe estar entre 0 y 100"
             )
     
     db_product = update_product(db, product_id=product_id, product=product)
@@ -145,6 +230,7 @@ def update_existing_product(
         )
     return db_product
 
+
 @router.delete("/{product_id}", response_model=Product)
 def delete_existing_product(
     product_id: int,
@@ -152,7 +238,15 @@ def delete_existing_product(
     current_user = Depends(get_current_admin_user)
 ):
     """
-    Elimina un producto (soft delete - solo administradores)
+    Elimina un producto (soft delete)
+    
+    Marca el producto como inactivo (is_active = False).
+    No elimina el registro de la BD (preserva historial).
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        404: Producto no encontrado
     """
     db_product = delete_product(db, product_id=product_id)
     if not db_product:
@@ -162,6 +256,7 @@ def delete_existing_product(
         )
     return db_product
 
+
 @router.patch("/{product_id}/stock", response_model=Product)
 def adjust_product_stock(
     product_id: int,
@@ -170,9 +265,23 @@ def adjust_product_stock(
     current_user = Depends(get_current_admin_user)
 ):
     """
-    Ajusta el stock de un producto (solo administradores)
+    Ajusta el inventario de un producto
+    
+    quantity puede ser positivo (agregar) o negativo (reducir).
+    
+    Valida que el stock resultante no sea negativo.
+    
+    Ejemplos:
+        - Recibir 100 unidades: quantity = 100
+        - Ajuste por merma de 5: quantity = -5
+    
+    Permisos: Solo administradores
+    
+    Raises:
+        400: Stock resultante sería negativo
+        404: Producto no encontrado
     """
-    # Obtener el producto actual para validar
+    # === OBTENER PRODUCTO ACTUAL ===
     current_product = get_product(db, product_id=product_id)
     if not current_product:
         raise HTTPException(
@@ -180,10 +289,9 @@ def adjust_product_stock(
             detail="Producto no encontrado"
         )
     
-    # Calcular el nuevo stock
+    # === CALCULAR Y VALIDAR NUEVO STOCK ===
     new_stock = current_product.stock_count + stock_update.quantity
     
-    # Validar que el stock resultante no sea negativo
     if new_stock < 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

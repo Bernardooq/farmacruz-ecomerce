@@ -36,8 +36,10 @@ export const orderService = {
   // ==================== Órdenes ====================
 
   // Crear una orden a partir del carrito
-  async checkout() {
-    return apiService.post('/orders/checkout')
+  async checkout(shippingAddressNumber = 1) {
+    return apiService.post('/orders/checkout', {
+      shipping_address_number: shippingAddressNumber
+    })
   },
 
   // Obtener las órdenes del usuario actual (con filtros como paginación o estatus)
@@ -63,6 +65,14 @@ export const orderService = {
   // Cancelar una orden
   async cancelOrder(id) {
     return apiService.post(`/orders/${id}/cancel`)
+  },
+
+  // Asignar vendedor a una orden
+  async assignOrderToSeller(id, sellerId, notes = '') {
+    return apiService.post(`/orders/${id}/assign`, {
+      assigned_seller_id: sellerId,
+      assignment_notes: notes
+    })
   }
 }
 

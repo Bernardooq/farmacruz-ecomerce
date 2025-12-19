@@ -5,22 +5,25 @@
   padding: 2rem 0;
   flex: 1;
   min-height: 100%;
+  background: v.$blanco;
 
   &__title {
     text-align: center;
     margin-bottom: 2rem;
     font-size: 2.5rem;
+    font-weight: 800;
     color: v.$negro;
   }
 }
 
-// Sección de perfil editable
+// Resto del archivo sin cambios en backgrounds...
 .profile-section {
   background-color: v.$blanco;
   padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 5px 15px rgba(v.$negro, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
   margin-bottom: 2rem;
+  border: 1px solid rgba(v.$negro, 0.06);
 }
 
 .profile-header {
@@ -34,39 +37,42 @@
   h2 {
     margin: 0;
     color: v.$negro;
+    font-weight: 800;
   }
 
   .btn-edit,
   .btn-cancel {
     padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
+    border-radius: 6px;
     border: none;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
   }
 
   .btn-edit {
-    background-color: v.$primario;
+    background: v.$primario;
     color: v.$blanco;
 
     &:hover {
-      background-color: darken(v.$primario, 10%);
+      background: darken(v.$primario, 8%);
+      transform: translateY(-2px);
     }
 
     &:disabled {
-      background-color: lighten(v.$primario, 20%);
+      opacity: 0.6;
       cursor: not-allowed;
     }
   }
 
   .btn-cancel {
-    background-color: lighten(v.$negro, 70%);
+    background-color: lighten(v.$negro, 96%);
     color: v.$negro;
     margin-left: 0.5rem;
+    border: 1px solid rgba(v.$negro, 0.15);
 
     &:hover {
-      background-color: lighten(v.$negro, 60%);
+      background-color: lighten(v.$negro, 92%);
     }
   }
 }
@@ -88,33 +94,34 @@
     }
 
     label {
-      font-weight: bold;
+      font-weight: 700;
       margin-bottom: 0.5rem;
       color: v.$negro;
     }
 
     input,
     textarea {
-      padding: 0.75rem;
-      border: 1px solid lighten(v.$negro, 70%);
-      border-radius: 0.5rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid rgba(v.$negro, 0.15);
+      border-radius: 6px;
       font-size: 1rem;
-      transition: border-color 0.3s ease;
+      transition: all 0.2s ease;
 
       &:focus {
         outline: none;
         border-color: v.$primario;
+        box-shadow: 0 0 0 1px v.$primario;
       }
 
       &:disabled {
-        background-color: lighten(v.$negro, 95%);
+        background-color: rgba(v.$negro, 0.02);
         cursor: not-allowed;
       }
     }
 
     .input-disabled {
-      background-color: lighten(v.$negro, 95%);
-      color: lighten(v.$negro, 40%);
+      background-color: rgba(v.$negro, 0.02);
+      color: rgba(v.$negro, 0.6);
     }
 
     textarea {
@@ -128,20 +135,22 @@
 .profile-card {
   background-color: v.$blanco;
   padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 5px 15px rgba(v.$negro, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
   margin-bottom: 2rem;
+  border: 1px solid rgba(v.$negro, 0.06);
 
   &__header {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
-    border-bottom: 1px solid lighten(v.$negro, 80%);
+    border-bottom: 1px solid rgba(v.$negro, 0.1);
     padding-bottom: 1.5rem;
     margin-bottom: 1.5rem;
-    @include m.tablet{
-        flex-direction: row;
+
+    @include m.tablet {
+      flex-direction: row;
     }
   }
 
@@ -153,11 +162,13 @@
   &__name {
     margin: 0;
     font-size: 1.5rem;
+    font-weight: 800;
   }
 
   &__email {
     margin: 0;
-    color: lighten(v.$negro, 40%);
+    color: rgba(v.$negro, 0.6);
+    font-weight: 600;
   }
 
   &__details p {
@@ -170,33 +181,43 @@
 .order-history .section-title {
   color: v.$negro;
   text-align: left;
+  font-weight: 800;
 }
 
 .order-table-container {
-  overflow-x: auto; // Scroll horizontal en pantallas muy pequeñas
+  overflow-x: auto;
 }
 
 .order-table {
   width: 100%;
   border-collapse: collapse;
   background-color: v.$blanco;
-  border-radius: 1rem;
-  overflow: hidden; 
+  border-radius: 12px;
+  overflow: hidden;
 
-  th, td {
+  th,
+  td {
     padding: 1rem;
     text-align: left;
   }
 
   thead {
-    background-color: lighten(v.$negro, 95%);
+    background: lighten(v.$negro, 97%);
+
     th {
-      font-weight: bold;
+      font-weight: 700;
+      color: v.$negro;
     }
   }
 
   tbody tr {
-    border-bottom: 1px solid lighten(v.$negro, 90%);
+    border-bottom: 1px solid rgba(v.$negro, 0.05);
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(v.$primario, 0.02);
+    }
+
     &:last-child {
       border-bottom: none;
     }
@@ -204,51 +225,82 @@
 
   // Estilos para las etiquetas de estado
   .status {
-    padding: 0.3rem 0.6rem;
-    border-radius: 2rem;
-    font-weight: bold;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
     color: v.$blanco;
-    
-    &--delivered { background-color: v.$terciario; }
-    &--shipped { background-color: v.$secundario; }
-    &--approved { background-color: lighten(v.$terciario, 10%); }
-    &--pending { background-color: v.$amarillo; color: v.$negro; }
-    &--cancelled { background-color: lighten(v.$negro, 50%); }
+    border: 1px solid;
+
+    &--delivered {
+      background: v.$success;
+      border-color: v.$success-dark;
+    }
+
+    &--shipped {
+      background: v.$info;
+      border-color: v.$info-dark;
+    }
+
+    &--approved {
+      background: v.$success;
+      border-color: v.$success-dark;
+    }
+
+    &--pending {
+      background: v.$warning;
+      color: v.$negro;
+      border-color: v.$warning-dark;
+    }
+
+    &--cancelled {
+      background: v.$danger;
+      border-color: v.$danger-dark;
+    }
   }
 
   .btn-secondary {
-    background-color: transparent;
-    border: 1px solid v.$negro;
-    color: v.$negro;
+    background: v.$secundario;
+    border: none;
+    color: v.$blanco;
     padding: 0.5rem 1rem;
-    border-radius: 5px;
+    border-radius: 6px;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 600;
     white-space: nowrap;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease;
 
     &:hover {
-      background-color: v.$primario;
+      background: darken(v.$secundario, 8%);
+      transform: translateY(-2px);
     }
   }
 
   // Responsiva
-  @media (max-width: v.$tablet) {
+  @include m.maxtablet {
     thead {
-      display: none; // Oculta los encabezados de la tabla
+      display: none;
     }
+
     tr {
-      display: block; // Cada fila se convierte en un bloque
+      display: block;
       margin-bottom: 1rem;
-      border-bottom: 2px solid v.$primario;
+      border: 1px solid rgba(v.$negro, 0.1);
+      border-radius: 8px;
+      padding: 0.5rem;
     }
+
     td {
       display: flex;
-      justify-content: space-between; // Alinea etiqueta y valor
+      justify-content: space-between;
       text-align: right;
-      border-bottom: 1px solid lighten(v.$negro, 90%);
-      
+      border-bottom: 1px solid rgba(v.$negro, 0.05);
+      padding: 0.8rem 0.5rem;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
       &::before {
         content: attr(data-label);
         font-weight: bold;

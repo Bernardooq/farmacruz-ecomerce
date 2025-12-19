@@ -6,7 +6,9 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
     sku: '',
     name: '',
     description: '',
-    price: '',
+    base_price: '',
+    iva_percentage: '',
+    stock_count: '',
     category_id: '',
     image_url: '',
     is_active: true
@@ -15,13 +17,17 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  console.log('ModalEditProduct render - isOpen:', isOpen, 'product:', product);
+
   useEffect(() => {
     if (isOpen && product) {
       setFormData({
         sku: product.sku || '',
         name: product.name || '',
         description: product.description || '',
-        price: product.price || '',
+        base_price: product.base_price || '',
+        iva_percentage: product.iva_percentage || '16.00',
+        stock_count: product.stock_count || '',
         category_id: product.category_id || '',
         image_url: product.image_url || '',
         is_active: product.is_active !== undefined ? product.is_active : true
@@ -52,15 +58,21 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
     setError('');
     
     // Validaciones adicionales
-    const price = parseFloat(formData.price);
+    const basePrice = parseFloat(formData.base_price);
+    const stock = parseInt(formData.stock_count);
     
-    if (price < 0) {
+    if (basePrice < 0) {
       setError('El precio no puede ser negativo');
       return;
     }
     
-    if (price === 0) {
+    if (basePrice === 0) {
       setError('El precio debe ser mayor a 0');
+      return;
+    }
+    
+    if (stock < 0) {
+      setError('El stock no puede ser negativo');
       return;
     }
     
@@ -70,7 +82,9 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
       // Convert numeric fields
       const productData = {
         ...formData,
-        price: price,
+        base_price: basePrice,
+        iva_percentage: parseFloat(formData.iva_percentage),
+        stock_count: stock,
         category_id: parseInt(formData.category_id)
       };
 
@@ -137,20 +151,40 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="price">Precio *</label>
+              <label htmlFor="base_price">Precio Base *</label>
               <input
                 type="number"
-                id="price"
-                name="price"
-                value={formData.price}
+                id="base_price"
+                name="base_price"
+                value={formData.base_price}
                 onChange={handleChange}
                 step="0.01"
                 min="0"
                 required
                 disabled={loading}
+                placeholder="0.00"
               />
             </div>
 
+            <div className="form-group">
+              <label htmlFor="iva_percentage">IVA (%) *</label>
+              <input
+                type="number"
+                id="iva_percentage"
+                name="iva_percentage"
+                value={formData.iva_percentage}
+                onChange={handleChange}
+                step="0.01"
+                min="0"
+                max="100"
+                required
+                disabled={loading}
+                placeholder="16.00"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="category_id">Categoría *</label>
               <select
