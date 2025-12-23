@@ -1,3 +1,23 @@
+/**
+ * Cart.jsx
+ * ========
+ * Página del carrito de compras de FarmaCruz
+ * 
+ * Esta página permite a los clientes revisar su carrito, modificar
+ * cantidades, eliminar productos y proceder con el checkout.
+ * 
+ * Funcionalidades:
+ * - Ver items del carrito
+ * - Modificar cantidades (con validación de stock)
+ * - Eliminar productos del carrito
+ * - Seleccionar dirección de envío
+ * - Realizar checkout
+ * - Ver resumen de precios y total
+ * 
+ * Permisos:
+ * - Solo para clientes autenticados
+ */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -10,17 +30,36 @@ import CartSummary from '../components/CartSummary';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
+// ============================================
+// CONSTANTES
+// ============================================
+const DEFAULT_ADDRESS = 'address_1';
+const ERROR_DISPLAY_DURATION = 3000; // 3 segundos
+
 export default function Cart() {
+  // ============================================
+  // HOOKS & STATE
+  // ============================================
   const { items, loading, updateQuantity, removeItem, checkout } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Estado de datos
+  const [customerInfo, setCustomerInfo] = useState(null);
+  const [selectedAddress, setSelectedAddress] = useState(DEFAULT_ADDRESS);
+
+  // Estado de UI
   const [error, setError] = useState(null);
   const [processingCheckout, setProcessingCheckout] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [customerInfo, setCustomerInfo] = useState(null);
-  const [selectedAddress, setSelectedAddress] = useState('address_1'); // Default to address_1
 
-  // Cargar información del cliente al montar
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  /**
+   * Cargar información del cliente al montar el componente
+   */
   useEffect(() => {
     const loadCustomerInfo = async () => {
       try {
@@ -36,13 +75,22 @@ export default function Cart() {
     }
   }, [user]);
 
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Maneja el cambio de cantidad de un producto
+   * Valida que no se exceda el stock disponible
+   */
   const handleQuantityChange = async (item, newQty) => {
+    // Validar cantidad mínima
     if (newQty < 1) return;
 
-    // Validate stock availability
+    // Validar disponibilidad de stock
     if (newQty > item.product.stock_count) {
       setError(`Solo hay ${item.product.stock_count} unidades disponibles de ${item.product.name}`);
-      setTimeout(() => setError(null), 3000);
+      setTimeout(() => setError(null), ERROR_DISPLAY_DURATION);
       return;
     }
 
@@ -55,6 +103,9 @@ export default function Cart() {
     }
   };
 
+  /**
+   * Maneja la eliminación de un producto del carrito
+   */
   const handleRemove = async (item) => {
     try {
       setError(null);
@@ -65,17 +116,23 @@ export default function Cart() {
     }
   };
 
+  /**
+   * Abre el modal de confirmación de pedido
+   */
   const handleCheckoutClick = () => {
     setShowConfirmModal(true);
   };
 
+  /**
+   * Procesa el checkout después de confirmar
+   */
   const handleConfirmCheckout = async () => {
     try {
       setError(null);
       setShowConfirmModal(false);
       setProcessingCheckout(true);
 
-      // Convert selected address to number (address_1 -> 1, address_2 -> 2, address_3 -> 3)
+      // Convertir selectedAddress a número (address_1 -> 1, address_2 -> 2, etc.)
       const addressNumber = parseInt(selectedAddress.replace('address_', ''));
 
       await checkout(addressNumber);
@@ -88,6 +145,34 @@ export default function Cart() {
     }
   };
 
+  /**
+   * Cierra el modal de confirmación
+   */
+  const handleCloseModal = () => {
+    setShowConfirmModal(false);
+  };
+
+  /**
+   * Navega a la página de productos
+   */
+  const handleGoToProducts = () => {
+    navigate('/products');
+  };
+
+  // ============================================
+  // HELPERS
+  // ============================================
+
+  /**
+   * Verifica si el cliente tiene al menos una dirección registrada
+   */
+  const hasAnyAddress = () => {
+    return customerInfo?.address_1 || customerInfo?.address_2 || customerInfo?.address_3;
+  };
+
+  // ============================================
+  // RENDER - LOADING STATE
+  // ============================================
   if (loading) {
     return (
       <>
@@ -98,30 +183,45 @@ export default function Cart() {
     );
   }
 
+  // ============================================
+  // RENDER - MAIN CONTENT
+  // ============================================
   return (
     <>
       <SearchBar />
+
       <main className="cart-page">
         <div className="container">
-          {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
+          {/* Mensaje de error si lo hay */}
+          {error && (
+            <ErrorMessage
+              error={error}
+              onDismiss={() => setError(null)}
+            />
+          )}
 
+          {/* Estado: Carrito vacío */}
           {items.length === 0 ? (
             <div className="empty-cart">
               <p>Tu carrito está vacío</p>
               <button
                 className="btn-primary"
-                onClick={() => navigate('/products')}
+                onClick={handleGoToProducts}
               >
                 Ir a Productos
               </button>
             </div>
           ) : (
+            /* Estado: Carrito con items */
             <div className="cart-layout">
+              {/* Lista de productos en el carrito */}
               <CartItemList
                 items={items}
                 onQuantityChange={handleQuantityChange}
                 onRemove={handleRemove}
               />
+
+              {/* Resumen y botón de checkout */}
               <CartSummary
                 items={items}
                 onCheckout={handleCheckoutClick}
@@ -131,35 +231,42 @@ export default function Cart() {
           )}
         </div>
       </main>
+
       <Footer />
 
-      {/* Modal de confirmacion */}
+      {/* ============================================ */}
+      {/* MODAL DE CONFIRMACIÓN DE PEDIDO             */}
+      {/* ============================================ */}
       {showConfirmModal && (
-        <div className="modal-overlay enable" onClick={() => setShowConfirmModal(false)}>
+        <div className="modal-overlay enable" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            {/* Botón de cerrar */}
             <button
               className="modal-close"
-              onClick={() => setShowConfirmModal(false)}
+              onClick={handleCloseModal}
               aria-label="Cerrar modal"
             >
               &times;
             </button>
 
+            {/* Header del modal */}
             <div className="modal-header">
               <h2>Confirmar Pedido</h2>
             </div>
 
+            {/* Cuerpo del modal */}
             <div className="modal-body">
               <p className="confirm-message">
                 ¿Desea confirmar su pedido?
               </p>
 
+              {/* Selector de dirección de envío */}
               <div className="address-box">
                 <p className="address-box__label">
                   Se enviará a:
                 </p>
 
-                {/* Address selector */}
+                {/* Dropdown para seleccionar dirección */}
                 <select
                   value={selectedAddress}
                   onChange={(e) => setSelectedAddress(e.target.value)}
@@ -190,33 +297,32 @@ export default function Cart() {
                   )}
                 </select>
 
-                {/* Show selected address */}
+                {/* Mostrar dirección seleccionada */}
                 <p className="address-box__address" style={{ marginTop: '0.5rem' }}>
                   {customerInfo?.[selectedAddress] || 'Sin dirección registrada'}
                 </p>
               </div>
 
-              {!customerInfo?.address_1 && !customerInfo?.address_2 && !customerInfo?.address_3 && (
+              {/* Advertencia si no hay direcciones */}
+              {!hasAnyAddress() && (
                 <p className="address-warning">
                   Por favor, actualiza tu dirección en tu perfil antes de continuar
                 </p>
               )}
             </div>
 
+            {/* Footer del modal con botones */}
             <div className="modal-footer">
               <button
                 className="btn-secondary"
-                onClick={() => setShowConfirmModal(false)}
+                onClick={handleCloseModal}
               >
                 Cancelar
               </button>
               <button
                 className="btn-primary"
                 onClick={handleConfirmCheckout}
-                disabled={
-                  (!customerInfo?.address_1 && !customerInfo?.address_2 && !customerInfo?.address_3) ||
-                  processingCheckout
-                }
+                disabled={!hasAnyAddress() || processingCheckout}
               >
                 {processingCheckout ? 'Procesando...' : 'Confirmar Pedido'}
               </button>

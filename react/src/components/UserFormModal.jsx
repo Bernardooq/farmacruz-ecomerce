@@ -1,8 +1,49 @@
+/**
+ * UserFormModal.jsx
+ * =================
+ * Modal para crear/editar usuarios del sistema (sellers y marketing)
+ * 
+ * Permite al administrador gestionar usuarios internos del sistema.
+ * Soporta creación y edición de sellers y marketing managers.
+ * 
+ * Props:
+ * @param {Object} user - Usuario a editar (null para crear nuevo)
+ * @param {string} role - Rol del usuario ('seller' o 'marketing')
+ * @param {function} onClose - Callback para cerrar modal
+ * @param {function} onSaved - Callback después de guardar exitosamente
+ * 
+ * Campos del formulario:
+ * - full_name: Nombre completo (requerido)
+ * - username: Usuario para login (requerido)
+ * - email: Email (requerido)
+ * - password: Contraseña (requerido al crear, opcional al editar)
+ * - is_active: Estado activo/inactivo
+ * 
+ * Modos:
+ * - Crear: user = null, password requerido
+ * - Editar: user = objeto, password opcional (solo si se quiere cambiar)
+ * 
+ * Roles soportados:
+ * - seller: Vendedor
+ * - marketing: Marketing Manager
+ * 
+ * Uso:
+ * <UserFormModal
+ *   user={selectedUser}
+ *   role="seller"
+ *   onClose={() => setShowModal(false)}
+ *   onSaved={() => refreshUsers()}
+ * />
+ */
+
 import { useState, useEffect } from 'react';
 import adminService from '../services/adminService';
 import ErrorMessage from './ErrorMessage';
 
 export default function UserFormModal({ user, role, onClose, onSaved }) {
+  // ============================================
+  // STATE
+  // ============================================
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -14,6 +55,13 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  /**
+   * Cargar datos del usuario si estamos editando
+   */
   useEffect(() => {
     if (user) {
       setFormData({
@@ -27,6 +75,13 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
     }
   }, [user]);
 
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Maneja cambios en campos del formulario
+   */
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -35,6 +90,10 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario
+   * Crea o actualiza el usuario según el modo
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -42,15 +101,17 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
 
     try {
       if (user) {
+        // Modo editar: solo enviar password si se proporcionó
         const updateData = { ...formData };
         if (!updateData.password || updateData.password.trim() === '') {
           delete updateData.password;
         }
         await adminService.updateUser(user.user_id, updateData);
       } else {
+        // Modo crear: password es requerido
         await adminService.createUser(formData);
       }
-      
+
       if (onSaved) onSaved();
     } catch (err) {
       const errorMessage = err.response?.data?.detail || err.message || 'Error al guardar el usuario.';
@@ -61,6 +122,13 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
     }
   };
 
+  // ============================================
+  // HELPERS
+  // ============================================
+
+  /**
+   * Obtiene la etiqueta del rol en español
+   */
   const getRoleLabel = () => {
     switch (role) {
       case 'seller': return 'Vendedor';
@@ -69,19 +137,23 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
     }
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} aria-label="Cerrar modal">
           &times;
         </button>
-        
+
         <div className="modal-body">
           <h2>{user ? `Editar ${getRoleLabel()}` : `Añadir ${getRoleLabel()}`}</h2>
-          
+
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
-          
+
           <form onSubmit={handleSubmit}>
+            {/* Nombre completo */}
             <div className="form-group">
               <label htmlFor="full_name">Nombre Completo *</label>
               <input
@@ -95,6 +167,7 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
               />
             </div>
 
+            {/* Usuario */}
             <div className="form-group">
               <label htmlFor="username">Usuario *</label>
               <input
@@ -108,6 +181,7 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
               />
             </div>
 
+            {/* Email */}
             <div className="form-group">
               <label htmlFor="email">Email *</label>
               <input
@@ -121,6 +195,7 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
               />
             </div>
 
+            {/* Contraseña */}
             <div className="form-group">
               <label htmlFor="password">
                 Contraseña {user ? '(dejar vacío para no cambiar)' : '*'}
@@ -137,6 +212,7 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
               />
             </div>
 
+            {/* Estado activo */}
             <div className="form-group">
               <label>
                 <input
@@ -150,17 +226,18 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
               </label>
             </div>
 
+            {/* Botones de acción */}
             <div className="form-actions">
-              <button 
-                type="button" 
-                className="btn-secondary" 
+              <button
+                type="button"
+                className="btn-secondary"
                 onClick={onClose}
                 disabled={loading}
               >
                 Cancelar
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn-primary"
                 disabled={loading}
               >

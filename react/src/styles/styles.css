@@ -1157,11 +1157,13 @@ body,
   font-weight: 800;
   color: #1A1A1A;
   border-bottom: 2px solid rgba(99, 193, 165, 0.2);
+  flex-shrink: 0;
 }
 @media (max-width: 480px) {
   .modal-content h2 {
-    padding: 1.25rem 1.5rem;
-    font-size: 1.5rem;
+    padding: 1rem;
+    font-size: 1.35rem;
+    word-wrap: break-word;
   }
 }
 
@@ -1480,18 +1482,21 @@ body,
   padding: 1.5rem 2rem;
   border-top: 1px solid rgba(26, 26, 26, 0.1);
   background: white;
+  flex-shrink: 0;
 }
 @media (max-width: 480px) {
   .modal-actions,
   .modal-footer,
   .form-actions {
-    padding: 1rem 1.25rem;
+    padding: 1rem;
     flex-direction: column-reverse;
     gap: 0.75rem;
     position: sticky;
     bottom: 0;
     background: #FFFFFF;
     box-shadow: 0 -2px 10px rgba(26, 26, 26, 0.1);
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 .modal-actions button,
@@ -1504,14 +1509,21 @@ body,
   font-weight: 600;
   font-size: 0.95rem;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 @media (max-width: 480px) {
   .modal-actions button,
   .modal-footer button,
   .form-actions button {
     width: 100%;
-    padding: 0.85rem 1.5rem;
-    font-size: 1rem;
+    max-width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    white-space: normal;
+    word-wrap: break-word;
   }
 }
 .modal-actions button:disabled,
@@ -1573,10 +1585,35 @@ body,
 
 .order-details {
   padding: 2rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+.order-details::-webkit-scrollbar {
+  width: 8px;
+}
+.order-details::-webkit-scrollbar-track {
+  background: white;
+}
+.order-details::-webkit-scrollbar-thumb {
+  background: rgba(26, 26, 26, 0.3);
+  border-radius: 4px;
+}
+.order-details::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 26, 26, 0.5);
+}
+.order-details {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26, 26, 26, 0.3) white;
 }
 @media (max-width: 480px) {
   .order-details {
     padding: 1rem;
+  }
+  .order-details::-webkit-scrollbar {
+    width: 6px;
   }
 }
 .order-details__section {
@@ -1639,6 +1676,9 @@ body,
   font-size: 1rem;
   color: #1A1A1A;
   font-weight: 600;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 .order-details__total {
   display: flex;
@@ -1663,6 +1703,46 @@ body,
 @media (max-width: 480px) {
   .order-details__total-amount {
     font-size: 1.5rem;
+  }
+}
+.order-details .table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -1rem;
+  padding: 0 1rem;
+}
+@media (max-width: 480px) {
+  .order-details .table-container {
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+}
+.order-details .data-table {
+  min-width: 100%;
+}
+@media (max-width: 480px) {
+  .order-details .data-table {
+    font-size: 0.875rem;
+  }
+}
+.order-details .data-table td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 200px;
+}
+@media (max-width: 480px) {
+  .order-details .data-table td {
+    max-width: 150px;
+    padding: 0.75rem 0.5rem;
+  }
+}
+.order-details .data-table th {
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .order-details .data-table th {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
   }
 }
 

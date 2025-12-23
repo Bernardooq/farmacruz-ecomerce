@@ -2,6 +2,7 @@
 Script para crear los 4 usuarios administradores iniciales de Farmacruz
 Uso: python create_initial_admins.py
 """
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from db.session import SessionLocal
 from db.base import User, UserRole
@@ -133,7 +134,7 @@ def verify_database_connection():
     """Verifica que la conexión a la base de datos funcione"""
     try:
         db: Session = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         print("✅ Conexión a la base de datos exitosa\n")
         return True

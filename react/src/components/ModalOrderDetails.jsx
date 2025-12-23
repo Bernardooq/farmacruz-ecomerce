@@ -224,19 +224,10 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
 
   return (
     <div className={`modal-overlay ${visible ? 'enable' : 'disable'}`}>
-      <div
-        className="modal-content modal-content--large"
-        style={{
-          maxWidth: '95%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          width: window.innerWidth > 768 ? '900px' : '95%'
-        }}
-      >
+      <div className="modal-content modal-content--large">
+
         <button className="modal-close" onClick={onClose}>&times;</button>
-        <h2 style={{ fontSize: window.innerWidth <= 768 ? '1.5rem' : '2rem' }}>
-          Detalles del Pedido #{order.order_id}
-        </h2>
+        <h2>Detalles del Pedido #{order.order_id}</h2>
 
         <div className="order-details">
           <div className="order-details__section">
@@ -333,35 +324,11 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
           </div>
         </div>
 
-        <div
-          className="modal-actions"
-          style={{
-            display: 'flex',
-            gap: '10px',
-            justifyContent: 'flex-end',
-            flexWrap: 'wrap',
-            marginTop: '20px',
-            padding: '15px 0'
-          }}
-        >
-          <button
-            className="btn-primary"
-            onClick={handleDownloadPDF}
-            style={{
-              flex: window.innerWidth <= 768 ? '1 1 100%' : '0 1 auto',
-              minWidth: window.innerWidth <= 768 ? '100%' : 'auto'
-            }}
-          >
+        <div className="modal-actions">
+          <button className="btn-primary" onClick={handleDownloadPDF}>
             📄 Descargar PDF
           </button>
-          <button
-            className="btn-secondary"
-            onClick={onClose}
-            style={{
-              flex: window.innerWidth <= 768 ? '1 1 100%' : '0 1 auto',
-              minWidth: window.innerWidth <= 768 ? '100%' : 'auto'
-            }}
-          >
+          <button className="btn-secondary" onClick={onClose}>
             Cerrar
           </button>
         </div>

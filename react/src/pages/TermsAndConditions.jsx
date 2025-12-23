@@ -1,3 +1,31 @@
+/**
+ * TermsAndConditions.jsx
+ * ======================
+ * Página de Términos y Condiciones de FarmaCruz
+ * 
+ * Esta página presenta los términos y condiciones de uso de la plataforma,
+ * estableciendo las reglas, responsabilidades y obligaciones tanto de
+ * FarmaCruz como de sus usuarios.
+ * 
+ * Contenido:
+ * - Aceptación de términos
+ * - Descripción del servicio B2B
+ * - Requisitos de registro y cuenta
+ * - Uso aceptable de la plataforma
+ * - Políticas de pedidos, pagos y envíos
+ * - Políticas de devoluciones
+ * - Propiedad intelectual
+ * - Limitación de responsabilidad
+ * - Ley aplicable y jurisdicción (México)
+ * 
+ * Acceso:
+ * - Página pública (no requiere autenticación)
+ * 
+ * Jurisdicción:
+ * - Leyes de México
+ * - Tribunales de Guadalajara, Jalisco
+ */
+
 import { useAuth } from '../context/AuthContext';
 import Header from '../layout/Header';
 import Header2 from '../layout/Header2';
@@ -5,29 +33,47 @@ import SearchBar from '../layout/SearchBar';
 import Footer from '../layout/Footer';
 
 export default function TermsAndConditions() {
+  // ============================================
+  // HOOKS & STATE
+  // ============================================
   const { isAuthenticated, user } = useAuth();
 
-  // Determinar qué header mostrar según el rol del usuario
+  // ============================================
+  // RENDER HELPERS
+  // ============================================
+
+  /**
+   * Renderiza el header apropiado según el tipo de usuario
+   * @returns {JSX.Element} Componente de header correspondiente
+   */
   const renderHeader = () => {
+    // Usuario no autenticado → Header público
     if (!isAuthenticated) {
-      return <Header />; // Usuario no autenticado - Header público
+      return <Header />;
     }
 
+    // Usuario staff (admin/seller/marketing) → Header con dashboard
     if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
-      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
+      return <Header2 />;
     }
 
-    return <SearchBar />; // Cliente - Header con búsqueda y carrito
+    // Cliente autenticado → SearchBar con carrito
+    return <SearchBar />;
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <>
       {renderHeader()}
+
       <main className="legal-page">
         <div className="container">
           <h1>Términos y Condiciones</h1>
           <p className="last-updated">Última actualización: Noviembre 2024</p>
 
+          {/* Sección 1: Aceptación de los Términos */}
           <section className="legal-section">
             <h2>1. Aceptación de los Términos</h2>
             <p>
@@ -36,6 +82,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 2: Descripción del Servicio */}
           <section className="legal-section">
             <h2>2. Descripción del Servicio</h2>
             <p>
@@ -51,6 +98,7 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
+          {/* Sección 3: Registro y Cuenta de Usuario */}
           <section className="legal-section">
             <h2>3. Registro y Cuenta de Usuario</h2>
             <p>
@@ -65,6 +113,7 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
+          {/* Sección 4: Uso Aceptable */}
           <section className="legal-section">
             <h2>4. Uso Aceptable</h2>
             <p>
@@ -79,6 +128,7 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
+          {/* Sección 5: Pedidos y Pagos */}
           <section className="legal-section">
             <h2>5. Pedidos y Pagos</h2>
             <p>
@@ -96,6 +146,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 6: Envíos y Entregas */}
           <section className="legal-section">
             <h2>6. Envíos y Entregas</h2>
             <p>
@@ -112,6 +163,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 7: Devoluciones y Reembolsos */}
           <section className="legal-section">
             <h2>7. Devoluciones y Reembolsos</h2>
             <p>
@@ -128,6 +180,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 8: Propiedad Intelectual */}
           <section className="legal-section">
             <h2>8. Propiedad Intelectual</h2>
             <p>
@@ -136,6 +189,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 9: Limitación de Responsabilidad */}
           <section className="legal-section">
             <h2>9. Limitación de Responsabilidad</h2>
             <p>
@@ -149,6 +203,7 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
+          {/* Sección 10: Privacidad y Protección de Datos */}
           <section className="legal-section">
             <h2>10. Privacidad y Protección de Datos</h2>
             <p>
@@ -157,6 +212,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 11: Modificaciones */}
           <section className="legal-section">
             <h2>11. Modificaciones</h2>
             <p>
@@ -165,6 +221,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 12: Terminación */}
           <section className="legal-section">
             <h2>12. Terminación</h2>
             <p>
@@ -173,6 +230,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 13: Ley Aplicable y Jurisdicción */}
           <section className="legal-section">
             <h2>13. Ley Aplicable y Jurisdicción</h2>
             <p>
@@ -181,6 +239,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
+          {/* Sección 14: Contacto */}
           <section className="legal-section">
             <h2>14. Contacto</h2>
             <p>
@@ -194,6 +253,7 @@ export default function TermsAndConditions() {
           </section>
         </div>
       </main>
+
       <Footer />
     </>
   );

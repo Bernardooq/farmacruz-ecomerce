@@ -1,3 +1,33 @@
+/**
+ * InventoryManager.jsx
+ * ====================
+ * Componente principal de gestión de inventario
+ * 
+ * Permite a los administradores gestionar el inventario completo de productos.
+ * Incluye búsqueda, filtrado, paginación y operaciones CRUD completas.
+ * 
+ * Funcionalidades:
+ * - Listar productos con paginación
+ * - Buscar por nombre y SKU
+ * - Filtrar por categoría y nivel de stock
+ * - Crear nuevo producto (admin only)
+ * - Editar producto existente (admin only)
+ * - Actualizar stock
+ * - Eliminar producto (admin only)
+ * 
+ * Filtros de stock:
+ * - ok: Stock >= 10
+ * - low: 0 < Stock < 10
+ * - out: Stock = 0
+ * 
+ * Permisos:
+ * - Admin: CRUD completo
+ * - Seller: Solo lectura
+ * 
+ * Uso:
+ * <InventoryManager />
+ */
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { productService } from '../services/productService';
@@ -10,44 +40,67 @@ import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import PaginationButtons from './PaginationButtons';
 
+// ============================================
+// CONSTANTES
+// ============================================
+const ITEMS_PER_PAGE = 10;
+const LOW_STOCK_THRESHOLD = 10;
+
 export default function InventoryManager() {
+  // ============================================
+  // HOOKS & STATE
+  // ============================================
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+
+  // Data state
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filters
+  // Filter state
   const [searchName, setSearchName] = useState('');
   const [searchSku, setSearchSku] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [stockFilter, setStockFilter] = useState('');
 
-  // Pagination
+  // Pagination state
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const itemsPerPage = 10;
 
-  // Modals
+  // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  console.log('InventoryManager state:', { showAddModal, showEditModal, showStockModal, selectedProduct });
+  // ============================================
+  // EFFECTS
+  // ============================================
 
-  // Load categories on mount
+  /**
+   * Cargar categorías al montar
+   */
   useEffect(() => {
     loadCategories();
   }, []);
 
-  // Load products when page or filters change
+  /**
+   * Cargar productos cuando cambian página o filtros
+   */
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, selectedCategory, stockFilter]);
 
+  // ============================================
+  // DATA FETCHING
+  // ============================================
+
+  /**
+   * Carga todas las categorías disponibles
+   */
   const loadCategories = async () => {
     try {
       const data = await categoryService.getCategories();
@@ -57,16 +110,22 @@ export default function InventoryManager() {
     }
   };
 
+  /**
+   * Carga productos con filtros y paginación
+   */
   const loadProducts = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const params = {
-        skip: page * itemsPerPage,
-        limit: itemsPerPage + 1
+        skip: page * ITEMS_PER_PAGE,
+        limit: ITEMS_PER_PAGE + 1 // +1 para detectar si hay más
       };
-      if (selectedCategory) params.category_id = parseInt(selectedCategory);
+
+      if (selectedCategory) {
+        params.category_id = parseInt(selectedCategory);
+      }
 
       const data = await productService.getProducts(params);
 
@@ -78,33 +137,14 @@ export default function InventoryManager() {
       }
 
       // Verificar si hay más páginas
-      const hasMorePages = data.length > itemsPerPage;
+      const hasMorePages = data.length > ITEMS_PER_PAGE;
       setHasMore(hasMorePages);
 
       // Tomar solo los items de la página actual
-      let pageProducts = hasMorePages ? data.slice(0, itemsPerPage) : data;
+      let pageProducts = hasMorePages ? data.slice(0, ITEMS_PER_PAGE) : data;
 
-      // Apply client-side filters (para búsqueda y stock)
-      if (searchName) {
-        pageProducts = pageProducts.filter(p =>
-          p.name && p.name.toLowerCase().includes(searchName.toLowerCase())
-        );
-      }
-
-      if (searchSku) {
-        pageProducts = pageProducts.filter(p =>
-          p.sku && p.sku.toLowerCase().includes(searchSku.toLowerCase())
-        );
-      }
-
-      if (stockFilter) {
-        pageProducts = pageProducts.filter(p => {
-          if (stockFilter === 'out') return p.stock_count === 0;
-          if (stockFilter === 'low') return p.stock_count > 0 && p.stock_count < 10;
-          if (stockFilter === 'ok') return p.stock_count >= 10;
-          return true;
-        });
-      }
+      // Aplicar filtros del lado del cliente
+      pageProducts = applyClientFilters(pageProducts);
 
       setProducts(pageProducts);
     } catch (err) {
@@ -116,21 +156,74 @@ export default function InventoryManager() {
     }
   };
 
+  // ============================================
+  // HELPERS
+  // ============================================
+
+  /**
+   * Aplica filtros de búsqueda y stock del lado del cliente
+   */
+  const applyClientFilters = (productList) => {
+    let filtered = [...productList];
+
+    // Filtro por nombre
+    if (searchName) {
+      filtered = filtered.filter(p =>
+        p.name && p.name.toLowerCase().includes(searchName.toLowerCase())
+      );
+    }
+
+    // Filtro por SKU
+    if (searchSku) {
+      filtered = filtered.filter(p =>
+        p.sku && p.sku.toLowerCase().includes(searchSku.toLowerCase())
+      );
+    }
+
+    // Filtro por nivel de stock
+    if (stockFilter) {
+      filtered = filtered.filter(p => {
+        if (stockFilter === 'out') return p.stock_count === 0;
+        if (stockFilter === 'low') return p.stock_count > 0 && p.stock_count < LOW_STOCK_THRESHOLD;
+        if (stockFilter === 'ok') return p.stock_count >= LOW_STOCK_THRESHOLD;
+        return true;
+      });
+    }
+
+    return filtered;
+  };
+
+  // ============================================
+  // EVENT HANDLERS - CRUD Operations
+  // ============================================
+
+  /**
+   * Crea un nuevo producto
+   */
   const handleAddProduct = async (productData) => {
     await productService.createProduct(productData);
     await loadProducts();
   };
 
+  /**
+   * Actualiza un producto existente
+   */
   const handleEditProduct = async (productId, productData) => {
     await productService.updateProduct(productId, productData);
     await loadProducts();
   };
 
+  /**
+   * Actualiza el stock de un producto
+   */
   const handleUpdateStock = async (productId, quantity) => {
     await productService.updateStock(productId, quantity);
     await loadProducts();
   };
 
+  /**
+   * Elimina un producto con confirmación
+   */
   const handleDeleteProduct = async (product) => {
     if (!window.confirm(`¿Estás seguro de eliminar el producto "${product.name}"?`)) {
       return;
@@ -145,12 +238,22 @@ export default function InventoryManager() {
     }
   };
 
+  // ============================================
+  // EVENT HANDLERS - Search
+  // ============================================
+
+  /**
+   * Maneja el envío del formulario de búsqueda
+   */
   const handleSearch = (e) => {
     e.preventDefault();
     loadProducts();
   };
 
-  // Error boundary fallback
+  // ============================================
+  // RENDER - Error Boundary
+  // ============================================
+
   if (error && products.length === 0 && !loading) {
     return (
       <section className="dashboard-section">
@@ -173,26 +276,35 @@ export default function InventoryManager() {
     );
   }
 
+  // ============================================
+  // RENDER - Main Component
+  // ============================================
   return (
     <section className="dashboard-section">
+      {/* Header con botón añadir */}
       <div className="section-header">
         <h2 className="section-title">Gestión de Inventario</h2>
         {isAdmin && (
-          <button className="btn-action" onClick={() => {
-            console.log('Opening add product modal...');
-            setShowEditModal(false);
-            setShowStockModal(false);
-            setSelectedProduct(null);
-            setShowAddModal(true);
-          }}>
+          <button
+            className="btn-action"
+            onClick={() => {
+              setShowEditModal(false);
+              setShowStockModal(false);
+              setSelectedProduct(null);
+              setShowAddModal(true);
+            }}
+          >
             <i className="fas fa-plus"></i> Añadir Nuevo Producto
           </button>
         )}
       </div>
 
+      {/* Mensaje de error */}
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
+      {/* Controles de búsqueda y filtros */}
       <div className="dashboard-controls">
+        {/* Búsqueda por nombre */}
         <form className="search-bar" onSubmit={handleSearch}>
           <input
             type="search"
@@ -205,6 +317,7 @@ export default function InventoryManager() {
           </button>
         </form>
 
+        {/* Búsqueda por SKU */}
         <form className="search-bar" onSubmit={handleSearch}>
           <input
             type="search"
@@ -217,6 +330,7 @@ export default function InventoryManager() {
           </button>
         </form>
 
+        {/* Filtro por categoría */}
         <div className="filter-group">
           <label htmlFor="filterCategory">Categoría:</label>
           <select
@@ -233,6 +347,7 @@ export default function InventoryManager() {
           </select>
         </div>
 
+        {/* Filtro por stock */}
         <div className="filter-group">
           <label htmlFor="filterStock">Stock:</label>
           <select
@@ -248,6 +363,7 @@ export default function InventoryManager() {
         </div>
       </div>
 
+      {/* Tabla de productos */}
       {loading ? (
         <LoadingSpinner message="Cargando productos..." />
       ) : (
@@ -279,7 +395,6 @@ export default function InventoryManager() {
                     key={product.product_id}
                     product={product}
                     onEdit={(p) => {
-                      console.log('Opening edit modal for:', p);
                       setShowAddModal(false);
                       setShowStockModal(false);
                       setSelectedProduct(p);
@@ -287,7 +402,6 @@ export default function InventoryManager() {
                     }}
                     onDelete={handleDeleteProduct}
                     onUpdateStock={(p) => {
-                      console.log('Opening stock modal for:', p);
                       setShowAddModal(false);
                       setShowEditModal(false);
                       setSelectedProduct(p);
@@ -302,6 +416,7 @@ export default function InventoryManager() {
         </div>
       )}
 
+      {/* Modal de agregar producto */}
       {showAddModal && (
         <ModalAddProduct
           isOpen={showAddModal}
@@ -310,6 +425,7 @@ export default function InventoryManager() {
         />
       )}
 
+      {/* Modal de editar producto */}
       {showEditModal && (
         <ModalEditProduct
           isOpen={showEditModal}
@@ -322,6 +438,7 @@ export default function InventoryManager() {
         />
       )}
 
+      {/* Modal de actualizar stock */}
       {showStockModal && (
         <ModalUpdateStock
           isOpen={showStockModal}

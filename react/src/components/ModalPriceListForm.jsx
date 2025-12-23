@@ -1,7 +1,47 @@
+/**
+ * ModalPriceListForm.jsx
+ * ======================
+ * Modal para crear/editar listas de precios
+ * 
+ * Permite gestionar listas de precios que se asignan a clientes.
+ * Cada lista de precios contiene precios personalizados por producto.
+ * 
+ * Props:
+ * @param {boolean} isOpen - Si el modal está visible
+ * @param {function} onClose - Callback para cerrar modal
+ * @param {function} onSuccess - Callback después de guardar exitosamente
+ * @param {Object} priceList - Lista a editar (null para crear nueva)
+ * 
+ * Campos del formulario:
+ * - price_list_id: ID opcional al crear (auto-generado si se omite)
+ * - list_name: Nombre de la lista (requerido)
+ * - description: Descripción opcional
+ * - is_active: Estado activo/inactivo
+ * 
+ * Modos:
+ * - Crear: priceList = null, muestra campo de ID opcional
+ * - Editar: priceList = objeto, ID no editable
+ * 
+ * Nota:
+ * - El ID solo se muestra en modo crear
+ * - Si no se proporciona ID, el backend lo auto-genera
+ * 
+ * Uso:
+ * <ModalPriceListForm
+ *   isOpen={showModal}
+ *   onClose={() => setShowModal(false)}
+ *   onSuccess={() => refreshLists()}
+ *   priceList={selectedList}
+ * />
+ */
+
 import { useState, useEffect } from 'react';
 import priceListService from '../services/priceListService';
 
 export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceList }) {
+  // ============================================
+  // STATE
+  // ============================================
   const [formData, setFormData] = useState({
     price_list_id: '',
     list_name: '',
@@ -11,14 +51,23 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  /**
+   * Inicializar formulario según el modo (crear/editar)
+   */
   useEffect(() => {
     if (isOpen && priceList) {
+      // Modo editar: cargar datos existentes
       setFormData({
         list_name: priceList.list_name || '',
         description: priceList.description || '',
         is_active: priceList.is_active !== undefined ? priceList.is_active : true
       });
     } else if (isOpen) {
+      // Modo crear: formulario vacío
       setFormData({
         price_list_id: '',
         list_name: '',
@@ -28,6 +77,13 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
     }
   }, [isOpen, priceList]);
 
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Maneja cambios en campos del formulario
+   */
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -36,6 +92,10 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
     }));
   };
 
+  /**
+   * Maneja el envío del formulario
+   * Crea o actualiza la lista de precios según el modo
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -43,17 +103,19 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
 
     try {
       if (priceList) {
+        // Modo editar
         await priceListService.updatePriceList(priceList.price_list_id, formData);
       } else {
-        const dataToSend = {
-          ...formData
-        };
-        // Only include price_list_id if it was provided
+        // Modo crear
+        const dataToSend = { ...formData };
+
+        // Solo incluir price_list_id si fue proporcionado
         if (formData.price_list_id) {
           dataToSend.price_list_id = parseInt(formData.price_list_id);
         } else {
           delete dataToSend.price_list_id;
         }
+
         await priceListService.createPriceList(dataToSend);
       }
 
@@ -65,6 +127,9 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
     }
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   if (!isOpen) return null;
 
   return (
@@ -78,7 +143,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
           <form onSubmit={handleSubmit}>
             {error && <div className="error-message">{error}</div>}
 
-            {/* ID field - only for create mode */}
+            {/* ID field - solo en modo crear */}
             {!priceList && (
               <div className="form-group">
                 <label htmlFor="price_list_id">ID de Lista (opcional)</label>
@@ -96,6 +161,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
               </div>
             )}
 
+            {/* Nombre */}
             <div className="form-group">
               <label htmlFor="list_name">Nombre de la Lista *</label>
               <input
@@ -110,6 +176,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
               />
             </div>
 
+            {/* Descripción */}
             <div className="form-group">
               <label htmlFor="description">Descripción</label>
               <textarea
@@ -123,6 +190,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
               />
             </div>
 
+            {/* Estado activo */}
             <div className="form-group">
               <label className="checkbox-label">
                 <input
@@ -136,6 +204,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
               </label>
             </div>
 
+            {/* Botones de acción */}
             <div className="form-actions">
               <button
                 type="button"

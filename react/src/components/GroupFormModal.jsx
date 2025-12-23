@@ -1,8 +1,42 @@
+/**
+ * GroupFormModal.jsx
+ * ==================
+ * Modal para crear/editar grupos de ventas
+ * 
+ * Permite crear nuevos grupos o editar grupos existentes.
+ * Los grupos de ventas se usan para organizar clientes, sellers
+ * y marketing managers.
+ * 
+ * Props:
+ * @param {Object} group - Grupo a editar (null para crear nuevo)
+ * @param {function} onClose - Callback para cerrar modal
+ * @param {function} onSaved - Callback después de guardar exitosamente
+ * 
+ * Campos del formulario:
+ * - group_name: Nombre del grupo (requerido)
+ * - description: Descripción opcional
+ * - is_active: Estado activo/inactivo
+ * 
+ * Modos:
+ * - Crear: group = null
+ * - Editar: group = objeto de grupo
+ * 
+ * Uso:
+ * <GroupFormModal
+ *   group={selectedGroup}
+ *   onClose={() => setShowModal(false)}
+ *   onSaved={() => refreshGroups()}
+ * />
+ */
+
 import { useState, useEffect } from 'react';
 import salesGroupService from '../services/salesGroupService';
 import ErrorMessage from './ErrorMessage';
 
 export default function GroupFormModal({ group, onClose, onSaved }) {
+  // ============================================
+  // STATE
+  // ============================================
   const [formData, setFormData] = useState({
     group_name: '',
     description: '',
@@ -11,6 +45,13 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  /**
+   * Cargar datos del grupo si estamos editando
+   */
   useEffect(() => {
     if (group) {
       setFormData({
@@ -21,6 +62,13 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
     }
   }, [group]);
 
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Maneja cambios en los campos del formulario
+   */
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -29,6 +77,10 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario
+   * Crea o actualiza el grupo según el modo
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -36,11 +88,13 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
 
     try {
       if (group) {
+        // Modo: Editar grupo existente
         await salesGroupService.updateSalesGroup(group.sales_group_id, formData);
       } else {
+        // Modo: Crear nuevo grupo
         await salesGroupService.createSalesGroup(formData);
       }
-      
+
       if (onSaved) onSaved();
     } catch (err) {
       const errorMessage = err.response?.data?.detail || err.message || 'Error al guardar el grupo.';
@@ -51,19 +105,25 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
     }
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        {/* Botón cerrar */}
         <button className="modal-close" onClick={onClose} aria-label="Cerrar modal">
           &times;
         </button>
-        
+
         <div className="modal-body">
           <h2>{group ? 'Editar Grupo de Ventas' : 'Crear Grupo de Ventas'}</h2>
-          
+
+          {/* Mensaje de error */}
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
-          
+
           <form onSubmit={handleSubmit}>
+            {/* Nombre del grupo */}
             <div className="form-group">
               <label htmlFor="group_name">Nombre del Grupo *</label>
               <input
@@ -78,6 +138,7 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
               />
             </div>
 
+            {/* Descripción */}
             <div className="form-group">
               <label htmlFor="description">Descripción</label>
               <textarea
@@ -91,6 +152,7 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
               />
             </div>
 
+            {/* Estado activo */}
             <div className="form-group">
               <label>
                 <input
@@ -104,17 +166,18 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
               </label>
             </div>
 
+            {/* Botones de acción */}
             <div className="form-actions">
-              <button 
-                type="button" 
-                className="btn-secondary" 
+              <button
+                type="button"
+                className="btn-secondary"
                 onClick={onClose}
                 disabled={loading}
               >
                 Cancelar
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn-primary"
                 disabled={loading}
               >

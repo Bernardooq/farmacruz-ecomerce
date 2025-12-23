@@ -24,6 +24,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 
 from dependencies import get_db, get_current_user, get_current_admin_user
 from core.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -51,7 +52,7 @@ class TokenData(BaseModel):
     
     Usado internamente para validación.
     """
-    username: str | None = None
+    username: Optional[str] = None
 
 
 @router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)

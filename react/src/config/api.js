@@ -1,6 +1,9 @@
 // Configuración centralizada de la API
 const API_CONFIG = {
+  // Usar CloudFront para HTTPS (evita Mixed Content errors)
+  // CloudFront hace proxy de /api/* hacia EC2 backend
   BASE_URL: 'http://localhost:8000',
+  // BASE_URL: 'https://digheqbxnmxr3.cloudfront.net',
   API_VERSION: '/api/v1',
   TIMEOUT: 10000,
 };
@@ -50,13 +53,13 @@ export const API_ENDPOINTS = {
 // Helper para construir URL completa
 export const buildUrl = (endpoint, params = {}) => {
   let url = `${API_BASE}${endpoint}`;
-  
+
   // Agregar query params si existen
   const queryString = new URLSearchParams(params).toString();
   if (queryString) {
     url += `?${queryString}`;
   }
-  
+
   return url;
 };
 

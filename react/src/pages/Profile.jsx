@@ -1,3 +1,23 @@
+/**
+ * Profile.jsx
+ * ===========
+ * Página de perfil del cliente en FarmaCruz
+ * 
+ * Esta página permite a los clientes ver y editar su información personal,
+ * así como consultar su historial de pedidos con paginación.
+ * 
+ * Funcionalidades:
+ * - Ver y editar información del usuario (nombre, email)
+ * - Ver y editar información del cliente (negocio, direcciones, RFC)
+ * - Ver historial de pedidos paginado
+ * - Ver detalles de pedidos individuales
+ * - Cancelar pedidos (solo si está en estado 'pending_validation')
+ * 
+ * Permisos:
+ * - Solo para clientes (role: 'customer')
+ * - Usuarios staff son redirigidos a sus dashboards respectivos
+ */
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -9,53 +29,108 @@ import OrderModal from '../components/OrderModal';
 import { userService } from '../services/userService';
 import orderService from '../services/orderService';
 
+// ============================================
+// CONSTANTES
+// ============================================
+const ORDERS_PER_PAGE = 10;
+
+// Mapeo de estados de pedido a etiquetas legibles
+const STATUS_LABELS = {
+  'pending_validation': 'Validando',
+  'approved': 'Aprobado',
+  'shipped': 'Enviado',
+  'delivered': 'Entregado',
+  'cancelled': 'Cancelado'
+};
+
+// Mapeo de estados a clases CSS
+const STATUS_CLASSES = {
+  'pending_validation': 'pending',
+  'approved': 'approved',
+  'shipped': 'shipped',
+  'delivered': 'delivered',
+  'cancelled': 'cancelled'
+};
+
 export default function Profile() {
+  // ============================================
+  // HOOKS & STATE
+  // ============================================
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Estado de datos del usuario
   const [profile, setProfile] = useState(null);
   const [customerInfo, setCustomerInfo] = useState(null);
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // Estado de UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Estado de edición
   const [editData, setEditData] = useState({});
+
+  // Estado de paginación de pedidos
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const ordersPerPage = 10;
 
-  // Bloquear acceso a usuarios internos (admin/seller/marketing)
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  /**
+   * Bloquear acceso a usuarios internos (admin/seller/marketing)
+   * y redirigirlos a sus dashboards respectivos
+   */
   useEffect(() => {
     if (user && user.role !== 'customer') {
-      // Redirigir a su dashboard respectivo
-      if (user.role === 'admin') {
-        navigate('/admindash');
-      } else if (user.role === 'seller') {
-        navigate('/sellerdash');
-      } else if (user.role === 'marketing') {
-        navigate('/marketingdash');
-      }
+      const dashboardRoutes = {
+        'admin': '/admindash',
+        'seller': '/sellerdash',
+        'marketing': '/marketingdash'
+      };
+
+      navigate(dashboardRoutes[user.role] || '/');
     }
   }, [user, navigate]);
 
+  /**
+   * Cargar datos del perfil al montar el componente
+   */
   useEffect(() => {
     loadProfileData();
   }, []);
 
+  /**
+   * Recargar pedidos cuando cambia la página
+   */
   useEffect(() => {
     loadOrders();
   }, [page]);
 
+  // ============================================
+  // DATA FETCHING
+  // ============================================
+
+  /**
+   * Carga los datos del perfil del usuario y su información de cliente
+   */
   const loadProfileData = async () => {
     try {
       setLoading(true);
+
       const [userData, customerData] = await Promise.all([
         userService.getCurrentUser(),
-        userService.getCurrentUserCustomerInfo().catch(() => null), // Si no tiene customer info, devolver null
+        userService.getCurrentUserCustomerInfo().catch(() => null) // Si no tiene customer info, devolver null
       ]);
 
       setProfile(userData);
       setCustomerInfo(customerData);
+
+      // Inicializar datos de edición
       setEditData({
         full_name: userData.full_name || '',
         email: userData.email || '',
@@ -63,7 +138,7 @@ export default function Profile() {
         address_1: customerData?.address_1 || '',
         address_2: customerData?.address_2 || '',
         address_3: customerData?.address_3 || '',
-        rfc: customerData?.rfc || '',
+        rfc: customerData?.rfc || ''
       });
     } catch (err) {
       console.error('Error loading profile:', err);
@@ -73,42 +148,50 @@ export default function Profile() {
     }
   };
 
+  /**
+   * Carga el historial de pedidos del usuario con paginación
+   */
   const loadOrders = async () => {
     try {
       setLoading(true);
+
       const ordersData = await orderService.getOrders({
-        skip: page * ordersPerPage,
-        limit: ordersPerPage + 1 // Pedir uno más para saber si hay más páginas
+        skip: page * ORDERS_PER_PAGE,
+        limit: ORDERS_PER_PAGE + 1 // Pedir uno más para saber si hay más páginas
       });
 
       // Verificar si hay más páginas
-      const hasMorePages = ordersData.length > ordersPerPage;
+      const hasMorePages = ordersData.length > ORDERS_PER_PAGE;
       setHasMore(hasMorePages);
 
       // Tomar solo los items de la página actual
-      const pageOrders = hasMorePages ? ordersData.slice(0, ordersPerPage) : ordersData;
+      const pageOrders = hasMorePages
+        ? ordersData.slice(0, ORDERS_PER_PAGE)
+        : ordersData;
 
-      // Mapear órdenes a formato esperado
-      const completedOrders = pageOrders.map(order => {
-        return {
-          id: `FC-${order.order_id}`,
-          orderId: order.order_id,
-          date: new Date(order.created_at).toLocaleDateString('es-MX', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
-          total: `$${parseFloat(order.total_amount).toFixed(2)} MXN`,
-          totalAmount: parseFloat(order.total_amount),
-          status: getStatusLabel(order.status),
-          statusClass: getStatusClass(order.status),
-          rawStatus: order.status,
-          shippingAddress: order.shipping_address || 'No especificada',  // From backend
-          items: (order.items || []).map(item =>
-            `${item.product?.name || 'Producto'} - ${item.quantity} unidades ($${parseFloat(item.final_price).toFixed(2)} c/u)`
-          )
-        };
-      });
+      // Mapear órdenes a formato esperado por los componentes
+      const completedOrders = pageOrders.map(order => ({
+        id: `FC-${order.order_id}`,
+        orderId: order.order_id,
+        date: new Date(order.created_at).toLocaleDateString('es-MX', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        total: `$${parseFloat(order.total_amount).toFixed(2)} MXN`,
+        totalAmount: parseFloat(order.total_amount),
+        status: getStatusLabel(order.status),
+        statusClass: getStatusClass(order.status),
+        rawStatus: order.status,
+        shippingAddress: order.shipping_address || 'No especificada',
+        items: (order.items || []).map(item => ({
+          name: item.product?.name || 'Producto',
+          quantity: item.quantity,
+          price: parseFloat(item.final_price),
+          subtotal: parseFloat(item.final_price) * item.quantity
+        }))
+      }));
+
       setOrders(completedOrders);
     } catch (err) {
       console.error('Error loading orders:', err);
@@ -117,28 +200,31 @@ export default function Profile() {
     }
   };
 
+  // ============================================
+  // HELPERS
+  // ============================================
+
+  /**
+   * Obtiene la etiqueta legible de un estado de pedido
+   */
   const getStatusLabel = (status) => {
-    const labels = {
-      'pending_validation': 'Validando',
-      'approved': 'Aprobado',
-      'shipped': 'Enviado',
-      'delivered': 'Entregado',
-      'cancelled': 'Cancelado'
-    };
-    return labels[status] || status;
+    return STATUS_LABELS[status] || status;
   };
 
+  /**
+   * Obtiene la clase CSS correspondiente a un estado de pedido
+   */
   const getStatusClass = (status) => {
-    const classes = {
-      'pending_validation': 'pending',
-      'approved': 'approved',
-      'shipped': 'shipped',
-      'delivered': 'delivered',
-      'cancelled': 'cancelled'
-    };
-    return classes[status] || 'pending';
+    return STATUS_CLASSES[status] || 'pending';
   };
 
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Alterna entre modo edición y modo vista
+   */
   const handleEditToggle = () => {
     if (isEditing) {
       // Cancelar edición, restaurar datos originales
@@ -149,12 +235,15 @@ export default function Profile() {
         address_1: customerInfo?.address_1 || '',
         address_2: customerInfo?.address_2 || '',
         address_3: customerInfo?.address_3 || '',
-        rfc: customerInfo?.rfc || '',
+        rfc: customerInfo?.rfc || ''
       });
     }
     setIsEditing(!isEditing);
   };
 
+  /**
+   * Maneja los cambios en los campos del formulario
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditData(prev => ({
@@ -163,31 +252,37 @@ export default function Profile() {
     }));
   };
 
+  /**
+   * Guarda los cambios del perfil
+   */
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
 
-      // Actualizar datos de usuario
+      // Preparar datos de usuario
       const userUpdateData = {
         full_name: editData.full_name,
-        email: editData.email,
+        email: editData.email
       };
 
-      // Actualizar datos de customer info
+      // Preparar datos de customer info
       const customerInfoUpdateData = {
         business_name: editData.business_name,
         address_1: editData.address_1,
         address_2: editData.address_2,
         address_3: editData.address_3,
-        rfc: editData.rfc,
+        rfc: editData.rfc
       };
 
+      // Actualizar ambos en paralelo
       await Promise.all([
         userService.updateCurrentUser(userUpdateData),
-        customerInfo ? userService.updateCurrentUserCustomerInfo(customerInfoUpdateData) : Promise.resolve(),
+        customerInfo
+          ? userService.updateCurrentUserCustomerInfo(customerInfoUpdateData)
+          : Promise.resolve()
       ]);
 
-      // Recargar datos
+      // Recargar datos actualizados
       await loadProfileData();
       setIsEditing(false);
       alert('Perfil actualizado exitosamente');
@@ -199,6 +294,9 @@ export default function Profile() {
     }
   };
 
+  /**
+   * Maneja la cancelación de un pedido
+   */
   const handleCancelOrder = async (order) => {
     if (!window.confirm(`¿Estás seguro de cancelar el pedido ${order.id}?`)) {
       return;
@@ -217,6 +315,9 @@ export default function Profile() {
     }
   };
 
+  // ============================================
+  // RENDER - LOADING STATE
+  // ============================================
   if (loading && !profile) {
     return (
       <>
@@ -231,6 +332,9 @@ export default function Profile() {
     );
   }
 
+  // ============================================
+  // RENDER - ERROR STATE
+  // ============================================
   if (error) {
     return (
       <>
@@ -245,17 +349,25 @@ export default function Profile() {
     );
   }
 
+  // ============================================
+  // RENDER - MAIN CONTENT
+  // ============================================
   return (
     <>
       <SearchBar />
+
       <main className="profile-page">
         <div className="container">
           <h1 className="profile-page__title">Panel de Cliente</h1>
 
-          {/* Sección de Perfil */}
+          {/* ============================================ */}
+          {/* SECCIÓN DE INFORMACIÓN DEL PERFIL           */}
+          {/* ============================================ */}
           <div className="profile-section">
+            {/* Header con botones de acción */}
             <div className="profile-header">
               <h2>Información del Perfil</h2>
+
               <button
                 className="btn-edit"
                 onClick={isEditing ? handleSaveProfile : handleEditToggle}
@@ -263,6 +375,7 @@ export default function Profile() {
               >
                 {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
               </button>
+
               {isEditing && (
                 <button
                   className="btn-cancel"
@@ -274,7 +387,9 @@ export default function Profile() {
               )}
             </div>
 
+            {/* Formulario de perfil */}
             <div className="profile-form">
+              {/* Usuario (no editable) */}
               <div className="form-group">
                 <label>Usuario:</label>
                 <input
@@ -285,6 +400,7 @@ export default function Profile() {
                 />
               </div>
 
+              {/* Nombre completo */}
               <div className="form-group">
                 <label>Nombre Completo:</label>
                 <input
@@ -296,6 +412,7 @@ export default function Profile() {
                 />
               </div>
 
+              {/* Email */}
               <div className="form-group">
                 <label>Email:</label>
                 <input
@@ -307,6 +424,7 @@ export default function Profile() {
                 />
               </div>
 
+              {/* Información de negocio (solo si tiene customerInfo) */}
               {customerInfo && (
                 <>
                   <div className="form-group">
@@ -372,14 +490,16 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Historial de Pedidos */}
+          {/* ============================================ */}
+          {/* SECCIÓN DE HISTORIAL DE PEDIDOS             */}
+          {/* ============================================ */}
           <OrderHistory
             orders={orders}
             onSelectOrder={setSelectedOrder}
             onCancelOrder={handleCancelOrder}
           />
 
-          {/* Paginación */}
+          {/* Paginación (solo si hay pedidos) */}
           {orders.length > 0 && (
             <PaginationButtons
               onPrev={() => setPage(p => Math.max(0, p - 1))}
@@ -390,8 +510,16 @@ export default function Profile() {
           )}
         </div>
       </main>
+
       <Footer />
-      {selectedOrder && <OrderModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
+
+      {/* Modal de detalles del pedido */}
+      {selectedOrder && (
+        <OrderModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
     </>
   );
 }

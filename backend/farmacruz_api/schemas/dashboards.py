@@ -19,8 +19,11 @@ class DashboardStats(BaseModel):
     total_users: int  # Total de usuarios internos (admin, marketing, seller)
     total_customers: int  # Total de clientes registrados
     total_sellers: int  # Total de vendedores activos
+    total_marketing: int  # Total de usuarios marketing activos
     total_products: int  # Total de productos en catálogo
     total_orders: int  # Total de pedidos históricos
+    delivered_orders: int  # Total de pedidos entregados (delivered)
+    other_orders: int  # Total de pedidos en otros estados (no delivered)
     pending_orders: int  # Pedidos pendientes de asignación
     total_revenue: float  # Ingresos totales (pedidos completados)
     low_stock_count: int  # Productos con bajo inventario (< 10 unidades)

@@ -8,6 +8,7 @@ antes de convertirlo en un pedido formal.
 from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 
 class CartItemBase(BaseModel):
@@ -30,10 +31,10 @@ class CartItem(CartItemBase):
     updated_at: datetime  # Última modificación de cantidad
     
     # Información del producto (opcional, para mostrar en el frontend)
-    product_name: str | None = None  # Nombre del producto
-    product_sku: str | None = None  # Código SKU
-    product_image_url: str | None = None  # URL de la imagen
-    stock_count: int | None = None  # Stock disponible
+    product_name: Optional[str] = None  # Nombre del producto
+    product_sku: Optional[str] = None  # Código SKU
+    product_image_url: Optional[str] = None  # URL de la imagen
+    stock_count: Optional[int] = None # Stock disponible
     
     model_config = {
         "from_attributes": True

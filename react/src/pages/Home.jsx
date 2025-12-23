@@ -1,3 +1,17 @@
+/**
+ * Home.jsx
+ * =======
+ * Página principal de FarmaCruz
+ * 
+ * Esta página muestra el contenido landing con información de la empresa,
+ * productos destacados, ventajas y laboratorios asociados.
+ * 
+ * Funcionalidades:
+ * - Renderiza diferentes headers según el rol del usuario (público, cliente, staff)
+ * - Muestra secciones: Hero, Intro, Productos Destacados, Ventajas, Laboratorios
+ * - Responsive y accesible para todos los usuarios
+ */
+
 import { useAuth } from '../context/AuthContext';
 import Header from '../layout/Header';
 import Header2 from '../layout/Header2';
@@ -10,31 +24,58 @@ import Advantages from '../components/Advantages';
 import Labs from '../components/Labs';
 
 export default function Home() {
+  // ============================================
+  // HOOKS & STATE
+  // ============================================
   const { isAuthenticated, user } = useAuth();
 
-  // Determinar qué header mostrar según el rol del usuario
+  // ============================================
+  // RENDER HELPERS
+  // ============================================
+
+  /**
+   * Renderiza el header apropiado según el tipo de usuario
+   * @returns {JSX.Element} Componente de header correspondiente
+   */
   const renderHeader = () => {
+    // Usuario no autenticado → Header público con opciones de login
     if (!isAuthenticated) {
-      return <Header />; // Usuario no autenticado - Header público
+      return <Header />;
     }
 
+    // Usuario staff (admin/seller/marketing) → Header con acceso al dashboard
     if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
-      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
+      return <Header2 />;
     }
 
-    return <SearchBar />; // Cliente - Header con búsqueda y carrito
+    // Cliente autenticado → SearchBar con carrito de compras
+    return <SearchBar />;
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <>
       {renderHeader()}
+
       <main>
+        {/* Sección Hero - Banner principal */}
         <Hero />
+
+        {/* Texto introductorio sobre FarmaCruz */}
         <IntroText />
+
+        {/* Productos destacados */}
         <Featured />
+
+        {/* Ventajas de comprar con nosotros */}
         <Advantages />
+
+        {/* Laboratorios asociados */}
         <Labs />
       </main>
+
       <Footer />
     </>
   );

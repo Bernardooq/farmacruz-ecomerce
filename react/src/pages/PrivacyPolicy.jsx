@@ -1,3 +1,29 @@
+/**
+ * PrivacyPolicy.jsx
+ * =================
+ * Página de Política de Privacidad de FarmaCruz
+ * 
+ * Esta página presenta la política de privacidad y protección de datos
+ * de la plataforma, explicando cómo se recopilan, usan y protegen
+ * los datos personales de los usuarios.
+ * 
+ * Contenido:
+ * - Información que se recopila
+ * - Cómo se utiliza la información
+ * - Compartir información con terceros
+ * - Medidas de seguridad
+ * - Derechos del usuario (ARCO)
+ * - Políticas de cookies
+ * - Retención de datos
+ * - Información de contacto
+ * 
+ * Acceso:
+ * - Página pública (no requiere autenticación)
+ * 
+ * Cumplimiento:
+ * - Cumple con LFPDPPP (Ley Federal de Protección de Datos Personales en Posesión de Particulares)
+ */
+
 import { useAuth } from '../context/AuthContext';
 import Header from '../layout/Header';
 import Header2 from '../layout/Header2';
@@ -5,29 +31,47 @@ import SearchBar from '../layout/SearchBar';
 import Footer from '../layout/Footer';
 
 export default function PrivacyPolicy() {
+  // ============================================
+  // HOOKS & STATE
+  // ============================================
   const { isAuthenticated, user } = useAuth();
 
-  // Determinar qué header mostrar según el rol del usuario
+  // ============================================
+  // RENDER HELPERS
+  // ============================================
+
+  /**
+   * Renderiza el header apropiado según el tipo de usuario
+   * @returns {JSX.Element} Componente de header correspondiente
+   */
   const renderHeader = () => {
+    // Usuario no autenticado → Header público
     if (!isAuthenticated) {
-      return <Header />; // Usuario no autenticado - Header público
+      return <Header />;
     }
 
+    // Usuario staff (admin/seller/marketing) → Header con dashboard
     if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
-      return <Header2 />; // Admin, Seller o Marketing - Header con Dashboard
+      return <Header2 />;
     }
 
-    return <SearchBar />; // Cliente - Header con búsqueda y carrito
+    // Cliente autenticado → SearchBar con carrito
+    return <SearchBar />;
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <>
       {renderHeader()}
+
       <main className="legal-page">
         <div className="container">
           <h1>Política de Privacidad</h1>
           <p className="last-updated">Última actualización: Noviembre 2024</p>
 
+          {/* Sección 1: Introducción */}
           <section className="legal-section">
             <h2>1. Introducción</h2>
             <p>
@@ -36,8 +80,10 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Sección 2: Información que Recopilamos */}
           <section className="legal-section">
             <h2>2. Información que Recopilamos</h2>
+
             <h3>2.1 Información que usted nos proporciona:</h3>
             <ul>
               <li>Datos de registro (nombre, email, teléfono)</li>
@@ -57,6 +103,7 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
+          {/* Sección 3: Cómo Utilizamos su Información */}
           <section className="legal-section">
             <h2>3. Cómo Utilizamos su Información</h2>
             <p>Utilizamos su información para:</p>
@@ -71,6 +118,7 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
+          {/* Sección 4: Compartir Información */}
           <section className="legal-section">
             <h2>4. Compartir Información</h2>
             <p>Podemos compartir su información con:</p>
@@ -84,6 +132,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Sección 5: Seguridad de los Datos */}
           <section className="legal-section">
             <h2>5. Seguridad de los Datos</h2>
             <p>
@@ -97,6 +146,7 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
+          {/* Sección 6: Sus Derechos (ARCO) */}
           <section className="legal-section">
             <h2>6. Sus Derechos</h2>
             <p>Usted tiene derecho a:</p>
@@ -113,6 +163,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Sección 7: Cookies */}
           <section className="legal-section">
             <h2>7. Cookies</h2>
             <p>
@@ -121,6 +172,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Sección 8: Retención de Datos */}
           <section className="legal-section">
             <h2>8. Retención de Datos</h2>
             <p>
@@ -129,6 +181,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Sección 9: Cambios a esta Política */}
           <section className="legal-section">
             <h2>9. Cambios a esta Política</h2>
             <p>
@@ -137,6 +190,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Sección 10: Contacto */}
           <section className="legal-section">
             <h2>10. Contacto</h2>
             <p>
@@ -148,6 +202,7 @@ export default function PrivacyPolicy() {
           </section>
         </div>
       </main>
+
       <Footer />
     </>
   );

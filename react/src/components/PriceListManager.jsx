@@ -1,3 +1,30 @@
+/**
+ * PriceListManager.jsx
+ * ====================
+ * Componente de gestión de listas de precios
+ * 
+ * Permite a los administradores gestionar las listas de precios del sistema.
+ * Cada lista contiene precios personalizados para productos específicos
+ * y se asigna a clientes.
+ * 
+ * Funcionalidades:
+ * - Listar todas las listas de precios
+ * - Crear nueva lista de precios
+ * - Editar lista existente
+ * - Eliminar lista
+ * - Gestionar productos/precios de cada lista
+ * 
+ * Permisos:
+ * - Solo para administradores
+ * 
+ * Componentes relacionados:
+ * - ModalPriceListForm: Crear/editar lista
+ * - ModalPriceListItems: Gestionar productos de la lista
+ * 
+ * Uso:
+ * <PriceListManager />
+ */
+
 import { useState, useEffect } from 'react';
 import priceListService from '../services/priceListService';
 import ModalPriceListForm from './ModalPriceListForm';
@@ -8,19 +35,36 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrashAlt, faList } from '@fortawesome/free-solid-svg-icons';
 
 export default function PriceListManager() {
+  // ============================================
+  // STATE
+  // ============================================
   const [priceLists, setPriceLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modals
+  // Modales
   const [showFormModal, setShowFormModal] = useState(false);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [selectedPriceList, setSelectedPriceList] = useState(null);
 
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  /**
+   * Cargar listas al montar el componente
+   */
   useEffect(() => {
     loadPriceLists();
   }, []);
 
+  // ============================================
+  // DATA FETCHING
+  // ============================================
+
+  /**
+   * Carga todas las listas de precios del sistema
+   */
   const loadPriceLists = async () => {
     try {
       setLoading(true);
@@ -35,21 +79,37 @@ export default function PriceListManager() {
     }
   };
 
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Abre modal para crear nueva lista
+   */
   const handleCreate = () => {
     setSelectedPriceList(null);
     setShowFormModal(true);
   };
 
+  /**
+   * Abre modal para editar lista seleccionada
+   */
   const handleEdit = (priceList) => {
     setSelectedPriceList(priceList);
     setShowFormModal(true);
   };
 
+  /**
+   * Abre modal para gestionar productos de la lista
+   */
   const handleManageItems = (priceList) => {
     setSelectedPriceList(priceList);
     setShowItemsModal(true);
   };
 
+  /**
+   * Elimina una lista de precios con confirmación
+   */
   const handleDelete = async (priceList) => {
     if (!window.confirm(`¿Estás seguro de eliminar la lista "${priceList.list_name}"?`)) {
       return;
@@ -64,14 +124,21 @@ export default function PriceListManager() {
     }
   };
 
+  /**
+   * Callback después de crear/editar exitosamente
+   */
   const handleFormSuccess = async () => {
     setShowFormModal(false);
     setSelectedPriceList(null);
     await loadPriceLists();
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <section className="dashboard-section">
+      {/* Header con botón crear */}
       <div className="section-header">
         <h2 className="section-title">Listas de Precios</h2>
         <button className="btn-action" onClick={handleCreate}>
@@ -79,8 +146,10 @@ export default function PriceListManager() {
         </button>
       </div>
 
+      {/* Mensaje de error */}
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
+      {/* Tabla de listas */}
       {loading ? (
         <LoadingSpinner message="Cargando listas de precios..." />
       ) : (
@@ -114,6 +183,7 @@ export default function PriceListManager() {
                       </span>
                     </td>
                     <td data-label="Acciones" className="actions-cell">
+                      {/* Gestionar productos */}
                       <button
                         className="btn-icon btn--view"
                         aria-label="Gestionar Productos"
@@ -122,17 +192,21 @@ export default function PriceListManager() {
                       >
                         <FontAwesomeIcon icon={faList} />
                       </button>
+                      {/* Editar */}
                       <button
                         className="btn-icon btn--edit"
                         aria-label="Editar Lista"
                         onClick={() => handleEdit(priceList)}
+                        title="Editar"
                       >
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>
+                      {/* Eliminar */}
                       <button
                         className="btn-icon btn--delete"
                         aria-label="Eliminar Lista"
                         onClick={() => handleDelete(priceList)}
+                        title="Eliminar"
                       >
                         <FontAwesomeIcon icon={faTrashAlt} />
                       </button>
@@ -145,6 +219,7 @@ export default function PriceListManager() {
         </div>
       )}
 
+      {/* Modal de formulario (crear/editar) */}
       {showFormModal && (
         <ModalPriceListForm
           isOpen={showFormModal}
@@ -157,6 +232,7 @@ export default function PriceListManager() {
         />
       )}
 
+      {/* Modal de gestión de productos */}
       {showItemsModal && (
         <ModalPriceListItems
           isOpen={showItemsModal}

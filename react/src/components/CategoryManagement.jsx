@@ -1,3 +1,31 @@
+/**
+ * CategoryManagement.jsx
+ * ======================
+ * Componente de gestión de categorías de productos
+ * 
+ * Permite administrar las categorías que se usan para clasificar
+ * productos en el sistema. Solo administradores pueden crear/editar/eliminar.
+ * Otros roles tienen acceso de solo lectura.
+ * 
+ * Funcionalidades:
+ * - Listar todas las categorías
+ * - Crear nueva categoría (admin only)
+ * - Editar categoría existente (admin only)
+ * - Eliminar categoría (admin only)
+ * - Vista de solo lectura para no-admin
+ * 
+ * Permisos:
+ * - Admin: CRUD completo
+ * - Seller/Marketing: Solo lectura
+ * 
+ * Campos de categoría:
+ * - name: Nombre de la categoría (requerido)
+ * - description: Descripción opcional
+ * 
+ * Uso:
+ * <CategoryManagement />
+ */
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,13 +35,22 @@ import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 
 export default function CategoryManagement() {
+  // ============================================
+  // HOOKS & STATE
+  // ============================================
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+
+  // Data state
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+
+  // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: ''
@@ -21,10 +58,24 @@ export default function CategoryManagement() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
 
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  /**
+   * Cargar categorías al montar
+   */
   useEffect(() => {
     loadCategories();
   }, []);
 
+  // ============================================
+  // DATA FETCHING
+  // ============================================
+
+  /**
+   * Carga todas las categorías del sistema
+   */
   const loadCategories = async () => {
     try {
       setLoading(true);
@@ -39,6 +90,13 @@ export default function CategoryManagement() {
     }
   };
 
+  // ============================================
+  // EVENT HANDLERS - Modal
+  // ============================================
+
+  /**
+   * Abre modal para crear nueva categoría
+   */
   const openAddModal = () => {
     setEditingCategory(null);
     setFormData({
@@ -49,6 +107,9 @@ export default function CategoryManagement() {
     setShowModal(true);
   };
 
+  /**
+   * Abre modal para editar categoría existente
+   */
   const openEditModal = (category) => {
     setEditingCategory(category);
     setFormData({
@@ -59,12 +120,22 @@ export default function CategoryManagement() {
     setShowModal(true);
   };
 
+  /**
+   * Cierra el modal y resetea estado
+   */
   const closeModal = () => {
     setShowModal(false);
     setEditingCategory(null);
     setFormError(null);
   };
 
+  // ============================================
+  // EVENT HANDLERS - Form
+  // ============================================
+
+  /**
+   * Maneja cambios en campos del formulario
+   */
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -73,6 +144,10 @@ export default function CategoryManagement() {
     }));
   };
 
+  /**
+   * Maneja el envío del formulario
+   * Crea o actualiza categoría según el modo
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -80,11 +155,13 @@ export default function CategoryManagement() {
 
     try {
       if (editingCategory) {
+        // Modo editar
         await categoryService.updateCategory(editingCategory.category_id, formData);
       } else {
+        // Modo crear
         await categoryService.createCategory(formData);
       }
-      
+
       closeModal();
       loadCategories();
     } catch (err) {
@@ -96,6 +173,9 @@ export default function CategoryManagement() {
     }
   };
 
+  /**
+   * Elimina una categoría con confirmación
+   */
   const handleDelete = async (category) => {
     if (!window.confirm(`¿Estás seguro de eliminar la categoría "${category.name}"?`)) {
       return;
@@ -110,6 +190,10 @@ export default function CategoryManagement() {
     }
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
+
   if (loading && categories.length === 0) {
     return <LoadingSpinner message="Cargando categorías..." />;
   }
@@ -117,6 +201,7 @@ export default function CategoryManagement() {
   return (
     <>
       <section className="dashboard-section">
+        {/* Header con botón crear (solo admin) */}
         <div className="section-header">
           <h2 className="section-title">Gestión de Categorías</h2>
           {isAdmin && (
@@ -126,8 +211,10 @@ export default function CategoryManagement() {
           )}
         </div>
 
+        {/* Mensaje de error */}
         {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
+        {/* Tabla de categorías */}
         <div className="table-container">
           <table className="data-table">
             <thead>
@@ -157,23 +244,29 @@ export default function CategoryManagement() {
                     <td className="actions-cell">
                       {isAdmin ? (
                         <>
-                          <button 
-                            className="btn-icon btn--edit" 
+                          {/* Editar */}
+                          <button
+                            className="btn-icon btn--edit"
                             onClick={() => openEditModal(category)}
                             aria-label="Editar categoría"
+                            title="Editar"
                           >
                             <FontAwesomeIcon icon={faPencilAlt} />
                           </button>
-                          <button 
-                            className="btn-icon btn--delete" 
+                          {/* Eliminar */}
+                          <button
+                            className="btn-icon btn--delete"
                             onClick={() => handleDelete(category)}
                             aria-label="Eliminar categoría"
+                            title="Eliminar"
                           >
                             <FontAwesomeIcon icon={faTrashAlt} />
                           </button>
                         </>
                       ) : (
-                        <span style={{ color: '#95a5a6', fontStyle: 'italic' }}>Solo lectura</span>
+                        <span style={{ color: '#95a5a6', fontStyle: 'italic' }}>
+                          Solo lectura
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -184,6 +277,7 @@ export default function CategoryManagement() {
         </div>
       </section>
 
+      {/* Modal de formulario */}
       {showModal && (
         <div className="modal-overlay enable" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -192,10 +286,11 @@ export default function CategoryManagement() {
             </button>
             <div className="modal-body">
               <h2>{editingCategory ? 'Editar Categoría' : 'Añadir Categoría'}</h2>
-              
+
               {formError && <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />}
-              
+
               <form onSubmit={handleSubmit}>
+                {/* Nombre */}
                 <div className="form-group">
                   <label htmlFor="name">Nombre *</label>
                   <input
@@ -210,6 +305,7 @@ export default function CategoryManagement() {
                   />
                 </div>
 
+                {/* Descripción */}
                 <div className="form-group">
                   <label htmlFor="description">Descripción</label>
                   <textarea
@@ -223,17 +319,18 @@ export default function CategoryManagement() {
                   />
                 </div>
 
+                {/* Botones de acción */}
                 <div className="form-actions">
-                  <button 
-                    type="button" 
-                    className="btn-secondary" 
+                  <button
+                    type="button"
+                    className="btn-secondary"
                     onClick={closeModal}
                     disabled={formLoading}
                   >
                     Cancelar
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn-primary"
                     disabled={formLoading}
                   >

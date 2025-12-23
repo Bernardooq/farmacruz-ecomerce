@@ -45,6 +45,11 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         User.role == UserRole.seller
     ).scalar()
     
+    # Total de usuarios marketing activos
+    total_marketing = db.query(func.count(User.user_id)).filter(
+        User.role == UserRole.marketing
+    ).scalar()
+    
     # === PRODUCTOS ===
     # Total de productos activos en catálogo
     total_products = db.query(func.count(Product.product_id)).filter(
@@ -62,6 +67,14 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
     # === PEDIDOS ===
     # Total de pedidos históricos
     total_orders = db.query(func.count(Order.order_id)).scalar()
+    
+    # Total de pedidos entregados
+    delivered_orders = db.query(func.count(Order.order_id)).filter(
+        Order.status == OrderStatus.delivered
+    ).scalar()
+    
+    # Total de pedidos en otros estados (no entregados)
+    other_orders = total_orders - delivered_orders
     
     # Pedidos pendientes de asignación a vendedor
     # Estos requieren atención inmediata del admin/marketing
@@ -84,8 +97,11 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         total_users=total_users,
         total_customers=total_customers,
         total_sellers=total_sellers,
+        total_marketing=total_marketing,
         total_products=total_products,
         total_orders=total_orders,
+        delivered_orders=delivered_orders,
+        other_orders=other_orders,
         pending_orders=pending_orders,
         total_revenue=float(total_revenue),
         low_stock_count=low_stock_count
