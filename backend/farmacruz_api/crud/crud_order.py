@@ -315,7 +315,6 @@ def cancel_order(db: Session, order_id: int) -> Optional[Order]:
     
     Solo se pueden cancelar pedidos en estados:
     - pending_validation
-    - assigned
     - approved
     
     Al cancelar, se restaura el stock de todos los productos.
@@ -337,7 +336,6 @@ def cancel_order(db: Session, order_id: int) -> Optional[Order]:
     # === VALIDAR QUE SE PUEDE CANCELAR ===
     if db_order.status not in [
         OrderStatus.pending_validation,
-        OrderStatus.assigned,
         OrderStatus.approved
     ]:
         raise ValueError("No se puede cancelar este pedido")

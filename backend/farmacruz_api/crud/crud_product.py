@@ -15,13 +15,13 @@ from db.base import Product
 from schemas.product import ProductCreate, ProductUpdate
 
 
-def get_product(db: Session, product_id: int) -> Optional[Product]:
+def get_product(db: Session, product_id: str) -> Optional[Product]:
     """
     Obtiene un producto por ID con su categoría
     
     Args:
         db: Sesión de base de datos
-        product_id: ID del producto
+        product_id: ID del producto (tipo texto, ej: "FAR74")
         
     Returns:
         Producto encontrado con categoría precargada, o None si no existe
@@ -148,7 +148,7 @@ def create_product(db: Session, product: ProductCreate) -> Product:
 
 def update_product(
     db: Session,
-    product_id: int,
+    product_id: str,
     product: ProductUpdate
 ) -> Optional[Product]:
     """
@@ -178,7 +178,7 @@ def update_product(
     return db_product
 
 
-def delete_product(db: Session, product_id: int) -> Optional[Product]:
+def delete_product(db: Session, product_id: str) -> Optional[Product]:
     """
     Elimina un producto (soft delete)
     
@@ -204,7 +204,7 @@ def delete_product(db: Session, product_id: int) -> Optional[Product]:
 
 def update_stock(
     db: Session,
-    product_id: int,
+    product_id: str,
     quantity: int
 ) -> Optional[Product]:
     """

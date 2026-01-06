@@ -40,7 +40,7 @@ def get_cart(db: Session, customer_id: int) -> List[CartCache]:
 def add_to_cart(
     db: Session,
     customer_id: int,
-    product_id: int,
+    product_id: str,
     quantity: int = 1
 ) -> CartCache:
     """

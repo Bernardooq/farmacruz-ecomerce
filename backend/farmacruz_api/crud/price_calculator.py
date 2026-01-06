@@ -146,7 +146,7 @@ def get_customer_markup(
 
 def calculate_product_price_for_customer(
     db: Session,
-    product_id: int,
+    product_id: str,
     customer_id: int  # CORREGIDO: era user_id
 ) -> Optional[ProductWithPrice]:
     """

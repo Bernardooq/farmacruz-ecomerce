@@ -37,7 +37,8 @@ from . import (
     sales_groups,
     price_lists,
     customers,
-    catalog
+    catalog,
+    sync_dbf
 )
 
 # Router principal que agrupa todos los módulos
@@ -119,4 +120,10 @@ api_router.include_router(
 api_router.include_router(
     price_lists.router,
     tags=["Listas de Precios"]
+)
+
+# === SINCRONIZACIÓN DBF ===
+api_router.include_router(
+    sync_dbf.router,
+    tags=["Sincronización DBF"]
 )

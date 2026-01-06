@@ -84,7 +84,7 @@ def read_products(
 
 
 @router.get("/{product_id}", response_model=Product)
-def read_product(product_id: int, db: Session = Depends(get_db)):
+def read_product(product_id: str, db: Session = Depends(get_db)):
     """
     Detalle de un producto específico
     
@@ -181,7 +181,7 @@ def create_new_product(
 
 @router.put("/{product_id}", response_model=Product)
 def update_existing_product(
-    product_id: int,
+    product_id: str,
     product: ProductUpdate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
@@ -233,7 +233,7 @@ def update_existing_product(
 
 @router.delete("/{product_id}", response_model=Product)
 def delete_existing_product(
-    product_id: int,
+    product_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
@@ -259,7 +259,7 @@ def delete_existing_product(
 
 @router.patch("/{product_id}/stock", response_model=Product)
 def adjust_product_stock(
-    product_id: int,
+    product_id: str,
     stock_update: StockUpdate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)

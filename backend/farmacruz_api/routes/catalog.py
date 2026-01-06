@@ -63,7 +63,7 @@ def get_catalog_products(
 
 @router.get("/products/{product_id}", response_model=CatalogProduct)
 def get_catalog_product(
-    product_id: int,
+    product_id: str,  # Cambiado a str
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -77,7 +77,7 @@ def get_catalog_product(
     Calcula el precio personalizado según el markup del cliente.
     
     Args:
-        product_id: ID del producto
+        product_id: ID del producto (tipo texto, ej: "FAR74")
     
     Returns:
         Producto con precio calculado

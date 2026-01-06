@@ -63,7 +63,7 @@ router = APIRouter()
 # === CARRITO DE COMPRAS ===
 
 class CartItemAdd(BaseModel):
-    product_id: int
+    product_id: str 
     quantity: int = 1
 
 class CartItemUpdate(BaseModel):
@@ -502,8 +502,7 @@ def update_order_status_route(
     
     # Transiciones base (sin cancelación)
     valid_transitions = {
-        OrderStatus.pending_validation: [OrderStatus.assigned, OrderStatus.approved],  # Puede asignarse o aprobarse directamente
-        OrderStatus.assigned: [OrderStatus.approved],  # Después de asignar, debe aprobarse
+        OrderStatus.pending_validation: [OrderStatus.approved],  # Puede asignarse o aprobarse directamente
         OrderStatus.approved: [OrderStatus.shipped],
         OrderStatus.shipped: [OrderStatus.delivered],
         OrderStatus.delivered: [],  # Estado final, no se puede cambiar
@@ -687,7 +686,6 @@ def assign_order_to_seller(
     order.assigned_seller_id = assign_data.assigned_seller_id
     order.assigned_by_user_id = current_user.user_id
     order.assigned_at = datetime.utcnow()
-    order.status = OrderStatus.assigned
     
     if assign_data.assignment_notes:
         order.assignment_notes = assign_data.assignment_notes

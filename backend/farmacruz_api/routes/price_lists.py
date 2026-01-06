@@ -203,7 +203,7 @@ def bulk_update_price_list_items(
 @router.put("/{price_list_id}/items/{product_id}", response_model=PriceListItem)
 def update_price_list_item(
     price_list_id: int,
-    product_id: int,
+    product_id: str,
     item_update: PriceListItemUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user)
@@ -224,7 +224,7 @@ def update_price_list_item(
 @router.delete("/{price_list_id}/items/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_price_list_item(
     price_list_id: int,
-    product_id: int,
+    product_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user)
 ):

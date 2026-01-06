@@ -184,7 +184,7 @@ def get_price_list_items(
 def get_price_list_item(
     db: Session,
     price_list_id: int,
-    product_id: int
+    product_id: str
 ) -> Optional[PriceListItem]:
     """
     Obtiene un item específico de una lista de precios
@@ -249,7 +249,7 @@ def create_price_list_item(
 def update_price_list_item(
     db: Session,
     price_list_id: int,
-    product_id: int,
+    product_id: str,
     item_update: PriceListItemUpdate
 ) -> Optional[PriceListItem]:
     """
@@ -277,7 +277,7 @@ def update_price_list_item(
 def delete_price_list_item(
     db: Session,
     price_list_id: int,
-    product_id: int
+    product_id: str
 ) -> bool:
     """
     Elimina un producto de la lista de precios
@@ -330,7 +330,7 @@ def bulk_update_price_list_items(
 def get_product_markup(
     db: Session,
     price_list_id: int,
-    product_id: int
+    product_id: str
 ) -> Optional[Decimal]:
     """
     Obtiene SOLO el markup de un producto en una lista

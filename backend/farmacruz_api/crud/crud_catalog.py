@@ -62,6 +62,8 @@ def _build_catalog_product(product: Product, final_price: Decimal, markup: Decim
         'sku': product.sku,
         'name': product.name,
         'description': product.description,
+        'descripcion_2': product.descripcion_2,  
+        'unidad_medida': product.unidad_medida,  
         'base_price': product.base_price,
         'iva_percentage': product.iva_percentage,
         'image_url': product.image_url,
@@ -133,7 +135,7 @@ def get_catalog_products(
 def get_catalog_product(
     db: Session,
     current_user,
-    product_id: int
+    product_id: str  # Cambiado a str (tipo "FAR74")
 ) -> CatalogProduct:
     """
     Obtiene un producto específico con su precio personalizado
