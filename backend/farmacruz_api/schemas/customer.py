@@ -1,85 +1,83 @@
 """
 Schemas para Clientes (Customers)
 
-Los clientes están separados de los usuarios internos del sistema.
-Son usuarios externos que:
-- Compran productos a través del e-commerce
-- Tienen información comercial asociada (CustomerInfo)
-- Realizan pedidos
-- Pertenecen a grupos de ventas
-
-NOTA: Los usuarios internos están en schemas/user.py (tabla separada)
+Los clientes son usuarios externos que compran productos.
+Tienen información adicional en CustomerInfo (dirección, RFC, etc.)
 """
 
-from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from pydantic import BaseModel, Field
 
 
 class CustomerBase(BaseModel):
-    """Schema base con campos comunes de cliente"""
-    username: str = Field(..., min_length=3, max_length=255)  # Nombre de usuario único
-    email: Optional[str] = Field(None, max_length=255)  # Email del cliente
-    full_name: Optional[str] = Field(None, max_length=255)  # Nombre completo
+    """Campos base compartidos por todos los schemas de Customer"""
+    username: str = Field(..., min_length=3, max_length=255)
+    email: Optional[str] = Field(None, max_length=255)
+    full_name: Optional[str] = Field(None, max_length=255)
 
 
 class CustomerCreate(CustomerBase):
-    """
-    Schema para crear un nuevo cliente
-    
-    El admin debe proporcionar el ID (para sincronización con sistema externo).
-    """
-    customer_id: int  # Admin debe proporcionar este ID
-    password: str = Field(..., min_length=8)  # Contraseña (mínimo 8 caracteres)
+    """Schema para crear un nuevo cliente"""
+    password: str = Field(..., min_length=8)
 
 
 class CustomerUpdate(BaseModel):
-    """
-    Schema para actualizar un cliente existente
-    
-    Todos los campos son opcionales (solo se actualiza lo que se envía).
-    """
-    username: Optional[str] = Field(None, min_length=3, max_length=255)
+    """Schema para actualizar un cliente existente"""
     email: Optional[str] = Field(None, max_length=255)
     full_name: Optional[str] = Field(None, max_length=255)
-    password: Optional[str] = Field(None, min_length=8)  # Nueva contraseña (opcional)
-    is_active: Optional[bool] = None  # Activar/desactivar (opcional)
+    password: Optional[str] = Field(None, min_length=8)
+    is_active: Optional[bool] = None
 
 
-class CustomerInDBBase(CustomerBase):
-    """
-    Schema base para clientes en la base de datos
-    
-    Incluye campos generados automáticamente.
-    """
-    customer_id: int  # ID único del cliente
-    is_active: bool  # Estado activo/inactivo
-    created_at: datetime  # Fecha de registro
+class Customer(CustomerBase):
+    """Schema de respuesta con datos del cliente"""
+    customer_id: int
+    is_active: bool
 
-    model_config = {"from_attributes": True}  # Permite crear desde modelo SQLAlchemy
-
-
-class Customer(CustomerInDBBase):
-    """
-    Schema completo de cliente para responses de la API
-    
-    No incluye el password_hash por seguridad.
-    """
-    pass
+    class Config:
+        from_attributes = True
 
 
 class CustomerWithInfo(Customer):
     """
-    Cliente con información comercial completa
-    
-    Incluye CustomerInfo (direcciones, grupo de ventas, lista de precios).
-    Útil para mostrar perfil completo del cliente.
+    Schema de respuesta que incluye información adicional del cliente
+    (dirección, RFC, lista de precios, etc.)
     """
-    customer_info: Optional['CustomerInfoSchema'] = None  # Información comercial asociada
+    business_name: Optional[str] = None
+    rfc: Optional[str] = None
+    price_list_id: Optional[int] = None
+    sales_group_id: Optional[int] = None
+    address_1: Optional[str] = None
+    address_2: Optional[str] = None
+    address_3: Optional[str] = None
 
-    model_config = {"from_attributes": True}
+    class Config:
+        from_attributes = True
 
 
-# Import para evitar dependencia circular
-from schemas.customer_info import CustomerInfo as CustomerInfoSchema
-CustomerWithInfo.model_rebuild()  # Reconstruir modelo después del import
+# ===== SCHEMA PARA SINCRONIZACIÓN =====
+
+class CustomerSync(BaseModel):
+    """
+    Schema unificado para sincronizar clientes desde DBF
+    
+    Combina campos de Customer y CustomerInfo en un solo schema
+    para simplificar la sincronización masiva.
+    """
+    # === CUSTOMER (obligatorios) ===
+    customer_id: int = Field(..., description="ID del cliente (del DBF)")
+    username: str = Field(..., min_length=3, max_length=255, description="Nombre de usuario")
+    password: str = Field(..., min_length=8, description="Contraseña inicial")
+    
+    # === CUSTOMER (opcionales) ===
+    email: Optional[str] = Field(None, max_length=255, description="Email del cliente")
+    full_name: Optional[str] = Field(None, max_length=255, description="Nombre completo")
+    
+    # === CUSTOMER INFO (opcionales) ===
+    business_name: Optional[str] = Field(None, max_length=255, description="Nombre comercial/fiscal")
+    rfc: Optional[str] = Field(None, max_length=13, description="RFC fiscal")
+    price_list_id: Optional[int] = Field(None, description="ID de lista de precios asignada")
+    sales_group_id: Optional[int] = Field(None, description="ID del grupo de ventas")
+    address_1: Optional[str] = Field(None, description="Dirección principal")
+    address_2: Optional[str] = Field(None, description="Dirección de entrega")
+    address_3: Optional[str] = Field(None, description="Dirección de facturación")

@@ -13,7 +13,7 @@ from typing import Optional
 
 class CartItemBase(BaseModel):
     """Schema base para items del carrito"""
-    product_id: int  # ID del producto a comprar
+    product_id: str  # ID del producto a comprar (tipo texto)
     quantity: int  # Cantidad deseada
     price_at_addition: Decimal  # Precio cuando se agregó (snapshot)
 

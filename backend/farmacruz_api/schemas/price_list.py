@@ -34,11 +34,15 @@ class PriceListBase(BaseModel):
 
 class PriceListCreate(PriceListBase):
     """
-    Schema para crear una nueva lista de precios
+    Schema para crear/actualizar una lista de precios (UPSERT desde DBF)
     
-    El ID es opcional (admin puede proporcionarlo o se auto-genera).
+    El price_list_id es REQUERIDO porque viene del sistema DBF:
+    - Si el ID existe en BD: Se ACTUALIZA con los nuevos valores
+    - Si el ID NO existe en BD: Se CREA nuevo registro
+    
+    Esto permite sincronización bidireccional manteniendo los IDs del DBF.
     """
-    price_list_id: Optional[int] = None  # Opcional: admin puede proveer o se auto-genera
+    price_list_id: int  # REQUERIDO: ID del DBF para UPSERT
     is_active: Optional[bool] = True  # Activa por defecto
 
 
@@ -77,7 +81,7 @@ class PriceListItemBase(BaseModel):
     
     Define el markup de UN producto en UNA lista.
     """
-    product_id: int  # ID del producto
+    product_id: str  # ID del producto (tipo texto, ej: "FAR74")
     markup_percentage: Decimal = Field(..., ge=0, decimal_places=2)  # % de ganancia (ej: 25.00)
 
     @field_validator('markup_percentage')

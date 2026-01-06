@@ -53,7 +53,7 @@ export default function FiltersBar({
               key={cat.category_id || cat}
               value={cat.category_id || cat}
             >
-              {cat.name || cat}
+              {typeof cat === 'object' && cat.name ? cat.name : String(cat)}
             </option>
           ))}
         </select>

@@ -6,21 +6,19 @@ para las tablas de la base de datos.
 
 Organización:
 - Base: Clase genérica CRUDBase
-- Auxiliares: dashboard, cart, price_calculator
+- Auxiliares: dashboard, cart, price_calculator, catalog
 - Básicos: user, customer, product, category
 - Complejos: order, sales_group, price_list
 
 Uso:
-    from crud import crud_user, crud_product, price_calculator
+    from crud import crud_user, crud_product, price_calculator, crud_catalog
 """
-
-# === CLASE BASE ===
-from .base import CRUDBase
 
 # === AUXILIARES ===
 from . import crud_dashboard
 from . import crud_cart
 from . import price_calculator
+from . import crud_catalog
 
 # === USUARIOS Y CLIENTES ===
 from . import crud_user
@@ -47,6 +45,7 @@ __all__ = [
     "crud_dashboard",
     "crud_cart",
     "price_calculator",
+    "crud_catalog",
     
     # Usuarios y clientes
     "crud_user",
@@ -63,3 +62,4 @@ __all__ = [
     "crud_sales_group",
     "crud_price_list",
 ]
+

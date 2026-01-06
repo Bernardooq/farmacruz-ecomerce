@@ -50,7 +50,7 @@ class OrderUser(BaseModel):
 
 class OrderItemBase(BaseModel):
     """Schema base de item de pedido"""
-    product_id: int  # ID del producto
+    product_id: str  # ID del producto (tipo texto)
     quantity: int = Field(..., gt=0)  # Cantidad (debe ser > 0)
 
 

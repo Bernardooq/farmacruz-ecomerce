@@ -24,7 +24,7 @@ from .user import User, UserCreate, UserUpdate, UserInDB
 from .customer import Customer, CustomerCreate, CustomerUpdate, CustomerWithInfo
 
 # === PRODUCTOS Y CATEGORÍAS ===
-from .product import Product, ProductCreate, ProductUpdate, ProductWithPrice
+from .product import Product, ProductCreate, ProductUpdate, ProductWithPrice, CatalogProduct
 from .category import Category, CategoryCreate, CategoryUpdate
 
 # === INFORMACIÓN DE CLIENTES ===
@@ -65,7 +65,7 @@ __all__ = [
     "Customer", "CustomerCreate", "CustomerUpdate", "CustomerWithInfo",
     
     # Productos y categorías
-    "Product", "ProductCreate", "ProductUpdate", "ProductWithPrice",
+    "Product", "ProductCreate", "ProductUpdate", "ProductWithPrice", "CatalogProduct",
     "Category", "CategoryCreate", "CategoryUpdate",
     
     # Información de clientes
