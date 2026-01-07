@@ -25,6 +25,11 @@ class CategoryUpdate(CategoryBase):
     pass
 
 
+class CategorySync(CategoryBase):
+    """Schema para sincronizar categorías desde DBF"""
+    pass
+
+
 class Category(CategoryBase):
     """
     Schema completo de categoría para responses

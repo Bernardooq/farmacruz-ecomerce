@@ -18,6 +18,7 @@ class CustomerBase(BaseModel):
 
 class CustomerCreate(CustomerBase):
     """Schema para crear un nuevo cliente"""
+    customer_id: int = Field(..., description="ID del cliente (para sincronización)")
     password: str = Field(..., min_length=8)
 
 

@@ -84,7 +84,7 @@ export default function ProductRow({
     <tr>
       <td data-label="ID">{product.product_id}</td>
       <td data-label="Producto">{product.name}</td>
-      <td data-label="SKU">{product.sku}</td>
+      <td data-label="codebar">{product.codebar}</td>
       <td data-label="Categoría">{product.category?.name || 'N/A'}</td>
       <td data-label="Precio Base">${basePrice.toFixed(2)}</td>
       <td data-label="IVA">

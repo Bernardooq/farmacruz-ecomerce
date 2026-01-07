@@ -8,7 +8,7 @@
  * 
  * Funcionalidades:
  * - Listar productos con paginación
- * - Buscar por nombre y SKU
+ * - Buscar por nombre y codebar
  * - Filtrar por categoría y nivel de stock
  * - Crear nuevo producto (admin only)
  * - Editar producto existente (admin only)
@@ -61,7 +61,7 @@ export default function InventoryManager() {
 
   // Filter state
   const [searchName, setSearchName] = useState('');
-  const [searchSku, setSearchSku] = useState('');
+  const [searchcodebar, setSearchcodebar] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [stockFilter, setStockFilter] = useState('');
 
@@ -92,7 +92,7 @@ export default function InventoryManager() {
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, selectedCategory, stockFilter]);
+  }, [page, selectedCategory, stockFilter, searchName]);
 
   // ============================================
   // DATA FETCHING
@@ -123,8 +123,23 @@ export default function InventoryManager() {
         limit: ITEMS_PER_PAGE + 1 // +1 para detectar si hay más
       };
 
+      // NUEVO: Enviar búsqueda al backend
+      if (searchName) {
+        params.search = searchName; // Backend busca en nombre Y descripción
+      }
+
       if (selectedCategory) {
         params.category_id = parseInt(selectedCategory);
+      }
+
+      // Enviar stock filter al backend
+      if (stockFilter) {
+        const filterMap = {
+          'ok': 'in_stock',
+          'low': 'low_stock',
+          'out': 'out_of_stock'
+        };
+        params.stock_filter = filterMap[stockFilter];
       }
 
       const data = await productService.getProducts(params);
@@ -161,34 +176,23 @@ export default function InventoryManager() {
   // ============================================
 
   /**
-   * Aplica filtros de búsqueda y stock del lado del cliente
+   * Aplica filtros del lado del cliente
+   * NOTA: Búsqueda y stock filtering ahora son server-side
+   * Solo se mantiene filtro de codebar client-side
    */
   const applyClientFilters = (productList) => {
     let filtered = [...productList];
 
-    // Filtro por nombre
-    if (searchName) {
+    // BÚSQUEDA POR NOMBRE ELIMINADA - Ahora server-side
+
+    // Filtro por codebar (client-side)
+    if (searchcodebar) {
       filtered = filtered.filter(p =>
-        p.name && p.name.toLowerCase().includes(searchName.toLowerCase())
+        p.codebar && p.codebar.toLowerCase().includes(searchcodebar.toLowerCase())
       );
     }
 
-    // Filtro por SKU
-    if (searchSku) {
-      filtered = filtered.filter(p =>
-        p.sku && p.sku.toLowerCase().includes(searchSku.toLowerCase())
-      );
-    }
-
-    // Filtro por nivel de stock
-    if (stockFilter) {
-      filtered = filtered.filter(p => {
-        if (stockFilter === 'out') return p.stock_count === 0;
-        if (stockFilter === 'low') return p.stock_count > 0 && p.stock_count < LOW_STOCK_THRESHOLD;
-        if (stockFilter === 'ok') return p.stock_count >= LOW_STOCK_THRESHOLD;
-        return true;
-      });
-    }
+    // FILTRO DE STOCK ELIMINADO - Ahora server-side
 
     return filtered;
   };
@@ -304,11 +308,11 @@ export default function InventoryManager() {
 
       {/* Controles de búsqueda y filtros */}
       <div className="dashboard-controls">
-        {/* Búsqueda por nombre */}
+        {/* Búsqueda por nombre */}s
         <form className="search-bar" onSubmit={handleSearch}>
           <input
             type="search"
-            placeholder="Buscar por nombre..."
+            placeholder="Buscar por nombre, ID o descripción..."
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
           />
@@ -317,13 +321,13 @@ export default function InventoryManager() {
           </button>
         </form>
 
-        {/* Búsqueda por SKU */}
+        {/* Búsqueda por codebar */}
         <form className="search-bar" onSubmit={handleSearch}>
           <input
             type="search"
-            placeholder="Buscar por SKU..."
-            value={searchSku}
-            onChange={(e) => setSearchSku(e.target.value)}
+            placeholder="Buscar por codebar..."
+            value={searchcodebar}
+            onChange={(e) => setSearchcodebar(e.target.value)}
           />
           <button type="submit" aria-label="Buscar">
             <i className="fas fa-search"></i>
@@ -373,7 +377,7 @@ export default function InventoryManager() {
               <tr>
                 <th>ID</th>
                 <th>Producto</th>
-                <th>SKU</th>
+                <th>Codigo de barras</th>
                 <th>Categoría</th>
                 <th>Precio Base</th>
                 <th>IVA</th>

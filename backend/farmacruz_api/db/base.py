@@ -202,6 +202,7 @@ class Category(Base):
     category_id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)  # Nombre de la categoría
     description = Column(Text)  # Descripción opcional
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Productos que pertenecen a esta categoría
     products = relationship("Product", back_populates="category")
@@ -218,17 +219,18 @@ class Product(Base):
     __tablename__ = "products"
 
     product_id = Column(String(50), primary_key=True)  # ID tipo "FAR74" (no numérico)
-    sku = Column(String(100), unique=True, nullable=False, index=True)  # Código único del producto
+    codebar = Column(String(100), unique=True, nullable=True, index=True)  # Código de barras (puede ser None)
     name = Column(String(255), nullable=False)  # Nombre del producto
     description = Column(Text)  # Descripción principal (del DBF/sincronización)
     descripcion_2 = Column(Text)  # Descripción adicional (editable por admin, ej: receta médica)
-    unidad_medida = Column(String(50))  # Unidad: "piezas", "cajas", "frascos", etc.
+    unidad_medida = Column(String(10))  # Unidad: "piezas", "cajas", "frascos", etc.
     base_price = Column(Numeric(10, 2), nullable=False, default=0.00)  # Precio base sin markup ni IVA
     iva_percentage = Column(Numeric(5, 2), default=0.00)  # % de IVA (ej: 16.00)
     image_url = Column(String(255))  # URL de la imagen del producto (puede ser None)
     stock_count = Column(Integer, default=0)  # Cantidad en inventario
     is_active = Column(Boolean, default=True, index=True)  # Para ocultar productos sin eliminarlos
     category_id = Column(Integer, ForeignKey("categories.category_id"), index=True)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relaciones
     category = relationship("Category", back_populates="products")
@@ -252,6 +254,7 @@ class PriceList(Base):
     description = Column(Text)  # Descripción de a quién aplica
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relaciones
     # Clientes asignados a esta lista

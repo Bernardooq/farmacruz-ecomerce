@@ -4,7 +4,7 @@ import { categoryService } from '../services/categoryService';
 export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     product_id: '',
-    sku: '',
+    codebar: '',
     name: '',
     description: '',
     price: '',
@@ -87,7 +87,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
       // Reset form
       setFormData({
         product_id: '',
-        sku: '',
+        codebar: '',
         name: '',
         description: '',
         price: '',
@@ -133,12 +133,12 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="sku">SKU *</label>
+              <label htmlFor="codebar">Codigo de barras *</label>
               <input
                 type="text"
-                id="sku"
-                name="sku"
-                value={formData.sku}
+                id="codebar"
+                name="codebar"
+                value={formData.codebar}
                 onChange={handleChange}
                 required
                 disabled={loading}

@@ -40,7 +40,7 @@ CREATE TABLE Categories (
 -- Tabla para los productos (sincronizados desde el ERP)
 CREATE TABLE Products (
     product_id SERIAL PRIMARY KEY,
-    sku VARCHAR(100) UNIQUE NOT NULL, -- Clave de enlace con Alpha ERP
+    codebar VARCHAR(100) UNIQUE NOT NULL, -- Clave de enlace con Alpha ERP
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
@@ -109,7 +109,7 @@ CREATE TABLE CartCache (
 
 -- --- 3. CREACION DE INDICES ---
 -- Mayor velocidad en las busquedas
-CREATE INDEX idx_products_sku ON Products (sku);
+CREATE INDEX idx_products_codebar ON Products (codebar);
 
 CREATE INDEX idx_orders_user_id ON Orders (user_id);
 

@@ -245,11 +245,11 @@ Antes de comenzar las pruebas, asegúrate de que:
 **Test Case 5.3.1: Listar productos**
 - [ ] En AdminDashboard, verificar sección InventoryManager
 - [ ] Verificar que se cargan productos desde productService.getProducts
-- [ ] Verificar que muestra: SKU, nombre, precio, stock, categoría, estado
+- [ ] Verificar que muestra: codebar, nombre, precio, stock, categoría, estado
 
 **Test Case 5.3.2: Crear producto**
 - [ ] Click en "Agregar Producto"
-- [ ] Llenar formulario: SKU, nombre, descripción, precio, stock, categoría, imagen
+- [ ] Llenar formulario: codebar, nombre, descripción, precio, stock, categoría, imagen
 - [ ] Verificar que se llama a productService.createProduct
 - [ ] Verificar que el nuevo producto aparece en la lista
 

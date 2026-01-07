@@ -59,7 +59,7 @@ def _build_catalog_product(product: Product, final_price: Decimal, markup: Decim
     
     return CatalogProduct.model_validate({
         'product_id': product.product_id,
-        'sku': product.sku,
+        'codebar': product.codebar,
         'name': product.name,
         'description': product.description,
         'descripcion_2': product.descripcion_2,  
@@ -84,13 +84,19 @@ def get_catalog_products(
     skip: int = 0,
     limit: int = 50,
     search: Optional[str] = None,
-    category_id: Optional[int] = None
+    category_id: Optional[int] = None,
+    sort_by: Optional[str] = None,  # NUEVO: Campo para ordenar
+    sort_order: Optional[str] = "asc"  # NUEVO: Dirección del orden
 ) -> List[CatalogProduct]:
     """
     Lista productos del catálogo con precios personalizados del cliente
     
     Solo muestra productos activos que estén en la lista de precios del cliente.
-    Soporta búsqueda por nombre/descripción/SKU y filtrado por categoría.
+    Soporta búsqueda por nombre/descripción/codebar, filtrado por categoría y ordenamiento.
+    
+    Args:
+        sort_by: Campo para ordenar ("name" o None para default)
+        sort_order: "asc" o "desc"
     """
     
     # Obtener lista de precios del cliente
@@ -113,14 +119,25 @@ def get_catalog_products(
         query = query.filter(
             (Product.name.ilike(term)) |
             (Product.description.ilike(term)) |
-            (Product.sku.ilike(term))
+            (Product.codebar.ilike(term))
         )
     
     if category_id:
         query = query.filter(Product.category_id == category_id)
     
+    # NUEVO: Aplicar ordenamiento
+    if sort_by == "name":
+        # Ordenar por nombre
+        if sort_order == "desc":
+            query = query.order_by(Product.name.desc())
+        else:
+            query = query.order_by(Product.name.asc())
+    else:
+        # Orden por defecto: más recientes primero (product_id descendente)
+        query = query.order_by(Product.product_id.desc())
+    
     # Ejecutar query con paginación
-    results = query.order_by(Product.name).offset(skip).limit(limit).all()
+    results = query.offset(skip).limit(limit).all()
     
     # Construir lista de productos con precios calculados
     catalog_products = []

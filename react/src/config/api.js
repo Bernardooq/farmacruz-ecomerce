@@ -27,7 +27,7 @@ export const API_ENDPOINTS = {
   PRODUCTS: {
     BASE: '/products',
     BY_ID: (id) => `/products/${id}`,
-    BY_SKU: (sku) => `/products/sku/${sku}`,
+    BY_codebar: (codebar) => `/products/codebar/${codebar}`,
     UPDATE_IMAGE: (id) => `/products/${id}/image`,
     UPDATE_STOCK: (id) => `/products/${id}/stock`,
   },

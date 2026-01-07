@@ -13,9 +13,9 @@ export const productService = {
     return apiService.get(`/products/${id}`)
   },
 
-  // Obtener un producto por su SKU (a veces es más útil que el ID)
-  async getProductBySku(sku) {
-    return apiService.get(`/products/sku/${sku}`)
+  // Obtener un producto por su codebar (a veces es más útil que el ID)
+  async getProductBycodebar(codebar) {
+    return apiService.get(`/products/codebar/${codebar}`)
   },
 
   // Crear un nuevo producto

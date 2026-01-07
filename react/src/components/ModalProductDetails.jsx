@@ -3,7 +3,7 @@
  * =======================
  * Modal de detalles de producto con funcionalidad de agregar al carrito
  * 
- * Muestra información completa del producto: imagen, nombre, SKU, precio,
+ * Muestra información completa del producto: imagen, nombre, codebar, precio,
  * stock disponible, descripción y selector de cantidad.
  * 
  * Props:
@@ -188,8 +188,8 @@ export default function ModalProductDetails({ product, isOpen, onClose }) {
               {product.name}
             </h2>
 
-            <p className="product-details__sku">
-              SKU: {product.sku}
+            <p className="product-details__codebar">
+              Codifo de barras: {product.codebar}
             </p>
 
             <div className="product-details__price">

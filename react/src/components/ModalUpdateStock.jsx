@@ -17,7 +17,7 @@
  * - Restar stock (números negativos)
  * - Validación de stock negativo
  * - Preview del nuevo stock en tiempo real
- * - Información del producto (nombre, SKU, stock actual)
+ * - Información del producto (nombre, codebar, stock actual)
  * 
  * Uso:
  * <ModalUpdateStock
@@ -100,7 +100,7 @@ export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product })
             {/* Información del producto */}
             <div className="product-info">
               <p><strong>Producto:</strong> {product.name}</p>
-              <p><strong>SKU:</strong> {product.sku}</p>
+              <p><strong>Codigo de barras:</strong> {product.codebar}</p>
               <p><strong>Stock Actual:</strong> {product.stock_count}</p>
             </div>
 

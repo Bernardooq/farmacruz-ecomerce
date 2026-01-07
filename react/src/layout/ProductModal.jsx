@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 export default function ProductModal({ visible, onClose }) {
   const initialForm = {
     name: '',
-    sku: '',
+    codebar: '',
     category: '',
     stock: 0,
   };
@@ -51,11 +51,11 @@ export default function ProductModal({ visible, onClose }) {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="sku">SKU</label>
+            <label htmlFor="codebar">Codigo de barras</label>
             <input
               type="text"
-              id="sku"
-              value={formData.sku}
+              id="codebar"
+              value={formData.codebar}
               onChange={handleChange}
               required
             />

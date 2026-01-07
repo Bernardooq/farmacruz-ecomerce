@@ -38,7 +38,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
         <tr>
           <td>${i + 1}</td>
           <td>${item.product?.name || 'N/A'}</td>
-          <td>${item.product?.sku || 'N/A'}</td>
+          <td>${item.product?.codebar || 'N/A'}</td>
           <td>${item.quantity}</td>
           <td>${formatCurrency(item.final_price)}</td>
           <td>${formatCurrency(item.quantity * item.final_price)}</td>
@@ -191,7 +191,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
             <tr>
               <th>#</th>
               <th>Producto</th>
-              <th>SKU</th>
+              <th>Codigo de barras</th>
               <th>Cantidad</th>
               <th>Precio Unit.</th>
               <th>Subtotal</th>
@@ -289,7 +289,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                 <thead>
                   <tr>
                     <th>Producto</th>
-                    <th>SKU</th>
+                    <th>Codigo de barras</th>
                     <th>Cantidad</th>
                     <th>Precio Unit.</th>
                     <th>Subtotal</th>
@@ -300,7 +300,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                     order.items.map((item, index) => (
                       <tr key={index}>
                         <td data-label="Producto">{item.product?.name || 'N/A'}</td>
-                        <td data-label="SKU">{item.product?.sku || 'N/A'}</td>
+                        <td data-label="codebar">{item.product?.codebar || 'N/A'}</td>
                         <td data-label="Cantidad">{item.quantity}</td>
                         <td data-label="Precio Unit.">{formatCurrency(item.final_price)}</td>
                         <td data-label="Subtotal">{formatCurrency(item.quantity * item.final_price)}</td>

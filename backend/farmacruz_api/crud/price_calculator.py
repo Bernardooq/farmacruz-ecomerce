@@ -192,7 +192,7 @@ def calculate_product_price_for_customer(
     # === CONSTRUIR RESPUESTA ===
     return ProductWithPrice(
         product_id=product.product_id,
-        sku=product.sku,
+        codebar=product.codebar,
         name=product.name,
         description=product.description,
         base_price=product.base_price,

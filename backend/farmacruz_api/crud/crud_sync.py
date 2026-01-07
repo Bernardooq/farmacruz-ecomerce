@@ -179,10 +179,31 @@ def verificar_si_categoria_existe(db: Session, categoria_id: int) -> bool:
     return categoria is not None
 
 
+def buscar_categoria_por_nombre(
+    db: Session,
+    nombre: str
+) -> Category:
+    """
+    Busca una categoría por su nombre
+    
+    Args:
+        db: Sesión de base de datos
+        nombre: Nombre de la categoría
+        
+    Returns:
+        Objeto Category si se encuentra, None si no
+    """
+    categoria = db.query(Category).filter(
+        Category.name == nombre
+    ).first()
+    
+    return categoria    
+
+
 def guardar_o_actualizar_producto(
     db: Session,
     producto_id: str,  # Cambiado a str para IDs tipo "FAR74"
-    sku: str,
+    codebar: str,
     nombre: str,
     descripcion: str = None,
     descripcion_2: str = None,  # Nueva: descripción manual (admin)
@@ -191,7 +212,7 @@ def guardar_o_actualizar_producto(
     porcentaje_iva: float = 0.0,
     cantidad_stock: int = 0,
     esta_activo: bool = True,
-    categoria_id: int = None,
+    category_name: str = None,
     url_imagen: str = None,
     preservar_descripcion_2: bool = False  # Si True, no tocar descripcion_2 existente
 ) -> Tuple[bool, str]:
@@ -210,7 +231,7 @@ def guardar_o_actualizar_producto(
     Args:
         db: Sesión de base de datos
         producto_id: ID del producto tipo "FAR74" (viene del DBF)
-        sku: Código SKU único del producto
+        codebar: Código codebar único del producto
         nombre: Nombre del producto
         descripcion: Descripción principal (del DBF)
         descripcion_2: Descripción adicional (editada por admin, ej: receta)
@@ -229,6 +250,9 @@ def guardar_o_actualizar_producto(
         - mensaje_error: None si todo bien, str con error si falló
     """
     try:
+        # Obtener categoria_id desde el nombre si se proporciona
+        categoria_id = buscar_categoria_por_nombre(db, category_name).category_id if category_name else None
+        
         # Validar categoría si se proporciona
         if categoria_id and not verificar_si_categoria_existe(db, categoria_id):
             return False, f"La categoría ID {categoria_id} no existe"
@@ -242,7 +266,7 @@ def guardar_o_actualizar_producto(
         # Preparar los datos base
         datos_producto = {
             "product_id": producto_id,
-            "sku": sku,
+            "codebar": codebar,
             "name": nombre,
             "description": descripcion,
             "unidad_medida": unidad_medida,
@@ -268,7 +292,7 @@ def guardar_o_actualizar_producto(
         
         # Definir qué campos actualizar si hay conflicto
         campos_a_actualizar = {
-            'sku': statement.excluded.sku,
+            'codebar': statement.excluded.codebar,
             'name': statement.excluded.name,
             'description': statement.excluded.description,
             'unidad_medida': statement.excluded.unidad_medida,
@@ -304,7 +328,7 @@ def guardar_o_actualizar_producto(
 def verificar_si_relacion_existe(
     db: Session,
     lista_id: int,
-    producto_id: int
+    producto_id: str  # Cambiado a str para match con Product.product_id
 ) -> bool:
     """
     Verifica si ya existe una relación producto-lista
@@ -328,7 +352,7 @@ def verificar_si_relacion_existe(
 def guardar_o_actualizar_markup(
     db: Session,
     lista_id: int,
-    producto_id: int,
+    producto_id: str,  # Cambiado a str para match con Product.product_id
     porcentaje_markup: float
 ) -> Tuple[bool, str]:
     """

@@ -373,7 +373,7 @@ def get_products_not_in_price_list(
         price_list_id: ID de la lista
         skip: Registros a saltar
         limit: Máximo de registros
-        search: Buscar por nombre o SKU (opcional)
+        search: Buscar por nombre o codebar (opcional)
         
     Returns:
         Lista de productos no incluidos en la lista
@@ -395,7 +395,7 @@ def get_products_not_in_price_list(
         query = query.filter(
             or_(
                 Product.name.ilike(search_term),
-                Product.sku.ilike(search_term)
+                Product.codebar.ilike(search_term)
             )
         )
     
@@ -420,7 +420,7 @@ def get_products_in_price_list_with_details(
         price_list_id: ID de la lista
         skip: Registros a saltar
         limit: Máximo de registros
-        search: Buscar por nombre o SKU (opcional)
+        search: Buscar por nombre o codebar (opcional)
         
     Returns:
         Lista de dicts con {product, markup_percentage, price_list_item_id}
@@ -440,7 +440,7 @@ def get_products_in_price_list_with_details(
         query = query.filter(
             or_(
                 Product.name.ilike(search_term),
-                Product.sku.ilike(search_term)
+                Product.codebar.ilike(search_term)
             )
         )
     

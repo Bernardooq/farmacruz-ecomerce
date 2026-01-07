@@ -31,20 +31,20 @@ def get_product(db: Session, product_id: str) -> Optional[Product]:
     ).filter(Product.product_id == product_id).first()
 
 
-def get_product_by_sku(db: Session, sku: str) -> Optional[Product]:
+def get_product_by_codebar(db: Session, codebar: str) -> Optional[Product]:
     """
-    Obtiene un producto por su SKU (código único)
+    Obtiene un producto por su codebar (código único)
     
     Args:
         db: Sesión de base de datos
-        sku: Código SKU del producto
+        codebar: Código codebar del producto
         
     Returns:
         Producto encontrado con categoría precargada, o None si no existe
     """
     return db.query(Product).options(
         joinedload(Product.category)
-    ).filter(Product.sku == sku).first()
+    ).filter(Product.codebar == codebar).first()
 
 
 def get_products(
@@ -53,6 +53,7 @@ def get_products(
     limit: int = 100,
     category_id: Optional[int] = None,
     is_active: Optional[bool] = None,
+    stock_filter: Optional[str] = None,  # NUEVO: Filtro de stock
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = "asc"
 ) -> List[Product]:
@@ -65,12 +66,15 @@ def get_products(
         limit: Máximo de registros a devolver
         category_id: Filtrar por categoría (opcional)
         is_active: Filtrar por estado activo/inactivo (opcional)
+        stock_filter: Filtrar por nivel de stock: "in_stock", "out_of_stock", "low_stock" (opcional)
         sort_by: Campo para ordenar ("price", "name", o None para default)
         sort_order: Orden ascendente ("asc") o descendente ("desc")
         
     Returns:
         Lista de productos con categorías precargadas
     """
+    LOW_STOCK_THRESHOLD = 10  # Umbral para considerar bajo stock
+    
     query = db.query(Product).options(joinedload(Product.category))
     
     # === APLICAR FILTROS ===
@@ -79,6 +83,18 @@ def get_products(
     
     if is_active is not None:
         query = query.filter(Product.is_active == is_active)
+    
+    # NUEVO: Filtrar por nivel de stock
+    if stock_filter:
+        if stock_filter == "out_of_stock":
+            query = query.filter(Product.stock_count == 0)
+        elif stock_filter == "low_stock":
+            query = query.filter(
+                Product.stock_count > 0,
+                Product.stock_count < LOW_STOCK_THRESHOLD
+            )
+        elif stock_filter == "in_stock":
+            query = query.filter(Product.stock_count >= LOW_STOCK_THRESHOLD)
     
     # === APLICAR ORDENAMIENTO ===
     if sort_by == "price":
@@ -107,7 +123,7 @@ def search_products(
     limit: int = 100
 ) -> List[Product]:
     """
-    Busca productos por nombre o descripción
+    Busca productos por ID, nombre o descripción
     
     La búsqueda es insensible a mayúsculas/minúsculas.
     
@@ -123,6 +139,7 @@ def search_products(
     return db.query(Product).options(
         joinedload(Product.category)
     ).filter(
+        (Product.product_id.ilike(f"%{search}%")) |  # NUEVO: Buscar por ID
         (Product.name.ilike(f"%{search}%")) | 
         (Product.description.ilike(f"%{search}%"))
     ).offset(skip).limit(limit).all()

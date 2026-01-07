@@ -42,16 +42,25 @@ export default function ClientManagement() {
   useEffect(() => {
     loadClients();
     loadPriceLists();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, searchTerm]); // Agregar searchTerm para recargar al buscar
 
   const loadClients = async () => {
     try {
       setLoading(true);
       setError(null);
-      const customers = await customerService.getCustomers({
+
+      const params = {
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1
-      });
+      };
+
+      // NUEVO: Enviar búsqueda al backend
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const customers = await customerService.getCustomers(params);
 
       const hasMorePages = customers.length > itemsPerPage;
       setHasMore(hasMorePages);
@@ -77,26 +86,9 @@ export default function ClientManagement() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    // Resetear a página 0 cuando se busca
     setPage(0);
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (searchTerm.trim()) {
-        const customers = await customerService.getCustomers({
-          search: searchTerm
-        });
-        setClients(customers);
-        setHasMore(false);
-      } else {
-        loadClients();
-      }
-    } catch (err) {
-      setError('Error al buscar clientes.');
-      console.error('Search failed:', err);
-    } finally {
-      setLoading(false);
-    }
+    // loadClients se llamará automáticamente por el useEffect
   };
 
   const openAddModal = () => {

@@ -125,7 +125,7 @@ CREATE TABLE OrderAssignments (
 ```sql
 CREATE TABLE Products (
     product_id SERIAL PRIMARY KEY,
-    sku VARCHAR(100) UNIQUE NOT NULL,
+    codebar VARCHAR(100) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     laboratory VARCHAR(255),                    -- NUEVO: Fabricante

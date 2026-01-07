@@ -256,7 +256,7 @@ def get_available_products(
 ):
     """
     Get products that are NOT in the price list (available to add).
-    With pagination and optional search by name, SKU, or description.
+    With pagination and optional search by name, codebar, or description.
     (admin only)
     """
     # Verify price list exists
@@ -288,7 +288,7 @@ def get_items_with_details(
     """
     Get products that ARE in the price list with full product details.
     Returns product info + markup percentage.
-    With pagination and optional search by name, SKU, or description.
+    With pagination and optional search by name, codebar, or description.
     (admin only)
     """
     # Verify price list exists

@@ -28,8 +28,10 @@ router = APIRouter()
 def get_catalog_products(
     skip: int = Query(0, ge=0, description="Registros a saltar (paginación)"),
     limit: int = Query(50, ge=1, le=100, description="Máximo de registros (1-100)"),
-    search: Optional[str] = Query(None, description="Buscar por nombre, descripción o SKU"),
+    search: Optional[str] = Query(None, description="Buscar por nombre, descripción o codebar"),
     category_id: Optional[int] = Query(None, description="Filtrar por categoría"),
+    sort_by: Optional[str] = Query(None, description="Ordenar por: name"),
+    sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -42,7 +44,7 @@ def get_catalog_products(
     - Con precios calculados según el markup del cliente
     
     Filtros opcionales:
-    - search: Busca en nombre, descripción y SKU
+    - search: Busca en nombre, descripción y codebar
     - category_id: Filtra por categoría
     
     Permisos: Solo clientes
@@ -57,7 +59,9 @@ def get_catalog_products(
         skip=skip,
         limit=limit,
         search=search,
-        category_id=category_id
+        category_id=category_id,
+        sort_by=sort_by,
+        sort_order=sort_order
     )
 
 

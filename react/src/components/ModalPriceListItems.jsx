@@ -246,7 +246,7 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                       <div key={product.product_id} className="product-card">
                         <div className="product-info">
                           <div className="product-name">{product.name}</div>
-                          <div className="product-sku">SKU: {product.sku}</div>
+                          <div className="product-codebar">Codigo de barras: {product.codebar}</div>
                           <div className="product-price">Precio Base: ${parseFloat(product.base_price).toFixed(2)}</div>
                         </div>
                         <div className="product-actions">
@@ -330,7 +330,7 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                         <div key={item.product?.product_id} className="product-card product-card--in-list">
                           <div className="product-info">
                             <div className="product-name">{item.product?.name}</div>
-                            <div className="product-sku">SKU: {item.product?.sku}</div>
+                            <div className="product-codebar">Codigo de barras: {item.product?.codebar}</div>
                             <div className="product-price">Base: ${parseFloat(item.product?.base_price || 0).toFixed(2)}</div>
                             <div className="product-markup">
                               {isEditing ? (

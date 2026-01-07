@@ -84,21 +84,25 @@ CREATE TABLE GroupSellers (
 CREATE TABLE Categories (
     category_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    description TEXT
+    description TEXT,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Productos
 CREATE TABLE Products (
-    product_id INTEGER PRIMARY KEY,
-    sku VARCHAR(100) UNIQUE NOT NULL,
+    product_id VARCHAR(50) PRIMARY KEY,
+    codebar VARCHAR(100) UNIQUE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    descripcion_2 TEXT,
+    unidad_medida VARCHAR(10),
     base_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     iva_percentage NUMERIC(5, 2) DEFAULT 0.00,
     image_url VARCHAR(255),
     stock_count INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
-    category_id INTEGER REFERENCES Categories (category_id)
+    category_id INTEGER REFERENCES Categories(category_id),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Listas de precios (contenedor)
@@ -107,14 +111,14 @@ CREATE TABLE PriceLists (
     list_name VARCHAR(100) NOT NULL,
     description TEXT,
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-
 -- Markup específico por producto en cada lista
 CREATE TABLE PriceListItems (
     price_list_item_id SERIAL PRIMARY KEY,
     price_list_id INTEGER NOT NULL REFERENCES PriceLists (price_list_id) ON DELETE CASCADE,
-    product_id INTEGER NOT NULL REFERENCES Products (product_id) ON DELETE CASCADE,
+    product_id VARCHAR(50) NOT NULL REFERENCES Products (product_id) ON DELETE CASCADE,
     markup_percentage NUMERIC(5, 2) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -155,7 +159,7 @@ CREATE TABLE Orders (
 CREATE TABLE OrderItems (
     order_item_id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES Orders (order_id) ON DELETE CASCADE,
-    product_id INTEGER NOT NULL REFERENCES Products (product_id),
+    product_id VARCHAR(50) NOT NULL REFERENCES Products (product_id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     base_price NUMERIC(10, 2) NOT NULL,
     markup_percentage NUMERIC(5, 2) NOT NULL,
@@ -167,7 +171,7 @@ CREATE TABLE OrderItems (
 CREATE TABLE CartCache (
     cart_cache_id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES Customers (customer_id) ON DELETE CASCADE,
-    product_id INTEGER NOT NULL REFERENCES Products (product_id),
+    product_id VARCHAR(50) NOT NULL REFERENCES Products (product_id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     added_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -184,7 +188,7 @@ CREATE INDEX idx_customers_username ON Customers (username);
 
 CREATE INDEX idx_customers_email ON Customers (email);
 
-CREATE INDEX idx_products_sku ON Products (sku);
+CREATE INDEX idx_products_codebar ON Products (codebar);
 
 CREATE INDEX idx_products_category ON Products (category_id);
 

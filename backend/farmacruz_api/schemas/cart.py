@@ -32,7 +32,7 @@ class CartItem(CartItemBase):
     
     # Información del producto (opcional, para mostrar en el frontend)
     product_name: Optional[str] = None  # Nombre del producto
-    product_sku: Optional[str] = None  # Código SKU
+    product_codebar: Optional[str] = None  # Código codebar
     product_image_url: Optional[str] = None  # URL de la imagen
     stock_count: Optional[int] = None # Stock disponible
     

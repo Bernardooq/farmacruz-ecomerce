@@ -25,10 +25,12 @@ import logging
 
 # ===== CONFIGURACIÓN =====
 BACKEND_URL = "http://localhost:8000/api/v1"
-DBF_PATH = Path(r"C:\Users\berna\Downloads\desarrollo\CLIENTES.DBF")
+DBF_DIR = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
+
+DBF_PATH = DBF_DIR / "clientes.dbf"
 BATCH_SIZE = 50  # Clientes a enviar cada llamada
 CREDENTIALS = {
-    "username": "farmacruz_admin",
+    "username": "admin",
     "password": "farmasaenz123"
 }
 
@@ -80,7 +82,7 @@ def migrate():
         return 1
     
     try:
-        df = pd.DataFrame(iter(DBF(DBF_PATH, encoding='latin-1')))
+        df = pd.DataFrame(iter(DBF(DBF_PATH, encoding='latin-1', ignore_missing_memofile=True)))
         df = df[df['CVE_CTE'].notna()].copy()
         logger.info(f"📊 {len(df)} clientes encontrados")
     except Exception as e:
@@ -120,7 +122,8 @@ def migrate():
         except Exception as e:
             logger.warning(f"⚠️  Error preparando cliente ID {row.get('CVE_CTE', 'N/A')}: {e}")
             continue
-    
+        
+         
     logger.info(f"✅ {len(lista_clientes)} clientes preparados correctamente")
 
     # === 4. ENVIAR AL BACKEND ===
@@ -133,51 +136,48 @@ def migrate():
         batch = lista_clientes[i : i + BATCH_SIZE]
         batch_num = i // BATCH_SIZE + 1
         
-        # Intenta endpoint batch primero, si no existe usa individual
+        # Usar endpoint de sincronización /sync/customers
         try:
-            # Opción 1: Endpoint batch (si está implementado)
+            # Preparar datos en formato CustomerSync
+            batch_sync = []
+            for cliente in batch:
+                cliente_sync = {
+                    "customer_id": cliente["customer_id"],
+                    "username": cliente["username"],
+                    "email": cliente["email"],
+                    "full_name": cliente["full_name"],
+                    "password": cliente["password"],
+                    "business_name": cliente["info"]["business_name"],
+                    "rfc": cliente["info"]["rfc"],
+                    "price_list_id": cliente["info"]["price_list_id"],
+                    "sales_group_id": cliente["info"]["sales_group_id"],
+                    "address_1": cliente["info"]["address_1"],
+                    "address_2": cliente["info"]["address_2"],
+                    "address_3": cliente["info"]["address_3"]
+                }
+                batch_sync.append(cliente_sync)
+            
+            # Enviar al endpoint de sincronización
             response = requests.post(
-                f"{BACKEND_URL}/customers/batch",
-                json=batch,
+                f"{BACKEND_URL}/sync/customers",
+                json=batch_sync,
                 headers=headers
             )
+            response.raise_for_status()
+            result = response.json()
             
-            if response.status_code == 404:
-                # Endpoint batch no existe, usar método individual
-                logger.info(f"📝 Lote {batch_num}: Usando creación individual...")
-                for cliente in batch:
-                    try:
-                        resp = requests.post(
-                            f"{BACKEND_URL}/customers",
-                            json=cliente,
-                            headers=headers
-                        )
-                        if resp.status_code in [200, 201]:
-                            total_exitosos += 1
-                            logger.info(f"   ✅ Cliente {cliente['customer_id']} creado")
-                        else:
-                            total_errores += 1
-                            logger.warning(f"   ⚠️  Cliente {cliente['customer_id']}: {resp.text[:100]}")
-                    except Exception as e:
-                        total_errores += 1
-                        logger.error(f"   ❌ Cliente {cliente['customer_id']}: {e}")
-            else:
-                # Endpoint batch existe
-                response.raise_for_status()
-                result = response.json()
-                
-                if isinstance(result, dict) and 'created' in result:
-                    # Respuesta tipo SyncResult
-                    total_exitosos += result.get('created', 0) + result.get('updated', 0)
-                    total_errores += result.get('errors', 0)
-                    logger.info(
-                        f"✅ Lote {batch_num}: {result.get('created', 0)} creados, "
-                        f"{result.get('updated', 0)} actualizados, {result.get('errors', 0)} errores"
-                    )
-                else:
-                    # Respuesta simple
-                    total_exitosos += len(batch)
-                    logger.info(f"✅ Lote {batch_num}: {len(batch)} clientes procesados")
+            # Procesar resultado
+            total_exitosos += result.get('creados', 0) + result.get('actualizados', 0)
+            total_errores += result.get('errores', 0)
+            logger.info(
+                f"✅ Lote {batch_num}: {result.get('creados', 0)} creados, "
+                f"{result.get('actualizados', 0)} actualizados, {result.get('errores', 0)} errores"
+            )
+            
+            # Mostrar primeros errores si los hay
+            if result.get('detalle_errores'):
+                for error in result.get('detalle_errores', [])[:3]:
+                    logger.warning(f"   ⚠️  {error}")
                     
         except requests.exceptions.HTTPError as e:
             logger.error(f"❌ Error HTTP en lote {batch_num}: {e}")

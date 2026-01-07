@@ -4,7 +4,7 @@ Routes para Administración de Productos
 Endpoints CRUD para gestión de productos del catálogo:
 - GET / - Lista de productos con filtros
 - GET /{id} - Detalle de producto
-- GET /sku/{sku} - Buscar por SKU
+- GET /codebar/{codebar} - Buscar por codebar
 - POST / - Crear producto
 - PUT /{id} - Actualizar producto
 - DELETE /{id} - Eliminar producto (soft delete)
@@ -27,7 +27,7 @@ from schemas.product import ProductCreate, ProductUpdate, Product
 from crud.crud_product import (
     get_products, 
     get_product, 
-    get_product_by_sku,
+    get_product_by_codebar,
     create_product,
     update_product,
     delete_product,
@@ -56,6 +56,7 @@ def read_products(
     category_id: Optional[int] = Query(None, description="Filtrar por categoría"),
     is_active: Optional[bool] = Query(True, description="Filtrar por estado"),
     search: Optional[str] = Query(None, description="Buscar por nombre/descripción"),
+    stock_filter: Optional[str] = Query(None, description="Filtrar por stock: in_stock, out_of_stock, low_stock"),
     sort_by: Optional[str] = Query(None, description="Ordenar por: price, name"),
     sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
     db: Session = Depends(get_db)
@@ -77,6 +78,7 @@ def read_products(
             limit=limit, 
             category_id=category_id,
             is_active=is_active,
+            stock_filter=stock_filter,
             sort_by=sort_by,
             sort_order=sort_order
         )
@@ -102,17 +104,17 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
     return product
 
 
-@router.get("/sku/{sku}", response_model=Product)
-def read_product_by_sku(sku: str, db: Session = Depends(get_db)):
+@router.get("/codebar/{codebar}", response_model=Product)
+def read_product_by_codebar(codebar: str, db: Session = Depends(get_db)):
     """
-    Buscar producto por SKU (código único)
+    Buscar producto por codebar (código único)
     
     Útil para validaciones y búsquedas por código de barras.
     
     Raises:
-        404: Si el SKU no existe
+        404: Si el codebar no existe
     """
-    product = get_product_by_sku(db, sku=sku)
+    product = get_product_by_codebar(db, codebar=codebar)
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -134,12 +136,12 @@ def create_new_product(
     - base_price > 0
     - iva_percentage entre 0 y 100
     - stock_count >= 0
-    - SKU único
+    - codebar único
     
     Permisos: Solo administradores
     
     Raises:
-        400: Validaciones fallidas o SKU duplicado
+        400: Validaciones fallidas o codebar duplicado
     """
     # === VALIDAR PRECIO BASE ===
     if product.base_price < 0:
@@ -168,12 +170,12 @@ def create_new_product(
             detail="El stock no puede ser negativo"
         )
     
-    # === VERIFICAR SKU ÚNICO ===
-    db_product = get_product_by_sku(db, sku=product.sku)
+    # === VERIFICAR codebar ÚNICO ===
+    db_product = get_product_by_codebar(db, codebar=product.codebar)
     if db_product:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"El SKU '{product.sku}' ya está registrado"
+            detail=f"El codebar '{product.codebar}' ya está registrado"
         )
     
     return create_product(db=db, product=product)

@@ -128,6 +128,18 @@ export default function Products() {
 
       if (isCustomer) {
         // CLIENTES: Usar catalog service (valida lista de precios y muestra precios personalizados)
+
+        // Agregar parámetros de ordenamiento para catalog
+        const sortConfig = {
+          'name_asc': { sort_by: 'name', sort_order: 'asc' },
+          'name_desc': { sort_by: 'name', sort_order: 'desc' },
+          'relevance': {}  // Sin sort_by = orden por defecto (más recientes)
+        };
+
+        if (sortConfig[sortOrder]) {
+          Object.assign(params, sortConfig[sortOrder]);
+        }
+
         data = await catalogService.getProducts(params);
       } else if (isInternalUser) {
         // STAFF: Usar product service (solo productos activos, sin precios)

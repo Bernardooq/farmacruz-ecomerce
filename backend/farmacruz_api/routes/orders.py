@@ -135,7 +135,7 @@ def read_cart(
             "product": {
                 "product_id": item.product.product_id,
                 "name": item.product.name,
-                "sku": item.product.sku,
+                "codebar": item.product.codebar,
                 "base_price": float(item.product.base_price) if item.product.base_price else 0.0,
                 "iva_percentage": float(item.product.iva_percentage) if item.product.iva_percentage else 16.0,
                 "final_price": final_price,

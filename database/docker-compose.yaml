@@ -5,14 +5,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: postgrees_farmacruz_image:15-alphine
+    image: postgrees_farmacruz_image:15-alpine
     container_name: postgres_db2
     environment:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
     volumes:
-      - db_data2:/var/lib/postgresql/data2
+      - ./db_init2.sql:/docker-entrypoint-initdb.d/db_init.sql
     ports:
       - "5434:5432"
 

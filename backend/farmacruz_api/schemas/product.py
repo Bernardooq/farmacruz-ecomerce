@@ -30,7 +30,7 @@ class CategoryInProduct(BaseModel):
 class ProductBase(BaseModel):
     """Schema base con todos los campos del producto"""
     product_id: str = Field(..., max_length=50)  # ID tipo texto "FAR74" (no numérico)
-    sku: str = Field(..., max_length=100)  # Código SKU único
+    codebar: Optional[str] = Field(None, max_length=100)  # Código de barras (puede ser None)
     name: str = Field(..., max_length=255)  # Nombre del producto
     description: Optional[str] = None  # Descripción principal (del DBF)
     descripcion_2: Optional[str] = None  # Descripción adicional (editada por admin, ej: receta)
@@ -59,7 +59,7 @@ class ProductCreate(BaseModel):
     - Solo se actualiza cuando el admin lo edita manualmente
     """
     product_id: str = Field(..., max_length=50)  # REQUERIDO: ID del DBF tipo "FAR74"
-    sku: str = Field(..., max_length=100)  # Código SKU único
+    codebar: Optional[str] = Field(None, max_length=100)  # Código de barras (puede ser None)
     name: str = Field(..., max_length=255)  # Nombre del producto
     description: Optional[str] = None  # Descripción principal
     descripcion_2: Optional[str] = None  # Descripción adicional (admin)
@@ -70,6 +70,35 @@ class ProductCreate(BaseModel):
     stock_count: int = Field(0, ge=0)  # Cantidad en inventario
     is_active: bool = True  # Si el producto está visible
     category_id: Optional[int] = None  # ID de la categoría
+
+
+class ProductCreate2(BaseModel):
+    """
+    Schema para crear/actualizar un producto (UPSERT desde DBF)
+    
+    El product_id es REQUERIDO porque viene del sistema DBF:
+    - Si el ID existe en BD: Se ACTUALIZA con los nuevos valores
+    - Si el ID NO existe en BD: Se CREA nuevo registro
+    
+    Esto permite sincronización bidireccional manteniendo los IDs del DBF.
+    
+    IMPORTANTE sobre descripcion_2:
+    - Al sincronizar desde DBF: NO se envía (es None)
+    - El CRUD debe preservar el valor existente en BD
+    - Solo se actualiza cuando el admin lo edita manualmente
+    """
+    product_id: str = Field(..., max_length=50)  # REQUERIDO: ID del DBF tipo "FAR74"
+    codebar: Optional[str] = Field(None, max_length=100)  # Código codebar único (puede ser None)
+    name: str = Field(..., max_length=255)  # Nombre del producto
+    description: Optional[str] = None  # Descripción principal
+    descripcion_2: Optional[str] = None  # Descripción adicional (admin)
+    unidad_medida: Optional[str] = Field(None, max_length=50)  # Unidad de medida
+    base_price: Decimal = Field(..., ge=0)  # Precio base
+    iva_percentage: Decimal = Field(0.00, ge=0, le=100)  # % de IVA
+    image_url: Optional[str] = Field(None, max_length=255)  # URL imagen (puede ser None)
+    stock_count: int = Field(0, ge=0)  # Cantidad en inventario
+    is_active: bool = True  # Si el producto está visible
+    category_name: Optional[str] = None  # Nombre de la categoría
 
 
 

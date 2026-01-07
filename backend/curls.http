@@ -30,7 +30,7 @@ curl -X POST http://localhost:8000/api/v1/products \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc2MjQ0MjE4Mn0.6eUICpV3HxwtSDPZKj5ObWxAxYVzLOJ6gfgky-MuAaA" \
   -H "Content-Type: application/json" \
   -d '{
-    "sku": "32342342",
+    "codebar": "32342342",
     "name": "Vitamina C 1000mg",
     "description": "Refuerza el sistema inmunológico",
     "price": 199.99,

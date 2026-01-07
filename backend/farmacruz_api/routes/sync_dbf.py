@@ -31,6 +31,7 @@ Solo administradores pueden usar estos endpoints.
 """
 
 from typing import List
+from schemas.category import CategorySync
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -38,7 +39,7 @@ from pydantic import BaseModel
 from dependencies import get_db, get_current_admin_user
 from db.base import User
 from schemas.price_list import PriceListCreate, PriceListItemCreate
-from schemas.product import ProductCreate
+from schemas.product import ProductCreate, ProductCreate2
 from schemas.customer import CustomerSync  # Nuevo import
 from crud import crud_sync
 
@@ -165,12 +166,6 @@ def sincronizar_listas_de_precios(
     return resultado
 
 
-# ENDPOINT: SINCRONIZAR CATEGORÍAS
-
-class CategorySync(BaseModel):
-    """Schema simple para sincronizar categorías"""
-    name: str
-    description: str = None
 
 @router.post("/categories", response_model=ResultadoSincronizacion)
 def sincronizar_categorias(
@@ -246,7 +241,7 @@ def sincronizar_categorias(
 
 @router.post("/products", response_model=ResultadoSincronizacion)
 def sincronizar_productos(
-    productos: List[ProductCreate],
+    productos: List[ProductCreate2],
     usuario_actual: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
@@ -272,7 +267,7 @@ def sincronizar_productos(
     [
         {
             "product_id": 1,
-            "sku": "PARACET500",
+            "codebar": "PARACET500",
             "name": "Paracetamol 500mg",
             "base_price": 25.50,
             "iva_percentage": 16.00,
@@ -286,7 +281,7 @@ def sincronizar_productos(
     ----------
     - Haber creado las categorias ANTES
     - Los IDs de productos son permanentes (no cambiarlos)
-    - El SKU debe ser unico
+    - El codebar debe ser unico
     """
     # Preparar el contador de resultados
     resultado = ResultadoSincronizacion(
@@ -297,14 +292,17 @@ def sincronizar_productos(
         detalle_errores=[]
     )
     
-    # Procesar cada producto uno por uno
+    # Procesar cada producto uno por uno con savepoints
     for producto in productos:
+        # Crear un savepoint para este producto (sub-transacción)
+        savepoint = db.begin_nested()
+        
         try:
             # Intentar guardar o actualizar el producto
             fue_creado, mensaje_error = crud_sync.guardar_o_actualizar_producto(
                 db=db,
                 producto_id=producto.product_id,
-                sku=producto.sku,
+                codebar=producto.codebar,
                 nombre=producto.name,
                 descripcion=producto.description,
                 descripcion_2=producto.descripcion_2,  # Nueva campo
@@ -313,28 +311,32 @@ def sincronizar_productos(
                 porcentaje_iva=float(producto.iva_percentage) if producto.iva_percentage else 0.0,
                 cantidad_stock=producto.stock_count if producto.stock_count else 0,
                 esta_activo=producto.is_active if producto.is_active is not None else True,
-                categoria_id=producto.category_id,
+                category_name=producto.category_name,
                 url_imagen=producto.image_url,
-                preservar_descripcion_2=True  # IMPORTANTE: NO tocar descripcion_2 al sincronizar DBF
+                preservar_descripcion_2=True  # NO tocar descripcion_2 al sincronizar DBF
             )
             
-            # Si hubo error, registrarlo
+            # Si hubo error, hacer rollback del savepoint y registrarlo
             if mensaje_error:
+                savepoint.rollback()
                 resultado.errores += 1
                 resultado.detalle_errores.append(
-                    f"Producto ID {producto.product_id} (SKU: {producto.sku}): {mensaje_error}"
+                    f"Producto ID {producto.product_id} (codebar: {producto.codebar}): {mensaje_error}"
                 )
-            # Si todo bien, contar si fue creado o actualizado
-            elif fue_creado:
-                resultado.creados += 1
+            # Si todo bien, confirmar savepoint y contar
             else:
-                resultado.actualizados += 1
+                savepoint.commit()
+                if fue_creado:
+                    resultado.creados += 1
+                else:
+                    resultado.actualizados += 1
                 
         except Exception as error_inesperado:
-            # Capturar cualquier error que no hayamos previsto
+            # Hacer rollback del savepoint en caso de error
+            savepoint.rollback()
             resultado.errores += 1
             resultado.detalle_errores.append(
-                f"Producto ID {producto.product_id} (SKU: {producto.sku}): "
+                f"Producto ID {producto.product_id} (codebar: {producto.codebar}): "
                 f"Error inesperado - {str(error_inesperado)}"
             )
     
@@ -531,8 +533,11 @@ def sincronizar_clientes(
         detalle_errores=[]
     )
     
-    # Procesar cada cliente uno por uno
+    # Procesar cada cliente uno por uno con savepoints
     for cliente in clientes:
+        # Crear savepoint para este cliente (sub-transacción)
+        savepoint = db.begin_nested()
+        
         try:
             # Intentar guardar o actualizar el cliente (Customer + CustomerInfo)
             # Ahora es mucho más simple con CustomerSync
@@ -553,20 +558,24 @@ def sincronizar_clientes(
                 address_3=cliente.address_3
             )
             
-            # Si hubo error, registrarlo
+            # Si hubo error, hacer rollback del savepoint y registrarlo
             if mensaje_error:
+                savepoint.rollback()
                 resultado.errores += 1
                 resultado.detalle_errores.append(
                     f"Cliente ID {cliente.customer_id} ({cliente.username}): {mensaje_error}"
                 )
-            # Si todo bien, contar si fue creado o actualizado
-            elif fue_creado:
-                resultado.creados += 1
+            # Si todo bien, confirmar savepoint y contar
             else:
-                resultado.actualizados += 1
+                savepoint.commit()
+                if fue_creado:
+                    resultado.creados += 1
+                else:
+                    resultado.actualizados += 1
                 
         except Exception as error_inesperado:
-            # Capturar cualquier error que no hayamos previsto
+            # Hacer rollback del savepoint en caso de error
+            savepoint.rollback()
             resultado.errores += 1
             resultado.detalle_errores.append(
                 f"Cliente ID {cliente.customer_id}: Error inesperado - {str(error_inesperado)}"
