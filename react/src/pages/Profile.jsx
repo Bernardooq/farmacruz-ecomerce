@@ -7,7 +7,7 @@
  * así como consultar su historial de pedidos con paginación.
  * 
  * Funcionalidades:
- * - Ver y editar información del usuario (nombre, email)
+ * - Ver y editar información del usuario (nombre, email, contraseña)
  * - Ver y editar información del cliente (negocio, direcciones, RFC)
  * - Ver historial de pedidos paginado
  * - Ver detalles de pedidos individuales
@@ -134,6 +134,8 @@ export default function Profile() {
       setEditData({
         full_name: userData.full_name || '',
         email: userData.email || '',
+        password: '',
+        confirmPassword: '',
         business_name: customerData?.business_name || '',
         address_1: customerData?.address_1 || '',
         address_2: customerData?.address_2 || '',
@@ -231,6 +233,8 @@ export default function Profile() {
       setEditData({
         full_name: profile.full_name || '',
         email: profile.email || '',
+        password: '',
+        confirmPassword: '',
         business_name: customerInfo?.business_name || '',
         address_1: customerInfo?.address_1 || '',
         address_2: customerInfo?.address_2 || '',
@@ -259,11 +263,30 @@ export default function Profile() {
     try {
       setLoading(true);
 
+      // Validar contraseñas si se proporcionaron
+      if (editData.password || editData.confirmPassword) {
+        if (editData.password !== editData.confirmPassword) {
+          alert('Las contraseñas no coinciden');
+          setLoading(false);
+          return;
+        }
+        if (editData.password.length < 8) {
+          alert('La contraseña debe tener al menos 8 caracteres');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Preparar datos de usuario
       const userUpdateData = {
         full_name: editData.full_name,
         email: editData.email
       };
+
+      // Solo incluir password si se proporcionó
+      if (editData.password && editData.password.trim() !== '') {
+        userUpdateData.password = editData.password;
+      }
 
       // Preparar datos de customer info
       const customerInfoUpdateData = {
@@ -423,6 +446,38 @@ export default function Profile() {
                   disabled={!isEditing}
                 />
               </div>
+
+              {/* Contraseña (solo visible al editar) */}
+              {isEditing && (
+                <>
+                  <div className="form-group">
+                    <label>Nueva Contraseña (opcional):</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={editData.password}
+                      onChange={handleInputChange}
+                      placeholder="Dejar en blanco para mantener la actual"
+                      minLength="8"
+                    />
+                    <small style={{ color: '#666', fontSize: '0.85em' }}>
+                      Mínimo 8 caracteres
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Confirmar Nueva Contraseña:</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={editData.confirmPassword}
+                      onChange={handleInputChange}
+                      placeholder="Confirmar contraseña"
+                      minLength="8"
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Información de negocio (solo si tiene customerInfo) */}
               {customerInfo && (

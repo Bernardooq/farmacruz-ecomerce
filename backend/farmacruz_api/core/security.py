@@ -12,34 +12,22 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
-# Contexto de hashing de contraseñas usando Argon2 (más seguro que bcrypt)
+# Contexto de hashing de contraseñas usando Argon2 
 pwd_context = CryptContext(
     schemes=["argon2"], 
     deprecated="auto"
 )
 
-def get_password_hash(password: str) -> str:
-    """Genera un hash seguro de la contraseña usando Argon2"""
+def get_password_hash(password: str) -> str: # Genera un hash seguro para una contraseña
     return pwd_context.hash(password)
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifica que una contraseña en texto plano coincida con su hash"""
+def verify_password(plain_password: str, hashed_password: str) -> bool: # Verifica si la contraseña proporcionada coincide con el hash almacenado
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """
-    Crea un token JWT para autenticación
-    
-    Args:
-        data: Información a incluir en el token (ej: username, user_type)
-        expires_delta: Tiempo de expiración personalizado (opcional)
-    
-    Returns:
-        Token JWT codificado como string
-    """
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str: # Crea un token JWT con los datos proporcionados y tiempo de expiración opcional
     to_encode = data.copy()
     
-    # Determinar tiempo de expiración
+    # Determinar tiempo de expiracion
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
@@ -50,18 +38,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 def decode_access_token(token: str) -> Optional[dict]:
-    """
-    Decodifica y valida un token JWT
-    
-    Args:
-        token: Token JWT a decodificar
-    
-    Returns:
-        Diccionario con los datos del token si es válido, None si no lo es
-    """
+    # Decodifica el token JWT y devuelve el payload si es valido
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
-        # Token inválido, expirado o manipulado
+        # Token invalido, expirado o manipulado
         return None

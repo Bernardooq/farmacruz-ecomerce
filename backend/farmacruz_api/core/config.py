@@ -1,8 +1,6 @@
 """
-Configuración global de la aplicación FARMACRUZ
-
-Este módulo centraliza todas las variables de configuración que se cargan
-desde variables de entorno (archivo .env). Incluye configuración de:
+CONFIGURACION global de la aplicación FARMACRUZ
+Incluye CONFIGURACION de:
 - Base de datos
 - Seguridad y autenticación
 - API y CORS
@@ -16,26 +14,21 @@ from pydantic_settings import BaseSettings
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
-class Settings(BaseSettings):
-    """
-    Clase de configuración usando Pydantic para validación
-    Los valores se obtienen de variables de entorno
-    """
-    
-    # === CONFIGURACIÓN DE BASE DE DATOS ===
+class Settings(BaseSettings):    
+    # === CONFIGURACION DE BASE DE DATOS ===
     DATABASE_URL: str = os.getenv("DATABASE_URL")
     
-    # === CONFIGURACIÓN DE SEGURIDAD Y JWT ===
+    # === CONFIGURACION DE SEGURIDAD Y JWT ===
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"  # Algoritmo para firmar tokens JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Duración de tokens de acceso
     
-    # === CONFIGURACIÓN DE LA API ===
+    # === CONFIGURACION DE LA API ===
     PROJECT_NAME: str = "Farmacruz API"
     API_V1_STR: str = "/api/v1"
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
     
-    # === CONFIGURACIÓN DE EMAIL (SMTP) ===
+    # === CONFIGURACION DE EMAIL (SMTP) ===
     # Se usa para enviar correos de contacto y notificaciones
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
@@ -46,11 +39,11 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
 
-# Instancia global de configuración
+# Instancia global de CONFIGURACION
 settings = Settings()
 
 # === VARIABLES DE COMPATIBILIDAD ===
-# Mantener estas variables para código legacy que las use directamente
+# Mantener estas variables para codigo legacy que las use directamente
 DATABASE_URL = settings.DATABASE_URL
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM

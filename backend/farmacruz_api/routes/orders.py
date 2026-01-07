@@ -194,7 +194,8 @@ def update_cart_item_quantity(
     db: Session = Depends(get_db)
 ):
     """
-    Actualiza la cantidad de un producto en el carrito
+    Actualiza la cantidad de un producto en el carrito.
+    Si quantity <= 0, el item se elimina del carrito.
     """
     from db.base import Customer
     
@@ -218,11 +219,10 @@ def update_cart_item_quantity(
         quantity=item.quantity
     )
     
-    if not cart_item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item no encontrado en el carrito"
-        )
+    # Si quantity <= 0, el item se eliminó correctamente
+    if cart_item is None:
+        return {"message": "Item eliminado del carrito", "deleted": True}
+    
     return cart_item
 
 @router.delete("/cart/{cart_id}")
