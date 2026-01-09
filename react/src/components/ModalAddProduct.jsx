@@ -7,6 +7,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
     codebar: '',
     name: '',
     description: '',
+    descripcion_2: '',
     price: '',
     iva_percentage: '16.00',
     category_id: '',
@@ -71,7 +72,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
       // Convert numeric fields
       const productData = {
         ...formData,
-        product_id: parseInt(formData.product_id),
+        product_id: formData.product_id,
         base_price: parseFloat(formData.price),  // El backend espera base_price, no price
         iva_percentage: parseFloat(formData.iva_percentage),
         category_id: parseInt(formData.category_id),
@@ -90,6 +91,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
         codebar: '',
         name: '',
         description: '',
+        descripcion_2: '',
         price: '',
         iva_percentage: '16.00',
         category_id: '',
@@ -120,7 +122,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
             <div className="form-group">
               <label htmlFor="product_id">ID del Producto *</label>
               <input
-                type="number"
+                type="text"
                 id="product_id"
                 name="product_id"
                 value={formData.product_id}
@@ -164,6 +166,19 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
                 id="description"
                 name="description"
                 value={formData.description}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                rows="3"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="descripcion_2">Descripción 2 *</label>
+              <textarea
+                id="descripcion_2"
+                name="descripcion_2"
+                value={formData.descripcion_2}
                 onChange={handleChange}
                 required
                 disabled={loading}

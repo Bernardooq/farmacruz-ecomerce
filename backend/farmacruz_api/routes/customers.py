@@ -26,8 +26,8 @@ from sqlalchemy.orm import Session
 
 from dependencies import get_db, get_current_admin_user
 from db.base import User, Customer, CustomerInfo
-from farmacruz_api.crud.crud_order import get_order_count_by_customer
-from farmacruz_api.crud.crud_user import get_user_by_email, get_user_by_username
+from crud.crud_order import get_order_count_by_customer
+from crud.crud_user import get_user_by_email, get_user_by_username
 from schemas.customer import (
     Customer as CustomerSchema,
     CustomerCreate,
@@ -108,11 +108,9 @@ def update_customer(
     db: Session = Depends(get_db)
 ):
     # Actualiza un cliente existente
-    db_user = get_user_by_username(db, username=customer_update.username) if customer_update.username else None
-    db_customer = crud_customer.get_customer_by_username(db, username=customer_update.username) if customer_update.username else None
     db_user_email = get_user_by_email(db, email=customer_update.email) if customer_update.email else None
-    db_customer_email = crud_customer.get_customer_by_email(db, email=customer_update.email) if customer_update.email else None
-    if db_user or db_customer or db_user_email or db_customer_email:
+    db_user = get_user_by_username(db, username=customer_update.username) if customer_update.username else None
+    if db_user_email or db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El nombre de usuario o email ya esta registrado"

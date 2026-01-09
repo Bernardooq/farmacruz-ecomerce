@@ -9,7 +9,7 @@ El carrito se limpia cuando se crea un pedido.
 """
 
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 
 from db.base import CartCache, Product
@@ -39,10 +39,10 @@ def add_to_cart(db: Session, customer_id: int, product_id: str, quantity: int = 
     
     if cart_item:
         # Ya existe: incrementar cantidad mientras sea menor o igual al stock
-        if cart_item.quantity + quantity > product.stock:
+        if cart_item.quantity + quantity > product.stock_count:
             raise ValueError("Cantidad excede el stock disponible")
         cart_item.quantity += quantity
-        cart_item.updated_at = datetime.utcnow()
+        cart_item.updated_at = datetime.now(timezone.utc)
     else:
         # Nuevo item: crear
         cart_item = CartCache(
@@ -73,7 +73,7 @@ def update_cart_item(db: Session, cart_id: int, quantity: int) -> Optional[CartC
     else:
         # Actualizar cantidad y timestamp
         cart_item.quantity = quantity
-        cart_item.updated_at = datetime.utcnow()
+        cart_item.updated_at = datetime.now(timezone.utc)
     
     db.commit()
     return cart_item

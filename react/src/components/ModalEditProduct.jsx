@@ -6,6 +6,7 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
     codebar: '',
     name: '',
     description: '',
+    descripcion_2: '',
     base_price: '',
     iva_percentage: '',
     stock_count: '',
@@ -25,6 +26,7 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
         codebar: product.codebar || '',
         name: product.name || '',
         description: product.description || '',
+        descripcion_2: product.descripcion_2 || '',
         base_price: product.base_price || '',
         iva_percentage: product.iva_percentage || '16.00',
         stock_count: product.stock_count || '',
@@ -144,6 +146,18 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
                 value={formData.description}
                 onChange={handleChange}
                 required
+                disabled={loading}
+                rows="3"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="descripcion_2">Descripción 2</label>
+              <textarea
+                id="descripcion_2"
+                name="descripcion_2"
+                value={formData.descripcion_2}
+                onChange={handleChange}
                 disabled={loading}
                 rows="3"
               />

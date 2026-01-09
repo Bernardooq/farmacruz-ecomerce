@@ -34,8 +34,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from dependencies import get_db, get_current_user, get_current_seller_user
-from farmacruz_api.crud.crud_customer import get_customer_info
-from farmacruz_api.crud.crud_user import get_user
+from crud.crud_customer import get_customer_info
+from crud.crud_user import get_user
 from schemas.order import Order, OrderUpdate, OrderWithAddress, OrderAssign
 from schemas.cart import CartItem
 from db.base import OrderStatus, User

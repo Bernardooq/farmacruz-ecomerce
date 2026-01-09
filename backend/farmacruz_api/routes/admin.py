@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from dependencies import get_db, get_current_admin_user
 from db.base import User, UserRole
-from farmacruz_api.crud.crud_customer import get_customer_by_email, get_customer_by_username
+from crud.crud_customer import get_customer_by_email, get_customer_by_username
 from schemas.user import User as UserSchema, UserUpdate, UserCreate
 from crud.crud_user import (
     get_users, get_user, update_user, delete_user,
@@ -106,11 +106,9 @@ def update_user_info(
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
-    db_user = get_user_by_username(db, username=user.username) if user_update.username else None
-    db_customer = get_customer_by_username(db, username=user.username) if user_update.username else None
-    db_user_email = get_user_by_email(db, email=user_update.email) if user_update.email else None
+    db_customer = get_customer_by_username(db, username=user_update.username) if user_update.username else None
     db_customer_email = get_customer_by_email(db, email=user_update.email) if user_update.email else None
-    if db_user or db_customer or db_user_email or db_customer_email:
+    if  db_customer or db_customer_email:
         raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="El nombre de usuario o email ya esta registrado"

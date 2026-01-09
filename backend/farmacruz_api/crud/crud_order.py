@@ -25,8 +25,8 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 
 from db.base import Order, OrderItem, OrderStatus, Product, CartCache, CustomerInfo, PriceListItem, User, UserRole
-from farmacruz_api.crud.crud_sales_group import get_user_groups, user_can_manage_order
-from farmacruz_api.crud.crud_user import get_user
+from crud.crud_sales_group import get_user_groups, user_can_manage_order
+from crud.crud_user import get_user
 from schemas.order import OrderAssign, OrderCreate, OrderUpdate, OrderItemCreate
 
 
@@ -203,8 +203,7 @@ def update_order_status(db: Session, order_id: int, status: OrderStatus, seller_
     
     # Si se aprueba, registrar validacion
     if seller_id and status == OrderStatus.approved:
-        db_order.assigned_seller_id = seller_id
-        db_order.validated_at = datetime.utcnow()
+        db_order.validated_at = datetime.now(timezone.utc)
     
     db.commit()
     db.refresh(db_order)

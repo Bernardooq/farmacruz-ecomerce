@@ -24,6 +24,7 @@ class CustomerCreate(CustomerBase):
 
 class CustomerUpdate(BaseModel):
     """Schema para actualizar un cliente existente"""
+    username: Optional[str] = Field(None, min_length=3, max_length=255)
     email: Optional[str] = Field(None, max_length=255)
     full_name: Optional[str] = Field(None, max_length=255)
     password: Optional[str] = Field(None, min_length=8)

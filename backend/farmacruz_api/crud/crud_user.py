@@ -10,6 +10,7 @@ NOTA: Los clientes estan en crud_customer.py (tabla separada).
 """
 
 from typing import List, Optional
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -74,25 +75,51 @@ def create_user(db: Session, user: UserCreate) -> User:
 
 
 def update_user(db: Session, user_id: int, user: UserUpdate) -> Optional[User]:
-    # Actualiza un usuario existente
     db_user = get_user(db, user_id)
     if not db_user:
         return None
-    
+
     update_data = user.model_dump(exclude_unset=True)
-    
-    # Hashear nueva passwd
-    if 'password' in update_data and update_data['password']:
-        update_data['password_hash'] = get_password_hash(update_data['password'])
-        del update_data['password']  # No guardar contrasenia en texto plano
-    
+
+    # Validar unicidad del username
+    if "username" in update_data and update_data["username"] != db_user.username:
+        existing_user = (
+            db.query(User)
+            .filter(User.username == update_data["username"], User.user_id != user_id)
+            .first()
+        )
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El nombre de usuario ya está en uso por otro usuario."
+            )
+
+    # Validar unicidad del email
+    if "email" in update_data and update_data["email"] != db_user.email:
+        existing_email = (
+            db.query(User)
+            .filter(User.email == update_data["email"], User.user_id != user_id)
+            .first()
+        )
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El correo electrónico ya está en uso por otro usuario."
+            )
+
+    # Hashear nueva contraseña
+    if "password" in update_data and update_data["password"]:
+        update_data["password_hash"] = get_password_hash(update_data["password"])
+        del update_data["password"]
+
     # Actualizar campos
     for field, value in update_data.items():
         setattr(db_user, field, value)
-    
+
     db.commit()
     db.refresh(db_user)
     return db_user
+
 
 
 def delete_user(db: Session, user_id: int) -> Optional[User]:

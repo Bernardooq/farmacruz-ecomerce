@@ -10,6 +10,7 @@ Funciones para manejar clientes del e-commerce:
 Los clientes estan separados de usuarios internos (admin, marketing, seller).
 """
 
+from fastapi import HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
@@ -78,26 +79,51 @@ def create_customer(db: Session, customer: CustomerCreate) -> Customer:
 
 
 def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> Optional[Customer]:
-    # Actualiza un cliente existente
-
     db_customer = get_customer(db, customer_id)
     if not db_customer:
         return None
-    
+
     update_data = customer.model_dump(exclude_unset=True)
-    
-    # Hashear nueva contrasenia
-    if 'password' in update_data and update_data['password']:
-        update_data['password_hash'] = get_password_hash(update_data['password'])
-        del update_data['password']  # No guardar en texto plano
-    
+
+    # Validar unicidad del username
+    if "username" in update_data and update_data["username"] != db_customer.username:
+        existing_customer = (
+            db.query(Customer)
+            .filter(Customer.username == update_data["username"], Customer.customer_id != customer_id)
+            .first()
+        )
+        if existing_customer:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El nombre de usuario ya está en uso por otro cliente."
+            )
+
+    # Validar unicidad del email
+    if "email" in update_data and update_data["email"] != db_customer.email:
+        existing_email = (
+            db.query(Customer)
+            .filter(Customer.email == update_data["email"], Customer.customer_id != customer_id)
+            .first()
+        )
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El correo electrónico ya está en uso por otro cliente."
+            )
+
+    # Hashear nueva contraseña
+    if "password" in update_data and update_data["password"]:
+        update_data["password_hash"] = get_password_hash(update_data["password"])
+        del update_data["password"]
+
     # Actualizar campos
     for field, value in update_data.items():
         setattr(db_customer, field, value)
-    
+
     db.commit()
     db.refresh(db_customer)
     return db_customer
+
 
 
 def delete_customer(db: Session, customer_id: int) -> Optional[Customer]:

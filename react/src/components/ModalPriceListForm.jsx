@@ -154,7 +154,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
                   value={formData.price_list_id}
                   onChange={handleChange}
                   disabled={loading}
-                  placeholder="Dejar vacío para auto-generar"
+                  placeholder="Id único de la lista de precios"
                   min="1"
                 />
                 <small>Si se deja vacío, el sistema generará el ID automáticamente</small>

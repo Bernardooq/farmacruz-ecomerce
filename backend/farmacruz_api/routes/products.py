@@ -129,21 +129,7 @@ def create_new_product(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Crea un nuevo producto
-    
-    Validaciones:
-    - base_price > 0
-    - iva_percentage entre 0 y 100
-    - stock_count >= 0
-    - codebar unico
-    
-    Permisos: Solo administradores
-    
-    Raises:
-        400: Validaciones fallidas o codebar duplicado
-    """
-    # === VALIDAR PRECIO BASE ===
+    # Crea un nuevo producto
     if product.base_price < 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -188,22 +174,7 @@ def update_existing_product(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Actualiza un producto existente
-    
-    Solo actualiza campos proporcionados (partial update).
-    
-    Validaciones (si el campo se proporciona):
-    - base_price > 0
-    - iva_percentage entre 0 y 100
-    
-    Permisos: Solo administradores
-    
-    Raises:
-        400: Validaciones fallidas
-        404: Producto no encontrado
-    """
-    # === VALIDAR PRECIO BASE ===
+    # Actualiza un producto existente
     if product.base_price is not None:
         if product.base_price < 0:
             raise HTTPException(
@@ -216,7 +187,7 @@ def update_existing_product(
                 detail="El precio base debe ser mayor a 0"
             )
     
-    # === VALIDAR IVA ===
+    # validar IVA
     if product.iva_percentage is not None:
         if product.iva_percentage < 0 or product.iva_percentage > 100:
             raise HTTPException(
@@ -239,17 +210,7 @@ def delete_existing_product(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Elimina un producto (soft delete)
-    
-    Marca el producto como inactivo (is_active = False).
-    No elimina el registro de la BD (preserva historial).
-    
-    Permisos: Solo administradores
-    
-    Raises:
-        404: Producto no encontrado
-    """
+    # Elimina un producto (soft delete)
     db_product = delete_product(db, product_id=product_id)
     if not db_product:
         raise HTTPException(
@@ -266,24 +227,7 @@ def adjust_product_stock(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Ajusta el inventario de un producto
-    
-    quantity puede ser positivo (agregar) o negativo (reducir).
-    
-    Valida que el stock resultante no sea negativo.
-    
-    Ejemplos:
-        - Recibir 100 unidades: quantity = 100
-        - Ajuste por merma de 5: quantity = -5
-    
-    Permisos: Solo administradores
-    
-    Raises:
-        400: Stock resultante seria negativo
-        404: Producto no encontrado
-    """
-    # === OBTENER PRODUCTO ACTUAL ===
+    # Ajusta el inventario de un producto (positivo o negativo)
     current_product = get_product(db, product_id=product_id)
     if not current_product:
         raise HTTPException(
@@ -291,7 +235,6 @@ def adjust_product_stock(
             detail="Producto no encontrado"
         )
     
-    # === CALCULAR Y VALIDAR NUEVO STOCK ===
     new_stock = current_product.stock_count + stock_update.quantity
     
     if new_stock < 0:
