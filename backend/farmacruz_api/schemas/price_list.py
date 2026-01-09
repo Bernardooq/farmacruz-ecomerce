@@ -3,7 +3,7 @@ Schemas para Listas de Precios (PriceLists) y PriceListItems
 
 Sistema de precios con markup por producto:
 - Cada PriceList es un contenedor (ej: "Farmacias Premium", "Hospitales")
-- Cada PriceListItem define el markup de un producto específico en esa lista
+- Cada PriceListItem define el markup de un producto especifico en esa lista
 - Los clientes se asignan a una lista, que determina sus precios
 
 Ejemplo:
@@ -22,14 +22,12 @@ from datetime import datetime
 from decimal import Decimal
 
 
-# ==========================================
 # PRICE LIST (Contenedor de listas de precios)
-# ==========================================
 
 class PriceListBase(BaseModel):
     """Schema base de lista de precios"""
     list_name: str = Field(..., max_length=100)  # Nombre de la lista (ej: "Premium")
-    description: Optional[str] = None  # Descripción de a quién aplica
+    description: Optional[str] = None  # Descripcion de a quien aplica
 
 
 class PriceListCreate(PriceListBase):
@@ -40,7 +38,7 @@ class PriceListCreate(PriceListBase):
     - Si el ID existe en BD: Se ACTUALIZA con los nuevos valores
     - Si el ID NO existe en BD: Se CREA nuevo registro
     
-    Esto permite sincronización bidireccional manteniendo los IDs del DBF.
+    Esto permite sincronizacion bidireccional manteniendo los IDs del DBF.
     """
     price_list_id: int  # REQUERIDO: ID del DBF para UPSERT
     is_active: Optional[bool] = True  # Activa por defecto
@@ -59,9 +57,9 @@ class PriceListUpdate(BaseModel):
 
 class PriceListInDBBase(PriceListBase):
     """Schema de lista en base de datos"""
-    price_list_id: int  # ID único de la lista
+    price_list_id: int  # ID unico de la lista
     is_active: bool  # Estado de la lista
-    created_at: datetime  # Fecha de creación
+    created_at: datetime  # Fecha de creacion
 
     model_config = {"from_attributes": True}
 
@@ -71,9 +69,7 @@ class PriceList(PriceListInDBBase):
     pass
 
 
-# ==========================================
 # PRICE LIST ITEMS (Markup por producto)
-# ==========================================
 
 class PriceListItemBase(BaseModel):
     """
@@ -117,10 +113,10 @@ class PriceListItemUpdate(BaseModel):
 
 class PriceListItemInDB(PriceListItemBase):
     """Schema de item en base de datos"""
-    price_list_item_id: int  # ID único del item
+    price_list_item_id: int  # ID unico del item
     price_list_id: int  # ID de la lista a la que pertenece
-    created_at: datetime  # Cuándo se agregó
-    updated_at: datetime  # Última actualización del markup
+    created_at: datetime  # Cuando se agrego
+    updated_at: datetime  # ultima actualizacion del markup
 
     model_config = {"from_attributes": True}
 
@@ -130,43 +126,39 @@ class PriceListItem(PriceListItemInDB):
     pass
 
 
-# ==========================================
 # SCHEMAS EXTENDIDOS
-# ==========================================
 
 class PriceListWithItems(PriceList):
     """
     Lista de precios con todos sus items
     
-    Útil para mostrar la lista completa con todos los markups.
+    util para mostrar la lista completa con todos los markups.
     """
     items: List[PriceListItem] = []  # Lista de productos con sus markups
 
 
 class PriceListItemsBulkUpdate(BaseModel):
     """
-    Schema para actualizar múltiples productos a la vez
+    Schema para actualizar multiples productos a la vez
     
-    Permite establecer el markup de varios productos en una sola operación.
+    Permite establecer el markup de varios productos en una sola operacion.
     """
     items: List[PriceListItemCreate]  # Lista de items a actualizar
 
 
-# ==========================================
-# PRECIO CALCULATION (Cálculo de precio final)
-# ==========================================
+# PRECIO CALCULATION (Calculo de precio final)
 
 class PriceCalculation(BaseModel):
     """
-    Resultado del cálculo de precio final para un producto
+    Resultado del calculo de precio final para un producto
     
     Muestra el desglose completo:
     1. Precio base del producto
-    2. Markup aplicado según lista del cliente
+    2. Markup aplicado segun lista del cliente
     3. IVA aplicado
     4. Precio final total
     
-    Fórmula:
+    Formula:
     - price_with_markup = base_price * (1 + markup_percentage/100)
     - iva_amount = price_with_markup * (iva_percentage/100)
     - final_price = price_with_markup + iva_amount

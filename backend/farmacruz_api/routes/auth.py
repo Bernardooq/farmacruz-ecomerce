@@ -1,16 +1,16 @@
 """
-Routes de Autenticación
+Routes de Autenticacion
 
-Endpoints para autenticación y gestión de sesión:
+Endpoints para autenticacion y gestion de sesion:
 - POST /register - Registrar nuevo usuario interno (admin only)
 - POST /login - Login (customers o users internos)
-- GET /me - Información del usuario actual
+- GET /me - Informacion del usuario actual
 
-Sistema de Autenticación:
+Sistema de Autenticacion:
 - Soporta tanto Customers como Users internos
 - Usa JWT tokens con OAuth2
 - Token incluye role y user_type
-- Expiración configurable (default: 30 minutos)
+- Expiracion configurable (default: 30 minutos)
 
 Flujo de Login:
 1. Intenta autenticar como Customer
@@ -37,21 +37,11 @@ router = APIRouter()
 
 
 class Token(BaseModel):
-    """
-    Response del endpoint de login
-    
-    Contiene el JWT access token y el tipo (siempre 'bearer').
-    """
     access_token: str
     token_type: str
 
 
 class TokenData(BaseModel):
-    """
-    Datos decodificados del token JWT
-    
-    Usado internamente para validación.
-    """
     username: Optional[str] = None
 
 
@@ -61,39 +51,22 @@ def register(
     db: Session = Depends(get_db),
     current_admin = Depends(get_current_admin_user)
 ):
-    """
-    Registra un nuevo usuario interno (admin, marketing, seller)
-    
-    IMPORTANTE:
-    - Este endpoint es para usuarios INTERNOS, no clientes
-    - Los clientes se registran por el admin directamente
-    - Solo administradores pueden crear usuarios
-    
-    Validaciones:
-    - Username único
-    - Email único (si se proporciona)
-    - Role válido
-    
-    Permisos: Solo administradores
-    
-    Raises:
-        400: Username o email ya existe
-    """
-    # === VALIDAR USERNAME ÚNICO ===
+    # Registra un nuevo usuario interno (admin, marketing, seller)
+    # Validar username unico
     db_user = get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El nombre de usuario ya está registrado"
+            detail="El nombre de usuario ya esta registrado"
         )
     
-    # === VALIDAR EMAIL ÚNICO ===
+    # Validar email unico
     if user.email:
         db_user = get_user_by_email(db, email=user.email)
         if db_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El email ya está registrado"
+                detail="El email ya esta registrado"
             )
     
     return create_user(db=db, user=user)
@@ -104,35 +77,11 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """
-    Autenticación con username y password
-    
-    Retorna un JWT access token válido por ACCESS_TOKEN_EXPIRE_MINUTES.
-    
-    Flujo de autenticación:
-    1. Intenta autenticar como Customer (tabla customers)
-    2. Si falla, intenta como User interno (tabla users)
-    3. Verifica que el usuario esté activo
-    4. Genera token con role apropiado
-    
-    El token incluye:
-    - Customer: role="customer", customer_id
-    - User: role=<admin|seller|marketing>, user_id
-    
-    Args:
-        form_data: OAuth2 form (username, password)
-    
-    Returns:
-        Token JWT válido con tipo 'bearer'
-    
-    Raises:
-        401: Credenciales inválidas
-        400: Usuario inactivo
-    """
+    # Autenticacion con username y password
     authenticated_user = None
     is_customer = False
     
-    # === PASO 1: INTENTAR COMO CUSTOMER ===
+    # Intentar como customer
     customer = db.query(Customer).filter(
         Customer.username == form_data.username
     ).first()
@@ -141,14 +90,14 @@ def login(
         authenticated_user = customer
         is_customer = True
     
-    # === PASO 2: SI NO ES CUSTOMER, INTENTAR COMO USER ===
+    # Si no es customer, es user
     if not authenticated_user:
         user = authenticate_user(db, form_data.username, form_data.password)
         if user:
             authenticated_user = user
             is_customer = False
     
-    # === PASO 3: VALIDAR AUTENTICACIÓN ===
+    # Validar auth
     if not authenticated_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -156,14 +105,14 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # === PASO 4: VERIFICAR QUE ESTÉ ACTIVO ===
+    # Validar que este activo
     if not authenticated_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Usuario inactivo. Contacta al administrador."
         )
     
-    # === PASO 5: GENERAR TOKEN ===
+    # Generar token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
     if is_customer:
@@ -193,27 +142,7 @@ def login(
 
 @router.get("/me")
 def read_users_me(current_user = Depends(get_current_user)):
-    """
-    Obtiene información del usuario autenticado actual
-    
-    Funciona para:
-    - Customers (role="customer")
-    - Users internos (role=admin|seller|marketing)
-    
-    La respuesta incluye:
-    - Identificador (customer_id o user_id)
-    - Información básica (username, email, nombre)
-    - Role
-    - Estado (is_active)
-    - Fecha de creación
-    
-    Permisos: Cualquier usuario autenticado
-    
-    Returns:
-        Dict con información del usuario actual
-    """
-    # === CONVERTIR A DICT SEGÚN EL TIPO ===
-    
+    # Obtiene informacion del usuario autenticado actual
     if isinstance(current_user, Customer):
         # Es un Customer
         user_dict = {
@@ -223,7 +152,7 @@ def read_users_me(current_user = Depends(get_current_user)):
             "full_name": current_user.full_name,
             "is_active": current_user.is_active,
             "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
-            "role": "customer"  # Role explícito para frontend
+            "role": "customer"  # Role explicito para frontend
         }
     else:
         # Es un User interno

@@ -1,5 +1,5 @@
 """
-Routes para Gestión de Pedidos y Carrito
+Routes para Gestion de Pedidos y Carrito
 
 Endpoints para el ciclo completo de pedidos:
 
@@ -17,7 +17,7 @@ PEDIDOS (Clientes):
 - POST /{id}/cancel - Cancelar pedido
 
 PEDIDOS (Admin/Marketing/Seller):
-- GET /all - Ver todos los pedidos (según permisos)
+- GET /all - Ver todos los pedidos (segun permisos)
 - PUT /{id}/status - Actualizar estado
 - POST /{id}/assign - Asignar vendedor
 
@@ -34,11 +34,15 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from dependencies import get_db, get_current_user, get_current_seller_user
+from farmacruz_api.crud.crud_customer import get_customer_info
+from farmacruz_api.crud.crud_user import get_user
 from schemas.order import Order, OrderUpdate, OrderWithAddress, OrderAssign
 from schemas.cart import CartItem
 from db.base import OrderStatus, User
 
 from crud.crud_order import (
+    assign_order_seller,
+    calculate_order_shipping_address,
     get_order,
     get_orders_by_customer,
     get_orders,
@@ -75,7 +79,7 @@ def read_cart(
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene el carrito del usuario actual con información de productos
+    Obtiene el carrito del usuario actual con informacion de productos
     """
     from db.base import Customer
     
@@ -102,7 +106,7 @@ def read_cart(
         CustomerInfo.customer_id == customer_id
     ).first()
     
-    # Enriquecer con información del producto en formato anidado
+    # Enriquecer con informacion del producto en formato anidado
     result = []
     for item in cart_items:
         # Calculate final price based on customer's price list
@@ -219,7 +223,7 @@ def update_cart_item_quantity(
         quantity=item.quantity
     )
     
-    # Si quantity <= 0, el item se eliminó correctamente
+    # Si quantity <= 0, el item se elimino correctamente
     if cart_item is None:
         return {"message": "Item eliminado del carrito", "deleted": True}
     
@@ -280,7 +284,7 @@ def checkout_cart(
 ):
     """
     Crea un pedido desde el carrito actual
-    Calcula precios en el servidor basándose en la lista de precios del cliente
+    Calcula precios en el servidor basandose en la lista de precios del cliente
     """
     from db.base import Customer
     
@@ -372,11 +376,11 @@ def read_all_orders(
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene pedidos según permisos del usuario:
+    Obtiene pedidos segun permisos del usuario:
     - Admin: todos los pedidos
     - Marketing/Seller: solo pedidos de clientes en sus grupos
     
-    Parámetro search: busca por número de pedido o nombre de cliente
+    Parametro search: busca por numero de pedido o nombre de cliente
     """
     orders = get_orders_for_user_groups(
         db=db,
@@ -395,13 +399,8 @@ def read_order(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Obtiene un pedido específico.
-    Permisos:
-    - Cliente: solo sus propios pedidos
-    - Marketing/Seller: pedidos de clientes en sus grupos
-    - Admin: todos los pedidos
-    """
+    # Obtiene un pedido especifico.
+    
     from db.base import CustomerInfo
     
     order = get_order(db, order_id=order_id)
@@ -439,27 +438,7 @@ def read_order(
         )
     
     # Calculate shipping address
-    if order.shipping_address_number:
-        customer_info = db.query(CustomerInfo).filter(
-            CustomerInfo.customer_id == order.customer_id
-        ).first()
-        
-        if customer_info:
-            address_key = f"address_{order.shipping_address_number}"
-            shipping_address = getattr(customer_info, address_key, None)
-            
-            if not shipping_address:
-                # Fallback to address_1
-                shipping_address = customer_info.address_1 or customer_info.address_2 or customer_info.address_3
-            
-            # Add as attribute (won't be in DB, just for response)
-            order.shipping_address = shipping_address or "No especificada"
-        else:
-            order.shipping_address = "No especificada"
-    else:
-        order.shipping_address = "No especificada"
-    
-    return order
+    return calculate_order_shipping_address(db, order)
 
 @router.put("/{order_id}/status", response_model=Order)
 def update_order_status_route(
@@ -468,12 +447,8 @@ def update_order_status_route(
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Actualiza el estado de un pedido con validación de transiciones.
-    Permisos:
-    - Admin: puede gestionar todos los pedidos
-    - Marketing/Seller: solo pedidos de clientes en sus grupos
-    """
+    # Actualiza el estado de un pedido con validacion de transiciones.
+    
     # Obtener el pedido actual
     order = get_order(db, order_id=order_id)
     if not order:
@@ -496,11 +471,11 @@ def update_order_status_route(
     current_status = order.status
     new_status = order_update.status
     
-    # Definir el flujo válido de estados
+    # Definir el flujo valido de estados
     # pending_validation -> approved -> shipped -> delivered
-    # Solo admin puede cancelar después de pending_validation
+    # Solo admin puede cancelar despues de pending_validation
     
-    # Transiciones base (sin cancelación)
+    # Transiciones base (sin cancelacion)
     valid_transitions = {
         OrderStatus.pending_validation: [OrderStatus.approved],  # Puede asignarse o aprobarse directamente
         OrderStatus.approved: [OrderStatus.shipped],
@@ -509,7 +484,7 @@ def update_order_status_route(
         OrderStatus.cancelled: []   # Estado final, no se puede cambiar
     }
     
-    # Agregar opción de cancelar según el rol y estado
+    # Agregar opcion de cancelar segun el rol y estado
     if new_status == OrderStatus.cancelled:
         if current_status == OrderStatus.delivered:
             # Nadie puede cancelar un pedido entregado
@@ -521,7 +496,7 @@ def update_order_status_route(
             # Cualquiera (seller/admin) puede cancelar en pending_validation
             valid_transitions[OrderStatus.pending_validation].append(OrderStatus.cancelled)
         elif current_status in [OrderStatus.approved, OrderStatus.shipped]:
-            # Solo admin puede cancelar después de pending_validation
+            # Solo admin puede cancelar despues de pending_validation
             if is_admin:
                 valid_transitions[current_status].append(OrderStatus.cancelled)
             else:
@@ -535,10 +510,10 @@ def update_order_status_route(
                     detail=f"Solo los administradores pueden cancelar pedidos que ya han sido {current_label}"
                 )
     
-    # Validar que la transición sea válida
+    # Validar que la transicion sea valida
     if new_status not in valid_transitions.get(current_status, []):
         status_labels = {
-            OrderStatus.pending_validation: "Pendiente de Validación",
+            OrderStatus.pending_validation: "Pendiente de Validacion",
             OrderStatus.approved: "Aprobado",
             OrderStatus.shipped: "Enviado",
             OrderStatus.delivered: "Entregado",
@@ -548,7 +523,7 @@ def update_order_status_route(
         current_label = status_labels.get(current_status, current_status.value)
         new_label = status_labels.get(new_status, new_status.value)
         
-        # Mensajes específicos para casos comunes
+        # Mensajes especificos para casos comunes
         if current_status == OrderStatus.delivered:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -562,7 +537,7 @@ def update_order_status_route(
         elif current_status == OrderStatus.shipped and new_status == OrderStatus.approved:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No se puede regresar un pedido de 'Enviado' a 'Aprobado'. El pedido ya está en tránsito."
+                detail="No se puede regresar un pedido de 'Enviado' a 'Aprobado'. El pedido ya esta en transito."
             )
         elif current_status == OrderStatus.approved and new_status == OrderStatus.pending_validation:
             raise HTTPException(
@@ -572,10 +547,10 @@ def update_order_status_route(
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Transición de estado inválida: no se puede cambiar de '{current_label}' a '{new_label}'"
+                detail=f"Transicion de estado invalida: no se puede cambiar de '{current_label}' a '{new_label}'"
             )
     
-    # Si la validación pasa, actualizar el estado
+    # Si la validacion pasa, actualizar el estado
     updated_order = update_order_status(
         db,
         order_id=order_id,
@@ -592,14 +567,7 @@ def assign_order_to_seller(
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Asigna un vendedor a un pedido.
-    Permisos:
-    - Admin: puede asignar pedidos de cualquier cliente, pero solo a vendedores del mismo grupo que el cliente
-    - Marketing: solo puede asignar pedidos de clientes en sus grupos a vendedores de sus grupos
-    
-    En ambos casos, el vendedor debe pertenecer al grupo de ventas del cliente.
-    """
+    # Asigna un vendedor a un pedido.
     from db.base import UserRole
     from datetime import datetime
     
@@ -611,7 +579,7 @@ def assign_order_to_seller(
             detail="Pedido no encontrado"
         )
     
-    # Verificar que la orden NO esté cancelada o entregada
+    # Verificar que la orden NO este cancelada o entregada
     if order.status in [OrderStatus.cancelled, OrderStatus.delivered]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -619,7 +587,7 @@ def assign_order_to_seller(
         )
     
     # Obtener el vendedor a asignar
-    seller = db.query(User).filter(User.user_id == assign_data.assigned_seller_id).first()
+    seller = get_user(db, assign_data.assigned_seller_id)
     if not seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -633,21 +601,19 @@ def assign_order_to_seller(
             detail=f"El usuario seleccionado no es un vendedor (rol: {seller.role.value})"
         )
     
-    # Verificar permisos según el rol del usuario que asigna
+    # Verificar permisos segun el rol del usuario que asigna
     from crud.crud_sales_group import get_user_groups
     from db.base import CustomerInfo
     
     # Obtener el grupo del cliente del pedido
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == order.customer_id
-    ).first()
+    customer_info = get_customer_info(db, order.customer_id)
     
     if not customer_info or not customer_info.sales_group_id:
         # Cliente sin grupo - solo admin puede gestionar, pero no puede asignar
         # porque no hay vendedores disponibles sin grupo
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El cliente no pertenece a ningún grupo de ventas. Asigne el cliente a un grupo primero."
+            detail="El cliente no pertenece a ningun grupo de ventas. Asigne el cliente a un grupo primero."
         )
     
     customer_group_id = customer_info.sales_group_id
@@ -679,21 +645,8 @@ def assign_order_to_seller(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No puede asignar a este vendedor. El vendedor no pertenece a sus grupos."
             )
-    # Admin puede asignar pedidos de cualquier grupo, pero debe respetar 
-    # la restricción de que el vendedor pertenezca al grupo del cliente
-    
-    # Asignar el vendedor
-    order.assigned_seller_id = assign_data.assigned_seller_id
-    order.assigned_by_user_id = current_user.user_id
-    order.assigned_at = datetime.utcnow()
-    
-    if assign_data.assignment_notes:
-        order.assignment_notes = assign_data.assignment_notes
-    
-    db.commit()
-    db.refresh(order)
-    
-    return order
+    # Admin puede asignar pedidos de cualquier grupo, pero debe respetar la regla de grupos    
+    return assign_order_seller(db, order, assign_data, current_user)
 
 @router.post("/{order_id}/cancel", response_model=Order)
 def cancel_order_route(
@@ -701,13 +654,7 @@ def cancel_order_route(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Cancela un pedido.
-    Permisos:
-    - Cliente: solo sus propios pedidos en estado pending_validation
-    - Marketing/Seller: pedidos de clientes en sus grupos
-    - Admin: todos los pedidos
-    """
+    # Cancela un pedido.
     order = get_order(db, order_id=order_id)
     if not order:
         raise HTTPException(
@@ -733,7 +680,7 @@ def cancel_order_route(
     
     # Si es el cliente dueño, puede cancelar
     if is_owner:
-        pass  # Permitir, validaciones de estado más abajo
+        pass  # Permitir, validaciones de estado mas abajo
     # Si es marketing/seller/admin, verificar permisos por grupo
     elif user_role and user_role in [UserRole.admin, UserRole.seller, UserRole.marketing]:
         if not user_can_manage_order(db, current_user_id, order.customer_id, user_role):
@@ -747,9 +694,9 @@ def cancel_order_route(
             detail="No tiene permiso para cancelar este pedido"
         )
     
-    # VALIDACIÓN CRÍTICA: Verificar si se puede cancelar según el estado y rol
+    # VALIDACIoN CRiTICA: Verificar si se puede cancelar segun el estado y rol
     
-    # No se puede cancelar si ya está entregado o cancelado
+    # No se puede cancelar si ya esta entregado o cancelado
     if order.status == OrderStatus.delivered:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -759,7 +706,7 @@ def cancel_order_route(
     if order.status == OrderStatus.cancelled:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Este pedido ya está cancelado"
+            detail="Este pedido ya esta cancelado"
         )
     
     # Si el pedido ya fue aprobado o enviado, solo admin puede cancelar

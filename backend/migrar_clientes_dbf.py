@@ -1,19 +1,19 @@
 """
-Script de Migración de Clientes desde DBF
+Script de Migracion de Clientes desde DBF
 
-Este script es una migración ONE-TIME (una sola vez) o ejecutar manualmente
+Este script es una migracion ONE-TIME (una sola vez) o ejecutar manualmente
 cuando se necesite sincronizar clientes desde el archivo DBF.
 
-A diferencia de productos y listas que requieren sincronización frecuente,
-los clientes usualmente se agregan de forma esporádica.
+A diferencia de productos y listas que requieren sincronizacion frecuente,
+los clientes usualmente se agregan de forma esporadica.
 
 ARCHIVO DBF REQUERIDO:
-- CLIENTES.DBF: Datos de clientes (ID, nombre, RFC, dirección, etc.)
+- CLIENTES.DBF: Datos de clientes (ID, nombre, RFC, direccion, etc.)
 
 USO:
     python migrar_clientes_dbf.py
 
-NOTA: Este script está basado en tu script original pero adaptado
+NOTA: Este script esta basado en tu script original pero adaptado
       para usar el endpoint batch de customers (si existe) o individual.
 """
 
@@ -23,7 +23,7 @@ from dbfread import DBF
 from pathlib import Path
 import logging
 
-# ===== CONFIGURACIÓN =====
+# ===== CONFIGURACIoN =====
 BACKEND_URL = "http://localhost:8000/api/v1"
 DBF_DIR = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
 
@@ -49,15 +49,15 @@ def migrate():
     Campos esperados en CLIENTES.DBF:
     - CVE_CTE (int): ID del cliente
     - NOM_CTE (str): Nombre completo
-    - NOM_FAC (str): Razón social (opcional, usa NOM_CTE si no existe)
+    - NOM_FAC (str): Razon social (opcional, usa NOM_CTE si no existe)
     - RFC_CTE (str): RFC del cliente
-    - DIR_CTE (str): Dirección principal
+    - DIR_CTE (str): Direccion principal
     - LISTA_PREC (int): ID de lista de precios asignada
     """
-    logger.info("🚀 === INICIANDO MIGRACIÓN DE CLIENTES ===\n")
+    logger.info("🚀 === INICIANDO MIGRACIoN DE CLIENTES ===\n")
     
     # === 1. LOGIN ===
-    logger.info("🔐 Iniciando sesión...")
+    logger.info("🔐 Iniciando sesion...")
     try:
         res_login = requests.post(
             f"{BACKEND_URL}/auth/login",
@@ -69,7 +69,7 @@ def migrate():
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
         }
-        logger.info("✅ Sesión iniciada correctamente")
+        logger.info("✅ Sesion iniciada correctamente")
     except Exception as e:
         logger.error(f"❌ Error de login: {e}")
         return 1
@@ -95,7 +95,7 @@ def migrate():
     
     for _, row in df.iterrows():
         try:
-            # Crear username único y válido
+            # Crear username unico y valido
             base_username = str(row.get('NOM_CTE', 'user')).strip()[:50]
             username = base_username.replace(" ", "_").replace(".", "_").lower()
             
@@ -114,7 +114,7 @@ def migrate():
                     "address_1": str(row.get('DIR_CTE', '')) or None,
                     "address_2": None,  # No disponible en DBF
                     "address_3": None,  # No disponible en DBF
-                    "sales_group_id": None  # Se asigna manualmente después
+                    "sales_group_id": None  # Se asigna manualmente despues
                 }
             }
             lista_clientes.append(cliente)
@@ -136,7 +136,7 @@ def migrate():
         batch = lista_clientes[i : i + BATCH_SIZE]
         batch_num = i // BATCH_SIZE + 1
         
-        # Usar endpoint de sincronización /sync/customers
+        # Usar endpoint de sincronizacion /sync/customers
         try:
             # Preparar datos en formato CustomerSync
             batch_sync = []
@@ -157,7 +157,7 @@ def migrate():
                 }
                 batch_sync.append(cliente_sync)
             
-            # Enviar al endpoint de sincronización
+            # Enviar al endpoint de sincronizacion
             response = requests.post(
                 f"{BACKEND_URL}/sync/customers",
                 json=batch_sync,
@@ -189,7 +189,7 @@ def migrate():
 
     # === 5. RESUMEN ===
     logger.info(f"\n{'='*60}")
-    logger.info(f"✨ MIGRACIÓN COMPLETADA")
+    logger.info(f"✨ MIGRACIoN COMPLETADA")
     logger.info(f"{'='*60}")
     logger.info(f"📊 Total procesados: {len(lista_clientes)}")
     logger.info(f"✅ Exitosos: {total_exitosos}")
@@ -199,7 +199,7 @@ def migrate():
     if total_errores > 0:
         logger.warning(
             "⚠️  Algunos clientes tuvieron errores. "
-            "Revisa los logs arriba para más detalles."
+            "Revisa los logs arriba para mas detalles."
         )
     
     return 0 if total_errores == 0 else 1

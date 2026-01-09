@@ -1,16 +1,16 @@
 """
 Routes para Formularios de Contacto
 
-Endpoint para envío de emails de contacto:
+Endpoint para envio de emails de contacto:
 - POST /send - Enviar mensaje de contacto
 
 Sistema de Email:
 - Usa SMTP configurado en settings
 - Formato HTML con diseño profesional
 - Reply-To apunta al email del remitente
-- Validación de email con EmailStr
+- Validacion de email con EmailStr
 
-No requiere autenticación (público).
+No requiere autenticacion (publico).
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -25,18 +25,7 @@ router = APIRouter()
 
 
 class ContactMessage(BaseModel):
-    """
-    Schema para mensaje de contacto
-    
-    Campos requeridos:
-    - name: Nombre del remitente
-    - email: Email del remitente (validado)
-    - subject: Asunto del mensaje
-    - message: Contenido del mensaje
-    
-    Campos opcionales:
-    - phone: Teléfono del remitente
-    """
+    # Schema para mensaje de contacto
     name: str
     email: EmailStr
     phone: str = None
@@ -46,32 +35,10 @@ class ContactMessage(BaseModel):
 
 @router.post("/send")
 def send_contact_email(contact: ContactMessage):
-    """
-    Envía un email de contacto al administrador
+    # Envia un email de contacto al administrador
     
-    El email se envía usando SMTP configurado en settings:
-    - SMTP_HOST: Servidor SMTP
-    - SMTP_PORT: Puerto SMTP
-    - SMTP_USER: Usuario de autenticación
-    - SMTP_PASSWORD: Contraseña
-    - CONTACT_EMAIL: Destinatario (admin)
-    
-    El email incluye:
-    - Nombre, email y teléfono del remitente
-    - Asunto y mensaje
-    - Reply-To para responder fácilmente
-    - Formato HTML profesional
-    
-    Permisos: Público (no requiere autenticación)
-    
-    Returns:
-        Mensaje de éxito
-    
-    Raises:
-        500: Error al enviar el email (SMTP, configuración, etc.)
-    """
     try:
-        # === CONFIGURACIÓN DEL EMAIL ===
+        # === CONFIGURACIoN DEL EMAIL ===
         sender_email = settings.SMTP_USER
         receiver_email = settings.CONTACT_EMAIL  # Admin email
         password = settings.SMTP_PASSWORD
@@ -95,7 +62,7 @@ def send_contact_email(contact: ContactMessage):
               <div style="margin: 20px 0;">
                 <p><strong>Nombre:</strong> {contact.name}</p>
                 <p><strong>Email:</strong> <a href="mailto:{contact.email}">{contact.email}</a></p>
-                {f'<p><strong>Teléfono:</strong> {contact.phone}</p>' if contact.phone else ''}
+                {f'<p><strong>Telefono:</strong> {contact.phone}</p>' if contact.phone else ''}
                 <p><strong>Asunto:</strong> {contact.subject}</p>
               </div>
               
@@ -127,16 +94,16 @@ def send_contact_email(contact: ContactMessage):
         return {"message": "Correo enviado exitosamente"}
         
     except smtplib.SMTPException as e:
-        # Error específico de SMTP
+        # Error especifico de SMTP
         print(f"SMTP Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al enviar el correo. Verifica la configuración SMTP."
+            detail="Error al enviar el correo. Verifica la configuracion SMTP."
         )
     except Exception as e:
         # Cualquier otro error
         print(f"Error sending email: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al enviar el correo. Por favor intenta de nuevo más tarde."
+            detail="Error al enviar el correo. Por favor intenta de nuevo mas tarde."
         )

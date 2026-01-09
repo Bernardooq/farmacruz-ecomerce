@@ -2,12 +2,12 @@
 CRUD para Clientes (Customers)
 
 Funciones para manejar clientes del e-commerce:
-- Operaciones CRUD básicas
-- Autenticación
-- Búsqueda
+- Operaciones CRUD basicas
+- Autenticacion
+- Busqueda
 - Manejo de CustomerInfo asociado
 
-Los clientes están separados de usuarios internos (admin, marketing, seller).
+Los clientes estan separados de usuarios internos (admin, marketing, seller).
 """
 
 from typing import List, Optional
@@ -15,84 +15,36 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 
 from core.security import get_password_hash, verify_password
-from db.base import Customer
+from db.base import Customer, CustomerInfo
 from schemas.customer import CustomerCreate, CustomerUpdate
 
 
 def get_customer(db: Session, customer_id: int) -> Optional[Customer]:
-    """
-    Obtiene un cliente por ID con su información comercial
-    
-    Pre-carga CustomerInfo para evitar queries adicionales.
-    
-    Args:
-        db: Sesión de base de datos
-        customer_id: ID del cliente
-        
-    Returns:
-        Cliente encontrado con customer_info, o None si no existe
-    """
+    # Obtiene un cliente por ID con su informacion comercial
+
     return db.query(Customer).options(
         joinedload(Customer.customer_info)  # Pre-cargar info comercial
     ).filter(Customer.customer_id == customer_id).first()
 
 
 def get_customer_by_username(db: Session, username: str) -> Optional[Customer]:
-    """
-    Obtiene un cliente por username
-    
-    Útil para autenticación y verificación de duplicados.
-    
-    Args:
-        db: Sesión de base de datos
-        username: Nombre de usuario único
-        
-    Returns:
-        Cliente encontrado o None si no existe
-    """
+    # Obtiene un cliente por username
     return db.query(Customer).filter(Customer.username == username).first()
 
 
 def get_customer_by_email(db: Session, email: str) -> Optional[Customer]:
-    """
-    Obtiene un cliente por email
-    
-    Args:
-        db: Sesión de base de datos
-        email: Email del cliente
-        
-    Returns:
-        Cliente encontrado o None si no existe
-    """
+    # Obtiene un cliente por email
     return db.query(Customer).filter(Customer.email == email).first()
 
 
-def get_customers(
-    db: Session,
-    skip: int = 0,
-    limit: int = 100,
-    search: Optional[str] = None
-) -> List[Customer]:
-    """
-    Obtiene lista de clientes con búsqueda opcional
+def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> List[Customer]:
+    # Obtiene lista de clientes con busqueda opcional
     
-    Pre-carga CustomerInfo para cada cliente.
-    
-    Args:
-        db: Sesión de base de datos
-        skip: Número de registros a saltar (paginación)
-        limit: Máximo de registros a devolver
-        search: Buscar por nombre, username o email
-        
-    Returns:
-        Lista de clientes con su customer_info
-    """
     query = db.query(Customer).options(
         joinedload(Customer.customer_info)
     )
     
-    # === BÚSQUEDA MÚLTIPLE ===
-    # Buscar en nombre, username y email para mejor UX
+    # Buscar en nombre, username y email 
     if search:
         search_term = f"%{search}%"
         query = query.filter(
@@ -107,20 +59,8 @@ def get_customers(
 
 
 def create_customer(db: Session, customer: CustomerCreate) -> Customer:
-    """
-    Crea un nuevo cliente
-    
-    El ID debe ser proporcionado por el admin (para sincronización
-    con sistemas externos).
-    
-    Args:
-        db: Sesión de base de datos
-        customer: Schema con datos del cliente a crear
-        
-    Returns:
-        Cliente creado
-    """
-    # Hashear contraseña
+    # Crea un nuevo cliente
+    # Hashear contrasenia
     hashed_password = get_password_hash(customer.password)
     
     db_customer = Customer(
@@ -137,31 +77,16 @@ def create_customer(db: Session, customer: CustomerCreate) -> Customer:
     return db_customer
 
 
-def update_customer(
-    db: Session,
-    customer_id: int,
-    customer: CustomerUpdate
-) -> Optional[Customer]:
-    """
-    Actualiza un cliente existente
-    
-    Si se proporciona una nueva contraseña, se hashea antes de guardar.
-    
-    Args:
-        db: Sesión de base de datos
-        customer_id: ID del cliente a actualizar
-        customer: Schema con campos a actualizar
-        
-    Returns:
-        Cliente actualizado o None si no existe
-    """
+def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> Optional[Customer]:
+    # Actualiza un cliente existente
+
     db_customer = get_customer(db, customer_id)
     if not db_customer:
         return None
     
     update_data = customer.model_dump(exclude_unset=True)
     
-    # === HASHEAR NUEVA CONTRASEÑA ===
+    # Hashear nueva contrasenia
     if 'password' in update_data and update_data['password']:
         update_data['password_hash'] = get_password_hash(update_data['password'])
         del update_data['password']  # No guardar en texto plano
@@ -176,22 +101,8 @@ def update_customer(
 
 
 def delete_customer(db: Session, customer_id: int) -> Optional[Customer]:
-    """
-    Elimina un cliente y su información comercial
-    
-    Elimina en cascada:
-    1. CustomerInfo (información comercial)
-    2. Customer (usuario)
-    
-    Esto también elimina pedidos y carrito por CASCADE en la BD.
-    
-    Args:
-        db: Sesión de base de datos
-        customer_id: ID del cliente a eliminar
-        
-    Returns:
-        Cliente eliminado o None si no existía
-    """
+    # Elimina un cliente y su informacion
+
     from db.base import CustomerInfo
     
     db_customer = get_customer(db, customer_id)
@@ -208,30 +119,58 @@ def delete_customer(db: Session, customer_id: int) -> Optional[Customer]:
     return db_customer
 
 
-def authenticate_customer(
-    db: Session,
-    username: str,
-    password: str
-) -> Optional[Customer]:
-    """
-    Autentica un cliente del e-commerce
-    
-    Verifica credenciales usando Argon2 para comparación segura.
-    
-    Args:
-        db: Sesión de base de datos
-        username: Nombre de usuario
-        password: Contraseña en texto plano
-        
-    Returns:
-        Cliente autenticado si las credenciales son válidas, None si no
-    """
+def authenticate_customer(db: Session, username: str,password: str) -> Optional[Customer]:
+    # Autentica un cliente del e-commerce
+
     customer = get_customer_by_username(db, username)
     if not customer:
         return None
     
-    # Verificar contraseña
+    # Verificar contrasenia
     if not verify_password(password, customer.password_hash):
         return None
     
     return customer
+
+
+def get_customer_info(db: Session, customer_id: int) -> Optional[CustomerInfo]:
+    # Obtiene la informacion comercial de un cliente    
+    return db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
+
+
+def buscar_customer_info(db: Session, customer_id: int) -> Optional[CustomerInfo]:
+    # Busca la informacion comercial de un cliente
+    return db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
+
+
+def create_or_update_customer_info(db: Session, customer_info: CustomerInfo, customer_id: int) -> CustomerInfo:
+    # Crea o actualiza la informacion comercial de un cliente
+    existing_info = buscar_customer_info(db, customer_id)
+    
+    if existing_info:
+        # Actualizar existente y agregar como campo el id
+        update_data = customer_info.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            if field != 'customer_info_id':  # No actualizar el ID
+                setattr(existing_info, field, value)
+        db.commit()
+        return existing_info
+    # Crear nuevo CustomerInfo
+    new_info = CustomerInfo(
+        customer_id=customer_id,
+        business_name=customer_info.business_name or '',
+        rfc=customer_info.rfc,
+        sales_group_id=customer_info.sales_group_id,
+        price_list_id=customer_info.price_list_id,
+        address_1=customer_info.address_1,
+        address_2=customer_info.address_2,
+        address_3=customer_info.address_3
+    )
+    db.add(new_info)
+    db.commit()
+    db.refresh(new_info)
+    return new_info

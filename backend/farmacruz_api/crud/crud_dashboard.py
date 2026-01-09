@@ -1,8 +1,8 @@
 """
 CRUD para Dashboards y Reportes
 
-Funciones para generar estadísticas y reportes del sistema:
-- Dashboard de administrador con métricas generales
+Funciones para generar estadisticas y reportes del sistema:
+- Dashboard de administrador con metricas generales
 - Reporte de ventas con desglose de pedidos
 """
 
@@ -17,23 +17,9 @@ from schemas.dashboards import DashboardStats, SalesReport, SalesReportItem
 
 
 def get_admin_dashboard_stats(db: Session) -> DashboardStats:
-    """
-    Obtiene estadísticas generales para el dashboard de administrador
+    # Obtiene estadisticas generales para el dashboard de administrador (Total usuarios y clientes, productos y pedidos, ingresos, productos y stock)
     
-    Calcula métricas clave del negocio:
-    - Total de usuarios internos y clientes
-    - Total de productos y pedidos
-    - Ingresos totales (pedidos completados)
-    - Productos con bajo inventario
-    
-    Args:
-        db: Sesión de base de datos
-        
-    Returns:
-        DashboardStats con todas las métricas
-    """
-    
-    # === USUARIOS ===
+    # USERS
     # Total de usuarios internos (admin, marketing, seller)
     total_users = db.query(func.count(User.user_id)).scalar()
     
@@ -50,22 +36,22 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         User.role == UserRole.marketing
     ).scalar()
     
-    # === PRODUCTOS ===
-    # Total de productos activos en catálogo
+    # PRODS
+    # Total de productos activos en catalogo
     total_products = db.query(func.count(Product.product_id)).filter(
         Product.is_active == True
     ).scalar()
     
     # Productos con bajo stock (menos de 10 unidades)
-    # Esto es útil para alertas de reabastecimiento
+    # Esto es util para alertas de reabastecimiento
     low_stock_count = db.query(func.count(Product.product_id)).filter(
         Product.stock_count < 10,
         Product.stock_count > 0,  # No contar productos sin stock
         Product.is_active == True
     ).scalar()
     
-    # === PEDIDOS ===
-    # Total de pedidos históricos
+    # PEDIDOS
+    # Total de pedidos historicos
     total_orders = db.query(func.count(Order.order_id)).scalar()
     
     # Total de pedidos entregados
@@ -76,14 +62,14 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
     # Total de pedidos en otros estados (no entregados)
     other_orders = total_orders - delivered_orders
     
-    # Pedidos pendientes de asignación a vendedor
-    # Estos requieren atención inmediata del admin/marketing
+    # Pedidos pendientes de asignacion a vendedor
+    # Estos requieren atencion inmediata del admin/marketing
     pending_orders = db.query(func.count(Order.order_id)).filter(
         Order.status == OrderStatus.pending_validation
     ).scalar()
     
-    # === INGRESOS ===
-    # Calcular revenue total de órdenes completadas
+    # INGRESOS
+    # Calcular revenue total de ordenes completadas
     # Solo se cuentan pedidos en estados: approved, shipped, delivered
     total_revenue = db.query(func.sum(Order.total_amount)).filter(
         Order.status.in_([
@@ -108,43 +94,19 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
     )
 
 
-def get_sales_report(
-    db: Session,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-) -> SalesReport:
-    """
-    Genera un reporte de ventas para un rango de fechas
-    
-    El reporte incluye:
-    - Estadísticas agregadas (total de pedidos y revenue)
-    - Desglose detallado de cada pedido
-    - Información del cliente para cada pedido
-    
-    Args:
-        db: Sesión de base de datos
-        start_date: Fecha inicial (formato: "YYYY-MM-DD"). Default: primer día del mes actual
-        end_date: Fecha final (formato: "YYYY-MM-DD"). Default: hoy
-        
-    Returns:
-        SalesReport con totales y lista de pedidos
-        
-    Raises:
-        HTTPException 400: Si el formato de fecha es inválido
-    """
-    
-    # === PARSEAR FECHAS ===
+def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Optional[str] = None) -> SalesReport:
+    # Genera un reporte de ventas para un rango de fechas
     try:
         if start_date:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         else:
-            # Default: primer día del mes actual a las 00:00:00
+            # Default: primer dia del mes actual a las 00:00:00
             start_dt = datetime.now().replace(
                 day=1, hour=0, minute=0, second=0, microsecond=0
             )
 
         if end_date:
-            # Incluir todo el día final (hasta las 23:59:59)
+            # Incluir todo el dia final (hasta las 23:59:59)
             end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(
                 hour=23, minute=59, second=59
             )
@@ -156,10 +118,10 @@ def get_sales_report(
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato de fecha inválido. Use YYYY-MM-DD"
+            detail="Formato de fecha invalido. Use YYYY-MM-DD"
         )
 
-    # === OBTENER PEDIDOS ===
+    # OBTENER PEDIDOS
     # Solo incluir pedidos completados (approved, shipped, delivered)
     # Excluir pedidos pendientes o cancelados
     orders = db.query(Order).filter(
@@ -170,18 +132,18 @@ def get_sales_report(
             OrderStatus.shipped,
             OrderStatus.delivered
         ])
-    ).order_by(Order.created_at.desc()).all()  # Más recientes primero
+    ).order_by(Order.created_at.desc()).all()  # Mas recientes primero
 
-    # === CALCULAR TOTALES ===
+    # CALCULAR TOTALES 
     total_orders = len(orders)
     total_revenue = sum(float(order.total_amount) for order in orders)
 
-    # === CONSTRUIR ITEMS DEL REPORTE ===
+    # CONSTRUIR ITEMS DEL REPORTE
     report_items: List[SalesReportItem] = []
     
     for order in orders:
-        # Obtener información del cliente
-        # IMPORTANTE: Buscar en tabla Customer, no User (después de la separación)
+        # Obtener informacion del cliente
+        # Buscar en tabla Customer
         customer = db.query(Customer).filter(
             Customer.customer_id == order.customer_id
         ).first()

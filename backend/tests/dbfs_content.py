@@ -1,8 +1,8 @@
 """
-Script de Sincronización DBF -> FarmaCruz Backend (simulado)
+Script de Sincronizacion DBF -> FarmaCruz Backend (simulado)
 
 Este script lee archivos DBF de listas de precios, productos y relaciones
-producto-lista, y muestra cómo se prepararían los payloads por lotes
+producto-lista, y muestra como se prepararian los payloads por lotes
 (batches) sin enviarlos al backend.
 """
 
@@ -26,9 +26,9 @@ DBF_PRECIOLIS = DBF_DIR / "PRECIPROD.DBF"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# ===== SINCRONIZAR CATEGORÍAS =====
+# ===== SINCRONIZAR CATEGORiAS =====
 def sync_categories_from_products(df_productos: pd.DataFrame):
-    logger.info("Extrayendo categorías únicas de productos...")
+    logger.info("Extrayendo categorias unicas de productos...")
     categorias_unicas = df_productos['CSE_PROD'].dropna().unique()
     categorias_unicas = [str(cat).strip() for cat in categorias_unicas if str(cat).strip()]
     
@@ -37,11 +37,11 @@ def sync_categories_from_products(df_productos: pd.DataFrame):
 
     for i in range(0, len(categorias_payload), BATCH_SIZE_CAT):
         batch = categorias_payload[i:i+BATCH_SIZE_CAT]
-        logger.info(f"Ejemplo batch de categorías ({i}-{i+len(batch)}): {batch[:3]}...")  # solo los primeros 3 para no saturar
+        logger.info(f"Ejemplo batch de categorias ({i}-{i+len(batch)}): {batch[:3]}...")  # solo los primeros 3 para no saturar
 
 # ===== SINCRONIZAR PRODUCTOS =====
 def sync_products(df_productos: pd.DataFrame):
-    logger.info("Preparando productos para sincronización...")
+    logger.info("Preparando productos para sincronizacion...")
     productos_payload = []
 
     for _, row in df_productos.iterrows():
@@ -101,19 +101,19 @@ def sync_price_list_items(df_preciprod: pd.DataFrame):
 
 # ===== MAIN =====
 def main():
-    logger.info("INICIANDO SIMULACIÓN DE SINCRONIZACIÓN DBF -> FARMACRUZ")
+    logger.info("INICIANDO SIMULACIoN DE SINCRONIZACIoN DBF -> FARMACRUZ")
     
     # Leer DBF productos
     df_productos = pd.DataFrame(iter(DBF(DBF_PRODUCTOS, encoding="latin-1")))
     df_preciprod = pd.DataFrame(iter(DBF(DBF_PRECIOLIS, encoding="latin-1")))
 
-    # Simular sincronización
+    # Simular sincronizacion
     sync_categories_from_products(df_productos)
     sync_products(df_productos)
     sync_price_lists(df_preciprod)
     sync_price_list_items(df_preciprod)
 
-    logger.info("✨ SIMULACIÓN COMPLETADA ✅")
+    logger.info("✨ SIMULACIoN COMPLETADA ✅")
 
 if __name__ == "__main__":
     main()

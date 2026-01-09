@@ -2,7 +2,7 @@
 Schemas para Clientes (Customers)
 
 Los clientes son usuarios externos que compran productos.
-Tienen información adicional en CustomerInfo (dirección, RFC, etc.)
+Tienen informacion adicional en CustomerInfo (direccion, RFC, etc.)
 """
 
 from typing import Optional
@@ -18,7 +18,7 @@ class CustomerBase(BaseModel):
 
 class CustomerCreate(CustomerBase):
     """Schema para crear un nuevo cliente"""
-    customer_id: int = Field(..., description="ID del cliente (para sincronización)")
+    customer_id: int = Field(..., description="ID del cliente (para sincronizacion)")
     password: str = Field(..., min_length=8)
 
 
@@ -41,8 +41,8 @@ class Customer(CustomerBase):
 
 class CustomerWithInfo(Customer):
     """
-    Schema de respuesta que incluye información adicional del cliente
-    (dirección, RFC, lista de precios, etc.)
+    Schema de respuesta que incluye informacion adicional del cliente
+    (direccion, RFC, lista de precios, etc.)
     """
     business_name: Optional[str] = None
     rfc: Optional[str] = None
@@ -56,14 +56,14 @@ class CustomerWithInfo(Customer):
         from_attributes = True
 
 
-# ===== SCHEMA PARA SINCRONIZACIÓN =====
+# ===== SCHEMA PARA SINCRONIZACIoN =====
 
 class CustomerSync(BaseModel):
     """
     Schema unificado para sincronizar clientes desde DBF
     
     Combina campos de Customer y CustomerInfo en un solo schema
-    para simplificar la sincronización masiva.
+    para simplificar la sincronizacion masiva.
     """
     # === CUSTOMER (obligatorios) ===
     customer_id: int = Field(..., description="ID del cliente (del DBF)")
@@ -79,6 +79,6 @@ class CustomerSync(BaseModel):
     rfc: Optional[str] = Field(None, max_length=13, description="RFC fiscal")
     price_list_id: Optional[int] = Field(None, description="ID de lista de precios asignada")
     sales_group_id: Optional[int] = Field(None, description="ID del grupo de ventas")
-    address_1: Optional[str] = Field(None, description="Dirección principal")
-    address_2: Optional[str] = Field(None, description="Dirección de entrega")
-    address_3: Optional[str] = Field(None, description="Dirección de facturación")
+    address_1: Optional[str] = Field(None, description="Direccion principal")
+    address_2: Optional[str] = Field(None, description="Direccion de entrega")
+    address_3: Optional[str] = Field(None, description="Direccion de facturacion")

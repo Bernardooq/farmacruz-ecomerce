@@ -5,7 +5,6 @@ Funciones para manejar el carrito temporal de clientes:
 - Actualizar cantidades
 - Eliminar items
 - Vaciar carrito completo
-
 El carrito se limpia cuando se crea un pedido.
 """
 
@@ -81,16 +80,7 @@ def update_cart_item(db: Session, cart_id: int, quantity: int) -> Optional[CartC
 
 
 def remove_from_cart(db: Session, cart_id: int) -> bool:
-    """
-    Elimina un item específico del carrito
-    
-    Args:
-        db: Sesión de base de datos
-        cart_id: ID del item del carrito a eliminar
-        
-    Returns:
-        True si se eliminó, False si no existía
-    """
+   # Eliminar Item especifico del carrito
     cart_item = db.query(CartCache).filter(
         CartCache.cart_cache_id == cart_id
     ).first()
@@ -104,19 +94,7 @@ def remove_from_cart(db: Session, cart_id: int) -> bool:
 
 
 def clear_cart(db: Session, customer_id: int) -> int:
-    """
-    Vacía completamente el carrito de un cliente
-    
-    Se usa típicamente después de crear un pedido
-    o cuando el cliente quiere empezar de nuevo.
-    
-    Args:
-        db: Sesión de base de datos
-        customer_id: ID del cliente dueño del carrito
-        
-    Returns:
-        Número de items eliminados
-    """
+    # Vacia completamente el carrito de un cliente
     deleted_count = db.query(CartCache).filter(
         CartCache.customer_id == customer_id
     ).delete()
@@ -126,19 +104,7 @@ def clear_cart(db: Session, customer_id: int) -> int:
 
 
 def get_cart_item_count(db: Session, customer_id: int) -> int:
-    """
-    Obtiene el número total de items en el carrito
-    
-    Útil para mostrar un contador en el ícono del carrito
-    sin cargar todos los items.
-    
-    Args:
-        db: Sesión de base de datos
-        customer_id: ID del cliente
-        
-    Returns:
-        Número de items en el carrito
-    """
+    # Numero total de items en el carrito
     from sqlalchemy import func
     
     return db.query(func.count(CartCache.cart_cache_id)).filter(

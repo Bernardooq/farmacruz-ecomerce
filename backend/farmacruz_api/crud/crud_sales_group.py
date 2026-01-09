@@ -1,21 +1,21 @@
 """
 CRUD para Grupos de Ventas (SalesGroups)
 
-Gestión completa de grupos de ventas con relaciones N:M:
-- Operaciones CRUD básicas de grupos
-- Asignación de marketing managers a grupos (N:M)
-- Asignación de sellers a grupos (N:M)
-- Asignación de customers a grupos (N:1)
-- Paginación y búsqueda de miembros
+Gestion completa de grupos de ventas con relaciones N:M:
+- Operaciones CRUD basicas de grupos
+- Asignacion de marketing managers a grupos (N:M)
+- Asignacion de sellers a grupos (N:M)
+- Asignacion de customers a grupos (N:1)
+- Paginacion y busqueda de miembros
 - Funciones para modales de UI
 
 Estructura de un Sales Group:
-- Múltiples marketing managers pueden administrar un grupo
-- Múltiples sellers pueden atender un grupo
-- Múltiples customers pertenecen a un grupo
+- Multiples marketing managers pueden administrar un grupo
+- Multiples sellers pueden atender un grupo
+- Multiples customers pertenecen a un grupo
 - Un user/customer puede estar en varios grupos
 
-Esto permite segmentación de clientes y asignación de equipos.
+Esto permite segmentacion de clientes y asignacion de equipos.
 """
 
 from typing import List, Optional
@@ -30,28 +30,13 @@ from db.base import (
 from schemas.sales_group import (
     SalesGroupCreate, 
     SalesGroupUpdate,
-    SalesGroupWithMembers,
-    GroupMarketingManagerCreate,
-    GroupSellerCreate
+    SalesGroupWithMembers
 )
 
 
-# ==========================================
-# SALES GROUP (Operaciones básicas)
-# ==========================================
-
 def create_sales_group(db: Session, group: SalesGroupCreate) -> SalesGroup:
-    """
-    Crea un nuevo grupo de ventas
-    
-    Args:
-        db: Sesión de base de datos
-        group: Datos del grupo a crear
-    
-    Returns:
-        Grupo de ventas creado con ID generado
-    """
-    db_group = SalesGroup(**group.dict())
+    # Crea un nuevo grupo de ventas
+    db_group = SalesGroup(**group.model_dump())
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
@@ -59,39 +44,15 @@ def create_sales_group(db: Session, group: SalesGroupCreate) -> SalesGroup:
 
 
 def get_sales_group(db: Session, group_id: int) -> Optional[SalesGroup]:
-    """
-    Obtiene un grupo de ventas por ID
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-    
-    Returns:
-        Grupo encontrado o None si no existe
-    """
+    # Obtiene un grupo de ventas por ID
     return db.query(SalesGroup).filter(
         SalesGroup.sales_group_id == group_id
     ).first()
 
 
-def get_sales_groups(
-    db: Session, 
-    skip: int = 0, 
-    limit: int = 100,
-    is_active: Optional[bool] = None
-) -> List[SalesGroup]:
-    """
-    Obtiene lista de grupos de ventas con filtros
-    
-    Args:
-        db: Sesión de base de datos
-        skip: Registros a saltar (paginación)
-        limit: Máximo de registros
-        is_active: Filtrar por estado activo (opcional)
-    
-    Returns:
-        Lista de grupos de ventas
-    """
+def get_sales_groups(db: Session, skip: int = 0, limit: int = 100, is_active: Optional[bool] = None) -> List[SalesGroup]:
+    # Obtiene lista de grupos de ventas con filtros
+
     query = db.query(SalesGroup)
     
     if is_active is not None:
@@ -100,27 +61,13 @@ def get_sales_groups(
     return query.offset(skip).limit(limit).all()
 
 
-def update_sales_group(
-    db: Session, 
-    group_id: int, 
-    group: SalesGroupUpdate
-) -> Optional[SalesGroup]:
-    """
-    Actualiza un grupo de ventas existente
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo a actualizar
-        group: Datos actualizados
-    
-    Returns:
-        Grupo actualizado o None si no existe
-    """
+def update_sales_group(db: Session, group_id: int, group: SalesGroupUpdate) -> Optional[SalesGroup]:
+    # Actualiza un grupo de ventas existente
     db_group = get_sales_group(db, group_id)
     if not db_group:
         return None
     
-    update_data = group.dict(exclude_unset=True)
+    update_data = group.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_group, field, value)
     
@@ -130,20 +77,8 @@ def update_sales_group(
 
 
 def delete_sales_group(db: Session, group_id: int) -> Optional[SalesGroup]:
-    """
-    Elimina un grupo de ventas
-    
-    Warning:
-        Elimina en CASCADE todas las membresías (managers, sellers).
-        Los customers del grupo quedarán sin grupo (sales_group_id = NULL).
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo a eliminar
-    
-    Returns:
-        Grupo eliminado o None si no existía
-    """
+    # Elimina un grupo de ventas
+
     db_group = get_sales_group(db, group_id)
     if db_group:
         db.delete(db_group)
@@ -151,23 +86,8 @@ def delete_sales_group(db: Session, group_id: int) -> Optional[SalesGroup]:
     return db_group
 
 
-def get_sales_group_with_counts(
-    db: Session, 
-    group_id: int
-) -> Optional[SalesGroupWithMembers]:
-    """
-    Obtiene un grupo con contadores de miembros
-    
-    Calcula cuántos marketing managers, sellers y customers
-    tiene el grupo sin cargar todos los miembros.
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-    
-    Returns:
-        SalesGroupWithMembers con contadores o None si no existe
-    """
+def get_sales_group_with_counts(db: Session, group_id: int) -> Optional[SalesGroupWithMembers]:
+    # Obtiene un grupo con contadores de miembros
     db_group = get_sales_group(db, group_id)
     if not db_group:
         return None
@@ -195,36 +115,9 @@ def get_sales_group_with_counts(
     )
 
 
-# ==========================================
-# MARKETING MANAGERS (Asignación N:M)
-# ==========================================
-
-def assign_marketing_to_group(
-    db: Session, 
-    group_id: int, 
-    marketing_id: int
-) -> GroupMarketingManager:
-    """
-    Asigna un marketing manager a un grupo
-    
-    Validaciones:
-    - El grupo debe existir y estar activo
-    - El usuario debe existir y estar activo
-    - El usuario debe tener rol marketing
-    - No debe estar ya asignado (evita duplicados)
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        marketing_id: ID del usuario marketing
-    
-    Returns:
-        Relación creada (GroupMarketingManager)
-    
-    Raises:
-        HTTPException 404: Grupo o usuario no encontrado
-        HTTPException 400: Usuario no es marketing o ya asignado
-    """
+# Marketings (Asignacion N:M)
+def assign_marketing_to_group(db: Session, group_id: int, marketing_id: int) -> GroupMarketingManager:
+    # Asigna un marketing manager a un grupo
     # Validar grupo
     group = get_sales_group(db, group_id)
     if not group:
@@ -248,7 +141,7 @@ def assign_marketing_to_group(
             detail="El usuario no es un marketing manager"
         )
     
-    # Verificar que no esté ya asignado
+    # Verificar que no este ya asignado
     existing = db.query(GroupMarketingManager).filter(
         and_(
             GroupMarketingManager.sales_group_id == group_id,
@@ -259,10 +152,10 @@ def assign_marketing_to_group(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El marketing manager ya está asignado a este grupo"
+            detail="El marketing manager ya esta asignado a este grupo"
         )
     
-    # Crear asignación
+    # Crear asignacion
     assignment = GroupMarketingManager(
         sales_group_id=group_id,
         marketing_id=marketing_id
@@ -273,22 +166,9 @@ def assign_marketing_to_group(
     return assignment
 
 
-def remove_marketing_from_group(
-    db: Session, 
-    group_id: int, 
-    marketing_id: int
-) -> bool:
-    """
-    Remueve un marketing manager de un grupo
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        marketing_id: ID del usuario marketing
-    
-    Returns:
-        True si se removió, False si no estaba asignado
-    """
+def remove_marketing_from_group(db: Session, group_id: int, marketing_id: int) -> bool:
+    # Remueve un marketing manager de un grupo
+
     assignment = db.query(GroupMarketingManager).filter(
         and_(
             GroupMarketingManager.sales_group_id == group_id,
@@ -304,16 +184,8 @@ def remove_marketing_from_group(
 
 
 def get_group_marketing_managers(db: Session, group_id: int) -> List[User]:
-    """
-    Obtiene todos los marketing managers de un grupo
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-    
-    Returns:
-        Lista de usuarios con rol marketing asignados al grupo
-    """
+    # Obtiene todos los marketing managers de un grupo
+   
     return db.query(User).join(
         GroupMarketingManager,
         User.user_id == GroupMarketingManager.marketing_id
@@ -322,28 +194,9 @@ def get_group_marketing_managers(db: Session, group_id: int) -> List[User]:
     ).all()
 
 
-def get_group_marketing_managers_paginated(
-    db: Session, 
-    group_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = None
-) -> List[User]:
-    """
-    Obtiene marketing managers paginados con búsqueda
+def get_group_marketing_managers_paginated(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[User]:
+    # Obtiene marketing managers paginados con busqueda
     
-    Útil para modales de UI con muchos miembros.
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        skip: Registros a saltar
-        limit: Máximo de registros
-        search: Buscar por nombre o username (opcional)
-    
-    Returns:
-        Lista paginada de marketing managers
-    """
     query = db.query(User).join(
         GroupMarketingManager,
         User.user_id == GroupMarketingManager.marketing_id
@@ -363,31 +216,10 @@ def get_group_marketing_managers_paginated(
     return query.offset(skip).limit(limit).all()
 
 
-# ==========================================
-# SELLERS (Asignación N:M)
-# ==========================================
+# SELLERS (Asignacion N:M)
 
-def assign_seller_to_group(
-    db: Session, 
-    group_id: int, 
-    seller_id: int
-) -> GroupSeller:
-    """
-    Asigna un vendedor a un grupo
-    
-    Validaciones similares a marketing managers.
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        seller_id: ID del usuario seller
-    
-    Returns:
-        Relación creada (GroupSeller)
-    
-    Raises:
-        HTTPException: Ver assign_marketing_to_group
-    """
+def assign_seller_to_group(db: Session, group_id: int, seller_id: int) -> GroupSeller:
+    # Asigna un vendedor a un grupo
     # Validar grupo
     group = get_sales_group(db, group_id)
     if not group:
@@ -422,10 +254,10 @@ def assign_seller_to_group(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El vendedor ya está asignado a este grupo"
+            detail="El vendedor ya esta asignado a este grupo"
         )
     
-    # Crear asignación
+    # Crear asignacion
     assignment = GroupSeller(
         sales_group_id=group_id,
         seller_id=seller_id
@@ -436,22 +268,8 @@ def assign_seller_to_group(
     return assignment
 
 
-def remove_seller_from_group(
-    db: Session, 
-    group_id: int, 
-    seller_id: int
-) -> bool:
-    """
-    Remueve un vendedor de un grupo
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        seller_id: ID del usuario seller
-    
-    Returns:
-        True si se removió, False si no estaba asignado
-    """
+def remove_seller_from_group(db: Session, group_id: int, seller_id: int) -> bool:
+    # Remueve un vendedor de un grupo
     assignment = db.query(GroupSeller).filter(
         and_(
             GroupSeller.sales_group_id == group_id,
@@ -467,16 +285,8 @@ def remove_seller_from_group(
 
 
 def get_group_sellers(db: Session, group_id: int) -> List[User]:
-    """
-    Obtiene todos los vendedores de un grupo
+    # Obtiene todos los vendedores de un grupo
     
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-    
-    Returns:
-        Lista de usuarios con rol seller asignados al grupo
-    """
     return db.query(User).join(
         GroupSeller,
         User.user_id == GroupSeller.seller_id
@@ -485,26 +295,9 @@ def get_group_sellers(db: Session, group_id: int) -> List[User]:
     ).all()
 
 
-def get_group_sellers_paginated(
-    db: Session, 
-    group_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = None
-) -> List[User]:
-    """
-    Obtiene vendedores paginados con búsqueda
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        skip: Registros a saltar
-        limit: Máximo de registros
-        search: Buscar por nombre o username (opcional)
-    
-    Returns:
-        Lista paginada de vendedores
-    """
+def get_group_sellers_paginated(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[User]:
+    # Obtiene vendedores paginados con busqueda
+
     query = db.query(User).join(
         GroupSeller,
         User.user_id == GroupSeller.seller_id
@@ -524,23 +317,11 @@ def get_group_sellers_paginated(
     return query.offset(skip).limit(limit).all()
 
 
-# ==========================================
-# CUSTOMERS (Asignación N:1 vía CustomerInfo)
-# ==========================================
+# CUSTOMERS (Asignacion N:1 via CustomerInfo)
 
 def get_group_customers(db: Session, group_id: int) -> List[Customer]:
-    """
-    Obtiene todos los clientes de un grupo
+    # Obtiene todos los clientes de un grupo
     
-    Los customers se asignan a grupos vía CustomerInfo.sales_group_id
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-    
-    Returns:
-        Lista de clientes en el grupo
-    """
     return db.query(Customer).join(
         CustomerInfo,
         Customer.customer_id == CustomerInfo.customer_id
@@ -549,26 +330,9 @@ def get_group_customers(db: Session, group_id: int) -> List[Customer]:
     ).all()
 
 
-def get_group_customers_paginated(
-    db: Session, 
-    group_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = None
-) -> List[Customer]:
-    """
-    Obtiene clientes paginados con búsqueda
+def get_group_customers_paginated(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[Customer]:
+    # Obtiene clientes paginados con busqueda
     
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        skip: Registros a saltar
-        limit: Máximo de registros
-        search: Buscar por nombre, username o email (opcional)
-    
-    Returns:
-        Lista paginada de clientes
-    """
     query = db.query(Customer).join(
         CustomerInfo,
         Customer.customer_id == CustomerInfo.customer_id
@@ -589,33 +353,10 @@ def get_group_customers_paginated(
     return query.offset(skip).limit(limit).all()
 
 
-# ==========================================
-# FUNCIONES PARA MODALES (Disponibles)
-# ==========================================
+# FUNCIONES PARA MODALES
 
-def get_available_marketing_managers(
-    db: Session,
-    group_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = None
-) -> List[User]:
-    """
-    Obtiene marketing managers NO asignados al grupo
-    
-    Útil para modal "Agregar Marketing Manager" mostrando
-    solo los que se pueden agregar.
-    
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        skip: Registros a saltar
-        limit: Máximo de registros
-        search: Buscar por nombre o username (opcional)
-    
-    Returns:
-        Lista de marketing managers disponibles para agregar
-    """
+def get_available_marketing_managers(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[User]:
+    # Obtiene marketing managers NO asignados al grupo
     # Subquery: IDs de marketing YA en el grupo
     assigned_ids = db.query(GroupMarketingManager.marketing_id).filter(
         GroupMarketingManager.sales_group_id == group_id
@@ -640,26 +381,9 @@ def get_available_marketing_managers(
     return query.offset(skip).limit(limit).all()
 
 
-def get_available_sellers(
-    db: Session,
-    group_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = None
-) -> List[User]:
-    """
-    Obtiene vendedores NO asignados al grupo
+def get_available_sellers(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[User]:
+    # Obtiene vendedores NO asignados al grupo
     
-    Args:
-        db: Sesión de base de datos
-        group_id: ID del grupo
-        skip: Registros a saltar
-        limit: Máximo de registros
-        search: Buscar por nombre o username (opcional)
-    
-    Returns:
-        Lista de vendedores disponibles para agregar
-    """
     # Subquery: IDs de sellers YA en el grupo
     assigned_ids = db.query(GroupSeller.seller_id).filter(
         GroupSeller.sales_group_id == group_id
@@ -684,24 +408,10 @@ def get_available_sellers(
     return query.offset(skip).limit(limit).all()
 
 
-# ==========================================
 # UTILIDADES
-# ==========================================
 
 def get_user_groups(db: Session, user_id: int) -> List[int]:
-    """
-    Obtiene IDs de grupos donde está asignado un usuario
-    
-    Busca en marketing managers y sellers.
-    Útil para verificar permisos.
-    
-    Args:
-        db: Sesión de base de datos
-        user_id: ID del usuario interno
-    
-    Returns:
-        Lista de IDs de grupos donde está el usuario
-    """
+    # Obtiene IDs de grupos donde esta asignado un usuario
     group_ids = []
     
     # Buscar en marketing managers
@@ -721,24 +431,8 @@ def get_user_groups(db: Session, user_id: int) -> List[int]:
 
 
 def user_can_manage_order(db: Session, user_id: int, customer_id: int, user_role) -> bool:
-    """
-    Verifica si un usuario puede gestionar pedidos de un cliente
-    
-    Lógica de permisos:
-    - Admin: Puede gestionar todos los pedidos
-    - Marketing/Seller: Solo puede gestionar pedidos de clientes en sus grupos
-    
-    Args:
-        db: Sesión de base de datos
-        user_id: ID del usuario interno
-        customer_id: ID del cliente del pedido
-        user_role: Role del usuario (UserRole enum)
-    
-    Returns:
-        True si el usuario puede gestionar, False caso contrario
-    """
-    from db.base import UserRole, CustomerInfo
-    
+    # Verifica si un usuario puede gestionar pedidos de un cliente
+        
     # Admin puede gestionar todo
     if user_role == UserRole.admin:
         return True
@@ -752,23 +446,13 @@ def user_can_manage_order(db: Session, user_id: int, customer_id: int, user_role
         # Cliente sin grupo - solo admin puede gestionar
         return False
     
-    # Verificar si el usuario está en el grupo del cliente
+    # Verificar si el usuario esta en el grupo del cliente
     user_groups = get_user_groups(db, user_id)
     return customer_info.sales_group_id in user_groups
 
 
 def user_belongs_to_group(db: Session, user_id: int, group_id: int) -> bool:
-    """
-    Verifica si un usuario pertenece a un grupo específico
+    # Verifica si un usuario pertenece a un grupo especifico
     
-    Args:
-        db: Sesión de base de datos
-        user_id: ID del usuario interno
-        group_id: ID del grupo
-    
-    Returns:
-        True si el usuario está en el grupo, False caso contrario
-    """
     user_groups = get_user_groups(db, user_id)
     return group_id in user_groups
-

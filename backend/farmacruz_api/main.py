@@ -20,6 +20,6 @@ app.include_router(api_router, prefix=config.API_V1_STR)
 def read_root():
     try:
         with engine.connect() as connection:
-            return {"message": "¡Hola Mundo! Conexión a la DB exitosa."}
+            return {"message": "¡Hola Mundo! Conexion a la DB exitosa."}
     except Exception as e:
         return {"message": "¡Hola Mundo! ERROR al conectar a la DB.", "error": str(e)}

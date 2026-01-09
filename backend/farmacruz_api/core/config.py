@@ -1,8 +1,8 @@
 """
-CONFIGURACION global de la aplicación FARMACRUZ
+CONFIGURACION global de la aplicacion FARMACRUZ
 Incluye CONFIGURACION de:
 - Base de datos
-- Seguridad y autenticación
+- Seguridad y autenticacion
 - API y CORS
 - Email/SMTP
 """
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # === CONFIGURACION DE SEGURIDAD Y JWT ===
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"  # Algoritmo para firmar tokens JWT
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Duración de tokens de acceso
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Duracion de tokens de acceso
     
     # === CONFIGURACION DE LA API ===
     PROJECT_NAME: str = "Farmacruz API"

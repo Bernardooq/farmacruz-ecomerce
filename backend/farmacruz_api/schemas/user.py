@@ -3,10 +3,10 @@ Schemas para Usuarios Internos del Sistema
 
 Define la estructura de datos para usuarios que trabajan en el sistema:
 - Admins: Acceso completo
-- Marketing: Gestión de grupos y clientes
+- Marketing: Gestion de grupos y clientes
 - Sellers: Procesamiento de pedidos
 
-NOTA: Los clientes están en schemas/customer.py (tabla separada)
+NOTA: Los clientes estan en schemas/customer.py (tabla separada)
 """
 
 from pydantic import BaseModel, EmailStr, Field
@@ -17,7 +17,7 @@ from db.base import UserRole
 
 class UserBase(BaseModel):
     """Schema base con campos comunes de usuario"""
-    username: str = Field(..., min_length=3, max_length=50)  # Nombre de usuario único
+    username: str = Field(..., min_length=3, max_length=50)  # Nombre de usuario unico
     email: Optional[EmailStr] = None  # Email (opcional)
     full_name: Optional[str] = Field(None, max_length=255)  # Nombre completo
 
@@ -25,9 +25,9 @@ class UserCreate(UserBase):
     """
     Schema para crear un nuevo usuario interno
     
-    Requiere contraseña, rol y puede especificar si está activo.
+    Requiere contraseña, rol y puede especificar si esta activo.
     """
-    password: str = Field(..., min_length=8)  # Contraseña (mínimo 8 caracteres)
+    password: str = Field(..., min_length=8)  # Contraseña (minimo 8 caracteres)
     role: UserRole  # Rol: admin, marketing o seller
     is_active: Optional[bool] = True  # Usuario activo por defecto
 
@@ -35,7 +35,7 @@ class UserUpdate(BaseModel):
     """
     Schema para actualizar un usuario existente
     
-    Todos los campos son opcionales (solo se actualiza lo que se envía).
+    Todos los campos son opcionales (solo se actualiza lo que se envia).
     """
     username: Optional[str] = Field(None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
@@ -48,12 +48,12 @@ class UserInDBBase(UserBase):
     """
     Schema base para usuarios en la base de datos
     
-    Incluye campos generados automáticamente (ID, timestamps, etc.)
+    Incluye campos generados automaticamente (ID, timestamps, etc.)
     """
-    user_id: int  # ID único del usuario
+    user_id: int  # ID unico del usuario
     role: UserRole  # Rol del usuario
     is_active: bool  # Estado activo/inactivo
-    created_at: datetime  # Fecha de creación
+    created_at: datetime  # Fecha de creacion
 
     model_config = {
         "from_attributes": True  # Permite crear desde modelo SQLAlchemy
@@ -72,6 +72,6 @@ class UserInDB(UserInDBBase):
     """
     Schema de usuario con password hash
     
-    Solo se usa internamente, NUNCA se envía al frontend.
+    Solo se usa internamente, NUNCA se envia al frontend.
     """
     password_hash: str

@@ -1,26 +1,27 @@
 """
 Router Principal de la API
 
-Centraliza todos los routers de módulos y los registra
+Centraliza todos los routers de modulos y los registra
 con sus prefijos y tags correspondientes.
 
 Estructura de la API:
 /api/v1/
-  ├── /auth           - Autenticación (login, register)
+  ├── /auth           - Autenticacion (login, register)
   ├── /users          - Perfil de usuario
   ├── /customers      - CRUD de clientes
-  ├── /categories     - CRUD de categorías
+  ├── /categories     - CRUD de categorias
   ├── /products       - CRUD de productos
-  ├── /catalog        - Catálogo con precios para clientes
-  ├── /orders         - Gestión de pedidos y carrito
-  ├── /admin          - Administración de usuarios
+  ├── /catalog        - Catalogo con precios para clientes
+  ├── /orders         - Gestion de pedidos y carrito
+  ├── /admin          - Administracion de usuarios
   ├── /contact        - Formularios de contacto
   ├── /admindash      - Dashboards y reportes
   ├── /sales-groups   - Grupos de ventas
   └── /price-lists    - Listas de precios
+  └── /sync           - Sincronizacion DBF
 
 Tags en Swagger:
-- Los tags organizan los endpoints en la documentación API
+- Los tags organizan los endpoints en la documentacion API
 - Cada router tiene un tag descriptivo en español
 """
 
@@ -41,14 +42,14 @@ from . import (
     sync_dbf
 )
 
-# Router principal que agrupa todos los módulos
+# Router principal que agrupa todos los modulos
 api_router = APIRouter()
 
-# === AUTENTICACIÓN ===
+# === AUTENTICACIoN ===
 api_router.include_router(
     auth.router,
     prefix="/auth",
-    tags=["Autenticación"]
+    tags=["Autenticacion"]
 )
 
 # === USUARIOS Y PERFIL ===
@@ -64,11 +65,11 @@ api_router.include_router(
     tags=["Clientes"]
 )
 
-# === CATÁLOGO Y PRODUCTOS ===
+# === CATaLOGO Y PRODUCTOS ===
 api_router.include_router(
     categories.router,
     prefix="/categories",
-    tags=["Categorías"]
+    tags=["Categorias"]
 )
 
 api_router.include_router(
@@ -80,7 +81,7 @@ api_router.include_router(
 api_router.include_router(
     catalog.router,
     prefix="/catalog",
-    tags=["Catálogo Cliente"]
+    tags=["Catalogo Cliente"]
 )
 
 # === PEDIDOS ===
@@ -90,11 +91,11 @@ api_router.include_router(
     tags=["Pedidos"]
 )
 
-# === ADMINISTRACIÓN ===
+# === ADMINISTRACIoN ===
 api_router.include_router(
     admin.router,
     prefix="/admin",
-    tags=["Administración"]
+    tags=["Administracion"]
 )
 
 api_router.include_router(
@@ -103,7 +104,7 @@ api_router.include_router(
     tags=["Dashboards"]
 )
 
-# === COMUNICACIÓN ===
+# === COMUNICACIoN ===
 api_router.include_router(
     contact.router,
     prefix="/contact",
@@ -119,11 +120,13 @@ api_router.include_router(
 
 api_router.include_router(
     price_lists.router,
+    prefix="/price-lists",
     tags=["Listas de Precios"]
 )
 
-# === SINCRONIZACIÓN DBF ===
+# === SINCRONIZACIoN DBF ===
 api_router.include_router(
     sync_dbf.router,
-    tags=["Sincronización DBF"]
+    prefix="/sync",
+    tags=["Sincronizacion DBF"]
 )

@@ -1,7 +1,7 @@
 """
-Routes para Administración de Productos
+Routes para Administracion de Productos
 
-Endpoints CRUD para gestión de productos del catálogo:
+Endpoints CRUD para gestion de productos del catalogo:
 - GET / - Lista de productos con filtros
 - GET /{id} - Detalle de producto
 - GET /codebar/{codebar} - Buscar por codebar
@@ -43,7 +43,7 @@ class StockUpdate(BaseModel):
     Schema para ajustar inventario
     
     quantity puede ser:
-    - Positivo: Agregar stock (recepción)
+    - Positivo: Agregar stock (recepcion)
     - Negativo: Reducir stock (ajuste)
     """
     quantity: int
@@ -52,10 +52,10 @@ class StockUpdate(BaseModel):
 @router.get("/", response_model=List[Product])
 def read_products(
     skip: int = Query(0, ge=0, description="Registros a saltar"),
-    limit: int = Query(100, ge=1, le=200, description="Máximo de registros"),
-    category_id: Optional[int] = Query(None, description="Filtrar por categoría"),
+    limit: int = Query(100, ge=1, le=200, description="Maximo de registros"),
+    category_id: Optional[int] = Query(None, description="Filtrar por categoria"),
     is_active: Optional[bool] = Query(True, description="Filtrar por estado"),
-    search: Optional[str] = Query(None, description="Buscar por nombre/descripción"),
+    search: Optional[str] = Query(None, description="Buscar por nombre/descripcion"),
     stock_filter: Optional[str] = Query(None, description="Filtrar por stock: in_stock, out_of_stock, low_stock"),
     sort_by: Optional[str] = Query(None, description="Ordenar por: price, name"),
     sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
@@ -64,10 +64,10 @@ def read_products(
     """
     Lista de productos con filtros y ordenamiento
     
-    Si search está presente, ignora otros filtros.
+    Si search esta presente, ignora otros filtros.
     
     Returns:
-        Lista de productos con categorías precargadas
+        Lista de productos con categorias precargadas
     """
     if search:
         products = search_products(db, search=search, skip=skip, limit=limit)
@@ -88,9 +88,9 @@ def read_products(
 @router.get("/{product_id}", response_model=Product)
 def read_product(product_id: str, db: Session = Depends(get_db)):
     """
-    Detalle de un producto específico
+    Detalle de un producto especifico
     
-    Incluye categoría precargada.
+    Incluye categoria precargada.
     
     Raises:
         404: Si el producto no existe
@@ -107,9 +107,9 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
 @router.get("/codebar/{codebar}", response_model=Product)
 def read_product_by_codebar(codebar: str, db: Session = Depends(get_db)):
     """
-    Buscar producto por codebar (código único)
+    Buscar producto por codebar (codigo unico)
     
-    Útil para validaciones y búsquedas por código de barras.
+    util para validaciones y busquedas por codigo de barras.
     
     Raises:
         404: Si el codebar no existe
@@ -136,7 +136,7 @@ def create_new_product(
     - base_price > 0
     - iva_percentage entre 0 y 100
     - stock_count >= 0
-    - codebar único
+    - codebar unico
     
     Permisos: Solo administradores
     
@@ -170,12 +170,12 @@ def create_new_product(
             detail="El stock no puede ser negativo"
         )
     
-    # === VERIFICAR codebar ÚNICO ===
+    # === VERIFICAR codebar uNICO ===
     db_product = get_product_by_codebar(db, codebar=product.codebar)
     if db_product:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"El codebar '{product.codebar}' ya está registrado"
+            detail=f"El codebar '{product.codebar}' ya esta registrado"
         )
     
     return create_product(db=db, product=product)
@@ -280,7 +280,7 @@ def adjust_product_stock(
     Permisos: Solo administradores
     
     Raises:
-        400: Stock resultante sería negativo
+        400: Stock resultante seria negativo
         404: Producto no encontrado
     """
     # === OBTENER PRODUCTO ACTUAL ===

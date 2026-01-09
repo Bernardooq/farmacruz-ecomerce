@@ -16,7 +16,7 @@ def leer_dbf_auto(dbf_path, encoding="latin-1"):
             table = DBF(dbf_path, load=True, ignore_missing_memofile=True, encoding=encoding)
 
         df = pd.DataFrame(iter(table))
-        print(f"Leídas {len(df)} filas y {len(df.columns)} columnas.")
+        print(f"Leidas {len(df)} filas y {len(df.columns)} columnas.")
         return df
 
     except Exception as e:

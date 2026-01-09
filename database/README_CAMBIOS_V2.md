@@ -84,7 +84,7 @@ ADD FOREIGN KEY (sales_group_id) REFERENCES SalesGroups(sales_group_id);
 ```sql
 CREATE TYPE order_status AS ENUM (
     'pending_validation',
-    'assigned',           -- NUEVO: Pedido asignado a vendedor
+    'assigned',           -- Pedido asignado a vendedor
     'approved',
     'shipped',
     'delivered',
@@ -128,9 +128,9 @@ CREATE TABLE Products (
     codebar VARCHAR(100) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    laboratory VARCHAR(255),                    -- NUEVO: Fabricante
-    base_price NUMERIC(10, 2) NOT NULL,        -- NUEVO: Precio base
-    iva_percentage NUMERIC(5, 2) DEFAULT 0.00, -- NUEVO: % de IVA
+    laboratory VARCHAR(255),                    -- Fabricante
+    base_price NUMERIC(10, 2) NOT NULL,        -- Precio base
+    iva_percentage NUMERIC(5, 2) DEFAULT 0.00, -- % de IVA
     image_url VARCHAR(255),
     stock_count INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
@@ -264,10 +264,10 @@ CREATE TABLE OrderItems (
     order_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL,
-    base_price NUMERIC(10, 2) NOT NULL,        -- NUEVO: Precio base
-    markup_percentage NUMERIC(5, 2) NOT NULL,  -- NUEVO: % aplicado
-    iva_percentage NUMERIC(5, 2) NOT NULL,     -- NUEVO: % IVA
-    final_price NUMERIC(10, 2) NOT NULL        -- NUEVO: Precio final completo
+    base_price NUMERIC(10, 2) NOT NULL,        -- Precio base
+    markup_percentage NUMERIC(5, 2) NOT NULL,  -- % aplicado
+    iva_percentage NUMERIC(5, 2) NOT NULL,     -- % IVA
+    final_price NUMERIC(10, 2) NOT NULL        -- Precio final completo
 );
 ```
 

@@ -1,28 +1,28 @@
 """
-Rutas para Sincronización desde Archivos DBF
+Rutas para Sincronizacion desde Archivos DBF
 
-Este módulo maneja la sincronización masiva de datos desde archivos DBF
+Este modulo maneja la sincronizacion masiva de datos desde archivos DBF
 del sistema legacy de FarmaCruz hacia la base de datos PostgreSQL.
 
-¿Qué hace este sistema?
+¿Que hace este sistema?
 -----------------------
 Permite mantener sincronizados los datos entre:
 - Sistema viejo (archivos DBF de Visual FoxPro)
 - Sistema nuevo (PostgreSQL)
 
-¿Cómo funciona?
+¿Como funciona?
 --------------
 1. Recibes datos del DBF en lotes (batches)
 2. Para cada registro:
    - Si ya EXISTE (por ID) → Se ACTUALIZA
    - Si NO existe → Se CREA nuevo
-3. Retornas un resumen: cuántos creados, actualizados, errores
+3. Retornas un resumen: cuantos creados, actualizados, errores
 
 ORDEN IMPORTANTE:
 ----------------
 Debes sincronizar en este orden (porque hay dependencias):
 1. PRIMERO → Listas de precios (son contenedores)
-2. SEGUNDO → Productos (dependen de categorías)
+2. SEGUNDO → Productos (dependen de categorias)
 3. TERCERO → Relaciones producto-lista (dependen de ambos anteriores)
 
 Permisos:
@@ -45,27 +45,27 @@ from crud import crud_sync
 
 
 # Crear router con prefijo /sync
-router = APIRouter(prefix="/sync", tags=["sync-dbf"])
+router = APIRouter()
 
 
 # SCHEMAS DE RESPUESTA
 
 class ResultadoSincronizacion(BaseModel):
     """
-    Resultado de una operación de sincronización
+    Resultado de una operacion de sincronizacion
     
-    Te dice exactamente qué pasó con tus datos:
-    - Cuántos se recibieron
-    - Cuántos se crearon (nuevos)
-    - Cuántos se actualizaron (ya existían)
-    - Cuántos tuvieron errores
+    Te dice exactamente que paso con tus datos:
+    - Cuantos se recibieron
+    - Cuantos se crearon (nuevos)
+    - Cuantos se actualizaron (ya existian)
+    - Cuantos tuvieron errores
     - Detalle de los errores
     """
     total_recibidos: int  # Total de registros que enviaste
     creados: int  # Registros nuevos que se crearon
-    actualizados: int  # Registros que ya existían y se actualizaron
-    errores: int  # Registros que tuvieron algún problema
-    detalle_errores: List[str] = []  # Descripción de cada error
+    actualizados: int  # Registros que ya existian y se actualizaron
+    errores: int  # Registros que tuvieron algun problema
+    detalle_errores: List[str] = []  # Descripcion de cada error
 
 
 # ENDPOINT: SINCRONIZAR LISTAS DE PRECIOS
@@ -79,14 +79,14 @@ def sincronizar_listas_de_precios(
     """
     Sincroniza listas de precios desde el DBF (en lote)
     
-    ¿Qué hace?
+    ¿Que hace?
     ----------
     - Recibe listas de precios del archivo LISTAS.DBF
     - Para cada lista:
-      * Si el ID ya existe → ACTUALIZA nombre, descripción, estado
+      * Si el ID ya existe → ACTUALIZA nombre, descripcion, estado
       * Si NO existe → CREA nueva lista con ese ID
     
-    ¿Por qué es importante?
+    ¿Por que es importante?
     ----------------------
     Las listas son "contenedores" que agrupan productos con sus precios.
     Debes sincronizar las listas ANTES que los productos porque los
@@ -174,14 +174,14 @@ def sincronizar_categorias(
     db: Session = Depends(get_db)
 ):
     """
-    Sincroniza categorías desde el DBF (en lote)
+    Sincroniza categorias desde el DBF (en lote)
     
-    ¿Qué hace?
+    ¿Que hace?
     ----------
-    - Recibe categorías únicas extraídas del campo CSE_PROD
-    - Para cada categoría:
+    - Recibe categorias unicas extraidas del campo CSE_PROD
+    - Para cada categoria:
       * Si el nombre ya existe → NO hace nada (skip)
-      * Si NO existe → CREA nueva categoría
+      * Si NO existe → CREA nueva categoria
     
     Ejemplo de uso:
     --------------
@@ -189,7 +189,7 @@ def sincronizar_categorias(
     [
         {
             "name": "Medicamentos",
-            "description": "Productos médicos"
+            "description": "Productos medicos"
         }
     ]
     """
@@ -212,7 +212,7 @@ def sincronizar_categorias(
             if mensaje_error:
                 resultado.errores += 1
                 resultado.detalle_errores.append(
-                    f"Categoría '{categoria.name}': {mensaje_error}"
+                    f"Categoria '{categoria.name}': {mensaje_error}"
                 )
             elif fue_creada:
                 resultado.creados += 1
@@ -222,7 +222,7 @@ def sincronizar_categorias(
         except Exception as error_inesperado:
             resultado.errores += 1
             resultado.detalle_errores.append(
-                f"Categoría '{categoria.name}': Error inesperado - {str(error_inesperado)}"
+                f"Categoria '{categoria.name}': Error inesperado - {str(error_inesperado)}"
             )
     
     try:
@@ -246,20 +246,20 @@ def sincronizar_productos(
     db: Session = Depends(get_db)
 ):
     """
-    Sincroniza productos del catálogo desde el DBF (en lote)
+    Sincroniza productos del catalogo desde el DBF (en lote)
     
-    ¿Qué hace?
+    ¿Que hace?
     ----------
     - Recibe productos del archivo PRODUCTOS.DBF
     - Para cada producto:
       * Si el ID ya existe → ACTUALIZA todos sus datos
       * Si NO existe → CREA nuevo producto con ese ID
     
-    ¿Qué valida?
+    ¿Que valida?
     -----------
-    - Que las categorías existan (si el producto tiene una)
-    - Que los precios sean válidos (≥ 0)
-    - Que el IVA esté entre 0 y 100
+    - Que las categorias existan (si el producto tiene una)
+    - Que los precios sean validos (≥ 0)
+    - Que el IVA este entre 0 y 100
     
     Ejemplo de uso:
     --------------
@@ -294,7 +294,7 @@ def sincronizar_productos(
     
     # Procesar cada producto uno por uno con savepoints
     for producto in productos:
-        # Crear un savepoint para este producto (sub-transacción)
+        # Crear un savepoint para este producto (sub-transaccion)
         savepoint = db.begin_nested()
         
         try:
@@ -305,8 +305,8 @@ def sincronizar_productos(
                 codebar=producto.codebar,
                 nombre=producto.name,
                 descripcion=producto.description,
-                descripcion_2=producto.descripcion_2,  # Nueva campo
-                unidad_medida=producto.unidad_medida,  # Nuevo campo
+                descripcion_2=producto.descripcion_2,  
+                unidad_medida=producto.unidad_medida,  
                 precio_base=float(producto.base_price),
                 porcentaje_iva=float(producto.iva_percentage) if producto.iva_percentage else 0.0,
                 cantidad_stock=producto.stock_count if producto.stock_count else 0,
@@ -357,7 +357,7 @@ def sincronizar_productos(
 
 class LoteDeMarkups(BaseModel):
     """
-    Lote de markups para una lista de precios específica
+    Lote de markups para una lista de precios especifica
     
     Agrupa todos los productos de UNA lista con sus porcentajes
     de ganancia (markup).
@@ -375,25 +375,25 @@ def sincronizar_markups(
     """
     Sincroniza relaciones producto-lista con sus markups (en lote)
     
-    ¿Qué hace?
+    ¿Que hace?
     ----------
     - Recibe relaciones del archivo PRECIOLIS.DBF
-    - Define qué productos están en qué lista
+    - Define que productos estan en que lista
     - Asigna el % de ganancia (markup) de cada producto
-    - Para cada relación:
+    - Para cada relacion:
       * Si ya existe → ACTUALIZA el markup
-      * Si NO existe → CREA la relación
+      * Si NO existe → CREA la relacion
     
-    ¿Qué es el markup?
+    ¿Que es el markup?
     -----------------
     Es el porcentaje de ganancia que se agrega al precio base.
     Ejemplo: Si el producto cuesta $100 y el markup es 25%,
-    el precio con markup será $125 (antes de IVA).
+    el precio con markup sera $125 (antes de IVA).
     
-    ¿Por qué por lotes?
+    ¿Por que por lotes?
     ------------------
-    Es más eficiente enviar todos los productos de UNA lista
-    en una sola petición, en lugar de uno por uno.
+    Es mas eficiente enviar todos los productos de UNA lista
+    en una sola peticion, en lugar de uno por uno.
     
     Ejemplo de uso:
     --------------
@@ -415,7 +415,7 @@ def sincronizar_markups(
     Nota importante:
     ---------------
     Debes sincronizar PRIMERO las listas y productos,
-    DESPUÉS las relaciones.
+    DESPUeS las relaciones.
     """
     # Verificar que la lista de precios exista
     if not crud_sync.verificar_si_lista_existe(db, lote.price_list_id):
@@ -434,7 +434,7 @@ def sincronizar_markups(
         detalle_errores=[]
     )
     
-    # Procesar cada relación producto-lista una por una
+    # Procesar cada relacion producto-lista una por una
     for item in lote.items:
         try:
             # Intentar guardar o actualizar el markup
@@ -490,7 +490,7 @@ def sincronizar_clientes(
     """
     Sincroniza clientes del archivo CLIENTES.DBF (en lote)
     
-    ¿Qué hace?
+    ¿Que hace?
     ----------
     - Recibe clientes del archivo CLIENTES.DBF
     - Para cada cliente:
@@ -505,9 +505,9 @@ def sincronizar_clientes(
             "customer_id": 1,
             "username": "juan_perez",
             "email": "juan@example.com",
-            "full_name": "Juan Pérez",
+            "full_name": "Juan Perez",
             "password": "FarmaCruz2024!",
-            "business_name": "Farmacia Pérez",
+            "business_name": "Farmacia Perez",
             "rfc": "PEPJ800101XXX",
             "price_list_id": 1,
             "address_1": "Calle Principal 123"
@@ -535,12 +535,12 @@ def sincronizar_clientes(
     
     # Procesar cada cliente uno por uno con savepoints
     for cliente in clientes:
-        # Crear savepoint para este cliente (sub-transacción)
+        # Crear savepoint para este cliente (sub-transaccion)
         savepoint = db.begin_nested()
         
         try:
             # Intentar guardar o actualizar el cliente (Customer + CustomerInfo)
-            # Ahora es mucho más simple con CustomerSync
+            # Ahora es mucho mas simple con CustomerSync
             fue_creado, mensaje_error = crud_sync.guardar_o_actualizar_cliente(
                 db=db,
                 customer_id=cliente.customer_id,

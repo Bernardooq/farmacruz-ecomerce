@@ -17,7 +17,7 @@ def leer_dbf_auto(dbf_path, encoding="latin-1"):
         df = pd.DataFrame(iter(table))
         # Guardar el DataFrame en un archivo CSV
         df.to_csv(dbf_path.with_suffix(".csv"), index=False)
-        print(f"Leídas {len(df)} filas y {len(df.columns)} columnas.")
+        print(f"Leidas {len(df)} filas y {len(df.columns)} columnas.")
         return df, df.columns
 
     except Exception as e:

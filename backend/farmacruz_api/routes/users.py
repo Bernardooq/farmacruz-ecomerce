@@ -1,5 +1,5 @@
 """
-Routes para Perfil y Configuración de Usuario
+Routes para Perfil y Configuracion de Usuario
 
 Endpoints para que los usuarios gestionen su propio perfil:
 
@@ -7,16 +7,16 @@ PERFIL:
 - GET /me - Ver mi perfil
 - PUT /me - Actualizar mi perfil
 
-INFORMACIÓN DE CLIENTE:
-- GET /me/customer-info - Ver mi información comercial
-- PUT /me/customer-info - Actualizar información comercial
+INFORMACIoN DE CLIENTE:
+- GET /me/customer-info - Ver mi informacion comercial
+- PUT /me/customer-info - Actualizar informacion comercial
 
 UTILIDADES:
 - GET /sellers - Lista de vendedores disponibles
 
 Funciona para:
-- Customers (gestión de perfil y customer_info)
-- Users internos (gestión de perfil básico)
+- Customers (gestion de perfil y customer_info)
+- Users internos (gestion de perfil basico)
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -38,13 +38,13 @@ def read_current_user_profile(current_user = Depends(get_current_user)):
     """
     Obtiene el perfil del usuario autenticado actual
     
-    Retorna información según el tipo:
+    Retorna informacion segun el tipo:
     - Customer: customer_id, username, email, full_name, role="customer"
     - User: user_id, username, email, full_name, role=<admin|seller|marketing>
     
     Permisos: Cualquier usuario autenticado
     """
-    # === CONVERTIR A DICT SEGÚN TIPO ===
+    # === CONVERTIR A DICT SEGuN TIPO ===
     if isinstance(current_user, Customer):
         user_dict = {
             "customer_id": current_user.customer_id,
@@ -79,7 +79,7 @@ def update_current_user_profile(
     Campos actualizables:
     - email
     - full_name
-    - password (se hashea automáticamente)
+    - password (se hashea automaticamente)
     
     Permisos: Cualquier usuario autenticado
     
@@ -130,10 +130,10 @@ def read_current_user_customer_info(
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene la información comercial del cliente actual
+    Obtiene la informacion comercial del cliente actual
     
     Incluye:
-    - Datos fiscales (RFC, razón social)
+    - Datos fiscales (RFC, razon social)
     - Direcciones (hasta 3)
     - Grupo de ventas asignado
     - Lista de precios asignada
@@ -161,7 +161,7 @@ def read_current_user_customer_info(
     if not customer_info:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Información de cliente no encontrada"
+            detail="Informacion de cliente no encontrada"
         )
     
     return customer_info
@@ -174,7 +174,7 @@ def update_current_user_customer_info(
     db: Session = Depends(get_db)
 ):
     """
-    Actualiza la información comercial del cliente actual
+    Actualiza la informacion comercial del cliente actual
     
     Campos actualizables:
     - address_1, address_2, address_3 (direcciones)
@@ -205,7 +205,7 @@ def update_current_user_customer_info(
     if not customer_info:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Información de cliente no encontrada"
+            detail="Informacion de cliente no encontrada"
         )
     
     # Actualizar campos
@@ -224,14 +224,14 @@ def get_available_sellers(
     db: Session = Depends(get_db)
 ):
     """
-    Lista de vendedores disponibles según permisos
+    Lista de vendedores disponibles segun permisos
     
-    Retorna vendedores según el rol:
+    Retorna vendedores segun el rol:
     - Admin: Todos los vendedores activos
     - Marketing: Solo vendedores de sus grupos asignados
-    - Seller: N/A (no debería poder ver esto)
+    - Seller: N/A (no deberia poder ver esto)
     
-    Útil para asignar pedidos a vendedores.
+    util para asignar pedidos a vendedores.
     
     Permisos: Admin y Marketing
     
@@ -254,7 +254,7 @@ def get_available_sellers(
             # Marketing sin grupos no puede ver vendedores
             return []
         
-        # Filtrar vendedores que estén en esos grupos
+        # Filtrar vendedores que esten en esos grupos
         seller_ids = db.query(GroupSeller.seller_id).filter(
             GroupSeller.sales_group_id.in_(user_groups)
         ).distinct().all()

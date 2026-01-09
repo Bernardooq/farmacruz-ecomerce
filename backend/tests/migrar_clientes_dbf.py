@@ -3,9 +3,7 @@ import pandas as pd
 from dbfread import DBF
 from pathlib import Path
 
-# ==========================================
-# 1. CONFIGURACIÓN BÁSICA
-# ==========================================
+# 1. CONFIGURACIoN BaSICA
 API_URL = "http://localhost:8000/api/v1"
 DBF_FILE = Path(r"C:\Users\berna\Downloads\desarrollo\CLIENTES.DBF")
 BATCH_SIZE = 50  # Mandamos de 50 en 50 para no saturar
@@ -36,7 +34,7 @@ def limpiar_y_formatear(df):
             "username": str(row.get('NOM_CTE', 'user')).strip()[:20].replace(" ", "_"),
             "email": f"cliente_{row['CVE_CTE']}@farmacruz.com",
             "full_name": str(row.get('NOM_CTE', 'Sin Nombre')).strip(),
-            "password": "FarmaCruz2024!", # Password genérica inicial
+            "password": "FarmaCruz2024!", # Password generica inicial
             "price_list_id": int(float(row['LISTA_PREC'])) if row.get('LISTA_PREC') else 1,
             "address": str(row.get('DIR_CTE', 'N/D')).strip()
         }
@@ -50,7 +48,7 @@ def migrar():
     if not token: return
     headers = {"Authorization": f"Bearer {token}"}
 
-    # 2. Leer DBF usando Pandas (la forma más fácil)
+    # 2. Leer DBF usando Pandas (la forma mas facil)
     print(f"Cargando archivo: {DBF_FILE.name}")
     try:
         tabla = DBF(DBF_FILE, encoding='latin-1')
@@ -63,9 +61,9 @@ def migrar():
     todos_los_clientes = limpiar_y_formatear(df)
     total = len(todos_los_clientes)
 
-    # 4. ENVÍO POR LOTES (Batch) 
+    # 4. ENViO POR LOTES (Batch) 
     # Usamos un rango que salta de 'BATCH_SIZE' en 'BATCH_SIZE'
-    print(f"Iniciando migración de {total} clientes...")
+    print(f"Iniciando migracion de {total} clientes...")
     
     for i in range(0, total, BATCH_SIZE):
         # Cortamos la lista (Slicing) para sacar el bloque actual
@@ -82,9 +80,9 @@ def migrar():
                 print(f"Error en bloque {i}: {res.status_code}")
                 
         except Exception as e:
-            print(f"Error de conexión: {e}")
+            print(f"Error de conexion: {e}")
 
-    print("\n¡Migración terminada exitosamente!")
+    print("\n¡Migracion terminada exitosamente!")
 
 if __name__ == "__main__":
     migrar()

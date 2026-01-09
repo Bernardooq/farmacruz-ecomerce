@@ -1,7 +1,7 @@
 """
 Routes para Grupos de Ventas (Sales Groups)
 
-Gestión completa de grupos de ventas con relaciones N:M.
+Gestion completa de grupos de ventas con relaciones N:M.
 
 GRUPOS (CRUD):
 - GET / - Lista de grupos con conteos
@@ -38,9 +38,9 @@ Sistema de Permisos:
 - Seller: Solo puede ver sus grupos asignados
 
 Relaciones N:M:
-- Un grupo puede tener múltiples marketing managers
-- Un grupo puede tener múltiples sellers
-- Un marketing/seller puede estar en múltiples grupos
+- Un grupo puede tener multiples marketing managers
+- Un grupo puede tener multiples sellers
+- Un marketing/seller puede estar en multiples grupos
 - Un customer pertenece a UN solo grupo (N:1)
 """
 
@@ -78,9 +78,7 @@ from crud.crud_sales_group import (
 router = APIRouter()
 
 
-# ==========================================
 # Sales Group CRUD Endpoints
-# ==========================================
 
 @router.get("/", response_model=List[SalesGroupWithMembers])
 def read_sales_groups(
@@ -90,10 +88,7 @@ def read_sales_groups(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Obtiene lista de grupos de ventas con paginación, filtros y conteos de miembros.
-    Solo administradores.
-    """
+    # Obtiene todos los grupos de ventas con conteos de miembros.
     groups = get_sales_groups(db, skip=skip, limit=limit, is_active=is_active)
     
     # Add member counts to each group
@@ -106,20 +101,14 @@ def read_sales_groups(
     return groups_with_counts
 
 
-# ==========================================
 # My Groups Endpoint (for marketing/sellers)
-# ==========================================
 
 @router.get("/my-groups", response_model=List[SalesGroupWithMembers])
 def read_my_sales_groups(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_seller_user)
 ):
-    """
-    Obtiene los grupos de ventas del usuario actual.
-    Marketing ve grupos donde es marketing manager.
-    Sellers ven grupos donde son sellers.
-    """
+    # Obtiene los grupos de ventas asignados al usuario actual (marketing/seller).
     from crud.crud_sales_group import get_user_groups, get_sales_group_with_counts
     
     # Obtener IDs de grupos del usuario
@@ -144,10 +133,7 @@ def read_sales_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Obtiene un grupo de ventas con conteos de miembros.
-    Solo administradores.
-    """
+    # Obtiene un grupo de ventas por ID con conteos de miembros
     group = get_sales_group_with_counts(db, group_id=group_id)
     if not group:
         raise HTTPException(
@@ -163,10 +149,7 @@ def create_new_sales_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Crea un nuevo grupo de ventas.
-    Solo administradores.
-    """
+    # Crea un nuevo grupo de ventas
     return create_sales_group(db=db, group=group)
 
 
@@ -177,10 +160,7 @@ def update_existing_sales_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Actualiza un grupo de ventas existente.
-    Solo administradores.
-    """
+    # Actualiza un grupo de ventas existente
     db_group = update_sales_group(db, group_id=group_id, group=group)
     if not db_group:
         raise HTTPException(
@@ -196,10 +176,7 @@ def delete_existing_sales_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Elimina un grupo de ventas (cascade delete de memberships).
-    Solo administradores.
-    """
+    # Elimina un grupo de ventas
     db_group = delete_sales_group(db, group_id=group_id)
     if not db_group:
         raise HTTPException(
@@ -209,9 +186,7 @@ def delete_existing_sales_group(
     return None
 
 
-# ==========================================
 # Marketing Manager Membership Endpoints
-# ==========================================
 
 class AssignUserRequest(BaseModel):
     user_id: int
@@ -224,10 +199,7 @@ def assign_marketing_manager(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Asigna un marketing manager a un grupo de ventas.
-    Solo administradores.
-    """
+    # Asigna un marketing manager a un grupo de ventas.
     return assign_marketing_to_group(
         db=db,
         group_id=group_id,
@@ -242,15 +214,12 @@ def remove_marketing_manager(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Remueve un marketing manager de un grupo de ventas.
-    Solo administradores.
-    """
+    # Remueve un marketing manager de un grupo de ventas.
     success = remove_marketing_from_group(db, group_id=group_id, marketing_id=user_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Asignación no encontrada"
+            detail="Asignacion no encontrada"
         )
     return None
 
@@ -264,10 +233,7 @@ def read_group_marketing_managers(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Obtiene marketing managers de un grupo con paginación y búsqueda server-side.
-    Solo administradores.
-    """
+    # Obtiene marketing managers de un grupo con paginacion y busqueda server-side.
     from crud.crud_sales_group import get_group_marketing_managers_paginated
     
     # Verificar que el grupo existe
@@ -296,10 +262,7 @@ def read_available_marketing_managers(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Obtiene marketing managers que NO están en el grupo (disponibles).
-    Con paginación y búsqueda server-side.
-    """
+    # Obtiene marketing managers que NO estan en el grupo (disponibles)
     from db.base import User as UserModel, UserRole
     
     # Verificar que el grupo existe
@@ -318,11 +281,11 @@ def read_available_marketing_managers(
     # Query de todos los marketing
     query = db.query(UserModel).filter(UserModel.role == UserRole.marketing)
     
-    # Excluir los que ya están en el grupo
+    # Excluir los que ya estan en el grupo
     if current_member_ids:
         query = query.filter(~UserModel.user_id.in_(current_member_ids))
     
-    # Aplicar búsqueda
+    # Aplicar busqueda
     if search:
         search_pattern = f"%{search}%"
         query = query.filter(
@@ -331,13 +294,11 @@ def read_available_marketing_managers(
             (UserModel.email.ilike(search_pattern))
         )
     
-    # Paginación
+    # Paginacion
     return query.order_by(UserModel.full_name).offset(skip).limit(limit).all()
 
 
-# ==========================================
 # Seller Membership Endpoints
-# ==========================================
 
 @router.post("/{group_id}/sellers", response_model=GroupSeller, status_code=status.HTTP_201_CREATED)
 def assign_seller_to_sales_group(
@@ -346,10 +307,7 @@ def assign_seller_to_sales_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Asigna un vendedor a un grupo de ventas.
-    Solo administradores.
-    """
+    # Asigna un seller a un grupo de ventas.
     return assign_seller_to_group(
         db=db,
         group_id=group_id,
@@ -364,15 +322,12 @@ def remove_seller_from_sales_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Remueve un vendedor de un grupo de ventas.
-    Solo administradores.
-    """
+    # Remueve un vendedor de un grupo de ventas.
     success = remove_seller_from_group(db, group_id=group_id, seller_id=user_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Asignación no encontrada"
+            detail="Asignacion no encontrada"
         )
     return None
 
@@ -387,11 +342,7 @@ def read_group_sellers(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_seller_user)
 ):
-    """
-    Obtiene vendedores de un grupo con paginación y búsqueda server-side.
-    Marketing/Sellers pueden ver vendedores de sus grupos.
-    Administradores pueden ver cualquier grupo.
-    """
+    # Obtiene sellers de un grupo con paginacion y busqueda server-side
     from db.base import UserRole
     from crud.crud_sales_group import user_belongs_to_group, get_group_sellers_paginated
     
@@ -429,10 +380,7 @@ def read_available_sellers(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Obtiene sellers que NO están en el grupo (disponibles).
-    Con paginación y búsqueda server-side.
-    """
+    # Obtiene sellers que NO estan en el grupo (disponibles)
     from db.base import User as UserModel, UserRole
     
     # Verificar que el grupo existe
@@ -451,11 +399,11 @@ def read_available_sellers(
     # Query de todos los sellers
     query = db.query(UserModel).filter(UserModel.role == UserRole.seller)
     
-    # Excluir los que ya están en el grupo
+    # Excluir los que ya estan en el grupo
     if current_member_ids:
         query = query.filter(~UserModel.user_id.in_(current_member_ids))
     
-    # Aplicar búsqueda
+    # Aplicar busqueda
     if search:
         search_pattern = f"%{search}%"
         query = query.filter(
@@ -464,14 +412,12 @@ def read_available_sellers(
             (UserModel.email.ilike(search_pattern))
         )
     
-    # Paginación
+    # Paginacion
     return query.order_by(UserModel.full_name).offset(skip).limit(limit).all()
 
 
 
-# ==========================================
 # Combined Members Endpoint
-# ==========================================
 
 class GroupMembers(BaseModel):
     marketing_managers: List[User]
@@ -484,10 +430,7 @@ def read_all_group_members(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Obtiene todos los miembros de un grupo (marketing managers y sellers).
-    Solo administradores.
-    """
+    # Obtiene todos los miembros (marketing + sellers) de un grupo de ventas.
     # Verificar que el grupo existe
     group = get_sales_group(db, group_id)
     if not group:
@@ -505,9 +448,7 @@ def read_all_group_members(
     )
 
 
-# ==========================================
 # Customer Assignment Endpoints
-# ==========================================
 
 @router.post("/{group_id}/customers/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def assign_customer_to_group(
@@ -516,10 +457,7 @@ def assign_customer_to_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Asigna un cliente a un grupo de ventas.
-    Solo administradores.
-    """
+    # Asigna un customer a un grupo de ventas
     from db.base import Customer, CustomerInfo
     from sqlalchemy import func as sqlalchemy_func
     
@@ -573,10 +511,7 @@ def remove_customer_from_group(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Remueve un cliente de un grupo de ventas.
-    Solo administradores.
-    """
+    # Remueve un customer de un grupo de ventas
     from db.base import CustomerInfo
     
     # Obtener CustomerInfo
@@ -610,11 +545,7 @@ def read_group_customers(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_seller_user)
 ):
-    """
-    Obtiene los clientes de un grupo con paginación y búsqueda.
-    Marketing/Sellers solo pueden ver clientes de sus grupos.
-    Administradores pueden ver cualquier grupo.
-    """
+    # Obtiene customers de un grupo con paginacion y busqueda server-side
     from db.base import CustomerInfo, Customer, UserRole
     from crud.crud_sales_group import user_belongs_to_group
     
@@ -634,7 +565,7 @@ def read_group_customers(
         CustomerInfo.sales_group_id == group_id
     )
     
-    # Aplicar búsqueda si se proporciona
+    # Aplicar busqueda si se proporciona
     if search:
         search_pattern = f"%{search}%"
         query = query.filter(
@@ -643,7 +574,7 @@ def read_group_customers(
             (Customer.email.ilike(search_pattern))
         )
     
-    # Aplicar paginación
+    # Aplicar paginacion
     customers = query.offset(skip).limit(limit).all()
     
     return customers
@@ -658,11 +589,7 @@ def read_available_customers(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user)
 ):
-    """
-    Obtiene clientes que NO están en este grupo (disponibles).
-    Incluye clientes sin grupo y clientes en otros grupos.
-    Con paginación y búsqueda server-side.
-    """
+    # Obtiene customers que NO estan en el grupo (disponibles)
     from db.base import CustomerInfo, Customer
     
     # Verificar que el grupo existe
@@ -685,7 +612,7 @@ def read_available_customers(
         (CustomerInfo.sales_group_id != group_id)
     )
     
-    # Aplicar búsqueda
+    # Aplicar busqueda
     if search:
         search_pattern = f"%{search}%"
         query = query.filter(
@@ -694,5 +621,5 @@ def read_available_customers(
             (Customer.email.ilike(search_pattern))
         )
     
-    # Paginación
+    # Paginacion
     return query.order_by(Customer.full_name).offset(skip).limit(limit).all()

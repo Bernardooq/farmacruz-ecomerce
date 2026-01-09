@@ -2,11 +2,11 @@
 Modelos SQLAlchemy para FARMACRUZ v2.1
 
 Arquitectura de base de datos:
-- Los usuarios internos (admin, marketing, seller) están en la tabla 'users'
-- Los clientes están separados en la tabla 'customers'
+- Los usuarios internos (admin, marketing, seller) estan en la tabla 'users'
+- Los clientes estan separados en la tabla 'customers'
 - Relaciones N:M para grupos de ventas con managers y vendedores
 - Listas de precios con markup por producto
-- Sistema de pedidos con asignación de vendedores
+- Sistema de pedidos con asignacion de vendedores
 """
 
 import enum
@@ -20,20 +20,9 @@ from sqlalchemy.orm import relationship, declarative_base
 Base = declarative_base()
 
 
-# ==========================================
-# ENUMS - Tipos enumerados para campos específicos
-# ==========================================
+# ENUMS - Tipos enumerados para campos especificos
 
 class UserRole(str, enum.Enum):
-    """
-    Roles para usuarios INTERNOS del sistema
-    
-    - admin: Administrador con acceso completo
-    - marketing: Manager de marketing con vista de sus grupos
-    - seller: Vendedor que procesa pedidos
-    
-    NOTA: Los clientes NO usan esta enumeración, están en tabla separada
-    """
     admin = "admin"
     marketing = "marketing"
     seller = "seller"
@@ -43,9 +32,9 @@ class OrderStatus(str, enum.Enum):
     """
     Estados del ciclo de vida de un pedido
     
-    - pending_validation: Pedido creado, esperando asignación a vendedor
-    - approved: Vendedor aprobó el pedido
-    - shipped: Pedido en tránsito
+    - pending_validation: Pedido creado, esperando asignacion a vendedor
+    - approved: Vendedor aprobo el pedido
+    - shipped: Pedido en transito
     - delivered: Entregado al cliente
     - cancelled: Cancelado (por admin o cliente)
     """
@@ -56,15 +45,13 @@ class OrderStatus(str, enum.Enum):
     cancelled = "cancelled"
 
 
-# ==========================================
-# MODELOS - Definición de tablas
-# ==========================================
+# MODELOS - Definicion de tablas
 
 class User(Base):
     """
     Usuarios INTERNOS del sistema (admin, marketing, seller)
     
-    Esta tabla NO incluye clientes. Los clientes están en 'customers'.
+    Esta tabla NO incluye clientes. Los clientes estan en 'customers'.
     Estos usuarios son empleados o personal interno de FARMACRUZ.
     """
     __tablename__ = "users"
@@ -82,7 +69,7 @@ class User(Base):
     # Relaciones con otras tablas
     # Pedidos donde este usuario es el vendedor asignado
     orders_assigned = relationship("Order", back_populates="assigned_seller", foreign_keys="[Order.assigned_seller_id]")
-    # Pedidos donde este usuario hizo la asignación (quién asignó el vendedor)
+    # Pedidos donde este usuario hizo la asignacion (quien asigno el vendedor)
     orders_assigned_by = relationship("Order", back_populates="assigned_by", foreign_keys="[Order.assigned_by_user_id]")
     # Grupos de ventas donde es marketing manager
     marketing_groups = relationship("GroupMarketingManager", back_populates="marketing_user", cascade="all, delete-orphan")
@@ -109,7 +96,7 @@ class Customer(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     # Relaciones con otras tablas
-    # Información adicional del cliente (direcciones, grupo, lista de precios)
+    # Informacion adicional del cliente (direcciones, grupo, lista de precios)
     customer_info = relationship("CustomerInfo", back_populates="customer", uselist=False)
     # Pedidos realizados por este cliente
     orders = relationship("Order", back_populates="customer")
@@ -122,15 +109,15 @@ class SalesGroup(Base):
     Grupos de ventas para organizar clientes, vendedores y managers
     
     Cada grupo puede tener:
-    - Múltiples marketing managers (relación N:M)
-    - Múltiples vendedores (relación N:M)
-    - Múltiples clientes asignados
+    - Multiples marketing managers (relacion N:M)
+    - Multiples vendedores (relacion N:M)
+    - Multiples clientes asignados
     """
     __tablename__ = "salesgroups"
 
     sales_group_id = Column(Integer, primary_key=True)
     group_name = Column(String(255), nullable=False)  # Ej: "Farmacias Zona Norte"
-    description = Column(Text)  # Descripción opcional del grupo
+    description = Column(Text)  # Descripcion opcional del grupo
     is_active = Column(Boolean, default=True)  # Para desactivar sin eliminar
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
@@ -145,17 +132,17 @@ class SalesGroup(Base):
 
 class GroupMarketingManager(Base):
     """
-    Tabla de relación N:M entre SalesGroup y User (marketing managers)
+    Tabla de relacion N:M entre SalesGroup y User (marketing managers)
     
-    Permite que un marketing manager esté en múltiples grupos
-    y que un grupo tenga múltiples marketing managers.
+    Permite que un marketing manager este en multiples grupos
+    y que un grupo tenga multiples marketing managers.
     """
     __tablename__ = "groupmarketingmanagers"
 
     group_marketing_id = Column(Integer, primary_key=True)
     sales_group_id = Column(Integer, ForeignKey("salesgroups.sales_group_id", ondelete="CASCADE"), nullable=False, index=True)
     marketing_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
-    assigned_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Cuándo se asignó
+    assigned_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Cuando se asigno
 
     # Constraint para evitar duplicados (mismo manager en mismo grupo)
     __table_args__ = (
@@ -169,17 +156,17 @@ class GroupMarketingManager(Base):
 
 class GroupSeller(Base):
     """
-    Tabla de relación N:M entre SalesGroup y User (sellers)
+    Tabla de relacion N:M entre SalesGroup y User (sellers)
     
-    Permite que un vendedor esté en múltiples grupos
-    y que un grupo tenga múltiples vendedores.
+    Permite que un vendedor este en multiples grupos
+    y que un grupo tenga multiples vendedores.
     """
     __tablename__ = "groupsellers"
 
     group_seller_id = Column(Integer, primary_key=True)
     sales_group_id = Column(Integer, ForeignKey("salesgroups.sales_group_id", ondelete="CASCADE"), nullable=False, index=True)
     seller_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
-    assigned_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Cuándo se asignó
+    assigned_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Cuando se asigno
 
     # Constraint para evitar duplicados (mismo vendedor en mismo grupo)
     __table_args__ = (
@@ -193,24 +180,24 @@ class GroupSeller(Base):
 
 class Category(Base):
     """
-    Categorías para organizar productos
+    Categorias para organizar productos
     
-    Ejemplos: "Analgésicos", "Antibióticos", "Vitaminas", etc.
+    Ejemplos: "Analgesicos", "Antibioticos", "Vitaminas", etc.
     """
     __tablename__ = "categories"
 
     category_id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)  # Nombre de la categoría
-    description = Column(Text)  # Descripción opcional
+    name = Column(String(100), nullable=False)  # Nombre de la categoria
+    description = Column(Text)  # Descripcion opcional
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # Productos que pertenecen a esta categoría
+    # Productos que pertenecen a esta categoria
     products = relationship("Product", back_populates="category")
 
 
 class Product(Base):
     """
-    Productos del catálogo
+    Productos del catalogo
     
     El precio final se calcula como:
     precio_final = (base_price + base_price * markup) * (1 + iva_percentage)
@@ -218,11 +205,11 @@ class Product(Base):
     """
     __tablename__ = "products"
 
-    product_id = Column(String(50), primary_key=True)  # ID tipo "FAR74" (no numérico)
-    codebar = Column(String(100), unique=True, nullable=True, index=True)  # Código de barras (puede ser None)
+    product_id = Column(String(50), primary_key=True)  # ID tipo "FAR74" (no numerico)
+    codebar = Column(String(100), unique=True, nullable=True, index=True)  # Codigo de barras (puede ser None)
     name = Column(String(255), nullable=False)  # Nombre del producto
-    description = Column(Text)  # Descripción principal (del DBF/sincronización)
-    descripcion_2 = Column(Text)  # Descripción adicional (editable por admin, ej: receta médica)
+    description = Column(Text)  # Descripcion principal (del DBF/sincronizacion)
+    descripcion_2 = Column(Text)  # Descripcion adicional (editable por admin, ej: receta medica)
     unidad_medida = Column(String(10))  # Unidad: "piezas", "cajas", "frascos", etc.
     base_price = Column(Numeric(10, 2), nullable=False, default=0.00)  # Precio base sin markup ni IVA
     iva_percentage = Column(Numeric(5, 2), default=0.00)  # % de IVA (ej: 16.00)
@@ -243,7 +230,7 @@ class PriceList(Base):
     """
     Lista de precios (contenedor)
     
-    Cada lista agrupa múltiples productos con sus respectivos markups.
+    Cada lista agrupa multiples productos con sus respectivos markups.
     Los clientes se asignan a una lista de precios que determina
     su porcentaje de ganancia sobre el precio base.
     """
@@ -251,7 +238,7 @@ class PriceList(Base):
 
     price_list_id = Column(Integer, primary_key=True)
     list_name = Column(String(100), nullable=False)  # Ej: "Farmacias Premium", "Hospitales"
-    description = Column(Text)  # Descripción de a quién aplica
+    description = Column(Text)  # Descripcion de a quien aplica
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -259,19 +246,17 @@ class PriceList(Base):
     # Relaciones
     # Clientes asignados a esta lista
     customers = relationship("CustomerInfo", back_populates="price_list")
-    # Items (productos) con su markup específico en esta lista
+    # Items (productos) con su markup especifico en esta lista
     price_list_items = relationship("PriceListItem", back_populates="price_list", cascade="all, delete-orphan")
 
 
 class PriceListItem(Base):
     """
-    Markup específico de un producto en una lista de precios
+    Markup especifico de un producto en una lista de precios
     
     Define el porcentaje de ganancia que se aplica al precio base
-    de un producto específico para una lista específica.
-    
-    Ejemplo: Producto X en "Lista Premium" tiene markup de 25.00%
-    """
+    de un producto especifico para una lista especifica.
+        """
     __tablename__ = "pricelistitems"
 
     price_list_item_id = Column(Integer, primary_key=True)
@@ -293,26 +278,26 @@ class PriceListItem(Base):
 
 class CustomerInfo(Base):
     """
-    Información adicional de clientes (1:1 con Customer)
+    Informacion adicional de clientes (1:1 con Customer)
     
     Almacena datos comerciales del cliente:
-    - Información fiscal (RFC, razón social)
+    - Informacion fiscal (RFC, razon social)
     - Grupo de ventas al que pertenece
     - Lista de precios asignada
-    - Hasta 3 direcciones de envío
+    - Hasta 3 direcciones de envio
     """
     __tablename__ = "customerinfo"
 
     customer_info_id = Column(Integer, primary_key=True)
     customer_id = Column(Integer, ForeignKey("customers.customer_id", ondelete="CASCADE"), unique=True, nullable=False)
-    business_name = Column(String(255), nullable=False)  # Razón social de la empresa
+    business_name = Column(String(255), nullable=False)  # Razon social de la empresa
     rfc = Column(String(13))  # RFC mexicano (12-13 caracteres)
     sales_group_id = Column(Integer, ForeignKey("salesgroups.sales_group_id"), index=True)  # Grupo asignado
     price_list_id = Column(Integer, ForeignKey("pricelists.price_list_id"), index=True)  # Lista de precios
-    # Tres direcciones posibles (el cliente elige cuál usar al hacer pedido)
-    address_1 = Column(Text)  # Dirección principal
-    address_2 = Column(Text)  # Dirección secundaria (opcional)
-    address_3 = Column(Text)  # Dirección terciaria (opcional)
+    # Tres direcciones posibles (el cliente elige cual usar al hacer pedido)
+    address_1 = Column(Text)  # Direccion principal
+    address_2 = Column(Text)  # Direccion secundaria (opcional)
+    address_3 = Column(Text)  # Direccion terciaria (opcional)
 
     # Relaciones
     customer = relationship("Customer", back_populates="customer_info")  # Usuario cliente
@@ -324,11 +309,11 @@ class Order(Base):
     """
     Pedidos de clientes
     
-    Flujo típico:
+    Flujo tipico:
     1. Cliente crea pedido (status: pending_validation)
     2. Admin/Marketing asigna a vendedor (status: assigned)
     3. Vendedor aprueba (status: approved)
-    4. Se envía (status: shipped)
+    4. Se envia (status: shipped)
     5. Se entrega (status: delivered)
     """
     __tablename__ = "orders"
@@ -336,16 +321,16 @@ class Order(Base):
     order_id = Column(Integer, primary_key=True)
     customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False, index=True)
     assigned_seller_id = Column(Integer, ForeignKey("users.user_id"), index=True)  # Vendedor asignado
-    assigned_by_user_id = Column(Integer, ForeignKey("users.user_id"))  # Quién hizo la asignación
+    assigned_by_user_id = Column(Integer, ForeignKey("users.user_id"))  # Quien hizo la asignacion
     status = Column(SQLAlchemyEnum(OrderStatus), nullable=False, default=OrderStatus.pending_validation, index=True)
     total_amount = Column(Numeric(12, 2), default=0.00)  # Monto total calculado
-    shipping_address_number = Column(Integer)  # 1, 2 o 3 (cuál de las 3 direcciones usar)
+    shipping_address_number = Column(Integer)  # 1, 2 o 3 (cual de las 3 direcciones usar)
     assignment_notes = Column(Text)  # Notas del admin al asignar vendedor
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), index=True)
-    assigned_at = Column(TIMESTAMP(timezone=True))  # Cuándo se asignó vendedor
-    validated_at = Column(TIMESTAMP(timezone=True))  # Cuándo el vendedor lo aprobó
+    assigned_at = Column(TIMESTAMP(timezone=True))  # Cuando se asigno vendedor
+    validated_at = Column(TIMESTAMP(timezone=True))  # Cuando el vendedor lo aprobo
 
-    # Constraint: número de dirección debe ser 1, 2 o 3
+    # Constraint: numero de direccion debe ser 1, 2 o 3
     __table_args__ = (
         CheckConstraint('shipping_address_number BETWEEN 1 AND 3', name='check_address_number'),
     )
@@ -353,7 +338,7 @@ class Order(Base):
     # Relaciones
     customer = relationship("Customer", back_populates="orders")  # Cliente que hizo el pedido
     assigned_seller = relationship("User", back_populates="orders_assigned", foreign_keys=[assigned_seller_id])  # Vendedor
-    assigned_by = relationship("User", back_populates="orders_assigned_by", foreign_keys=[assigned_by_user_id])  # Quién asignó
+    assigned_by = relationship("User", back_populates="orders_assigned_by", foreign_keys=[assigned_by_user_id])  # Quien asigno
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")  # Productos del pedido
 
 
@@ -363,7 +348,7 @@ class OrderItem(Base):
     
     Cada item representa un producto con su cantidad y precios.
     Los precios se 'congelan' al momento de crear el pedido para
-    mantener historial preciso aunque los precios cambien después.
+    mantener historial preciso aunque los precios cambien despues.
     """
     __tablename__ = "orderitems"
 
@@ -392,7 +377,7 @@ class CartCache(Base):
     Carrito de compras temporal de clientes
     
     Almacena los productos que el cliente ha agregado al carrito
-    pero aún no ha convertido en pedido. Se limpia al crear el pedido.
+    pero aun no ha convertido en pedido. Se limpia al crear el pedido.
     """
     __tablename__ = "cartcache"
 
@@ -401,7 +386,7 @@ class CartCache(Base):
     product_id = Column(String(50), ForeignKey("products.product_id"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)  # Cantidad a ordenar
     added_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Primera vez agregado
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())  # Última modificación
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())  # ultima modificacion
 
     __table_args__ = (
         # Un producto solo puede aparecer una vez en el carrito de un cliente

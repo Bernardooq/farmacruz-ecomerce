@@ -6,43 +6,33 @@ Funciones para manejar el ciclo completo de pedidos:
 - Consultar pedidos (cliente, admin, seller)
 - Actualizar estado de pedidos
 - Asignar pedidos a vendedores
-- Cancelar pedidos con restauración de stock
+- Cancelar pedidos con restauracion de stock
 - Filtrado por grupos de ventas (permisos)
 
-Flujo típico de un pedido:
+Flujo tipico de un pedido:
 1. Cliente crea pedido desde carrito → pending_validation
 2. Admin/Marketing asigna vendedor → assigned
 3. Vendedor aprueba → approved
-4. Se envía → shipped
+4. Se envia → shipped
 5. Se entrega → delivered
 """
 
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 
-from db.base import Order, OrderItem, OrderStatus, Product, CartCache, CustomerInfo, PriceListItem
-from schemas.order import OrderCreate, OrderUpdate, OrderItemCreate
+from db.base import Order, OrderItem, OrderStatus, Product, CartCache, CustomerInfo, PriceListItem, User, UserRole
+from farmacruz_api.crud.crud_sales_group import get_user_groups, user_can_manage_order
+from farmacruz_api.crud.crud_user import get_user
+from schemas.order import OrderAssign, OrderCreate, OrderUpdate, OrderItemCreate
 
 
 def get_order(db: Session, order_id: int) -> Optional[Order]:
-    """
-    Obtiene un pedido por ID con todas sus relaciones
-    
-    Pre-carga:
-    - Items del pedido con información de productos
-    - Información del cliente
-    - Información del vendedor asignado (si existe)
-    
-    Args:
-        db: Sesión de base de datos
-        order_id: ID del pedido
-        
-    Returns:
-        Pedido completo o None si no existe
-    """
+    # Obtiene un pedido por ID con todas sus relaciones
+
     return db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product),
         joinedload(Order.customer),
@@ -50,28 +40,9 @@ def get_order(db: Session, order_id: int) -> Optional[Order]:
     ).filter(Order.order_id == order_id).first()
 
 
-def get_orders_by_customer(
-    db: Session, 
-    customer_id: int, 
-    skip: int = 0, 
-    limit: int = 100,
-    status: Optional[OrderStatus] = None
-) -> List[Order]:
-    """
-    Obtiene pedidos de un cliente específico
+def get_orders_by_customer(db: Session, customer_id: int, skip: int = 0, limit: int = 100, status: Optional[OrderStatus] = None) -> List[Order]:
+    # Obtiene pedidos de un cliente especifico
     
-    Útil para el historial de pedidos del cliente.
-    
-    Args:
-        db: Sesión de base de datos
-        customer_id: ID del cliente
-        skip: Registros a saltar (paginación)
-        limit: Máximo de registros
-        status: Filtrar por estado específico (opcional)
-        
-    Returns:
-        Lista de pedidos del cliente ordenados por fecha (más recientes primero)
-    """
     query = db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product),
         joinedload(Order.customer),
@@ -84,31 +55,9 @@ def get_orders_by_customer(
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
 
-def get_orders(
-    db: Session, 
-    skip: int = 0, 
-    limit: int = 100,
-    status: Optional[OrderStatus] = None,
-    search: Optional[str] = None
-) -> List[Order]:
-    """
-    Obtiene todos los pedidos (admin/seller) con búsqueda opcional
+def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[OrderStatus] = None, search: Optional[str] = None) -> List[Order]:
+    # Obtiene todos los pedidos (admin/seller) con busqueda opcional
     
-    Búsqueda por:
-    - Número de pedido (si el término es numérico)
-    - Nombre completo del cliente
-    - Username del cliente
-    
-    Args:
-        db: Sesión de base de datos
-        skip: Registros a saltar
-        limit: Máximo de registros
-        status: Filtrar por estado (opcional)
-        search: Término de búsqueda (opcional)
-        
-    Returns:
-        Lista de pedidos ordenados por fecha (más recientes primero)
-    """
     from db.base import Customer
     
     query = db.query(Order).options(
@@ -117,16 +66,16 @@ def get_orders(
         joinedload(Order.assigned_seller)
     )
     
-    # === FILTRAR POR ESTADO ===
+    # Filtrar por status
     if status:
         query = query.filter(Order.status == status)
     
-    # === BÚSQUEDA ===
+    # Busqueda
     if search:
         query = query.join(Order.customer)
         
         if search.isdigit():
-            # Buscar por número de pedido o nombre
+            # Buscar por numero de pedido o nombre
             query = query.filter(
                 or_(
                     Order.order_id == int(search),
@@ -147,51 +96,22 @@ def get_orders(
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
 
-def create_order_from_cart(
-    db: Session,
-    customer_id: int,
-    shipping_address_number: int = 1
-) -> Order:
-    """
-    Crea un pedido a partir del carrito del cliente
+def create_order_from_cart(db: Session, customer_id: int, shipping_address_number: int = 1) -> Order:
+    # Crea un pedido a partir del carrito del cliente
     
-    Proceso completo:
-    1. Validar que el carrito no esté vacío
-    2. Validar que el cliente tenga lista de precios
-    3. Validar stock suficiente para cada producto
-    4. Calcular precios con markup e IVA
-    5. Crear pedido y items
-    6. Reducir stock de productos
-    7. Limpiar carrito
-    
-    Los precios se "congelan" al momento del pedido para
-    mantener historial preciso aunque cambien después.
-    
-    Args:
-        db: Sesión de base de datos
-        customer_id: ID del cliente
-        shipping_address_number: Qué dirección usar (1, 2 o 3)
-        
-    Returns:
-        Pedido creado con todos sus items
-        
-    Raises:
-        ValueError: Si el carrito está vacío, sin lista de precios,
-                   stock insuficiente, o dirección inválida
-    """
-    # === VALIDAR DIRECCIÓN ===
+    # Validar direccion
     if shipping_address_number not in [1, 2, 3]:
-        raise ValueError("Número de dirección inválido. Debe ser 1, 2 o 3.")
+        raise ValueError("Numero de direccion invalido. Debe ser 1, 2 o 3.")
     
-    # === OBTENER ITEMS DEL CARRITO ===
+    # Obtener items del carrito
     cart_items = db.query(CartCache).filter(
         CartCache.customer_id == customer_id
     ).all()
     
     if not cart_items:
-        raise ValueError("El carrito está vacío")
+        raise ValueError("El carrito esta vacio")
     
-    # === VALIDAR LISTA DE PRECIOS ===
+    # Validar lista de precios
     customer_info = db.query(CustomerInfo).filter(
         CustomerInfo.customer_id == customer_id
     ).first()
@@ -199,17 +119,17 @@ def create_order_from_cart(
     if not customer_info or not customer_info.price_list_id:
         raise ValueError("No tienes una lista de precios asignada. Contacta al administrador.")
     
-    # === CREAR PEDIDO ===
+    # Crear pedido
     db_order = Order(
         customer_id=customer_id,
         status=OrderStatus.pending_validation,
-        total_amount=0,  # Se calculará después
+        total_amount=0,  # Se calculara despues
         shipping_address_number=shipping_address_number
     )
     db.add(db_order)
     db.flush()  # Para obtener order_id
     
-    # === CREAR ITEMS Y CALCULAR TOTAL ===
+    # CREAR ITEMS Y CALCULAR TOTAL
     total = Decimal('0')
     
     for cart_item in cart_items:
@@ -233,10 +153,10 @@ def create_order_from_cart(
         ).first()
         
         if not price_item:
-            raise ValueError(f"El producto {product.name} no está en tu lista de precios")
+            raise ValueError(f"El producto {product.name} no esta en tu lista de precios")
         
-        # === CALCULAR PRECIO FINAL ===
-        # Fórmula: final = (base * (1 + markup/100)) * (1 + iva/100)
+        # CALCULAR PRECIO FINAL
+        # Formula: final = (base * (1 + markup/100)) * (1 + iva/100)
         base_price = Decimal(str(product.base_price or 0))
         markup = Decimal(str(price_item.markup_percentage or 0))
         iva = Decimal(str(product.iva_percentage or 0))
@@ -257,7 +177,7 @@ def create_order_from_cart(
         db.add(order_item)
         
         # Reducir stock
-        product.stock_count -= cart_item.quantity
+        # product.stock_count -= cart_item.quantity
         
         # Acumular total
         total += final_price * cart_item.quantity
@@ -273,33 +193,15 @@ def create_order_from_cart(
     return db_order
 
 
-def update_order_status(
-    db: Session, 
-    order_id: int, 
-    status: OrderStatus,
-    seller_id: Optional[int] = None
-) -> Optional[Order]:
-    """
-    Actualiza el estado de un pedido
-    
-    Si se aprueba, también registra quién lo validó y cuándo.
-    
-    Args:
-        db: Sesión de base de datos
-        order_id: ID del pedido
-        status: Nuevo estado
-        seller_id: ID del vendedor que aprueba (si aplica)
-        
-    Returns:
-        Pedido actualizado o None si no existe
-    """
+def update_order_status(db: Session, order_id: int, status: OrderStatus, seller_id: Optional[int] = None) -> Optional[Order]:
+    # Actualiza el estado de un pedido
     db_order = get_order(db, order_id)
     if not db_order:
         return None
     
     db_order.status = status
     
-    # Si se aprueba, registrar validación
+    # Si se aprueba, registrar validacion
     if seller_id and status == OrderStatus.approved:
         db_order.assigned_seller_id = seller_id
         db_order.validated_at = datetime.utcnow()
@@ -310,43 +212,29 @@ def update_order_status(
 
 
 def cancel_order(db: Session, order_id: int) -> Optional[Order]:
-    """
-    Cancela un pedido y restaura el stock
+    # Cancela un pedido y puede restaurar el stock
     
-    Solo se pueden cancelar pedidos en estados:
-    - pending_validation
-    - approved
-    
-    Al cancelar, se restaura el stock de todos los productos.
-    
-    Args:
-        db: Sesión de base de datos
-        order_id: ID del pedido a cancelar
-        
-    Returns:
-        Pedido cancelado
-        
-    Raises:
-        ValueError: Si el pedido no se puede cancelar (ya enviado/entregado)
-    """
     db_order = get_order(db, order_id)
     if not db_order:
         return None
     
-    # === VALIDAR QUE SE PUEDE CANCELAR ===
+    # Validar que se pueda cancelar
     if db_order.status not in [
         OrderStatus.pending_validation,
-        OrderStatus.approved
+        OrderStatus.approved,
+        OrderStatus.shipped
     ]:
         raise ValueError("No se puede cancelar este pedido")
     
-    # === RESTAURAR STOCK ===
+    # RESTAURAR STOCK 
+    """
     for item in db_order.items:
         product = db.query(Product).filter(
             Product.product_id == item.product_id
         ).first()
         if product:
             product.stock_count += item.quantity
+    """
     
     # Cambiar estado a cancelado
     db_order.status = OrderStatus.cancelled
@@ -364,26 +252,7 @@ def get_orders_for_user_groups(
     status: Optional[OrderStatus] = None,
     search: Optional[str] = None
 ) -> List[Order]:
-    """
-    Obtiene pedidos filtrados según los grupos del usuario
-    
-    Lógica de permisos:
-    - Admin: ve TODOS los pedidos
-    - Marketing: ve pedidos de clientes en sus grupos asignados
-    - Seller: ve SOLO pedidos asignados a él
-    
-    Args:
-        db: Sesión de base de datos
-        user_id: ID del usuario interno
-        user_role: Rol del usuario (UserRole)
-        skip: Registros a saltar
-        limit: Máximo de registros
-        status: Filtrar por estado (opcional)
-        search: Buscar por número o nombre (opcional)
-        
-    Returns:
-        Lista de pedidos filtrados según permisos
-    """
+    # Obtiene pedidos filtrados segun los grupos del usuario
     from db.base import User, Customer, UserRole
     
     query = db.query(Order).options(
@@ -392,14 +261,14 @@ def get_orders_for_user_groups(
         joinedload(Order.assigned_seller)
     )
     
-    # === APLICAR FILTROS SEGÚN ROL ===
+    # Filtros segun rol
     if user_role != UserRole.admin:
         from crud.crud_sales_group import get_user_groups
         
         # Obtener grupos del usuario
         user_group_ids = get_user_groups(db, user_id)
         
-        # Si no está en ningún grupo, no puede ver pedidos
+        # Si no esta en ningun grupo, no puede ver pedidos
         if not user_group_ids:
             return []
         
@@ -415,11 +284,11 @@ def get_orders_for_user_groups(
                 CustomerInfo.sales_group_id.in_(user_group_ids)
             )
     
-    # === FILTRAR POR ESTADO ===
+    # Filtro por status
     if status:
         query = query.filter(Order.status == status)
     
-    # === BÚSQUEDA ===
+    # Busqueda
     if search:
         # Re-join con Customer si no se hizo antes
         if user_role == UserRole.admin:
@@ -443,3 +312,50 @@ def get_orders_for_user_groups(
             )
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
+
+def get_order_count_by_customer(db: Session, customer_id: int) -> int:
+    # Obtiene el conteo de pedidos de un cliente especifico
+    corder_count = db.query(Order).filter(
+        Order.customer_id == customer_id
+    ).count()
+
+    return corder_count
+
+
+def calculate_order_shipping_address(db: Session, order: Order) -> str:
+    # Calcula la direccion de envio completa basada en el numero seleccionado
+    if order.shipping_address_number:
+        customer_info = db.query(CustomerInfo).filter(
+            CustomerInfo.customer_id == order.customer_id
+        ).first()
+        
+        if customer_info:
+            address_key = f"address_{order.shipping_address_number}"
+            shipping_address = getattr(customer_info, address_key, None)
+            
+            if not shipping_address:
+                # Fallback to address_1
+                shipping_address = customer_info.address_1 or customer_info.address_2 or customer_info.address_3
+            
+            # Add as attribute (won't be in DB, just for response)
+            order.shipping_address = shipping_address or "No especificada"
+        else:
+            order.shipping_address = "No especificada"
+    else:
+        order.shipping_address = "No especificada"
+    
+    return order
+
+
+def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, current_user: User) -> Order | None:
+    # Asignación final
+    order.assigned_seller_id = assign_data.assigned_seller_id
+    order.assigned_by_user_id = current_user.user_id
+    order.assigned_at = datetime.now(timezone.utc)  
+
+    if assign_data.assignment_notes:
+        order.assignment_notes = assign_data.assignment_notes
+
+    db.commit()
+    db.refresh(order)
+    return order

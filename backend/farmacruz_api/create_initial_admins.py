@@ -14,25 +14,25 @@ ADMINS = [
         "username": "israel.saenz.admin",
         "email": "israel.saenz.admin@farmacruz.com",
         "full_name": "Israel saenz.admin",
-        "password": "farmasaenz123"  # Asignar contraseña aquí
+        "password": "farmasaenz123"  # Asignar contraseña aqui
     },
     {
         "username": "manuel.saenz.admin",
         "email": "manuel.saenz.admin@farmacruz.com",
         "full_name": "Manuel saenz.admin",
-        "password": "farmasaenz123"  # Asignar contraseña aquí
+        "password": "farmasaenz123"  # Asignar contraseña aqui
     },
     {
         "username": "andre.saenz.admin",
         "email": "andre.saenz.admin@farmacruz.com",
         "full_name": "Andre saenz.admin",
-        "password": "farmasaenz123"  # Asignar contraseña aquí
+        "password": "farmasaenz123"  # Asignar contraseña aqui
     },
     {
         "username": "admin",
         "email": "admin@farmacruz.com",
         "full_name": "Administrador",
-        "password": "farmasaenz123"  # Asignar contraseña aquí
+        "password": "farmasaenz123"  # Asignar contraseña aqui
     }
 ]
 
@@ -41,11 +41,11 @@ def create_admin_users():
     db: Session = SessionLocal()
     
     print("=" * 70)
-    print("  CREACIÓN DE USUARIOS ADMINISTRADORES - FARMACRUZ")
+    print("  CREACIoN DE USUARIOS ADMINISTRADORES - FARMACRUZ")
     print("=" * 70)
     print()
     
-    # Verificar que todas las contraseñas estén asignadas
+    # Verificar que todas las contraseñas esten asignadas
     missing_passwords = [admin["username"] for admin in ADMINS if not admin["password"]]
     if missing_passwords:
         print("❌ ERROR: Las siguientes cuentas no tienen contraseña asignada:")
@@ -62,7 +62,7 @@ def create_admin_users():
         if len(admin["password"]) < 8
     ]
     if weak_passwords:
-        print("❌ ERROR: Las siguientes cuentas tienen contraseñas muy cortas (mínimo 8 caracteres):")
+        print("❌ ERROR: Las siguientes cuentas tienen contraseñas muy cortas (minimo 8 caracteres):")
         for username in weak_passwords:
             print(f"   - {username}")
         return False
@@ -108,7 +108,7 @@ def create_admin_users():
         print("=" * 70)
         print(f"  RESUMEN:")
         print(f"  - Usuarios creados: {created_count}")
-        print(f"  - Usuarios omitidos (ya existían): {skipped_count}")
+        print(f"  - Usuarios omitidos (ya existian): {skipped_count}")
         print("=" * 70)
         print()
         
@@ -118,41 +118,41 @@ def create_admin_users():
             print("⚠️  IMPORTANTE:")
             print("   1. Guarda las credenciales en un lugar seguro")
             print("   2. Comparte las contraseñas de forma segura con cada usuario")
-            print("   3. Pídeles que cambien su contraseña en el primer login")
+            print("   3. Pideles que cambien su contraseña en el primer login")
             print()
         
         return True
         
     except Exception as e:
-        print(f"\n❌ Error durante la creación de usuarios: {e}")
+        print(f"\n❌ Error durante la creacion de usuarios: {e}")
         db.rollback()
         return False
     finally:
         db.close()
 
 def verify_database_connection():
-    """Verifica que la conexión a la base de datos funcione"""
+    """Verifica que la conexion a la base de datos funcione"""
     try:
         db: Session = SessionLocal()
         db.execute(text("SELECT 1"))
         db.close()
-        print("✅ Conexión a la base de datos exitosa\n")
+        print("✅ Conexion a la base de datos exitosa\n")
         return True
     except Exception as e:
-        print(f"❌ Error de conexión a la base de datos: {e}\n")
+        print(f"❌ Error de conexion a la base de datos: {e}\n")
         return False
 
 def main():
-    # Verificar conexión
+    # Verificar conexion
     if not verify_database_connection():
-        print("Verifica la configuración de la base de datos y vuelve a intentar.")
+        print("Verifica la configuracion de la base de datos y vuelve a intentar.")
         return
     
     # Crear usuarios
     success = create_admin_users()
     
     if not success:
-        print("\n❌ El proceso falló. Revisa los errores anteriores.")
+        print("\n❌ El proceso fallo. Revisa los errores anteriores.")
         exit(1)
 
 if __name__ == "__main__":

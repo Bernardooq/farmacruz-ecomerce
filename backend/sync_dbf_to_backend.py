@@ -1,6 +1,6 @@
 """
-Sincronización DBF -> FarmaCruz Backend
-Procesa DBF grandes en batches y sincroniza categorías, productos,
+Sincronizacion DBF -> FarmaCruz Backend
+Procesa DBF grandes en batches y sincroniza categorias, productos,
 listas de precios y relaciones producto-lista.
 """
 
@@ -39,14 +39,14 @@ def clean_numeric(val, default=0.0):
 
 # ===== LOGIN =====
 def login() -> str:
-    logger.info("Iniciando sesión en el backend...")
+    logger.info("Iniciando sesion en el backend...")
     resp = requests.post(f"{BACKEND_URL}/auth/login", data=CREDENTIALS)
     resp.raise_for_status()
     token = resp.json()["access_token"]
-    logger.info("Sesión iniciada correctamente")
+    logger.info("Sesion iniciada correctamente")
     return token
 
-# ===== ENVÍO EN BATCHES =====
+# ===== ENViO EN BATCHES =====
 def send_in_batches(payload_list, batch_size, endpoint, token, entity_name):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     total_created, total_updated, total_errors = 0, 0, 0
@@ -74,16 +74,16 @@ def send_in_batches(payload_list, batch_size, endpoint, token, entity_name):
 
     logger.info(f"{entity_name} - RESUMEN TOTAL: {total_created} creados, {total_updated} actualizados, {total_errors} errores")
 
-# ===== SINCRONIZAR CATEGORÍAS =====
+# ===== SINCRONIZAR CATEGORiAS =====
 def sync_categories(df_productos, token):
-    logger.info("Extrayendo categorías únicas de productos...")
+    logger.info("Extrayendo categorias unicas de productos...")
     categorias_unicas = df_productos['CSE_PROD'].dropna().apply(clean_str).unique()
     
     # FILTRAR: Excluir GASTOS y 99999
     categorias_unicas = [cat for cat in categorias_unicas if cat and cat.upper() != 'GASTOS' and cat != '99999']
     
     categorias_payload = [{"name": cat, "description": None} for cat in categorias_unicas]
-    send_in_batches(categorias_payload, BATCH_SIZE_CAT, "sync/categories", token, "Categorías")
+    send_in_batches(categorias_payload, BATCH_SIZE_CAT, "sync/categories", token, "Categorias")
 
 # ===== SINCRONIZAR PRODUCTOS =====
 def sync_products(df_productos, token):
@@ -91,7 +91,7 @@ def sync_products(df_productos, token):
     productos_payload = []
 
     for _, row in df_productos.iterrows():
-        # FILTRAR: Excluir productos de categorías GASTOS y 99999
+        # FILTRAR: Excluir productos de categorias GASTOS y 99999
         categoria = clean_str(row.get('CSE_PROD'))
         if categoria.upper() == 'GASTOS' or categoria == '99999':
             continue  # Saltar este producto
@@ -103,7 +103,7 @@ def sync_products(df_productos, token):
 
         stock_count = int(clean_numeric(row.get('DATO_1'), 10))
         
-        # Convertir codebar vacío a None para evitar violación de unicidad
+        # Convertir codebar vacio a None para evitar violacion de unicidad
         codebar_value = clean_str(row.get('CODBAR'))
         if not codebar_value or codebar_value.strip() == "":
             codebar_value = None
@@ -169,7 +169,7 @@ def sync_price_list_items(df_preciprod, token):
 
 # ===== MAIN =====
 def main():
-    logger.info("INICIANDO SINCRONIZACIÓN DBF -> FARMACRUZ")
+    logger.info("INICIANDO SINCRONIZACIoN DBF -> FARMACRUZ")
     token = login()
 
     logger.info("Cargando DBFs...")
@@ -180,13 +180,13 @@ def main():
     df_productos = df_productos.applymap(lambda x: clean_str(x) if isinstance(x,str) else x)
     df_preciprod = df_preciprod.applymap(lambda x: clean_str(x) if isinstance(x,str) else x)
 
-    # Sincronización paso a paso, batch por batch
+    # Sincronizacion paso a paso, batch por batch
     sync_categories(df_productos, token)
     sync_products(df_productos, token)
     sync_price_lists(df_preciprod, token)
     sync_price_list_items(df_preciprod, token)
 
-    logger.info("SINCRONIZACIÓN COMPLETA: Todos los registros procesados en batches")
+    logger.info("SINCRONIZACIoN COMPLETA: Todos los registros procesados en batches")
 
 if __name__ == "__main__":
     main()

@@ -123,7 +123,7 @@ export default function InventoryManager() {
         limit: ITEMS_PER_PAGE + 1 // +1 para detectar si hay más
       };
 
-      // NUEVO: Enviar búsqueda al backend
+      // Enviar búsqueda al backend
       if (searchName) {
         params.search = searchName; // Backend busca en nombre Y descripción
       }

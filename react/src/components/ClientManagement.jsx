@@ -55,7 +55,7 @@ export default function ClientManagement() {
         limit: itemsPerPage + 1
       };
 
-      // NUEVO: Enviar búsqueda al backend
+      // Enviar búsqueda al backend
       if (searchTerm) {
         params.search = searchTerm;
       }
