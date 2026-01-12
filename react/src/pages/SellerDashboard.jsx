@@ -20,8 +20,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import orderService from '../services/orderService';
-import { productService } from '../services/productService';
+import dashboardService from '../services/dashboardService';
 import Header from '../layout/Header2';
 import Footer from '../layout/Footer';
 import SummaryCards from '../components/SummaryCards';
@@ -30,11 +29,6 @@ import InventoryManager from '../components/InventoryManager';
 import CategoryManagement from '../components/CategoryManagement';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
-
-// ============================================
-// CONSTANTES
-// ============================================
-const LOW_STOCK_THRESHOLD = 10; // Productos con stock menor a este valor se consideran bajo stock
 
 export default function SellerDashboard() {
   // ============================================
@@ -65,34 +59,21 @@ export default function SellerDashboard() {
 
   /**
    * Carga las estadísticas del dashboard del vendedor
-   * - Número de pedidos pendientes de validación
-   * - Número total de productos en catálogo
-   * - Número de productos con stock bajo
+   * Ahora usa el endpoint del backend en lugar de calcular en el frontend
    */
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Obtener pedidos pendientes de validación
-      const pendingOrders = await orderService.getAllOrders({
-        status: 'pending_validation'
-      });
+      // Obtener estadísticas del dashboard desde el backend
+      const stats = await dashboardService.getSellerMarketingStats();
 
-      // Obtener todos los productos para calcular métricas
-      const allProducts = await productService.getProducts();
-
-      // Calcular productos con stock bajo
-      // (productos con stock > 0 pero < threshold)
-      const lowStockCount = allProducts.filter(
-        product => product.stock_count > 0 && product.stock_count < LOW_STOCK_THRESHOLD
-      ).length;
-
-      // Actualizar estado con las métricas calculadas
+      // Actualizar estado con las métricas del backend
       setSummary({
-        pendingOrders: pendingOrders.length,
-        catalogCount: allProducts.length,
-        lowStockCount: lowStockCount
+        pendingOrders: stats.pending_orders,
+        catalogCount: stats.total_products,
+        lowStockCount: stats.low_stock_count
       });
     } catch (err) {
       setError('No se pudieron cargar los datos del dashboard. Intenta de nuevo.');

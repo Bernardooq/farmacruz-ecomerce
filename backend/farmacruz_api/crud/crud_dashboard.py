@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from db.base import Order, OrderStatus, Product, User, UserRole, Customer
-from schemas.dashboards import DashboardStats, SalesReport, SalesReportItem
+from schemas.dashboards import DashboardStats, SalesReport, SalesReportItem, SellerMarketingDashboardStats
 
 
 def get_admin_dashboard_stats(db: Session) -> DashboardStats:
@@ -90,6 +90,33 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         other_orders=other_orders,
         pending_orders=pending_orders,
         total_revenue=float(total_revenue),
+        low_stock_count=low_stock_count
+    )
+
+
+def get_seller_marketing_dashboard_stats(db: Session) -> SellerMarketingDashboardStats:
+    # Obtiene estadisticas simplificadas para el dashboard de vendedores y marketing
+    
+    # Total de productos activos en catalogo
+    total_products = db.query(func.count(Product.product_id)).filter(
+        Product.is_active == True
+    ).scalar()
+    
+    # Productos con bajo stock (menos de 10 unidades)
+    low_stock_count = db.query(func.count(Product.product_id)).filter(
+        Product.stock_count < 10,
+        Product.stock_count > 0,  # No contar productos sin stock
+        Product.is_active == True
+    ).scalar()
+    
+    # Pedidos pendientes de validacion
+    pending_orders = db.query(func.count(Order.order_id)).filter(
+        Order.status == OrderStatus.pending_validation
+    ).scalar()
+    
+    return SellerMarketingDashboardStats(
+        pending_orders=pending_orders,
+        total_products=total_products,
         low_stock_count=low_stock_count
     )
 

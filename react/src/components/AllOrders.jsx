@@ -404,15 +404,34 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
                 Entregar
               </button>
             )}
-            {(order.status === 'pending_validation' || order.status === 'assigned' || order.status === 'approved') && (
-              <button
-                className="btn-action btn-action--cancel"
-                onClick={() => onCancel(order.order_id)}
-                title="Cancelar Pedido"
-              >
-                Cancelar
-              </button>
-            )}
+            {/* Botón Cancelar - basado en rol y estado */}
+            {(() => {
+              // Admin puede cancelar hasta antes de 'delivered'
+              if (userRole === 'admin') {
+                return order.status !== 'delivered' && order.status !== 'cancelled' && (
+                  <button
+                    className="btn-action btn-action--cancel"
+                    onClick={() => onCancel(order.order_id)}
+                    title="Cancelar Pedido"
+                  >
+                    Cancelar
+                  </button>
+                );
+              }
+              // Marketing y Seller pueden cancelar antes de 'shipped'
+              if (userRole === 'marketing' || userRole === 'seller') {
+                return (order.status === 'pending_validation' || order.status === 'assigned' || order.status === 'approved') && (
+                  <button
+                    className="btn-action btn-action--cancel"
+                    onClick={() => onCancel(order.order_id)}
+                    title="Cancelar Pedido"
+                  >
+                    Cancelar
+                  </button>
+                );
+              }
+              return null;
+            })()}
 
             {/* Botón Asignar solo para admin y marketing */}
             {order.status !== 'cancelled' && order.status !== 'delivered' && (userRole === 'admin' || userRole === 'marketing') && (

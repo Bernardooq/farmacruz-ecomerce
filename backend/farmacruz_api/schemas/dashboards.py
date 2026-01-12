@@ -30,6 +30,17 @@ class DashboardStats(BaseModel):
     low_stock_count: int  # Productos con bajo inventario (< 10 unidades)
 
 
+class SellerMarketingDashboardStats(BaseModel):
+    """
+    Estadisticas para el dashboard de vendedores y marketing
+    
+    Muestra metricas simplificadas relevantes para estos roles.
+    """
+    pending_orders: int  # Pedidos pendientes de validación
+    total_products: int  # Total de productos en catálogo
+    low_stock_count: int  # Productos con bajo inventario (< 10 unidades)
+
+
 class SalesReportItem(BaseModel):
     """
     Item individual en el reporte de ventas

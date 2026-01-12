@@ -696,31 +696,43 @@ def cancel_order_route(
     
     # VALIDACIoN CRiTICA: Verificar si se puede cancelar segun el estado y rol
     
-    # No se puede cancelar si ya esta entregado o cancelado
-    if order.status == OrderStatus.delivered:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se puede cancelar un pedido que ya ha sido entregado"
-        )
-    
+    # No se puede cancelar si ya esta cancelado
     if order.status == OrderStatus.cancelled:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Este pedido ya esta cancelado"
         )
     
-    # Si el pedido ya fue aprobado o enviado, solo admin puede cancelar
-    if order.status in [OrderStatus.approved, OrderStatus.shipped]:
-        if not is_admin:
-            status_labels = {
-                OrderStatus.approved: "aprobado",
-                OrderStatus.shipped: "enviado"
-            }
-            current_status = status_labels.get(order.status, order.status.value)
+    # No se puede cancelar si ya esta entregado
+    if order.status == OrderStatus.delivered:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede cancelar un pedido que ya ha sido entregado"
+        )
+    
+    # Validación basada en rol
+    if is_customer:
+        # Los clientes solo pueden cancelar antes de que sea validado
+        if order.status != OrderStatus.pending_validation:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Solo los administradores pueden cancelar pedidos que ya han sido {current_status}"
+                detail="Los clientes solo pueden cancelar pedidos pendientes de validación"
             )
+    elif user_role in [UserRole.marketing, UserRole.seller]:
+        # Marketing y Seller pueden cancelar antes de enviado
+        if order.status == OrderStatus.shipped:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Marketing y Vendedores solo pueden cancelar pedidos antes de que sean enviados"
+            )
+    elif is_admin:
+        # Admin puede cancelar hasta antes de entregado (ya validado arriba)
+        pass
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permisos para cancelar este pedido"
+        )
     
     try:
         cancelled_order = cancel_order(db, order_id=order_id)
