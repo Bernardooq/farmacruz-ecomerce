@@ -20,6 +20,7 @@ Flujo tipico de un pedido:
 from typing import List, Optional
 from datetime import datetime, timezone
 from decimal import Decimal
+from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
@@ -30,7 +31,7 @@ from crud.crud_user import get_user
 from schemas.order import OrderAssign, OrderCreate, OrderUpdate, OrderItemCreate
 
 
-def get_order(db: Session, order_id: int) -> Optional[Order]:
+def get_order(db: Session, order_id: UUID) -> Optional[Order]:
     # Obtiene un pedido por ID con todas sus relaciones
 
     return db.query(Order).options(
@@ -72,26 +73,29 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[Or
     
     # Busqueda
     if search:
+        from uuid import UUID
         query = query.join(Order.customer)
         
-        if search.isdigit():
-            # Buscar por numero de pedido o nombre
-            query = query.filter(
-                or_(
-                    Order.order_id == int(search),
-                    Customer.full_name.ilike(f"%{search}%"),
-                    Customer.username.ilike(f"%{search}%")
-                )
-            )
-        else:
-            # Buscar solo por nombre
-            search_term = f"%{search}%"
-            query = query.filter(
-                or_(
-                    Customer.full_name.ilike(search_term),
-                    Customer.username.ilike(search_term)
-                )
-            )
+        # Intentar parsear como UUID
+        order_id_filter = None
+        try:
+            search_uuid = UUID(search)
+            order_id_filter = Order.order_id == search_uuid
+        except (ValueError, AttributeError):
+            # No es UUID completo, buscar parcialmente convirtiendo a texto
+            from sqlalchemy import cast, String
+            search_term_uuid = f"%{search}%"
+            order_id_filter = cast(Order.order_id, String).ilike(search_term_uuid)
+        
+        # Buscar por nombre de cliente
+        search_term = f"%{search}%"
+        name_filters = or_(
+            Customer.full_name.ilike(search_term),
+            Customer.username.ilike(search_term)
+        )
+        
+        # Combinar filtros (siempre busca en order_id Y nombres)
+        query = query.filter(or_(order_id_filter, name_filters))
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
@@ -193,7 +197,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
     return db_order
 
 
-def update_order_status(db: Session, order_id: int, status: OrderStatus, seller_id: Optional[int] = None) -> Optional[Order]:
+def update_order_status(db: Session, order_id: UUID, status: OrderStatus, seller_id: Optional[int] = None) -> Optional[Order]:
     # Actualiza el estado de un pedido
     db_order = get_order(db, order_id)
     if not db_order:
@@ -210,7 +214,7 @@ def update_order_status(db: Session, order_id: int, status: OrderStatus, seller_
     return db_order
 
 
-def cancel_order(db: Session, order_id: int) -> Optional[Order]:
+def cancel_order(db: Session, order_id: UUID) -> Optional[Order]:
     # Cancela un pedido y puede restaurar el stock
     
     db_order = get_order(db, order_id)
@@ -249,6 +253,7 @@ def get_orders_for_user_groups(
     skip: int = 0,
     limit: int = 100,
     status: Optional[OrderStatus] = None,
+    status_filter: Optional[str] = None,  # Filtro raw (puede ser "assigned")
     search: Optional[str] = None
 ) -> List[Order]:
     # Obtiene pedidos filtrados segun los grupos del usuario
@@ -283,32 +288,41 @@ def get_orders_for_user_groups(
                 CustomerInfo.sales_group_id.in_(user_group_ids)
             )
     
-    # Filtro por status
-    if status:
+    # Filtro especial: "assigned" significa que tiene vendedor asignado
+    if status_filter == "assigned":
+        query = query.filter(Order.assigned_seller_id.isnot(None))
+    # Filtro por status normal
+    elif status:
         query = query.filter(Order.status == status)
     
     # Busqueda
     if search:
+        from uuid import UUID
+        
         # Re-join con Customer si no se hizo antes
         if user_role == UserRole.admin:
             query = query.join(Order.customer)
         
-        if search.isdigit():
-            query = query.filter(
-                or_(
-                    Order.order_id == int(search),
-                    Customer.full_name.ilike(f"%{search}%"),
-                    Customer.username.ilike(f"%{search}%")
-                )
-            )
-        else:
-            search_term = f"%{search}%"
-            query = query.filter(
-                or_(
-                    Customer.full_name.ilike(search_term),
-                    Customer.username.ilike(search_term)
-                )
-            )
+        # Intentar parsear como UUID
+        order_id_filter = None
+        try:
+            search_uuid = UUID(search)
+            order_id_filter = Order.order_id == search_uuid
+        except (ValueError, AttributeError):
+            # No es UUID completo, buscar parcialmente convirtiendo a texto
+            from sqlalchemy import cast, String
+            search_term_uuid = f"%{search}%"
+            order_id_filter = cast(Order.order_id, String).ilike(search_term_uuid)
+        
+        # Buscar por nombre de cliente
+        search_term = f"%{search}%"
+        name_filters = or_(
+            Customer.full_name.ilike(search_term),
+            Customer.username.ilike(search_term)
+        )
+        
+        # Combinar filtros (siempre busca en order_id Y nombres)
+        query = query.filter(or_(order_id_filter, name_filters))
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
@@ -323,25 +337,33 @@ def get_order_count_by_customer(db: Session, customer_id: int) -> int:
 
 def calculate_order_shipping_address(db: Session, order: Order) -> str:
     # Calcula la direccion de envio completa basada en el numero seleccionado
-    if order.shipping_address_number:
-        customer_info = db.query(CustomerInfo).filter(
-            CustomerInfo.customer_id == order.customer_id
-        ).first()
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == order.customer_id
+    ).first()
+    
+    if order.shipping_address_number and customer_info:
+        address_key = f"address_{order.shipping_address_number}"
+        shipping_address = getattr(customer_info, address_key, None)
         
-        if customer_info:
-            address_key = f"address_{order.shipping_address_number}"
-            shipping_address = getattr(customer_info, address_key, None)
-            
-            if not shipping_address:
-                # Fallback to address_1
-                shipping_address = customer_info.address_1 or customer_info.address_2 or customer_info.address_3
-            
-            # Add as attribute (won't be in DB, just for response)
-            order.shipping_address = shipping_address or "No especificada"
-        else:
-            order.shipping_address = "No especificada"
+        if not shipping_address:
+            # Fallback to address_1
+            shipping_address = customer_info.address_1 or customer_info.address_2 or customer_info.address_3
+        
+        order.shipping_address = shipping_address or "No especificada"
     else:
         order.shipping_address = "No especificada"
+    
+    # Agregar customerInfo completo al order
+    if customer_info:
+        order.customerInfo = {
+            "business_name": customer_info.business_name,
+            "rfc": customer_info.rfc,
+            "telefono_1": customer_info.telefono_1,
+            "telefono_2": customer_info.telefono_2,
+            "address_1": customer_info.address_1,
+            "address_2": customer_info.address_2,
+            "address_3": customer_info.address_3
+        }
     
     return order
 

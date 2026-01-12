@@ -39,13 +39,7 @@ router = APIRouter()
 
 
 class StockUpdate(BaseModel):
-    """
-    Schema para ajustar inventario
-    
-    quantity puede ser:
-    - Positivo: Agregar stock (recepcion)
-    - Negativo: Reducir stock (ajuste)
-    """
+    # Schema para ajustar inventario
     quantity: int
 
 
@@ -59,16 +53,10 @@ def read_products(
     stock_filter: Optional[str] = Query(None, description="Filtrar por stock: in_stock, out_of_stock, low_stock"),
     sort_by: Optional[str] = Query(None, description="Ordenar por: price, name"),
     sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
+    image: Optional[bool] = Query(None, description="Filtrar por imagen"),
     db: Session = Depends(get_db)
 ):
-    """
-    Lista de productos con filtros y ordenamiento
-    
-    Si search esta presente, ignora otros filtros.
-    
-    Returns:
-        Lista de productos con categorias precargadas
-    """
+    # Lista de productos con filtros y ordenamiento
     if search:
         products = search_products(db, search=search, skip=skip, limit=limit)
     else:
@@ -80,21 +68,15 @@ def read_products(
             is_active=is_active,
             stock_filter=stock_filter,
             sort_by=sort_by,
-            sort_order=sort_order
+            sort_order=sort_order,
+            image=image
         )
     return products
 
 
 @router.get("/{product_id}", response_model=Product)
 def read_product(product_id: str, db: Session = Depends(get_db)):
-    """
-    Detalle de un producto especifico
-    
-    Incluye categoria precargada.
-    
-    Raises:
-        404: Si el producto no existe
-    """
+    # Detalle de un producto especifico
     product = get_product(db, product_id=product_id)
     if not product:
         raise HTTPException(
@@ -106,14 +88,7 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
 
 @router.get("/codebar/{codebar}", response_model=Product)
 def read_product_by_codebar(codebar: str, db: Session = Depends(get_db)):
-    """
-    Buscar producto por codebar (codigo unico)
-    
-    util para validaciones y busquedas por codigo de barras.
-    
-    Raises:
-        404: Si el codebar no existe
-    """
+    # Buscar producto por codebar (codigo unico) 
     product = get_product_by_codebar(db, codebar=codebar)
     if not product:
         raise HTTPException(

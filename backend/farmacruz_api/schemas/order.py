@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from db.base import OrderStatus
 from .product import Product
@@ -67,7 +68,7 @@ class OrderItem(OrderItemBase):
     Los precios se "congelan" al momento de crear el pedido,
     manteniendo un historial preciso aunque los precios cambien despues.
     """
-    order_item_id: int  # ID unico del item
+    order_item_id: UUID  # ID unico del item
     # Precios congelados (snapshot al momento del pedido)
     base_price: Decimal  # Precio base del producto cuando se ordeno
     markup_percentage: Decimal  # % de markup cuando se ordeno
@@ -123,7 +124,7 @@ class Order(OrderBase):
     
     Incluye toda la informacion del pedido con relaciones.
     """
-    order_id: int  # ID unico del pedido
+    order_id: UUID  # ID unico del pedido
     customer_id: int  # ID del cliente que hizo el pedido (cambio de user_id)
     assigned_seller_id: Optional[int] = None  # ID del vendedor asignado (si hay)
     assigned_by_user_id: Optional[int] = None  # ID de quien hizo la asignacion (si hay)
@@ -155,3 +156,4 @@ class OrderWithAddress(Order):
     util para mostrar en detalles de pedido o para impresion.
     """
     shipping_address: Optional[str] = None  # Direccion completa basada en shipping_address_number
+    customerInfo: Optional[dict] = None  # Informacion completa del cliente (RFC, business_name, telefonos)

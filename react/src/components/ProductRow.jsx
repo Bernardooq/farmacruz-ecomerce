@@ -66,10 +66,11 @@ export default function ProductRow({
   // CALCULATIONS
   // ============================================
 
-  const stockClass = getStockClass(product.stock_count);
+  const stockCount = product.stock_count ?? 0;
+  const stockClass = getStockClass(stockCount);
   const stockLabel = stockClass === 'out' ? 'Agotado' :
-    stockClass === 'low' ? `Bajo (${product.stock_count})` :
-      product.stock_count;
+    stockClass === 'low' ? `Bajo (${stockCount})` :
+      stockCount;
 
   // Calcular IVA y precio final
   const basePrice = parseFloat(product.base_price) || 0;

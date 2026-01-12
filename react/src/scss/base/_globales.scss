@@ -117,13 +117,17 @@ body,
 // Header y Nav Styles
 .header {
   background: v.$negro;
-  padding: 1rem 0;
+  padding: 0.75rem 0;
   position: sticky;
   top: 0;
   z-index: 100;
   width: 100%;
   box-shadow: 0 2px 4px rgba(v.$negro, 0.1);
   border-bottom: 1px solid rgba(v.$primario, 0.2);
+
+  @include m.tablet {
+    padding: 1rem 0;
+  }
 }
 
 // Nav
@@ -131,19 +135,28 @@ body,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 90%;
+  width: 95%;
   max-width: 1200px;
   margin: 0 auto;
   flex-wrap: wrap;
-  gap: 2rem;
+  gap: 0.75rem;
+
+  @include m.tablet {
+    width: 90%;
+    gap: 2rem;
+  }
 
   &__logo {
     color: v.$blanco;
-    font-size: 1.75rem;
+    font-size: 1.35rem;
     font-weight: 800;
     text-decoration: none;
     letter-spacing: -0.5px;
     transition: all 0.2s ease;
+
+    @include m.tablet {
+      font-size: 1.75rem;
+    }
 
     &:hover {
       color: v.$primario;
@@ -153,9 +166,13 @@ body,
   &__menu {
     list-style: none;
     display: flex;
-    gap: 0.5rem;
+    gap: 0.25rem;
 
     @include m.telefono {
+      gap: 0.5rem;
+    }
+
+    @include m.tablet {
       gap: 1rem;
     }
   }
@@ -163,12 +180,17 @@ body,
   &__link {
     color: rgba(v.$blanco, 0.8);
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.6rem;
     border-radius: 6px;
     transition: all 0.2s ease;
     position: relative;
+
+    @include m.tablet {
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+    }
 
     &:hover {
       color: v.$primario;
@@ -179,12 +201,17 @@ body,
   &__login-link {
     background: v.$primario;
     color: v.$blanco;
-    padding: 0.65rem 1.5rem;
+    padding: 0.5rem 1rem;
     border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     transition: all 0.2s ease;
+
+    @include m.tablet {
+      padding: 0.65rem 1.5rem;
+      font-size: 0.95rem;
+    }
 
     &:hover {
       background: darken(v.$primario, 8%);
@@ -195,14 +222,28 @@ body,
   &__user-section {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 0.5rem;
+
+    @include m.tablet {
+      gap: 1.25rem;
+    }
   }
 
   &__user-name {
     color: rgba(v.$blanco, 0.7);
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     font-weight: 500;
     white-space: nowrap;
+    display: none;
+
+    @include m.telefono {
+      display: inline;
+      font-size: 0.85rem;
+    }
+
+    @include m.tablet {
+      font-size: 0.9rem;
+    }
   }
 
   &__cart-link {
@@ -211,10 +252,15 @@ body,
     align-items: center;
     justify-content: center;
     color: v.$blanco;
-    font-size: 1.4rem;
-    padding: 0.5rem;
+    font-size: 1.2rem;
+    padding: 0.4rem;
     border-radius: 8px;
     transition: all 0.2s ease;
+
+    @include m.tablet {
+      font-size: 1.4rem;
+      padding: 0.5rem;
+    }
 
     &:hover {
       color: v.$primario;
@@ -284,19 +330,56 @@ body,
   }
 }
 
+// BOTÓN DE CAMBIAR CONTRASEÑA EN NAV
+.nav__password-btn {
+  background-color: transparent;
+  color: rgba(v.$blanco, 0.8);
+  border: 1px solid rgba(v.$blanco, 0.25);
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  @include m.tablet {
+    padding: 0.6rem 0.9rem;
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background-color: rgba(v.$blanco, 0.1);
+    color: v.$primario;
+    border-color: rgba(v.$primario, 0.4);
+    transform: translateY(0);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
 // BOTÓN DE LOGOUT MEJORADO Y MINIMALISTA
 .nav__logout-link {
   background-color: transparent;
   color: rgba(v.$blanco, 0.8);
   border: 1px solid rgba(v.$blanco, 0.25);
-  padding: 0.6rem 1.15rem;
+  padding: 0.5rem 0.8rem;
   border-radius: 6px;
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   white-space: nowrap;
   transition: all 0.2s ease;
   cursor: pointer;
+
+  @include m.tablet {
+    padding: 0.6rem 1.15rem;
+    font-size: 0.9rem;
+  }
 
   &:hover {
     background-color: rgba(v.$blanco, 0.1);

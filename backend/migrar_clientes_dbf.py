@@ -97,21 +97,21 @@ def migrate():
         try:
             # Crear username unico y valido
             base_username = str(row.get('NOM_CTE', 'user')).strip()[:50]
-            username = base_username.replace(" ", "_").replace(".", "_").lower()
-            
+            username = f"{base_username.replace(" ", "_").replace(".", "_").lower()}_{row['CVE_CTE']}"
+            address_1 = f"{str(row.get('DIR_CTE', ''))} {str(row.get('COL_CTE', ''))} {str(row.get('CD_CTE', ''))} {str(row.get('MUN_CTE', ''))} {str(row.get('EDO_CTE', ''))} {str(row.get('CP_CTE', ''))}"
             # Construir objeto cliente
             cliente = {
                 "customer_id": int(row['CVE_CTE']),
-                "username": username or f"cliente_{row['CVE_CTE']}",
+                "username": username,
                 "email": f"cliente{row['CVE_CTE']}@farmacruz.com",
                 "full_name": str(row.get('NOM_CTE', 'N/A')).strip(),
-                "password": "FarmaCruz2024!",  # Contraseña temporal
+                "password": "farmacruz2026",  # Contrasenia temporal
                 "is_active": True,
                 "info": {
                     "business_name": str(row.get('NOM_FAC', row.get('NOM_CTE', ''))).strip(),
                     "rfc": str(row.get('RFC_CTE', ''))[:13] or None,
                     "price_list_id": int(float(row['LISTA_PREC'])) if row.get('LISTA_PREC') else None,
-                    "address_1": str(row.get('DIR_CTE', '')) or None,
+                    "address_1": address_1 or None,
                     "address_2": None,  # No disponible en DBF
                     "address_3": None,  # No disponible en DBF
                     "sales_group_id": None  # Se asigna manualmente despues

@@ -24,6 +24,8 @@ class CustomerInfoBase(BaseModel):
     address_1: Optional[str] = None  # Direccion principal
     address_2: Optional[str] = None  # Direccion secundaria (opcional)
     address_3: Optional[str] = None  # Direccion terciaria (opcional)
+    telefono_1: Optional[str] = Field(None, max_length=15)  # Telefono principal
+    telefono_2: Optional[str] = Field(None, max_length=15)  # Telefono secundario
 
 
 class CustomerInfoCreate(CustomerInfoBase):
@@ -49,6 +51,8 @@ class CustomerInfoUpdate(BaseModel):
     address_1: Optional[str] = None  # Actualizar direccion 1
     address_2: Optional[str] = None  # Actualizar direccion 2
     address_3: Optional[str] = None  # Actualizar direccion 3
+    telefono_1: Optional[str] = Field(None, max_length=15)  # Actualizar telefono 1
+    telefono_2: Optional[str] = Field(None, max_length=15)  # Actualizar telefono 2
 
 
 class CustomerInfo(CustomerInfoBase):

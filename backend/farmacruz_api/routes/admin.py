@@ -129,40 +129,6 @@ def delete_user_account(
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
-    # Elimina un usuario (hard delete)
-    from db.base import Order
-    
-    # No autoeliminacion
-    if user_id == current_user.user_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No puedes eliminar tu propia cuenta"
-        )
-    
-    # Contar pedidos donde el usuario es vendedor asignado
-    assigned_orders = db.query(Order).filter(
-        Order.assigned_seller_id == user_id
-    ).count()
-    
-    # Contar pedidos donde el usuario hizo la asignacion
-    assigned_by_orders = db.query(Order).filter(
-        Order.assigned_by_user_id == user_id
-    ).count()
-    
-    total_orders = assigned_orders + assigned_by_orders
-    
-    if total_orders > 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"No se puede eliminar el usuario porque tiene {total_orders} pedido(s) asociado(s) "
-                f"({assigned_orders} como vendedor asignado, {assigned_by_orders} como asignador). "
-                "Para mantener el historial de pedidos, desactiva el usuario en su lugar "
-                "(establecer is_active=False)."
-            )
-        )
-    
-    # Eliminar si no tiene pedidos
     user = delete_user(db, user_id=user_id)
     if not user:
         raise HTTPException(

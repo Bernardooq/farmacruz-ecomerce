@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSpinner, faSync } from '@fortawesome/free-solid-svg-icons';
 import orderService from '../services/orderService';
 import { userService } from '../services/userService';
 import LoadingSpinner from './LoadingSpinner';
@@ -132,18 +132,6 @@ export default function AllOrders() {
       setActionLoading(orderId);
       const orderDetails = await orderService.getOrderById(orderId);
 
-      // Cargar información adicional del cliente si existe
-      if (orderDetails.customer?.customer_id || orderDetails.customer?.user_id) {
-        try {
-          const { userService } = await import('../services/userService');
-          const customerId = orderDetails.customer.customer_id || orderDetails.customer.user_id;
-          const customerInfo = await userService.getUserCustomerInfo(customerId);
-          orderDetails.customerInfo = customerInfo;
-        } catch (err) {
-          console.log('No customer info available', err);
-        }
-      }
-
       // Use shipping_address from backend (already calculated)
       orderDetails.shippingAddress = orderDetails.shipping_address || 'No especificada';
 
@@ -220,6 +208,16 @@ export default function AllOrders() {
             <FontAwesomeIcon icon={faSearch} />
           </button>
         </form>
+
+        <button
+          className="btn-refresh"
+          onClick={loadOrders}
+          disabled={loading}
+          title="Recargar Pedidos"
+        >
+          <FontAwesomeIcon icon={faSync} spin={loading} />
+          {loading ? 'Cargando...' : 'Recargar'}
+        </button>
 
         <div className="filter-group">
           <label htmlFor="status-filter">Estado:</label>
@@ -422,7 +420,6 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
                 className="btn-action btn-action--assign"
                 onClick={() => onAssign(order)}
                 title="Asignar/Reasignar Vendedor"
-                style={{ backgroundColor: '#8e44ad', color: 'white' }}
               >
                 Asignar
               </button>

@@ -8,6 +8,7 @@ Define la estructura de datos para:
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from uuid import UUID
 
 
 class DashboardStats(BaseModel):
@@ -35,7 +36,7 @@ class SalesReportItem(BaseModel):
     
     Representa un pedido con informacion resumida del cliente.
     """
-    order_id: int  # ID del pedido
+    order_id: UUID  # ID del pedido
     customer_name: str  # Nombre completo del cliente
     customer_email: str  # Email del cliente
     order_date: str  # Fecha del pedido (formato: "YYYY-MM-DD HH:MM")

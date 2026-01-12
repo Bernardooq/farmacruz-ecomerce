@@ -146,18 +146,7 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[Use
 
 
 def get_users_by_role(db: Session, role: UserRole) -> List[User]:
-    """
-    Obtiene todos los usuarios de un rol especifico
-    
-    util para listar todos los sellers, marketing managers, etc.
-    
-    Args:
-        db: Sesion de base de datos
-        role: Rol a filtrar (admin, marketing, seller)
-        
-    Returns:
-        Lista de usuarios con ese rol
-    """
+    # Obtiene todos los usuarios de un rol especifico
     return db.query(User).filter(
         User.role == role,
         User.is_active == True

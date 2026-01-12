@@ -35,10 +35,10 @@ class ProductBase(BaseModel):
     description: Optional[str] = None  # Descripcion principal (del DBF)
     descripcion_2: Optional[str] = None  # Descripcion adicional (editada por admin, ej: receta)
     unidad_medida: Optional[str] = Field(None, max_length=50)  # "piezas", "cajas", "frascos"
-    base_price: Decimal = Field(..., ge=0)  # Precio base sin markup ni IVA
-    iva_percentage: Decimal = Field(0.00, ge=0, le=100)  # % de IVA (ej: 16.00)
+    base_price: Optional[Decimal] = Field(None, ge=0)  # Precio base sin markup ni IVA
+    iva_percentage: Optional[Decimal] = Field(None, ge=0, le=100)  # % de IVA (ej: 16.00)
     image_url: Optional[str] = Field(None, max_length=255)  # URL de la imagen (puede ser None)
-    stock_count: int = Field(0, ge=0)  # Cantidad en inventario
+    stock_count: Optional[int] = Field(None, ge=0)  # Cantidad en inventario
     is_active: bool = True  # Si el producto esta visible
     category_id: Optional[int] = None  # ID de la categoria (opcional)
 

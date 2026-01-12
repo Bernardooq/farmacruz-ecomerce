@@ -224,12 +224,31 @@ def get_products_in_price_list_with_details(db: Session, price_list_id: int, ski
     # Ejecutar query con paginacion
     results = query.offset(skip).limit(limit).all()
     
-    # Formatear resultados
-    return [
-        {
+    # Formatear resultados con cálculo de precios
+    formatted_results = []
+    for price_list_item, product in results:
+        base_price = float(product.base_price or 0)
+        iva_percentage = float(product.iva_percentage or 0)
+        markup_percentage = float(price_list_item.markup_percentage)
+        
+        # Calcular precio con markup
+        markup_amount = base_price * (markup_percentage / 100)
+        price_with_markup = base_price + markup_amount
+        
+        # Calcular IVA
+        iva_amount = price_with_markup * (iva_percentage / 100)
+        
+        # Precio final
+        final_price = price_with_markup + iva_amount
+        
+        formatted_results.append({
             "product": product,
-            "markup_percentage": float(price_list_item.markup_percentage),
+            "markup_percentage": markup_percentage,
+            "markup_amount": round(markup_amount, 2),
+            "iva_amount": round(iva_amount, 2),
+            "final_price": round(final_price, 2),
             "price_list_item_id": price_list_item.price_list_item_id
-        }
-        for price_list_item, product in results
-    ]
+        })
+    
+    return formatted_results
+

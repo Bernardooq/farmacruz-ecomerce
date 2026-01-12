@@ -213,11 +213,101 @@
 }
 
 .actions-cell {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  @include m.maxtablet {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
 }
+
+// Estilos mejorados para botones de acciones de pedidos
+.btn-action {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(v.$negro, 0.1);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(v.$negro, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &--approve {
+    background: linear-gradient(135deg, lighten(v.$terciario, 5%), v.$terciario);
+    color: v.$blanco;
+
+    &:hover {
+      background: linear-gradient(135deg, v.$terciario, darken(v.$terciario, 5%));
+    }
+  }
+
+  &--ship {
+    background: linear-gradient(135deg, lighten(v.$secundario, 5%), v.$secundario);
+    color: v.$blanco;
+
+    &:hover {
+      background: linear-gradient(135deg, v.$secundario, darken(v.$secundario, 5%));
+    }
+  }
+
+  &--deliver {
+    background: linear-gradient(135deg, lighten(v.$primario, 5%), v.$primario);
+    color: v.$blanco;
+
+    &:hover {
+      background: linear-gradient(135deg, v.$primario, darken(v.$primario, 5%));
+    }
+  }
+
+  &--cancel {
+    background: linear-gradient(135deg, lighten(v.$acento, 5%), v.$acento);
+    color: v.$blanco;
+
+    &:hover {
+      background: linear-gradient(135deg, v.$acento, darken(v.$acento, 5%));
+    }
+  }
+
+  &--assign {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: v.$blanco;
+
+    &:hover {
+      background: linear-gradient(135deg, #5a6268, #495057);
+    }
+  }
+
+  &--view {
+    background: v.$blanco;
+    color: v.$primario;
+    border: 1.5px solid v.$primario;
+    box-shadow: none;
+
+    &:hover {
+      background: v.$primario;
+      color: v.$blanco;
+    }
+  }
+}
+
 
 .btn-icon {
   background: lighten(v.$negro, 96%);

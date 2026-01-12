@@ -185,15 +185,6 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
     }
   };
 
-  const calculateFinalPrice = (basePrice, ivaPercentage, markup) => {
-    const base = parseFloat(basePrice) || 0;
-    const iva = parseFloat(ivaPercentage) || 0;
-    const markupPercent = parseFloat(markup) || 0;
-    const priceWithMarkup = base * (1 + markupPercent / 100);
-    const finalPrice = priceWithMarkup * (1 + iva / 100);
-    return finalPrice.toFixed(2);
-  };
-
   // Ya no filtramos localmente. Confiamos en que 'listItems' trae lo que buscó el backend.
 
   if (!isOpen || !priceList) return null;
@@ -319,12 +310,23 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                     {/* Renderizamos listItems directamente sin filtrar localmente */}
                     {listItems.map(item => {
                       const isEditing = editingItem === item.product?.product_id;
-                      const markup = isEditing ? editMarkup : item.markup_percentage;
-                      const finalPrice = calculateFinalPrice(
-                        item.product?.base_price,
-                        item.product?.iva_percentage,
-                        markup
-                      );
+                      const markup = isEditing ? parseFloat(editMarkup) : (item.markup_percentage || 0);
+
+                      // Si estamos editando, recalcular localmente para preview
+                      let finalPrice, ivaAmount, markupAmount;
+                      if (isEditing) {
+                        const basePrice = parseFloat(item.product?.base_price || 0);
+                        const ivaPercentage = parseFloat(item.product?.iva_percentage || 0);
+                        markupAmount = basePrice * (markup / 100);
+                        const priceWithMarkup = basePrice + markupAmount;
+                        ivaAmount = priceWithMarkup * (ivaPercentage / 100);
+                        finalPrice = priceWithMarkup + ivaAmount;
+                      } else {
+                        // Usar valores calculados por el backend (con fallbacks)
+                        finalPrice = item.final_price ?? 0;
+                        ivaAmount = item.iva_amount ?? 0;
+                        markupAmount = item.markup_amount ?? 0;
+                      }
 
                       return (
                         <div key={item.product?.product_id} className="product-card product-card--in-list">
@@ -344,12 +346,12 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                                   autoFocus
                                 />
                               ) : (
-                                <span>Markup: {markup}% (${(item.product?.base_price * (markup / 100)).toFixed(2)})</span>
+                                <span>Markup: {markup.toFixed(2)}% (${markupAmount.toFixed(2)})</span>
                               )}
                               <br />
-                              <span>IVA: {item.product?.iva_percentage}% (${(item.product?.base_price * (item.product?.iva_percentage / 100)).toFixed(2)})</span>
+                              <span>IVA: {(item.product?.iva_percentage || 0).toFixed(2)}% (${ivaAmount.toFixed(2)})</span>
                             </div>
-                            <div className="product-price">Final: ${finalPrice}</div>
+                            <div className="product-price">Final: ${finalPrice.toFixed(2)}</div>
                           </div>
                           <div className="product-actions">
                             {isEditing ? (

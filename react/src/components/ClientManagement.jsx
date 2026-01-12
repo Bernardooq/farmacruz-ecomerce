@@ -32,6 +32,8 @@ export default function ClientManagement() {
     address_1: '',
     address_2: '',
     address_3: '',
+    telefono_1: '',
+    telefono_2: '',
     rfc: '',
     sales_group_id: null,
     price_list_id: null
@@ -107,6 +109,8 @@ export default function ClientManagement() {
       address_1: '',
       address_2: '',
       address_3: '',
+      telefono_1: '',
+      telefono_2: '',
       rfc: '',
       sales_group_id: null,
       price_list_id: null
@@ -134,6 +138,8 @@ export default function ClientManagement() {
         address_1: customerInfo.address_1 || '',
         address_2: customerInfo.address_2 || '',
         address_3: customerInfo.address_3 || '',
+        telefono_1: customerInfo.telefono_1 || '',
+        telefono_2: customerInfo.telefono_2 || '',
         rfc: customerInfo.rfc || '',
         sales_group_id: customerInfo.sales_group_id || null,
         price_list_id: customerInfo.price_list_id || null
@@ -145,6 +151,8 @@ export default function ClientManagement() {
         address_1: '',
         address_2: '',
         address_3: '',
+        telefono_1: '',
+        telefono_2: '',
         rfc: '',
         sales_group_id: null,
         price_list_id: null
@@ -503,6 +511,34 @@ export default function ClientManagement() {
                     value={customerInfoData.rfc}
                     onChange={handleCustomerInfoChange}
                     disabled={formLoading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="telefono_1">Teléfono Principal</label>
+                  <input
+                    type="tel"
+                    id="telefono_1"
+                    name="telefono_1"
+                    value={customerInfoData.telefono_1}
+                    onChange={handleCustomerInfoChange}
+                    disabled={formLoading}
+                    maxLength="15"
+                    placeholder="10 dígitos"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="telefono_2">Teléfono Secundario</label>
+                  <input
+                    type="tel"
+                    id="telefono_2"
+                    name="telefono_2"
+                    value={customerInfoData.telefono_2}
+                    onChange={handleCustomerInfoChange}
+                    disabled={formLoading}
+                    maxLength="15"
+                    placeholder="Opcional"
                   />
                 </div>
 

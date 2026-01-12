@@ -14,6 +14,7 @@ from sqlalchemy import (
     Column, Integer, String, Boolean, Enum as SQLAlchemyEnum, 
     ForeignKey, Numeric, TIMESTAMP, func, Text, UniqueConstraint, CheckConstraint
 )
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship, declarative_base
 
 # Clase base de la que heredan todos los modelos
@@ -213,7 +214,7 @@ class Product(Base):
     unidad_medida = Column(String(10))  # Unidad: "piezas", "cajas", "frascos", etc.
     base_price = Column(Numeric(10, 2), nullable=False, default=0.00)  # Precio base sin markup ni IVA
     iva_percentage = Column(Numeric(5, 2), default=0.00)  # % de IVA (ej: 16.00)
-    image_url = Column(String(255))  # URL de la imagen del producto (puede ser None)
+    image_url = Column(String(255), default=None)  # URL de la imagen del producto (puede ser None)
     stock_count = Column(Integer, default=0)  # Cantidad en inventario
     is_active = Column(Boolean, default=True, index=True)  # Para ocultar productos sin eliminarlos
     category_id = Column(Integer, ForeignKey("categories.category_id"), index=True)
@@ -298,6 +299,8 @@ class CustomerInfo(Base):
     address_1 = Column(Text)  # Direccion principal
     address_2 = Column(Text)  # Direccion secundaria (opcional)
     address_3 = Column(Text)  # Direccion terciaria (opcional)
+    telefono_1 = Column(String(15))  # Telefono principal
+    telefono_2 = Column(String(15))  # Telefono secundario (opcional)
 
     # Relaciones
     customer = relationship("Customer", back_populates="customer_info")  # Usuario cliente
@@ -318,7 +321,7 @@ class Order(Base):
     """
     __tablename__ = "orders"
 
-    order_id = Column(Integer, primary_key=True)
+    order_id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())
     customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False, index=True)
     assigned_seller_id = Column(Integer, ForeignKey("users.user_id"), index=True)  # Vendedor asignado
     assigned_by_user_id = Column(Integer, ForeignKey("users.user_id"))  # Quien hizo la asignacion
@@ -352,8 +355,8 @@ class OrderItem(Base):
     """
     __tablename__ = "orderitems"
 
-    order_item_id = Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey("orders.order_id", ondelete="CASCADE"), nullable=False, index=True)
+    order_item_id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())
+    order_id = Column(PG_UUID(as_uuid=True), ForeignKey("orders.order_id", ondelete="CASCADE"), nullable=False, index=True)
     product_id = Column(String(50), ForeignKey("products.product_id"), nullable=False, index=True)
     quantity = Column(Integer, nullable=False)  # Cantidad del producto
     # Precios congelados al momento del pedido

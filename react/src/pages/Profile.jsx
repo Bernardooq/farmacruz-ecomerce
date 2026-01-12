@@ -140,6 +140,8 @@ export default function Profile() {
         address_1: customerData?.address_1 || '',
         address_2: customerData?.address_2 || '',
         address_3: customerData?.address_3 || '',
+        telefono_1: customerData?.telefono_1 || '',
+        telefono_2: customerData?.telefono_2 || '',
         rfc: customerData?.rfc || ''
       });
     } catch (err) {
@@ -233,12 +235,12 @@ export default function Profile() {
       setEditData({
         full_name: profile.full_name || '',
         email: profile.email || '',
-        password: '',
-        confirmPassword: '',
         business_name: customerInfo?.business_name || '',
         address_1: customerInfo?.address_1 || '',
         address_2: customerInfo?.address_2 || '',
         address_3: customerInfo?.address_3 || '',
+        telefono_1: customerInfo?.telefono_1 || '',
+        telefono_2: customerInfo?.telefono_2 || '',
         rfc: customerInfo?.rfc || ''
       });
     }
@@ -263,30 +265,11 @@ export default function Profile() {
     try {
       setLoading(true);
 
-      // Validar contraseñas si se proporcionaron
-      if (editData.password || editData.confirmPassword) {
-        if (editData.password !== editData.confirmPassword) {
-          alert('Las contraseñas no coinciden');
-          setLoading(false);
-          return;
-        }
-        if (editData.password.length < 8) {
-          alert('La contraseña debe tener al menos 8 caracteres');
-          setLoading(false);
-          return;
-        }
-      }
-
       // Preparar datos de usuario
       const userUpdateData = {
         full_name: editData.full_name,
         email: editData.email
       };
-
-      // Solo incluir password si se proporcionó
-      if (editData.password && editData.password.trim() !== '') {
-        userUpdateData.password = editData.password;
-      }
 
       // Preparar datos de customer info
       const customerInfoUpdateData = {
@@ -294,6 +277,8 @@ export default function Profile() {
         address_1: editData.address_1,
         address_2: editData.address_2,
         address_3: editData.address_3,
+        telefono_1: editData.telefono_1,
+        telefono_2: editData.telefono_2,
         rfc: editData.rfc
       };
 
@@ -447,37 +432,7 @@ export default function Profile() {
                 />
               </div>
 
-              {/* Contraseña (solo visible al editar) */}
-              {isEditing && (
-                <>
-                  <div className="form-group">
-                    <label>Nueva Contraseña (opcional):</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={editData.password}
-                      onChange={handleInputChange}
-                      placeholder="Dejar en blanco para mantener la actual"
-                      minLength="8"
-                    />
-                    <small style={{ color: '#666', fontSize: '0.85em' }}>
-                      Mínimo 8 caracteres
-                    </small>
-                  </div>
 
-                  <div className="form-group">
-                    <label>Confirmar Nueva Contraseña:</label>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={editData.confirmPassword}
-                      onChange={handleInputChange}
-                      placeholder="Confirmar contraseña"
-                      minLength="8"
-                    />
-                  </div>
-                </>
-              )}
 
               {/* Información de negocio (solo si tiene customerInfo) */}
               {customerInfo && (
@@ -538,6 +493,32 @@ export default function Profile() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       maxLength="13"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Teléfono Principal:</label>
+                    <input
+                      type="tel"
+                      name="telefono_1"
+                      value={editData.telefono_1}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      maxLength="15"
+                      placeholder="10 dígitos"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Teléfono Secundario:</label>
+                    <input
+                      type="tel"
+                      name="telefono_2"
+                      value={editData.telefono_2}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      maxLength="15"
+                      placeholder="Opcional"
                     />
                   </div>
                 </>

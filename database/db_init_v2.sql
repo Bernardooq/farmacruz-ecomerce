@@ -14,6 +14,9 @@
 -- - PriceListItems: Define markup específico por producto
 -- ============================================
 
+-- Habilitar extensión UUID
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 --- TIPOS ENUM ---
 
 -- Roles solo para usuarios internos (quitamos 'customer')
@@ -135,12 +138,14 @@ CREATE TABLE CustomerInfo (
     price_list_id INTEGER REFERENCES PriceLists (price_list_id),
     address_1 TEXT,
     address_2 TEXT,
-    address_3 TEXT
+    address_3 TEXT, 
+    telefono_1 VARCHAR(15),
+    telefono_2 VARCHAR(15)
 );
 
 -- Pedidos (AHORA REFERENCIA A CUSTOMERS)
 CREATE TABLE Orders (
-    order_id SERIAL PRIMARY KEY,
+    order_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     customer_id INTEGER NOT NULL REFERENCES Customers (customer_id),
     assigned_seller_id INTEGER REFERENCES Users (user_id),
     assigned_by_user_id INTEGER REFERENCES Users (user_id),
@@ -157,8 +162,8 @@ CREATE TABLE Orders (
 
 -- Items de pedidos
 CREATE TABLE OrderItems (
-    order_item_id SERIAL PRIMARY KEY,
-    order_id INTEGER NOT NULL REFERENCES Orders (order_id) ON DELETE CASCADE,
+    order_item_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID NOT NULL REFERENCES Orders (order_id) ON DELETE CASCADE,
     product_id VARCHAR(50) NOT NULL REFERENCES Products (product_id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     base_price NUMERIC(10, 2) NOT NULL,

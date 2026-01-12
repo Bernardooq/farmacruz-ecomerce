@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from uuid import UUID
 
 from dependencies import get_db, get_current_user, get_current_seller_user
 from crud.crud_customer import get_customer_info
@@ -159,9 +160,6 @@ def add_item_to_cart(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Agrega un producto al carrito
-    """
     from db.base import Customer
     
     # Get customer_id based on user type
@@ -215,8 +213,6 @@ def update_cart_item_quantity(
             detail="No se pudo identificar el cliente"
         )
     
-    # Note: update_cart_item doesn't validate customer_id, but that's ok
-    # since cart_id is unique and user can only access their own cart items
     cart_item = update_cart_item(
         db,
         cart_id=cart_id,
@@ -235,9 +231,7 @@ def delete_cart_item(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Elimina un item del carrito
-    """
+    # Elimina un item del carrito
     success = remove_from_cart(db, cart_id=cart_id)
     if not success:
         raise HTTPException(
@@ -251,9 +245,7 @@ def clear_user_cart(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Limpia el carrito del usuario
-    """
+    # Limpia el carrito del usuario
     from db.base import Customer
     
     # Get customer_id based on user type
@@ -370,39 +362,47 @@ def read_orders(
 def read_all_orders(
     skip: int = 0,
     limit: int = 100,
-    status: Optional[OrderStatus] = None,
+    status: Optional[str] = None,  # Changed to str to accept "assigned"
     search: Optional[str] = None,
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Obtiene pedidos segun permisos del usuario:
-    - Admin: todos los pedidos
-    - Marketing/Seller: solo pedidos de clientes en sus grupos
+    # Obtiene todos los pedidos filtrados segun los grupos del usuario
+    # Convertir status a OrderStatus si es válido, o None si es "assigned"
+    order_status = None
+    status_filter = None
     
-    Parametro search: busca por numero de pedido o nombre de cliente
-    """
+    if status:
+        if status == "assigned":
+            status_filter = "assigned"
+        else:
+            try:
+                order_status = OrderStatus(status)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Status inválido: {status}"
+                )
+    
     orders = get_orders_for_user_groups(
         db=db,
         user_id=current_user.user_id,
         user_role=current_user.role,
         skip=skip,
         limit=limit,
-        status=status,
+        status=order_status,
+        status_filter=status_filter,
         search=search
     )
     return orders
 
 @router.get("/{order_id}", response_model=OrderWithAddress)
 def read_order(
-    order_id: int,
+    order_id: UUID,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Obtiene un pedido especifico.
-    
-    from db.base import CustomerInfo
-    
+    # Obtiene un pedido especifico
     order = get_order(db, order_id=order_id)
     if not order:
         raise HTTPException(
@@ -442,7 +442,7 @@ def read_order(
 
 @router.put("/{order_id}/status", response_model=Order)
 def update_order_status_route(
-    order_id: int,
+    order_id: UUID,
     order_update: OrderUpdate,
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
@@ -562,7 +562,7 @@ def update_order_status_route(
 
 @router.post("/{order_id}/assign", response_model=Order)
 def assign_order_to_seller(
-    order_id: int,
+    order_id: UUID,
     assign_data: OrderAssign,
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
@@ -650,7 +650,7 @@ def assign_order_to_seller(
 
 @router.post("/{order_id}/cancel", response_model=Order)
 def cancel_order_route(
-    order_id: int,
+    order_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

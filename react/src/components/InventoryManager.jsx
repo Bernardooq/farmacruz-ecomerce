@@ -64,6 +64,7 @@ export default function InventoryManager() {
   const [searchcodebar, setSearchcodebar] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [stockFilter, setStockFilter] = useState('');
+  const [imageFilter, setImageFilter] = useState('');
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -92,7 +93,7 @@ export default function InventoryManager() {
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, selectedCategory, stockFilter, searchName]);
+  }, [page, selectedCategory, stockFilter, searchName, imageFilter]);
 
   // ============================================
   // DATA FETCHING
@@ -140,6 +141,11 @@ export default function InventoryManager() {
           'out': 'out_of_stock'
         };
         params.stock_filter = filterMap[stockFilter];
+      }
+
+      // Filtro por imagen
+      if (imageFilter !== '') {
+        params.image = imageFilter === 'true';
       }
 
       const data = await productService.getProducts(params);
@@ -308,7 +314,7 @@ export default function InventoryManager() {
 
       {/* Controles de búsqueda y filtros */}
       <div className="dashboard-controls">
-        {/* Búsqueda por nombre */}s
+        {/* Búsqueda por nombre */}
         <form className="search-bar" onSubmit={handleSearch}>
           <input
             type="search"
@@ -363,6 +369,20 @@ export default function InventoryManager() {
             <option value="ok">En Stock</option>
             <option value="low">Bajo Stock</option>
             <option value="out">Agotado</option>
+          </select>
+        </div>
+
+        {/* Filtro por imagen */}
+        <div className="filter-group">
+          <label htmlFor="filterImage">Imagen:</label>
+          <select
+            id="filterImage"
+            value={imageFilter}
+            onChange={(e) => setImageFilter(e.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="true">Con Imagen</option>
+            <option value="false">Sin Imagen</option>
           </select>
         </div>
       </div>

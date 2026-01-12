@@ -32,7 +32,7 @@ def get_product_by_codebar(db: Session, codebar: str) -> Optional[Product]:
 
 
 def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Optional[int] = None, is_active: Optional[bool] = None, stock_filter: Optional[str] = None,
-    sort_by: Optional[str] = None, sort_order: Optional[str] = "asc") -> List[Product]:
+    sort_by: Optional[str] = None, sort_order: Optional[str] = "asc", image: Optional[bool] = None  ) -> List[Product]:
     # Obtiene lista de productos con filtros y ordenamiento
     LOW_STOCK_THRESHOLD = 10  # Umbral para considerar bajo stock
     
@@ -44,6 +44,12 @@ def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Opti
     
     if is_active is not None:
         query = query.filter(Product.is_active == is_active)
+    
+    if image is not None:
+        if image:
+            query = query.filter(Product.image_url.isnot(None))
+        else:
+            query = query.filter(Product.image_url.is_(None))
     
     # Filtrar por nivel de stock
     if stock_filter:
