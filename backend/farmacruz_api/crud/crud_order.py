@@ -8,6 +8,8 @@ Funciones para manejar el ciclo completo de pedidos:
 - Asignar pedidos a vendedores
 - Cancelar pedidos con restauracion de stock
 - Filtrado por grupos de ventas (permisos)
+- Modificacion de direcciones de ordenes
+- Modificaciones de productos en ordenes
 
 Flujo tipico de un pedido:
 1. Cliente crea pedido desde carrito → pending_validation
@@ -377,6 +379,67 @@ def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, cur
     if assign_data.assignment_notes:
         order.assignment_notes = assign_data.assignment_notes
 
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+def modify_order_items(db: Session, order: Order, items_data: List[OrderItemCreate]) -> Order | None:
+    # Modifica los items de un pedido existente
+    # Primero eliminar items actuales
+    db.query(OrderItem).filter(OrderItem.order_id == order.order_id).delete()
+    
+    total = Decimal('0')
+    
+    for item_data in items_data:
+        product = db.query(Product).filter(
+            Product.product_id == item_data.product_id
+        ).first()
+        
+        if not product or not product.is_active:
+            continue
+        
+        # Obtener markup de la lista de precios del cliente
+        customer_info = db.query(CustomerInfo).filter(
+            CustomerInfo.customer_id == order.customer_id
+        ).first()
+        
+        if not customer_info or not customer_info.price_list_id:
+            raise ValueError("No tienes una lista de precios asignada. Contacta al administrador.")
+        
+        price_item = db.query(PriceListItem).filter(
+            PriceListItem.price_list_id == customer_info.price_list_id,
+            PriceListItem.product_id == item_data.product_id
+        ).first()
+        
+        if not price_item:
+            raise ValueError(f"El producto {product.name} no esta en tu lista de precios")
+        
+        # CALCULAR PRECIO FINAL
+        base_price = Decimal(str(product.base_price or 0))
+        markup = Decimal(str(price_item.markup_percentage or 0))
+        iva = Decimal(str(product.iva_percentage or 0))
+        
+        price_with_markup = base_price * (1 + markup / 100)
+        final_price = price_with_markup * (1 + iva / 100)
+        
+        # Crear nuevo item del pedido
+        order_item = OrderItem(
+            order_id=order.order_id,
+            product_id=item_data.product_id,
+            quantity=item_data.quantity,
+            base_price=float(base_price),
+            markup_percentage=float(markup),
+            iva_percentage=float(iva),
+            final_price=float(final_price)
+        )
+        db.add(order_item)
+        
+        total += final_price * item_data.quantity
+    
+    # Actualizar total del pedido
+    order.total_amount = float(total)
+    
     db.commit()
     db.refresh(order)
     return order

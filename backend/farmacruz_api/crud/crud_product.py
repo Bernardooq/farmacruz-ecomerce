@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session, joinedload
 
 from db.base import Product
 from schemas.product import ProductCreate, ProductUpdate
-from crud.price_calculator import calculate_product_price_for_customer
 
 
 
