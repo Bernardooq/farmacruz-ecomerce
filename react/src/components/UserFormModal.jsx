@@ -45,6 +45,7 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
   // STATE
   // ============================================
   const [formData, setFormData] = useState({
+    user_id: '',  // ID manual (opcional)
     username: '',
     email: '',
     password: '',
@@ -65,6 +66,7 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
   useEffect(() => {
     if (user) {
       setFormData({
+        user_id: user.user_id || '',
         username: user.username,
         email: user.email,
         password: '',
@@ -108,8 +110,17 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
         }
         await adminService.updateUser(user.user_id, updateData);
       } else {
-        // Modo crear: password es requerido
-        await adminService.createUser(formData);
+        // Modo crear: preparar datos
+        const createData = { ...formData };
+
+        // Solo enviar user_id si se proporcionó
+        if (!createData.user_id || createData.user_id === '') {
+          delete createData.user_id;
+        } else {
+          createData.user_id = parseInt(createData.user_id, 10);
+        }
+
+        await adminService.createUser(createData);
       }
 
       if (onSaved) onSaved();
@@ -153,6 +164,26 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
           <form onSubmit={handleSubmit}>
+            {/* ID Manual (solo al crear) */}
+            {!user && (
+              <div className="form-group">
+                <label htmlFor="user_id">ID (opcional)</label>
+                <input
+                  type="number"
+                  id="user_id"
+                  name="user_id"
+                  value={formData.user_id}
+                  onChange={handleChange}
+                  disabled={loading}
+                  placeholder="Auto-generado si se deja vacío"
+                  min="1"
+                />
+                <small style={{ fontSize: '0.85em', color: '#666' }}>
+                  {role === 'seller' ? 'Sellers: 1-9000' : 'Admin/Marketing: 9001+'}
+                </small>
+              </div>
+            )}
+
             {/* Nombre completo */}
             <div className="form-group">
               <label htmlFor="full_name">Nombre Completo *</label>

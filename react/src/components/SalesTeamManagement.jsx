@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUserTie, faUsers, faUsersGear, faSearch, faUserCircle, 
-  faPencilAlt, faTrashAlt, faPlus, faEye 
+import {
+  faUserTie, faUsers, faUsersGear, faSearch, faUserCircle,
+  faPencilAlt, faTrashAlt, faPlus, faEye
 } from '@fortawesome/free-solid-svg-icons';
 import adminService from '../services/adminService';
 import salesGroupService from '../services/salesGroupService';
@@ -57,13 +57,13 @@ export default function SalesTeamManagement() {
     try {
       setLoading(true);
       setError(null);
-      const users = await adminService.getUsers({ 
+      const users = await adminService.getUsers({
         role: 'seller',
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1,
         search: searchTerm || undefined
       });
-      
+
       const hasMorePages = users.length > itemsPerPage;
       setHasMore(hasMorePages);
       const pageUsers = hasMorePages ? users.slice(0, itemsPerPage) : users;
@@ -80,13 +80,13 @@ export default function SalesTeamManagement() {
     try {
       setLoading(true);
       setError(null);
-      const users = await adminService.getUsers({ 
+      const users = await adminService.getUsers({
         role: 'marketing',
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1,
         search: searchTerm || undefined
       });
-      
+
       const hasMorePages = users.length > itemsPerPage;
       setHasMore(hasMorePages);
       const pageUsers = hasMorePages ? users.slice(0, itemsPerPage) : users;
@@ -107,7 +107,7 @@ export default function SalesTeamManagement() {
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1
       });
-      
+
       const hasMorePages = groupsData.length > itemsPerPage;
       setHasMore(hasMorePages);
       const pageGroups = hasMorePages ? groupsData.slice(0, itemsPerPage) : groupsData;
@@ -204,9 +204,9 @@ export default function SalesTeamManagement() {
 
       <div className="dashboard-controls">
         <form className="search-bar" onSubmit={handleSearch}>
-          <input 
-            type="search" 
-            placeholder="Buscar vendedor..." 
+          <input
+            type="search"
+            placeholder="Buscar vendedor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -220,6 +220,7 @@ export default function SalesTeamManagement() {
         <table className="data-table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>Vendedor</th>
               <th>Usuario</th>
               <th>Estado</th>
@@ -236,7 +237,8 @@ export default function SalesTeamManagement() {
             ) : (
               sellers.map((seller) => (
                 <tr key={seller.user_id}>
-                  <td>
+                  <td data-label="ID">{seller.user_id}</td>
+                  <td data-label="Vendedor">
                     <div className="user-cell">
                       <FontAwesomeIcon icon={faUserCircle} className="user-cell__avatar" />
                       <div className="user-cell__info">
@@ -252,15 +254,15 @@ export default function SalesTeamManagement() {
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <button 
-                      className="btn-icon btn--edit" 
+                    <button
+                      className="btn-icon btn--edit"
                       onClick={() => openEditUserModal(seller, 'seller')}
                       aria-label="Editar vendedor"
                     >
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>
-                    <button 
-                      className="btn-icon btn--delete" 
+                    <button
+                      className="btn-icon btn--delete"
                       onClick={() => handleDeleteUser(seller)}
                       aria-label="Eliminar vendedor"
                     >
@@ -297,9 +299,9 @@ export default function SalesTeamManagement() {
 
       <div className="dashboard-controls">
         <form className="search-bar" onSubmit={handleSearch}>
-          <input 
-            type="search" 
-            placeholder="Buscar marketing..." 
+          <input
+            type="search"
+            placeholder="Buscar marketing..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -313,6 +315,7 @@ export default function SalesTeamManagement() {
         <table className="data-table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>Marketing Manager</th>
               <th>Usuario</th>
               <th>Estado</th>
@@ -329,7 +332,8 @@ export default function SalesTeamManagement() {
             ) : (
               marketingUsers.map((user) => (
                 <tr key={user.user_id}>
-                  <td>
+                  <td data-label="ID">{user.user_id}</td>
+                  <td data-label="Marketing Manager">
                     <div className="user-cell">
                       <FontAwesomeIcon icon={faUserCircle} className="user-cell__avatar" />
                       <div className="user-cell__info">
@@ -345,15 +349,15 @@ export default function SalesTeamManagement() {
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <button 
-                      className="btn-icon btn--edit" 
+                    <button
+                      className="btn-icon btn--edit"
                       onClick={() => openEditUserModal(user, 'marketing')}
                       aria-label="Editar marketing"
                     >
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>
-                    <button 
-                      className="btn-icon btn--delete" 
+                    <button
+                      className="btn-icon btn--delete"
                       onClick={() => handleDeleteUser(user)}
                       aria-label="Eliminar marketing"
                     >
@@ -433,23 +437,23 @@ export default function SalesTeamManagement() {
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <button 
-                      className="btn-icon btn--view" 
+                    <button
+                      className="btn-icon btn--view"
                       onClick={() => openGroupDetailsModal(group)}
                       aria-label="Ver detalles"
                       title="Ver miembros"
                     >
                       <FontAwesomeIcon icon={faEye} />
                     </button>
-                    <button 
-                      className="btn-icon btn--edit" 
+                    <button
+                      className="btn-icon btn--edit"
                       onClick={() => openEditGroupModal(group)}
                       aria-label="Editar grupo"
                     >
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>
-                    <button 
-                      className="btn-icon btn--delete" 
+                    <button
+                      className="btn-icon btn--delete"
                       onClick={() => handleDeleteGroup(group)}
                       aria-label="Eliminar grupo"
                     >
@@ -484,19 +488,19 @@ export default function SalesTeamManagement() {
         {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
         <div className="sales-team-tabs">
-          <button 
+          <button
             className={`sales-team-tab ${activeTab === 'sellers' ? 'sales-team-tab--active' : ''}`}
             onClick={() => { setActiveTab('sellers'); setPage(0); setSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUserTie} /> Vendedores
           </button>
-          <button 
+          <button
             className={`sales-team-tab ${activeTab === 'marketing' ? 'sales-team-tab--active' : ''}`}
             onClick={() => { setActiveTab('marketing'); setPage(0); setSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUsers} /> Marketing
           </button>
-          <button 
+          <button
             className={`sales-team-tab ${activeTab === 'groups' ? 'sales-team-tab--active' : ''}`}
             onClick={() => { setActiveTab('groups'); setPage(0); setSearchTerm(''); }}
           >
@@ -536,8 +540,8 @@ export default function SalesTeamManagement() {
             // Reload the specific group with updated counts
             try {
               const updatedGroup = await salesGroupService.getSalesGroup(selectedGroup.sales_group_id);
-              setGroups(prevGroups => 
-                prevGroups.map(g => 
+              setGroups(prevGroups =>
+                prevGroups.map(g =>
                   g.sales_group_id === updatedGroup.sales_group_id ? updatedGroup : g
                 )
               );

@@ -26,7 +26,9 @@ class UserCreate(UserBase):
     Schema para crear un nuevo usuario interno
     
     Requiere contraseña, rol y puede especificar si esta activo.
+    Admin puede opcionalmente asignar un ID manual.
     """
+    user_id: Optional[int] = Field(None, gt=0, description="ID manual (opcional, se auto-genera si no se proporciona)")
     password: str = Field(..., min_length=8)  # Contraseña (minimo 8 caracteres)
     role: UserRole  # Rol: admin, marketing o seller
     is_active: Optional[bool] = True  # Usuario activo por defecto

@@ -19,28 +19,22 @@ from core.security import get_password_hash, verify_password
 from db.base import Customer, CustomerInfo
 from schemas.customer import CustomerCreate, CustomerUpdate
 
-
+"""Obtiene un cliente por ID con su informacion comercial"""
 def get_customer(db: Session, customer_id: int) -> Optional[Customer]:
-    # Obtiene un cliente por ID con su informacion comercial
-
     return db.query(Customer).options(
         joinedload(Customer.customer_info)  # Pre-cargar info comercial
     ).filter(Customer.customer_id == customer_id).first()
 
-
+"""Obtiene un cliente por username"""
 def get_customer_by_username(db: Session, username: str) -> Optional[Customer]:
-    # Obtiene un cliente por username
     return db.query(Customer).filter(Customer.username == username).first()
 
-
+"""Obtiene un cliente por email"""
 def get_customer_by_email(db: Session, email: str) -> Optional[Customer]:
-    # Obtiene un cliente por email
     return db.query(Customer).filter(Customer.email == email).first()
 
-
-def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> List[Customer]:
-    # Obtiene lista de clientes con busqueda opcional
-    
+"""Obtiene lista de clientes con busqueda opcional"""
+def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> List[Customer]:    
     query = db.query(Customer).options(
         joinedload(Customer.customer_info)
     )
@@ -58,7 +52,7 @@ def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional
     
     return query.offset(skip).limit(limit).all()
 
-
+"""Crea un nuevo cliente"""
 def create_customer(db: Session, customer: CustomerCreate) -> Customer:
     # Crea un nuevo cliente
     # Hashear contrasenia
@@ -77,7 +71,7 @@ def create_customer(db: Session, customer: CustomerCreate) -> Customer:
     db.refresh(db_customer)
     return db_customer
 
-
+"""Actualiza un cliente existente"""
 def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> Optional[Customer]:
     db_customer = get_customer(db, customer_id)
     if not db_customer:
@@ -125,12 +119,8 @@ def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> 
     return db_customer
 
 
-
-def delete_customer(db: Session, customer_id: int) -> Optional[Customer]:
-    # Elimina un cliente y su informacion
-
-    from db.base import CustomerInfo
-    
+"""Elimina un cliente y su informacion"""
+def delete_customer(db: Session, customer_id: int) -> Optional[Customer]:    
     db_customer = get_customer(db, customer_id)
     if db_customer:
         # Primero eliminar CustomerInfo para evitar errores de FK
@@ -144,38 +134,26 @@ def delete_customer(db: Session, customer_id: int) -> Optional[Customer]:
     
     return db_customer
 
-
+"""Autentica un cliente del e-commerce"""
 def authenticate_customer(db: Session, username: str,password: str) -> Optional[Customer]:
-    # Autentica un cliente del e-commerce
-
     customer = get_customer_by_username(db, username)
     if not customer:
         return None
-    
     # Verificar contrasenia
     if not verify_password(password, customer.password_hash):
         return None
     
     return customer
 
-
+"""Obtiene la informacion comercial de un cliente"""
 def get_customer_info(db: Session, customer_id: int) -> Optional[CustomerInfo]:
-    # Obtiene la informacion comercial de un cliente    
     return db.query(CustomerInfo).filter(
         CustomerInfo.customer_id == customer_id
     ).first()
 
-
-def buscar_customer_info(db: Session, customer_id: int) -> Optional[CustomerInfo]:
-    # Busca la informacion comercial de un cliente
-    return db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == customer_id
-    ).first()
-
-
+"""Busca la informacion comercial de un cliente"""
 def create_or_update_customer_info(db: Session, customer_info: CustomerInfo, customer_id: int) -> CustomerInfo:
-    # Crea o actualiza la informacion comercial de un cliente
-    existing_info = buscar_customer_info(db, customer_id)
+    existing_info = get_customer_info(db, customer_id)
     
     if existing_info:
         # Actualizar existente y agregar como campo el id

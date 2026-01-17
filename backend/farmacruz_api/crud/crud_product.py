@@ -15,28 +15,23 @@ from db.base import Product
 from schemas.product import ProductCreate, ProductUpdate
 
 
-
+""" Obtiene un producto por ID con su categoria """
 def get_product(db: Session, product_id: str) -> Optional[Product]:
-    # Obtiene un producto por ID con su categoria
     return db.query(Product).options(
-        joinedload(Product.category)  # Eager load para evitar N+1 queries
+        joinedload(Product.category)  
     ).filter(Product.product_id == product_id).first()
 
-
+""" Obtiene un producto por codigo de barras con su categoria """
 def get_product_by_codebar(db: Session, codebar: str) -> Optional[Product]:
-    # Obtiene un producto por su codebar (codigo unico)
     return db.query(Product).options(
         joinedload(Product.category)
     ).filter(Product.codebar == codebar).first()
 
-
+""" Obtiene lista de productos con filtros y ordenamiento """
 def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Optional[int] = None, is_active: Optional[bool] = None, stock_filter: Optional[str] = None,
     sort_by: Optional[str] = None, sort_order: Optional[str] = "asc", image: Optional[bool] = None  ) -> List[Product]:
-    # Obtiene lista de productos con filtros y ordenamiento
     LOW_STOCK_THRESHOLD = 10  # Umbral para considerar bajo stock
-    
     query = db.query(Product).options(joinedload(Product.category))
-    
     # Filtros
     if category_id is not None:
         query = query.filter(Product.category_id == category_id)
@@ -81,9 +76,8 @@ def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Opti
     
     return query.offset(skip).limit(limit).all()
 
-
+""" Busca productos por ID, nombre o descripcion """
 def search_products(db: Session, search: str, skip: int = 0, limit: int = 100) -> List[Product]:
-    # Busca productos por ID, nombre o descripcion
     return db.query(Product).options(
         joinedload(Product.category)
     ).filter(
@@ -92,18 +86,16 @@ def search_products(db: Session, search: str, skip: int = 0, limit: int = 100) -
         (Product.description.ilike(f"%{search}%"))
     ).offset(skip).limit(limit).all()
 
-
+""" Crea un nuevo producto en el catalogo """
 def create_product(db: Session, product: ProductCreate) -> Product:
-    # Crea un nuevo producto en el catalogo
     db_product = Product(**product.model_dump())
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
     return db_product
 
-
+""" Actualiza un producto existente """
 def update_product(db: Session, product_id: str,product: ProductUpdate) -> Optional[Product]:
-    # Actualiza un producto existente
     db_product = get_product(db, product_id)
     if not db_product:
         return None
@@ -117,7 +109,7 @@ def update_product(db: Session, product_id: str,product: ProductUpdate) -> Optio
     db.refresh(db_product)
     return db_product
 
-
+""" Elimina (soft delete) un producto """
 def delete_product(db: Session, product_id: str) -> Optional[Product]:
     # Elimina un producto (soft delete)
     db_product = get_product(db, product_id)
@@ -127,11 +119,12 @@ def delete_product(db: Session, product_id: str) -> Optional[Product]:
         db.refresh(db_product)
     return db_product
 
-
+""" Actualiza el stock de un producto """
 def update_stock(db: Session, product_id: str, quantity: int) -> Optional[Product]:
-    # Actualiza el stock de un producto
     db_product = get_product(db, product_id)
     if db_product:
+        if db_product.stock_count + quantity < 0:
+            raise ValueError("Stock no puede ser negativo")
         db_product.stock_count += quantity
         db.commit()
         db.refresh(db_product)

@@ -45,8 +45,7 @@ from schemas.product import Product as ProductSchema
 from crud import crud_price_list
 router = APIRouter()
 
-# PriceList Endpoints
-
+""" GET / - Listar todas las listas de precios """
 @router.get("", response_model=List[PriceList])
 def get_price_lists(
     skip: int = 0,
@@ -58,7 +57,7 @@ def get_price_lists(
     # Obtener todas las listas de precios (solo admin)
     return crud_price_list.get_price_lists(db, skip=skip, limit=limit, is_active=is_active)
 
-
+""" GET /{id} - Ver detalle de una lista de precios con sus items """
 @router.get("/{price_list_id}", response_model=PriceListWithItems)
 def get_price_list(
     price_list_id: int,
@@ -83,7 +82,7 @@ def get_price_list(
         items=items
     )
 
-
+""" POST / - Crear una nueva lista de precios """
 @router.post("", response_model=PriceList, status_code=status.HTTP_201_CREATED)
 def create_price_list(
     price_list: PriceListCreate,
@@ -93,7 +92,7 @@ def create_price_list(
     # Crear una nueva lista de precios (solo admin)
     return crud_price_list.create_price_list(db, price_list)
 
-
+""" PUT /{id} - Actualizar una lista de precios """
 @router.put("/{price_list_id}", response_model=PriceList)
 def update_price_list(
     price_list_id: int,
@@ -113,7 +112,7 @@ def update_price_list(
     
     return updated_list
 
-
+""" DELETE /{id} - Eliminar una lista de precios """
 @router.delete("/{price_list_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_price_list(
     price_list_id: int,
@@ -134,7 +133,7 @@ def delete_price_list(
 
 
 # PriceListItem Endpoints
-
+""" GET /{id}/items - Ver todos los items de una lista de precios """
 @router.get("/{price_list_id}/items", response_model=List[PriceListItem])
 def get_price_list_items(
     price_list_id: int,
@@ -153,7 +152,7 @@ def get_price_list_items(
     
     return crud_price_list.get_price_list_items(db, price_list_id)
 
-
+""" POST /{id}/items - Crear o actualizar un item en la lista de precios """
 @router.post("/{price_list_id}/items", response_model=PriceListItem, status_code=status.HTTP_201_CREATED)
 def create_price_list_item(
     price_list_id: int,
@@ -173,7 +172,7 @@ def create_price_list_item(
     
     return crud_price_list.create_price_list_item(db, price_list_id, item)
 
-
+""" POST /{id}/items/bulk - Crear o actualizar multiples items en la lista de precios """
 @router.post("/{price_list_id}/items/bulk", response_model=List[PriceListItem])
 def bulk_update_price_list_items(
     price_list_id: int,
@@ -193,7 +192,7 @@ def bulk_update_price_list_items(
     
     return crud_price_list.bulk_update_price_list_items(db, price_list_id, bulk_update.items)
 
-
+""" PUT /{id}/items/{product_id} - Actualizar un item especifico en la lista de precios """
 @router.put("/{price_list_id}/items/{product_id}", response_model=PriceListItem)
 def update_price_list_item(
     price_list_id: int,
@@ -214,7 +213,7 @@ def update_price_list_item(
     
     return updated_item
 
-
+""" DELETE /{id}/items/{product_id} - Eliminar un item de la lista de precios """
 @router.delete("/{price_list_id}/items/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_price_list_item(
     price_list_id: int,
@@ -235,8 +234,8 @@ def delete_price_list_item(
     return None
 
 
-# NEW ENDPOINTS FOR MODAL
-
+# Modal Helpers
+""" GET /{id}/available-products - Obtener productos no en la lista de precios """
 @router.get("/{price_list_id}/available-products", response_model=List[ProductSchema])
 def get_available_products(
     price_list_id: int,
@@ -263,7 +262,7 @@ def get_available_products(
         search=search
     )
 
-
+""" GET /{id}/items-with-details - Obtener items con info completa del producto """
 @router.get("/{price_list_id}/items-with-details")
 def get_items_with_details(
     price_list_id: int,

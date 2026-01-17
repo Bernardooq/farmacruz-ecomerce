@@ -26,17 +26,15 @@ from schemas.price_list import (
     PriceListItemCreate, PriceListItemUpdate
 )
 
-
+""" Obtiene una lista de precios por ID """
 def get_price_list(db: Session, price_list_id: int) -> Optional[PriceList]:
     # Obtiene una lista de precios por ID
     return db.query(PriceList).filter(
         PriceList.price_list_id == price_list_id
     ).first()
 
-
+""" Obtiene todas las listas de precios con filtrado opcional """
 def get_price_lists(db: Session, skip: int = 0, limit: int = 100, is_active: Optional[bool] = None) -> List[PriceList]:
-    # Obtiene todas las listas de precios con filtrado opcional
-    
     query = db.query(PriceList)
     
     if is_active is not None:
@@ -44,10 +42,9 @@ def get_price_lists(db: Session, skip: int = 0, limit: int = 100, is_active: Opt
     
     return query.offset(skip).limit(limit).all()
 
-
+""" Crea una nueva lista de precios """
 def create_price_list(db: Session, price_list: PriceListCreate) -> PriceList:
     # Crea una nueva lista de precios
-    
     db_price_list = PriceList(
         list_name=price_list.list_name,
         description=price_list.description,
@@ -63,10 +60,8 @@ def create_price_list(db: Session, price_list: PriceListCreate) -> PriceList:
     db.refresh(db_price_list)
     return db_price_list
 
-
-def update_price_list(db: Session, price_list_id: int, price_list_update: PriceListUpdate) -> Optional[PriceList]:
-    # Actualiza una lista de precios existente
-    
+""" Actualiza una lista de precios existente """
+def update_price_list(db: Session, price_list_id: int, price_list_update: PriceListUpdate) -> Optional[PriceList]:    
     db_price_list = get_price_list(db, price_list_id)
     if not db_price_list:
         return None
@@ -79,27 +74,22 @@ def update_price_list(db: Session, price_list_id: int, price_list_update: PriceL
     db.refresh(db_price_list)
     return db_price_list
 
-
+""" Elimina una lista de precios (hard delete) """
 def delete_price_list(db: Session, price_list_id: int) -> Optional[PriceList]:
-    # Elimina una lista de precios (hard delete)
     db_price_list = get_price_list(db, price_list_id)
     if db_price_list:
         db.delete(db_price_list)
         db.commit()
     return db_price_list
 
-
-def get_price_list_items(db: Session, price_list_id: int) -> List[PriceListItem]:
-    # Obtiene todos los items de una lista de precios
-    
+""" Obtiene todos los items de una lista de precios """
+def get_price_list_items(db: Session, price_list_id: int) -> List[PriceListItem]:    
     return db.query(PriceListItem).options(
         joinedload(PriceListItem.product)
     ).filter(PriceListItem.price_list_id == price_list_id).all()
 
-
+""" Obtiene un item especifico de una lista de precios """
 def get_price_list_item(db: Session, price_list_id: int, product_id: str) -> Optional[PriceListItem]:
-    # Obtiene un item especifico de una lista de precios
-
     return db.query(PriceListItem).filter(
         and_(
             PriceListItem.price_list_id == price_list_id,
@@ -107,10 +97,8 @@ def get_price_list_item(db: Session, price_list_id: int, product_id: str) -> Opt
         )
     ).first()
 
-
+""" Crea o actualiza un item en la lista de precios """
 def create_price_list_item(db: Session, price_list_id: int, item: PriceListItemCreate) -> PriceListItem:
-    # Crea o actualiza un item en la lista de precios
-    # Verificar si ya existe
     existing = get_price_list_item(db, price_list_id, item.product_id)
     
     if existing:
@@ -131,10 +119,8 @@ def create_price_list_item(db: Session, price_list_id: int, item: PriceListItemC
         db.refresh(db_item)
         return db_item
 
-
-def update_price_list_item(db: Session, price_list_id: int, product_id: str, item_update: PriceListItemUpdate) -> Optional[PriceListItem]:
-    # Actualiza el markup de un producto en la lista
-    
+""" Actualiza un item en la lista de precios """
+def update_price_list_item(db: Session, price_list_id: int, product_id: str, item_update: PriceListItemUpdate) -> Optional[PriceListItem]:    
     db_item = get_price_list_item(db, price_list_id, product_id)
     if not db_item:
         return None
@@ -144,10 +130,8 @@ def update_price_list_item(db: Session, price_list_id: int, product_id: str, ite
     db.refresh(db_item)
     return db_item
 
-
-def delete_price_list_item(db: Session, price_list_id: int, product_id: str) -> bool:
-    # Elimina un producto de la lista de precios
-    
+""" Elimina un item de la lista de precios """
+def delete_price_list_item(db: Session, price_list_id: int, product_id: str) -> bool:    
     db_item = get_price_list_item(db, price_list_id, product_id)
     if db_item:
         db.delete(db_item)
@@ -155,28 +139,23 @@ def delete_price_list_item(db: Session, price_list_id: int, product_id: str) -> 
         return True
     return False
 
-
+""" Actualizacion masiva de items en la lista de precios """
 def bulk_update_price_list_items(db: Session, price_list_id: int, items: List[PriceListItemCreate]) -> List[PriceListItem]:
-    # Actualizacion masiva de items de la lista
-
     result = []
     for item in items:
         db_item = create_price_list_item(db, price_list_id, item)
         result.append(db_item)
     return result
 
-
+""" Obtiene el markup de un producto en una lista de precios """
 def get_product_markup(db: Session, price_list_id: int, product_id: str) -> Optional[Decimal]:
-    # Obtiene SOLO el markup de un producto en una lista
     item = get_price_list_item(db, price_list_id, product_id)
     if item:
         return Decimal(str(item.markup_percentage))
     return None
 
-
+""" Obtiene productos que NO estan en una lista de precios """
 def get_products_not_in_price_list(db: Session, price_list_id: int, skip: int = 0, limit: int = 10, search: Optional[str] = None) -> List[Product]:
-    # Obtiene productos que NO estan en una lista de precios
-    # Subquery: IDs de productos YA en la lista
     product_ids_in_list = db.query(PriceListItem.product_id).filter(
         PriceListItem.price_list_id == price_list_id
     ).subquery()
@@ -186,7 +165,6 @@ def get_products_not_in_price_list(db: Session, price_list_id: int, skip: int = 
         ~Product.product_id.in_(product_ids_in_list),
         Product.is_active == True  # Solo productos activos
     )
-    
     # Busqueda opcional
     if search:
         search_term = f"%{search}%"
@@ -196,13 +174,10 @@ def get_products_not_in_price_list(db: Session, price_list_id: int, skip: int = 
                 Product.codebar.ilike(search_term)
             )
         )
-    
     return query.offset(skip).limit(limit).all()
 
-
+""" Obtiene productos que SI estan en una lista de precios con detalles calculados """
 def get_products_in_price_list_with_details(db: Session, price_list_id: int, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> List[dict]:
-    # Obtiene productos que Si estan en una lista con sus detalles
-    # Join entre PriceListItem y Product
     query = db.query(PriceListItem, Product).join(
         Product,
         PriceListItem.product_id == Product.product_id

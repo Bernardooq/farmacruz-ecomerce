@@ -21,7 +21,7 @@ from db.base import Product, CustomerInfo, PriceList, PriceListItem
 from schemas.price_list import PriceCalculation
 from schemas.product import ProductWithPrice
 
-
+""" Calcular el precio final de un producto con desglose completo """
 def calculate_final_price(base_price: Decimal, markup_percentage: Decimal, iva_percentage: Decimal) -> PriceCalculation:
     # Calcula el precio final con desglose completo de markup e IVA
     # Validaciones
@@ -61,7 +61,7 @@ def calculate_final_price(base_price: Decimal, markup_percentage: Decimal, iva_p
         final_price=final_price
     )
 
-
+""" Obtener el porcentaje de markup para un cliente y producto especifico """
 def get_customer_markup(db: Session, customer_id: int, product_id: Optional[int] = None) -> Decimal:
     # Obtiene el porcentaje de markup para un cliente
     
@@ -87,7 +87,7 @@ def get_customer_markup(db: Session, customer_id: int, product_id: Optional[int]
     
     return Decimal('0')
 
-
+""" Calcular el precio completo de un producto para un cliente especifico """
 def calculate_product_price_for_customer(db: Session, product_id: str, customer_id: int ) -> Optional[ProductWithPrice]:
     # Calcula el precio completo de un producto para un cliente especifico
     # Obtener prod

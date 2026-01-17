@@ -42,7 +42,7 @@ class StockUpdate(BaseModel):
     # Schema para ajustar inventario
     quantity: int
 
-
+""" GET / - Lista de productos con filtros """
 @router.get("/", response_model=List[Product])
 def read_products(
     skip: int = Query(0, ge=0, description="Registros a saltar"),
@@ -60,20 +60,11 @@ def read_products(
     if search:
         products = search_products(db, search=search, skip=skip, limit=limit)
     else:
-        products = get_products(
-            db, 
-            skip=skip, 
-            limit=limit, 
-            category_id=category_id,
-            is_active=is_active,
-            stock_filter=stock_filter,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            image=image
-        )
+        products = get_products(db, skip=skip, limit=limit, category_id=category_id, is_active=is_active, stock_filter=stock_filter,
+            sort_by=sort_by, sort_order=sort_order, image=image)
     return products
 
-
+""" GET /{id} - Detalle de producto especifico """
 @router.get("/{product_id}", response_model=Product)
 def read_product(product_id: str, db: Session = Depends(get_db)):
     # Detalle de un producto especifico
@@ -85,7 +76,7 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
         )
     return product
 
-
+""" GET /codebar/{codebar} - Buscar producto por codebar (codigo unico) """
 @router.get("/codebar/{codebar}", response_model=Product)
 def read_product_by_codebar(codebar: str, db: Session = Depends(get_db)):
     # Buscar producto por codebar (codigo unico) 
@@ -97,13 +88,9 @@ def read_product_by_codebar(codebar: str, db: Session = Depends(get_db)):
         )
     return product
 
-
+""" POST / - Crear un nuevo producto """
 @router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
-def create_new_product(
-    product: ProductCreate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def create_new_product(product: ProductCreate, db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Crea un nuevo producto
     if product.base_price < 0:
         raise HTTPException(
@@ -141,14 +128,10 @@ def create_new_product(
     
     return create_product(db=db, product=product)
 
-
+""" PUT /{product_id} - Actualizar un producto existente """
 @router.put("/{product_id}", response_model=Product)
-def update_existing_product(
-    product_id: str,
-    product: ProductUpdate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def update_existing_product(product_id: str, product: ProductUpdate,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Actualiza un producto existente
     if product.base_price is not None:
         if product.base_price < 0:
@@ -178,7 +161,7 @@ def update_existing_product(
         )
     return db_product
 
-
+""" DELETE /{product_id} - Eliminar un producto (soft delete) """
 @router.delete("/{product_id}", response_model=Product)
 def delete_existing_product(
     product_id: str,
@@ -194,7 +177,7 @@ def delete_existing_product(
         )
     return db_product
 
-
+""" PATCH /{product_id}/stock - Ajustar inventario de un producto """
 @router.patch("/{product_id}/stock", response_model=Product)
 def adjust_product_stock(
     product_id: str,

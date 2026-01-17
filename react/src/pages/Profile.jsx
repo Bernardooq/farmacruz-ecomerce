@@ -68,7 +68,6 @@ export default function Profile() {
   // Estado de UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
 
   // Estado de edición
   const [editData, setEditData] = useState({});
@@ -222,31 +221,6 @@ export default function Profile() {
     return STATUS_CLASSES[status] || 'pending';
   };
 
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
-
-  /**
-   * Alterna entre modo edición y modo vista
-   */
-  const handleEditToggle = () => {
-    if (isEditing) {
-      // Cancelar edición, restaurar datos originales
-      setEditData({
-        full_name: profile.full_name || '',
-        email: profile.email || '',
-        business_name: customerInfo?.business_name || '',
-        address_1: customerInfo?.address_1 || '',
-        address_2: customerInfo?.address_2 || '',
-        address_3: customerInfo?.address_3 || '',
-        telefono_1: customerInfo?.telefono_1 || '',
-        telefono_2: customerInfo?.telefono_2 || '',
-        rfc: customerInfo?.rfc || ''
-      });
-    }
-    setIsEditing(!isEditing);
-  };
-
   /**
    * Maneja los cambios en los campos del formulario
    */
@@ -256,50 +230,6 @@ export default function Profile() {
       ...prev,
       [name]: value
     }));
-  };
-
-  /**
-   * Guarda los cambios del perfil
-   */
-  const handleSaveProfile = async () => {
-    try {
-      setLoading(true);
-
-      // Preparar datos de usuario
-      const userUpdateData = {
-        full_name: editData.full_name,
-        email: editData.email
-      };
-
-      // Preparar datos de customer info
-      const customerInfoUpdateData = {
-        business_name: editData.business_name,
-        address_1: editData.address_1,
-        address_2: editData.address_2,
-        address_3: editData.address_3,
-        telefono_1: editData.telefono_1,
-        telefono_2: editData.telefono_2,
-        rfc: editData.rfc
-      };
-
-      // Actualizar ambos en paralelo
-      await Promise.all([
-        userService.updateCurrentUser(userUpdateData),
-        customerInfo
-          ? userService.updateCurrentUserCustomerInfo(customerInfoUpdateData)
-          : Promise.resolve()
-      ]);
-
-      // Recargar datos actualizados
-      await loadProfileData();
-      setIsEditing(false);
-      alert('Perfil actualizado exitosamente');
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      alert('Error al actualizar el perfil');
-    } finally {
-      setLoading(false);
-    }
   };
 
   /**
@@ -375,24 +305,6 @@ export default function Profile() {
             {/* Header con botones de acción */}
             <div className="profile-header">
               <h2>Información del Perfil</h2>
-
-              <button
-                className="btn-edit"
-                onClick={isEditing ? handleSaveProfile : handleEditToggle}
-                disabled={loading}
-              >
-                {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
-              </button>
-
-              {isEditing && (
-                <button
-                  className="btn-cancel"
-                  onClick={handleEditToggle}
-                  disabled={loading}
-                >
-                  Cancelar
-                </button>
-              )}
             </div>
 
             {/* Formulario de perfil */}
@@ -416,7 +328,7 @@ export default function Profile() {
                   name="full_name"
                   value={editData.full_name}
                   onChange={handleInputChange}
-                  disabled={!isEditing}
+                  disabled={true}
                 />
               </div>
 
@@ -428,7 +340,7 @@ export default function Profile() {
                   name="email"
                   value={editData.email}
                   onChange={handleInputChange}
-                  disabled={!isEditing}
+                  disabled={true}
                 />
               </div>
 
@@ -444,7 +356,7 @@ export default function Profile() {
                       name="business_name"
                       value={editData.business_name}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={true}
                     />
                   </div>
 
@@ -455,7 +367,7 @@ export default function Profile() {
                       name="address_1"
                       value={editData.address_1}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={true}
                       placeholder="Calle, número, colonia"
                     />
                   </div>
@@ -467,7 +379,7 @@ export default function Profile() {
                       name="address_2"
                       value={editData.address_2}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={true}
                       placeholder="Dirección alternativa"
                     />
                   </div>
@@ -479,7 +391,7 @@ export default function Profile() {
                       name="address_3"
                       value={editData.address_3}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={true}
                       placeholder="Dirección alternativa"
                     />
                   </div>
@@ -491,7 +403,7 @@ export default function Profile() {
                       name="rfc"
                       value={editData.rfc}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={true}
                       maxLength="13"
                     />
                   </div>
@@ -503,7 +415,7 @@ export default function Profile() {
                       name="telefono_1"
                       value={editData.telefono_1}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={true}
                       maxLength="15"
                       placeholder="10 dígitos"
                     />
@@ -516,7 +428,7 @@ export default function Profile() {
                       name="telefono_2"
                       value={editData.telefono_2}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={true}
                       maxLength="15"
                       placeholder="Opcional"
                     />

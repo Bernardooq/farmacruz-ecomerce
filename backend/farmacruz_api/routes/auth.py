@@ -35,16 +35,16 @@ from db.base import Customer
 
 router = APIRouter()
 
-
+"""Schemas de respuesta de token"""
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-
+"""Schemas de datos del token"""
 class TokenData(BaseModel):
     username: Optional[str] = None
 
-
+""" POST /register - Registrar nuevo usuario interno """
 @router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
 def register(
     user: UserCreate,
@@ -68,10 +68,9 @@ def register(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El email ya esta registrado"
             )
-    
     return create_user(db=db, user=user)
 
-
+""" POST /login - Login (customers o users internos) """
 @router.post("/login", response_model=Token)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -139,7 +138,7 @@ def login(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-
+""" GET /me - Informacion del usuario actual """
 @router.get("/me")
 def read_users_me(current_user = Depends(get_current_user)):
     # Obtiene informacion del usuario autenticado actual

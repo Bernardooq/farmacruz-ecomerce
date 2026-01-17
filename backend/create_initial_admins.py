@@ -26,24 +26,28 @@ except ImportError as e:
 # Definir los 4 administradores
 ADMINS = [
     {
+        "user_id": 9001,
         "username": "israel.saenz.admin",
         "email": "israel.saenz.admin@farmacruz.com",
         "full_name": "Israel Saenz",
         "password": "farmasaenz123"  # Asignar contraseña aqui
     },
     {
+        "user_id": 9002,
         "username": "manuel.saenz.admin",
         "email": "manuel.saenz.admin@farmacruz.com",
         "full_name": "Manuel Saenz",
         "password": "farmasaenz123"  # Asignar contraseña aqui
     },
     {
+        "user_id": 9003,
         "username": "andre.saenz.admin",
         "email": "andre.saenz.admin@farmacruz.com",
         "full_name": "Andre Saenz",
         "password": "farmasaenz123"  # Asignar contraseña aqui
     },
     {
+        "user_id": 9004,
         "username": "admin",
         "email": "admin@farmacruz.com",
         "full_name": "Administrador",
@@ -101,6 +105,7 @@ def create_admin_users():
                 # Crear el usuario
                 hashed_password = get_password_hash(admin_data["password"])
                 new_admin = User(
+                    user_id=admin_data["user_id"],
                     username=admin_data["username"],
                     email=admin_data["email"],
                     password_hash=hashed_password,

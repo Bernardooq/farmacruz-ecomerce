@@ -5,24 +5,79 @@ Funciones para manejar el carrito temporal de clientes:
 - Actualizar cantidades
 - Eliminar items
 - Vaciar carrito completo
+- Obtener conteo de items en el carrito
 El carrito se limpia cuando se crea un pedido.
 """
 
+from decimal import Decimal
 from typing import List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 
-from db.base import CartCache, Product
+from db.base import CartCache, CustomerInfo, PriceListItem, Product
 
-def get_cart(db: Session, customer_id: int) -> List[CartCache]:
-    # Obtiene todos los items en el carrito de un cliente
-    return db.query(CartCache).options(
-        joinedload(CartCache.product)  # Pre-cargar info del producto
-    ).filter(CartCache.customer_id == customer_id).all()
+"""Obtiene todos los items en el carrito de un cliente con detalles del producto y precios"""
+def get_cart(db: Session, customer_id: int) -> List[CartCache]: 
+    cart_items = db.query(CartCache).options(
+        joinedload(CartCache.product)
+    ).filter(
+        CartCache.customer_id == customer_id
+    ).all()
+    
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
+    
+    # Enriquecer con informacion del producto en formato anidado
+    result = []
+    for item in cart_items:
+        # Calcular precio final con markup e IVA si aplica
+        final_price = None
+        markup_percentage = 0.0
+        
+        if customer_info and customer_info.price_list_id and item.product:
+            # Buscar item de lista de precios
+            price_item = db.query(PriceListItem).filter(
+                PriceListItem.price_list_id == customer_info.price_list_id,
+                PriceListItem.product_id == item.product_id
+            ).first()
+            
+            if price_item:
+                base_price = Decimal(str(item.product.base_price or 0))
+                markup = Decimal(str(price_item.markup_percentage or 0))
+                iva = Decimal(str(item.product.iva_percentage or 0))
+                
+                price_with_markup = base_price * (1 + markup / 100)
+                final_price = float(price_with_markup * (1 + iva / 100))
+                markup_percentage = float(markup)
+        
+        cart_data = {
+            "cart_cache_id": item.cart_cache_id,
+            "customer_id": item.customer_id,
+            "product_id": item.product_id,
+            "quantity": item.quantity,
+            "added_at": item.added_at,
+            "updated_at": item.updated_at,
+            "product": {
+                "product_id": item.product.product_id,
+                "name": item.product.name,
+                "codebar": item.product.codebar,
+                "base_price": float(item.product.base_price) if item.product.base_price else 0.0,
+                "iva_percentage": float(item.product.iva_percentage) if item.product.iva_percentage else 16.0,
+                "final_price": final_price,
+                "markup_percentage": markup_percentage,
+                "image_url": item.product.image_url,
+                "stock_count": item.product.stock_count,
+                "is_active": item.product.is_active
+            } if item.product else None
+        }
+        result.append(cart_data)
+    
+    return result
 
-
+"""Agrega un producto al carrito o incrementa su cantidad si ya existe"""
 def add_to_cart(db: Session, customer_id: int, product_id: str, quantity: int = 1) -> CartCache:
-    # Agrega un producto al carrito o incrementa su cantidad si ya existe
     # Validaciones 
     product = db.query(Product).filter(
         Product.product_id == product_id
@@ -56,9 +111,8 @@ def add_to_cart(db: Session, customer_id: int, product_id: str, quantity: int = 
     db.refresh(cart_item)
     return cart_item
 
-
+"""Actualiza la cantidad de un item en el carrito"""
 def update_cart_item(db: Session, cart_id: int, quantity: int) -> Optional[CartCache]:
-    # Actualiza la cantidad de un item en el carrito
     cart_item = db.query(CartCache).filter(
         CartCache.cart_cache_id == cart_id
     ).first()
@@ -78,9 +132,8 @@ def update_cart_item(db: Session, cart_id: int, quantity: int) -> Optional[CartC
     db.commit()
     return cart_item
 
-
+"""Elimina un item especifico del carrito"""
 def remove_from_cart(db: Session, cart_id: int) -> bool:
-   # Eliminar Item especifico del carrito
     cart_item = db.query(CartCache).filter(
         CartCache.cart_cache_id == cart_id
     ).first()
@@ -92,9 +145,8 @@ def remove_from_cart(db: Session, cart_id: int) -> bool:
     
     return False
 
-
+"""Vacía todo el carrito de un cliente"""
 def clear_cart(db: Session, customer_id: int) -> int:
-    # Vacia completamente el carrito de un cliente
     deleted_count = db.query(CartCache).filter(
         CartCache.customer_id == customer_id
     ).delete()
@@ -102,11 +154,8 @@ def clear_cart(db: Session, customer_id: int) -> int:
     db.commit()
     return deleted_count
 
-
+"""Obtiene el numero total de items en el carrito de un cliente"""
 def get_cart_item_count(db: Session, customer_id: int) -> int:
-    # Numero total de items en el carrito
-    from sqlalchemy import func
-    
     return db.query(func.count(CartCache.cart_cache_id)).filter(
         CartCache.customer_id == customer_id
     ).scalar() or 0

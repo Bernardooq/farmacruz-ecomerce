@@ -25,27 +25,23 @@ from decimal import Decimal
 from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_, or_, cast, String
 
-from db.base import Order, OrderItem, OrderStatus, Product, CartCache, CustomerInfo, PriceListItem, User, UserRole
+from db.base import Order, OrderItem, OrderStatus, Product, CartCache, CustomerInfo, PriceListItem, User, Customer
 from crud.crud_sales_group import get_user_groups, user_can_manage_order
 from crud.crud_user import get_user
 from schemas.order import OrderAssign, OrderCreate, OrderUpdate, OrderItemCreate
 
-
+""" Obtener pedidos por ID con relaciones """
 def get_order(db: Session, order_id: UUID) -> Optional[Order]:
-    # Obtiene un pedido por ID con todas sus relaciones
-
     return db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product),
         joinedload(Order.customer),
         joinedload(Order.assigned_seller)
     ).filter(Order.order_id == order_id).first()
 
-
-def get_orders_by_customer(db: Session, customer_id: int, skip: int = 0, limit: int = 100, status: Optional[OrderStatus] = None) -> List[Order]:
-    # Obtiene pedidos de un cliente especifico
-    
+""" Obtener pedidos de un cliente especifico con relaciones """
+def get_orders_by_customer(db: Session, customer_id: int, skip: int = 0, limit: int = 100, status: Optional[OrderStatus] = None) -> List[Order]:    
     query = db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product),
         joinedload(Order.customer),
@@ -57,12 +53,8 @@ def get_orders_by_customer(db: Session, customer_id: int, skip: int = 0, limit: 
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
-
-def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[OrderStatus] = None, search: Optional[str] = None) -> List[Order]:
-    # Obtiene todos los pedidos (admin/seller) con busqueda opcional
-    
-    from db.base import Customer
-    
+""" Obtener todos los pedidos con filtros opcionales para admin/marketing/seller """
+def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[OrderStatus] = None, search: Optional[str] = None) -> List[Order]:        
     query = db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product),
         joinedload(Order.customer),
@@ -85,7 +77,6 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[Or
             order_id_filter = Order.order_id == search_uuid
         except (ValueError, AttributeError):
             # No es UUID completo, buscar parcialmente convirtiendo a texto
-            from sqlalchemy import cast, String
             search_term_uuid = f"%{search}%"
             order_id_filter = cast(Order.order_id, String).ilike(search_term_uuid)
         
@@ -101,10 +92,8 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[Or
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
-
+""" Crear un pedido a partir del carrito del cliente """
 def create_order_from_cart(db: Session, customer_id: int, shipping_address_number: int = 1) -> Order:
-    # Crea un pedido a partir del carrito del cliente
-    
     # Validar direccion
     if shipping_address_number not in [1, 2, 3]:
         raise ValueError("Numero de direccion invalido. Debe ser 1, 2 o 3.")
@@ -125,12 +114,18 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
     if not customer_info or not customer_info.price_list_id:
         raise ValueError("No tienes una lista de precios asignada. Contacta al administrador.")
     
-    # Crear pedido
+    # Obtener el agente del cliente para asignarlo automáticamente
+    from db.base import Customer
+    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+    assigned_seller_id = customer.agent_id if customer and customer.agent_id else None
+    
+    # Crear pedido con agente asignado automáticamente
     db_order = Order(
         customer_id=customer_id,
         status=OrderStatus.pending_validation,
         total_amount=0,  # Se calculara despues
-        shipping_address_number=shipping_address_number
+        shipping_address_number=shipping_address_number,
+        assigned_seller_id=assigned_seller_id  # Auto-asignar agente
     )
     db.add(db_order)
     db.flush()  # Para obtener order_id
@@ -198,7 +193,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
     db.refresh(db_order)
     return db_order
 
-
+""" Actualizar el estado de un pedido """
 def update_order_status(db: Session, order_id: UUID, status: OrderStatus, seller_id: Optional[int] = None) -> Optional[Order]:
     # Actualiza el estado de un pedido
     db_order = get_order(db, order_id)
@@ -215,7 +210,7 @@ def update_order_status(db: Session, order_id: UUID, status: OrderStatus, seller
     db.refresh(db_order)
     return db_order
 
-
+""" Cancelar un pedido y restaurar stock """
 def cancel_order(db: Session, order_id: UUID) -> Optional[Order]:
     # Cancela un pedido y puede restaurar el stock
     
@@ -247,17 +242,10 @@ def cancel_order(db: Session, order_id: UUID) -> Optional[Order]:
     db.refresh(db_order)
     return db_order
 
-
-def get_orders_for_user_groups(
-    db: Session,
-    user_id: int,
-    user_role,
-    skip: int = 0,
-    limit: int = 100,
-    status: Optional[OrderStatus] = None,
-    status_filter: Optional[str] = None,  # Filtro raw (puede ser "assigned")
-    search: Optional[str] = None
-) -> List[Order]:
+""" Obtener pedidos filtrados segun los grupos del usuario """
+def get_orders_for_user_groups(db: Session, user_id: int, user_role,
+    skip: int = 0, limit: int = 100, status: Optional[OrderStatus] = None, status_filter: Optional[str] = None,  # Filtro raw (puede ser "assigned")
+    search: Optional[str] = None) -> List[Order]:
     # Obtiene pedidos filtrados segun los grupos del usuario
     from db.base import User, Customer, UserRole
     
@@ -270,19 +258,21 @@ def get_orders_for_user_groups(
     # Filtros segun rol
     if user_role != UserRole.admin:
         from crud.crud_sales_group import get_user_groups
+        from db.base import Customer
         
         # Obtener grupos del usuario
         user_group_ids = get_user_groups(db, user_id)
         
-        # Si no esta en ningun grupo, no puede ver pedidos
-        if not user_group_ids:
-            return []
-        
         if user_role == UserRole.seller:
             # Sellers SOLO ven pedidos asignados a ellos
+            # (Los pedidos se asignan automaticamente al agente al crearse)
             query = query.filter(Order.assigned_seller_id == user_id)
         else:
             # Marketing ve pedidos de clientes en sus grupos
+            # Si no esta en ningun grupo, no puede ver pedidos
+            if not user_group_ids:
+                return []
+            
             query = query.join(
                 CustomerInfo,
                 Order.customer_id == CustomerInfo.customer_id
@@ -312,7 +302,6 @@ def get_orders_for_user_groups(
             order_id_filter = Order.order_id == search_uuid
         except (ValueError, AttributeError):
             # No es UUID completo, buscar parcialmente convirtiendo a texto
-            from sqlalchemy import cast, String
             search_term_uuid = f"%{search}%"
             order_id_filter = cast(Order.order_id, String).ilike(search_term_uuid)
         
@@ -327,7 +316,8 @@ def get_orders_for_user_groups(
         query = query.filter(or_(order_id_filter, name_filters))
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
-
+    
+""" Obtener el conteo de pedidos de un cliente especifico """
 def get_order_count_by_customer(db: Session, customer_id: int) -> int:
     # Obtiene el conteo de pedidos de un cliente especifico
     corder_count = db.query(Order).filter(
@@ -336,7 +326,7 @@ def get_order_count_by_customer(db: Session, customer_id: int) -> int:
 
     return corder_count
 
-
+""" Calcular y actualizar la direccion de envio de un pedido """
 def calculate_order_shipping_address(db: Session, order: Order) -> str:
     # Calcula la direccion de envio completa basada en el numero seleccionado
     customer_info = db.query(CustomerInfo).filter(
@@ -369,7 +359,7 @@ def calculate_order_shipping_address(db: Session, order: Order) -> str:
     
     return order
 
-
+""" Asignar un pedido a un vendedor """
 def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, current_user: User) -> Order | None:
     # Asignación final
     order.assigned_seller_id = assign_data.assigned_seller_id
@@ -379,67 +369,6 @@ def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, cur
     if assign_data.assignment_notes:
         order.assignment_notes = assign_data.assignment_notes
 
-    db.commit()
-    db.refresh(order)
-    return order
-
-
-def modify_order_items(db: Session, order: Order, items_data: List[OrderItemCreate]) -> Order | None:
-    # Modifica los items de un pedido existente
-    # Primero eliminar items actuales
-    db.query(OrderItem).filter(OrderItem.order_id == order.order_id).delete()
-    
-    total = Decimal('0')
-    
-    for item_data in items_data:
-        product = db.query(Product).filter(
-            Product.product_id == item_data.product_id
-        ).first()
-        
-        if not product or not product.is_active:
-            continue
-        
-        # Obtener markup de la lista de precios del cliente
-        customer_info = db.query(CustomerInfo).filter(
-            CustomerInfo.customer_id == order.customer_id
-        ).first()
-        
-        if not customer_info or not customer_info.price_list_id:
-            raise ValueError("No tienes una lista de precios asignada. Contacta al administrador.")
-        
-        price_item = db.query(PriceListItem).filter(
-            PriceListItem.price_list_id == customer_info.price_list_id,
-            PriceListItem.product_id == item_data.product_id
-        ).first()
-        
-        if not price_item:
-            raise ValueError(f"El producto {product.name} no esta en tu lista de precios")
-        
-        # CALCULAR PRECIO FINAL
-        base_price = Decimal(str(product.base_price or 0))
-        markup = Decimal(str(price_item.markup_percentage or 0))
-        iva = Decimal(str(product.iva_percentage or 0))
-        
-        price_with_markup = base_price * (1 + markup / 100)
-        final_price = price_with_markup * (1 + iva / 100)
-        
-        # Crear nuevo item del pedido
-        order_item = OrderItem(
-            order_id=order.order_id,
-            product_id=item_data.product_id,
-            quantity=item_data.quantity,
-            base_price=float(base_price),
-            markup_percentage=float(markup),
-            iva_percentage=float(iva),
-            final_price=float(final_price)
-        )
-        db.add(order_item)
-        
-        total += final_price * item_data.quantity
-    
-    # Actualizar total del pedido
-    order.total_amount = float(total)
-    
     db.commit()
     db.refresh(order)
     return order

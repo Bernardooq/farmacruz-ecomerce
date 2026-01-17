@@ -16,7 +16,7 @@ from db.base import Customer, CustomerInfo, Product, PriceListItem
 from schemas.product import CatalogProduct
 
 
-
+"""Obtiene el ID de la lista de precios del cliente actual o lanza excepcion si no es cliente o no tiene lista asignada"""
 def _get_customer_price_list(current_user, db: Session) -> int:
     # Valida que sea cliente y retorna su price_list_id 
     if not isinstance(current_user, Customer):
@@ -37,9 +37,9 @@ def _get_customer_price_list(current_user, db: Session) -> int:
     
     return customer_info.price_list_id
 
-
+"""Calcula el precio final de un producto aplicando markup e IVA"""
 def _calculate_price(product: Product, price_item: PriceListItem) -> Tuple[Decimal, Decimal]:
-    # Calcula precio final aplicando markup e IVA. Retorna (precio_final, markup)
+    # Retorna (precio_final, markup)
     
     base = Decimal(str(product.base_price or 0))
     markup = Decimal(str(price_item.markup_percentage or 0))
@@ -51,7 +51,7 @@ def _calculate_price(product: Product, price_item: PriceListItem) -> Tuple[Decim
     
     return final, markup
 
-
+"""Construye un CatalogProduct desde el ORM Product y precios calculados"""
 def _build_catalog_product(product: Product, final_price: Decimal, markup: Decimal) -> CatalogProduct:
     # Construye un CatalogProduct desde el ORM Product
     
@@ -75,10 +75,8 @@ def _build_catalog_product(product: Product, final_price: Decimal, markup: Decim
 
 
 # API FUNCTIONS
-
-def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 50, search: Optional[str] = None, category_id: Optional[int] = None, sort_by: Optional[str] = None, sort_order: Optional[str] = "asc" ) -> List[CatalogProduct]:
-   # Lista productos del catalogo con precios personalizados del cliente
-    
+"""Lista productos del catalogo con precios personalizados del cliente"""
+def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 50, search: Optional[str] = None, category_id: Optional[int] = None, sort_by: Optional[str] = None, sort_order: Optional[str] = "asc" ) -> List[CatalogProduct]:    
     # Obtener lista de precios del cliente
     price_list_id = _get_customer_price_list(current_user, db)
     
@@ -128,10 +126,8 @@ def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 
     
     return catalog_products
 
-
-def get_catalog_product(db: Session, current_user, product_id: str  ) -> CatalogProduct:
-    # Obtiene un producto especifico con su precio personalizado
-    
+"""Obtiene un producto especifico del catalogo con precio personalizado del cliente"""
+def get_catalog_product(db: Session, current_user, product_id: str  ) -> CatalogProduct:    
     # Obtener lista de precios del cliente
     price_list_id = _get_customer_price_list(current_user, db)
     
@@ -158,3 +154,69 @@ def get_catalog_product(db: Session, current_user, product_id: str  ) -> Catalog
     final_price, markup = _calculate_price(product, price_item)
     
     return _build_catalog_product(product, final_price, markup)
+
+
+"""Obtiene productos del catalogo con precios personalizados de un cliente especifico (para admin/marketing)"""
+def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None, category_id: Optional[int] = None, sort_by: Optional[str] = None, sort_order: Optional[str] = "asc") -> List[CatalogProduct]:
+    """
+    Similar a get_catalog_products pero para un customer_id especifico.
+    Usado por admin/marketing al editar pedidos para ver productos con precios del cliente.
+    """
+    from fastapi import HTTPException, status
+    
+    # Obtener customer_info y verificar que tenga price_list
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
+    
+    if not customer_info or not customer_info.price_list_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El cliente no tiene lista de precios asignada"
+        )
+    
+    price_list_id = customer_info.price_list_id
+    
+    # Query base: productos activos en la lista de precios del cliente
+    query = db.query(Product, PriceListItem).join(
+        PriceListItem,
+        Product.product_id == PriceListItem.product_id
+    ).options(
+        joinedload(Product.category)
+    ).filter(
+        PriceListItem.price_list_id == price_list_id,
+        Product.is_active == True
+    )
+    
+    # Filtros opcionales
+    if search:
+        term = f"%{search}%"
+        query = query.filter(
+            (Product.name.ilike(term)) |
+            (Product.description.ilike(term)) |
+            (Product.codebar.ilike(term))
+        )
+    
+    if category_id:
+        query = query.filter(Product.category_id == category_id)
+    
+    # Aplicar ordenamiento
+    if sort_by == "name":
+        if sort_order == "desc":
+            query = query.order_by(Product.name.desc())
+        else:
+            query = query.order_by(Product.name.asc())
+    else:
+        query = query.order_by(Product.product_id.desc())
+    
+    # Ejecutar query con paginacion
+    results = query.offset(skip).limit(limit).all()
+    
+    # Construir lista de productos con precios calculados
+    catalog_products = []
+    for product, price_item in results:
+        final_price, markup = _calculate_price(product, price_item)
+        catalog_product = _build_catalog_product(product, final_price, markup)
+        catalog_products.append(catalog_product)
+    
+    return catalog_products

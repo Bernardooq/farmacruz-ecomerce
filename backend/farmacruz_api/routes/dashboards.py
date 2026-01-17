@@ -21,7 +21,7 @@ from crud.crud_dashboard import get_admin_dashboard_stats, get_sales_report, get
 
 router = APIRouter()
 
-
+""" GET /dashboard - Estadisticas generales del negocio """
 @router.get("/dashboard", response_model=DashboardStats)
 def get_dashboard_stats(
     current_user: User = Depends(get_current_admin_user),
@@ -31,7 +31,7 @@ def get_dashboard_stats(
     
     return get_admin_dashboard_stats(db)
 
-
+""" GET /dashboard/seller-marketing - Estadisticas para vendedores de marketing """
 @router.get("/dashboard/seller-marketing", response_model=SellerMarketingDashboardStats)
 def get_seller_marketing_dashboard_stats_route(
     current_user: User = Depends(get_current_seller_user),
@@ -40,7 +40,7 @@ def get_seller_marketing_dashboard_stats_route(
     # Obtiene estadisticas del dashboard para vendedores de marketing
     return get_seller_marketing_dashboard_stats(db)
 
-
+""" GET /reports/sales - Reporte de ventas por rango de fechas """
 @router.get("/reports/sales", response_model=SalesReport)
 def sales_report(
     start_date: Optional[str] = Query(

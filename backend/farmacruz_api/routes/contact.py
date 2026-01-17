@@ -32,7 +32,7 @@ class ContactMessage(BaseModel):
     subject: str
     message: str
 
-
+""" POST /send - Enviar mensaje de contacto """
 @router.post("/send")
 def send_contact_email(contact: ContactMessage):
     # Envia un email de contacto al administrador

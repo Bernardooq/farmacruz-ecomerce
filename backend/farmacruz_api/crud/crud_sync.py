@@ -18,10 +18,8 @@ from crud.crud_customer import get_password_hash
 
 
 # CATEGORiAS
-
+""" Guarda una nueva categoria si no existe (basado en nombre) """
 def guardar_o_actualizar_categoria(db: Session, name: str, description: str = None) -> Tuple[bool, str]:
-    # Guarda una nueva categoria si no existe (basado en nombre)
-
     try:
         # Verificar si ya existe una categoria con ese nombre
         categoria_existente = db.query(Category).filter(
@@ -47,18 +45,16 @@ def guardar_o_actualizar_categoria(db: Session, name: str, description: str = No
 
 
 # LISTAS DE PRECIOS
-
+""" Verifica si una lista de precios existe """
 def verificar_si_lista_existe(db: Session, lista_id: int) -> bool:
-    # Verifica si una lista de precios ya esta en la base de datos
     lista_existente = db.query(PriceList).filter(
         PriceList.price_list_id == lista_id
     ).first()
     
     return lista_existente is not None
 
-
+""" Guarda o actualiza una lista de precios (UPSERT) """
 def guardar_o_actualizar_lista(db: Session, lista_id: int, nombre: str, descripcion: str = None, esta_activa: bool = True) -> Tuple[bool, str]:
-    # Guarda una nueva lista o actualiza una existente (UPSERT)
     try:
         # Verificar si ya existe
         ya_existe = verificar_si_lista_existe(db, lista_id)
@@ -93,16 +89,15 @@ def guardar_o_actualizar_lista(db: Session, lista_id: int, nombre: str, descripc
 
 
 # PRODUCTOS
-
+""" Verifica si un producto existe """
 def verificar_si_producto_existe(db: Session, producto_id: str) -> bool:
-    # Verifica si un producto ya esta en la base de datos
     producto_existente = db.query(Product).filter(
         Product.product_id == producto_id
     ).first()
     
     return producto_existente is not None
 
-
+""" Verifica si una categoria existe """
 def verificar_si_categoria_existe(db: Session, categoria_id: int) -> bool:
     # Verifica si una categoria existe en la base de datos
     categoria = db.query(Category).filter(
@@ -111,7 +106,7 @@ def verificar_si_categoria_existe(db: Session, categoria_id: int) -> bool:
     
     return categoria is not None
 
-
+""" Busca una categoria por su nombre """
 def buscar_categoria_por_nombre(db: Session, nombre: str) -> Category:
     # Busca una categoria por su nombre
     categoria = db.query(Category).filter(
@@ -120,7 +115,7 @@ def buscar_categoria_por_nombre(db: Session, nombre: str) -> Category:
     
     return categoria    
 
-
+""" Guarda o actualiza un producto (UPSERT) """
 def guardar_o_actualizar_producto(db: Session, producto_id: str, codebar: str, nombre: str, descripcion: str = None, descripcion_2: str = None, unidad_medida: str = None,
     precio_base: float = 0.0, porcentaje_iva: float = 0.0, cantidad_stock: int = 0, esta_activo: bool = True, category_name: str = None,
     url_imagen: str = None, preservar_descripcion_2: bool = False  ) -> Tuple[bool, str]:
@@ -197,7 +192,7 @@ def guardar_o_actualizar_producto(db: Session, producto_id: str, codebar: str, n
 
 
 # RELACIONES PRODUCTO-LISTA (MARKUPS)
-
+""" Verifica si una relacion producto-lista existe """
 def verificar_si_relacion_existe(db: Session, lista_id: int, producto_id: str) -> bool:
     # Verifica si ya existe una relacion producto-lista
     relacion_existente = db.query(PriceListItem).filter(
@@ -207,7 +202,7 @@ def verificar_si_relacion_existe(db: Session, lista_id: int, producto_id: str) -
     
     return relacion_existente is not None
 
-
+""" Guarda o actualiza el markup de un producto en una lista (UPSERT) """
 def guardar_o_actualizar_markup(db: Session, lista_id: int, producto_id: str, porcentaje_markup: float) -> Tuple[bool, str]:
     # Guarda o actualiza el markup de un producto en una lista (UPSERT)
     try:
@@ -251,7 +246,7 @@ def guardar_o_actualizar_markup(db: Session, lista_id: int, producto_id: str, po
 
 
 # CLIENTES (CUSTOMERS)
-
+""" Guarda o actualiza un cliente completo (Customer + CustomerInfo) - UPSERT """
 def guardar_o_actualizar_cliente(db: Session, customer_id: int, username: str, email: str, full_name: str, password: str, business_name: str = None, rfc: str = None,
     price_list_id: int = None, sales_group_id: int = None, address_1: str = None, address_2: str = None, address_3: str = None) -> Tuple[bool, str]:
     # Guarda o actualiza un cliente completo (Customer + CustomerInfo) - UPSERT

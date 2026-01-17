@@ -40,9 +40,9 @@ from schemas.customer_info import (
 )
 from crud import crud_customer
 
-router = APIRouter(prefix="/customers", tags=["customers"])
+router = APIRouter()
 
-
+""" GET / - Lista de clientes con customer_info """
 @router.get("", response_model=List[CustomerWithInfo])
 def get_customers(
     skip: int = Query(0, ge=0, description="Registros a saltar"),
@@ -54,7 +54,7 @@ def get_customers(
     # Lista de clientes con su informacion comercial
     return crud_customer.get_customers(db, skip=skip, limit=limit, search=search)
 
-
+""" GET /{id} - Detalle de cliente """
 @router.get("/{customer_id}", response_model=CustomerWithInfo)
 def get_customer(
     customer_id: int,
@@ -70,7 +70,7 @@ def get_customer(
         )
     return customer
 
-
+""" POST / - Crear cliente """
 @router.post("", response_model=CustomerSchema, status_code=status.HTTP_201_CREATED)
 def create_customer(
     customer: CustomerCreate,
@@ -99,7 +99,7 @@ def create_customer(
     
     return crud_customer.create_customer(db=db, customer=customer)
 
-
+""" PUT /{id} - Actualizar cliente """
 @router.put("/{customer_id}", response_model=CustomerSchema)
 def update_customer(
     customer_id: int,
@@ -129,7 +129,7 @@ def update_customer(
         )
     return customer
 
-
+""" DELETE /{id} - Eliminar cliente """
 @router.delete("/{customer_id}")
 def delete_customer(
     customer_id: int,
@@ -162,7 +162,7 @@ def delete_customer(
 
 
 # Customers Info Routes
-
+""" GET /{id}/info - Ver customer_info """
 @router.get("/{customer_id}/info", response_model=CustomerInfoSchema)
 def get_customer_info(
     customer_id: int,
@@ -180,7 +180,7 @@ def get_customer_info(
     
     return customer_info
 
-
+""" PUT /{id}/info - Actualizar/crear customer_info """
 @router.put("/{customer_id}/info", response_model=CustomerInfoSchema)
 def update_customer_info(
     customer_id: int,

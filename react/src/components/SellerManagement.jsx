@@ -35,16 +35,16 @@ export default function SellerManagement() {
     try {
       setLoading(true);
       setError(null);
-      const users = await adminService.getUsers({ 
+      const users = await adminService.getUsers({
         role: 'seller',
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1
       });
-      
+
       // Verificar si hay más páginas
       const hasMorePages = users.length > itemsPerPage;
       setHasMore(hasMorePages);
-      
+
       // Tomar solo los items de la página actual
       const pageUsers = hasMorePages ? users.slice(0, itemsPerPage) : users;
       setSellers(pageUsers);
@@ -62,12 +62,12 @@ export default function SellerManagement() {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (searchTerm.trim()) {
         // Si hay término de búsqueda, buscar sin paginación
-        const users = await adminService.getUsers({ 
+        const users = await adminService.getUsers({
           role: 'seller',
-          search: searchTerm 
+          search: searchTerm
         });
         setSellers(users);
         setHasMore(false); // Deshabilitar paginación en búsqueda
@@ -149,7 +149,7 @@ export default function SellerManagement() {
         console.log('Creating seller with data:', formData);
         await adminService.createUser(formData);
       }
-      
+
       closeModal();
       loadSellers(); // Reload the list
     } catch (err) {
@@ -193,9 +193,9 @@ export default function SellerManagement() {
 
         <div className="dashboard-controls">
           <form className="search-bar" onSubmit={handleSearch}>
-            <input 
-              type="search" 
-              placeholder="Buscar por nombre de Vendedor..." 
+            <input
+              type="search"
+              placeholder="Buscar por nombre de Vendedor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -209,6 +209,7 @@ export default function SellerManagement() {
           <table className="data-table">
             <thead>
               <tr>
+                <th>ID</th>
                 <th>Vendedor</th>
                 <th>Usuario</th>
                 <th>Estado</th>
@@ -225,7 +226,8 @@ export default function SellerManagement() {
               ) : (
                 sellers.map((seller) => (
                   <tr key={seller.user_id}>
-                    <td>
+                    <td data-label="ID">{seller.user_id}</td>
+                    <td data-label="Vendedor">
                       <div className="user-cell">
                         <FontAwesomeIcon icon={faUserCircle} className="user-cell__avatar" />
                         <div className="user-cell__info">
@@ -241,15 +243,15 @@ export default function SellerManagement() {
                       </span>
                     </td>
                     <td className="actions-cell">
-                      <button 
-                        className="btn-icon btn--edit" 
+                      <button
+                        className="btn-icon btn--edit"
                         onClick={() => openEditModal(seller)}
                         aria-label="Editar vendedor"
                       >
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>
-                      <button 
-                        className="btn-icon btn--delete" 
+                      <button
+                        className="btn-icon btn--delete"
                         onClick={() => handleDelete(seller)}
                         aria-label="Eliminar vendedor"
                       >
@@ -282,9 +284,9 @@ export default function SellerManagement() {
             </button>
             <div className="modal-body">
               <h2>{editingSeller ? 'Editar Vendedor' : 'Añadir Vendedor'}</h2>
-              
+
               {formError && <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />}
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label htmlFor="full_name">Nombre Completo *</label>
@@ -355,16 +357,16 @@ export default function SellerManagement() {
                 </div>
 
                 <div className="form-actions">
-                  <button 
-                    type="button" 
-                    className="btn-secondary" 
+                  <button
+                    type="button"
+                    className="btn-secondary"
                     onClick={closeModal}
                     disabled={formLoading}
                   >
                     Cancelar
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn-primary"
                     disabled={formLoading}
                   >

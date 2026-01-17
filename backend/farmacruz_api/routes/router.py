@@ -62,6 +62,7 @@ api_router.include_router(
 # === CLIENTES ===
 api_router.include_router(
     customers.router,
+    prefix="/customers",
     tags=["Clientes"]
 )
 

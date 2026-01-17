@@ -20,6 +20,7 @@ class CustomerCreate(CustomerBase):
     """Schema para crear un nuevo cliente"""
     customer_id: int = Field(..., description="ID del cliente (para sincronizacion)")
     password: str = Field(..., min_length=8)
+    agent_id: Optional[int] = Field(None, description="ID del agente/seller asignado")
 
 
 class CustomerUpdate(BaseModel):
@@ -29,12 +30,14 @@ class CustomerUpdate(BaseModel):
     full_name: Optional[str] = Field(None, max_length=255)
     password: Optional[str] = Field(None, min_length=8)
     is_active: Optional[bool] = None
+    agent_id: Optional[int] = Field(None, description="ID del agente/seller asignado")
 
 
 class Customer(CustomerBase):
     """Schema de respuesta con datos del cliente"""
     customer_id: int
     is_active: bool
+    agent_id: Optional[int] = None
 
     class Config:
         from_attributes = True

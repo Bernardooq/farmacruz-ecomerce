@@ -15,10 +15,8 @@ from sqlalchemy import func
 from db.base import Order, OrderStatus, Product, User, UserRole, Customer
 from schemas.dashboards import DashboardStats, SalesReport, SalesReportItem, SellerMarketingDashboardStats
 
-
+"""Obtiene estadisticas generales para el dashboard de administrador (Total usuarios y clientes, productos y pedidos, ingresos, productos y stock)"""
 def get_admin_dashboard_stats(db: Session) -> DashboardStats:
-    # Obtiene estadisticas generales para el dashboard de administrador (Total usuarios y clientes, productos y pedidos, ingresos, productos y stock)
-    
     # USERS
     # Total de usuarios internos (admin, marketing, seller)
     total_users = db.query(func.count(User.user_id)).scalar()
@@ -93,7 +91,7 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         low_stock_count=low_stock_count
     )
 
-
+"""Obtiene estadisticas simplificadas para el dashboard de vendedores y marketing"""
 def get_seller_marketing_dashboard_stats(db: Session) -> SellerMarketingDashboardStats:
     # Obtiene estadisticas simplificadas para el dashboard de vendedores y marketing
     
@@ -120,7 +118,7 @@ def get_seller_marketing_dashboard_stats(db: Session) -> SellerMarketingDashboar
         low_stock_count=low_stock_count
     )
 
-
+"""Genera un reporte de ventas para un rango de fechas"""
 def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Optional[str] = None) -> SalesReport:
     # Genera un reporte de ventas para un rango de fechas
     try:

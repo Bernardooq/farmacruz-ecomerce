@@ -118,6 +118,28 @@ class OrderAssign(BaseModel):
     assignment_notes: Optional[str] = None  # Notas sobre la asignacion
 
 
+class OrderItemEdit(BaseModel):
+    """
+    Schema para editar items de un pedido existente
+    
+    Si order_item_id es None, es un nuevo producto a agregar.
+    Si existe, se actualiza la cantidad de ese item.
+    """
+    order_item_id: Optional[UUID] = None  # ID del item existente (None para nuevos)
+    product_id: str  # ID del producto
+    quantity: int = Field(..., gt=0)  # Nueva cantidad
+
+
+class OrderEditRequest(BaseModel):
+    """
+    Schema para solicitud de edición de pedido
+    
+    Permite actualizar los items de un pedido.
+    Los precios se recalculan automáticamente en el backend.
+    """
+    items: List[OrderItemEdit]  # Lista de items actualizados
+
+
 class Order(OrderBase):
     """
     Schema completo de pedido para responses
@@ -157,3 +179,6 @@ class OrderWithAddress(Order):
     """
     shipping_address: Optional[str] = None  # Direccion completa basada en shipping_address_number
     customerInfo: Optional[dict] = None  # Informacion completa del cliente (RFC, business_name, telefonos)
+
+
+

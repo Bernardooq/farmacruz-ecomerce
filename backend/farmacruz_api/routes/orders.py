@@ -28,6 +28,7 @@ Sistema de Permisos:
 - Admin: Todos los pedidos
 """
 
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -38,30 +39,18 @@ from dependencies import get_db, get_current_user, get_current_seller_user
 from crud.crud_customer import get_customer_info
 from crud.crud_user import get_user
 from schemas.order import Order, OrderUpdate, OrderWithAddress, OrderAssign
+from schemas.order_edit import OrderEditRequest
 from schemas.cart import CartItem
-from db.base import OrderStatus, User
+from db.base import OrderStatus, User, UserRole, Customer, CustomerInfo, PriceListItem
 
-from crud.crud_order import (
-    assign_order_seller,
-    calculate_order_shipping_address,
-    get_order,
-    get_orders_by_customer,
-    get_orders,
-    get_orders_for_user_groups,
-    create_order_from_cart,
-    update_order_status,
-    cancel_order
-)
+from crud.crud_order import (assign_order_seller, calculate_order_shipping_address, get_order, get_orders_by_customer, get_orders, 
+    get_orders_for_user_groups, create_order_from_cart, update_order_status, cancel_order)
 
-from crud.crud_cart import (
-    get_cart,
-    add_to_cart,
-    update_cart_item,
-    remove_from_cart,
-    clear_cart
-)
+from crud.crud_order_edit import edit_order_items
 
-from crud.crud_sales_group import user_can_manage_order
+from crud.crud_cart import (get_cart, add_to_cart, update_cart_item, remove_from_cart, clear_cart)
+
+from crud.crud_sales_group import get_user_groups, user_can_manage_order
 
 router = APIRouter()
 
@@ -74,21 +63,12 @@ class CartItemAdd(BaseModel):
 class CartItemUpdate(BaseModel):
     quantity: int
 
+""" GET /cart - Ver carrito por el cliente autenticado """
 @router.get("/cart")
-def read_cart(
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Obtiene el carrito del usuario actual con informacion de productos
-    """
-    from db.base import Customer
-    
-    # Get customer_id based on user type
+def read_cart(current_user = Depends(get_current_user), db: Session = Depends(get_db)):    
     if isinstance(current_user, Customer):
         customer_id = current_user.customer_id
     else:
-        # For backwards compatibility with old User-based customers
         customer_id = getattr(current_user, 'user_id', None)
     
     if not customer_id:
@@ -98,110 +78,33 @@ def read_cart(
         )
     
     cart_items = get_cart(db, customer_id=customer_id)
-    
-    # Get customer's price list to calculate final prices
-    from db.base import Customer, CustomerInfo, PriceListItem
-    from decimal import Decimal
-    
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == customer_id
-    ).first()
-    
-    # Enriquecer con informacion del producto en formato anidado
-    result = []
-    for item in cart_items:
-        # Calculate final price based on customer's price list
-        final_price = None
-        markup_percentage = 0.0
-        
-        if customer_info and customer_info.price_list_id and item.product:
-            # Get markup from price list
-            price_item = db.query(PriceListItem).filter(
-                PriceListItem.price_list_id == customer_info.price_list_id,
-                PriceListItem.product_id == item.product_id
-            ).first()
-            
-            if price_item:
-                base_price = Decimal(str(item.product.base_price or 0))
-                markup = Decimal(str(price_item.markup_percentage or 0))
-                iva = Decimal(str(item.product.iva_percentage or 0))
-                
-                price_with_markup = base_price * (1 + markup / 100)
-                final_price = float(price_with_markup * (1 + iva / 100))
-                markup_percentage = float(markup)
-        
-        cart_data = {
-            "cart_cache_id": item.cart_cache_id,
-            "customer_id": item.customer_id,
-            "product_id": item.product_id,
-            "quantity": item.quantity,
-            "added_at": item.added_at,
-            "updated_at": item.updated_at,
-            "product": {
-                "product_id": item.product.product_id,
-                "name": item.product.name,
-                "codebar": item.product.codebar,
-                "base_price": float(item.product.base_price) if item.product.base_price else 0.0,
-                "iva_percentage": float(item.product.iva_percentage) if item.product.iva_percentage else 16.0,
-                "final_price": final_price,
-                "markup_percentage": markup_percentage,
-                "image_url": item.product.image_url,
-                "stock_count": item.product.stock_count,
-                "is_active": item.product.is_active
-            } if item.product else None
-        }
-        result.append(cart_data)
-    
-    return result
+    return cart_items
 
+""" POST /cart - Agregar producto al carrito """
 @router.post("/cart")
-def add_item_to_cart(
-    item: CartItemAdd,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    from db.base import Customer
-    
-    # Get customer_id based on user type
+def add_item_to_cart(item: CartItemAdd, current_user = Depends(get_current_user), db: Session = Depends(get_db)):    
     if isinstance(current_user, Customer):
         customer_id = current_user.customer_id
     else:
         customer_id = getattr(current_user, 'user_id', None)
     
     if not customer_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se pudo identificar el cliente"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No se pudo identificar el cliente")
     
     try:
-        cart_item = add_to_cart(
-            db,
-            customer_id=customer_id,
-            product_id=item.product_id,
-            quantity=item.quantity
-        )
+        cart_item = add_to_cart(db, customer_id=customer_id, product_id=item.product_id, quantity=item.quantity)
         return cart_item
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+""" PUT /cart/{id} - Actualizar cantidad de un item en el carrito """
 @router.put("/cart/{cart_id}")
-def update_cart_item_quantity(
-    cart_id: int,
-    item: CartItemUpdate,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+def update_cart_item_quantity(cart_id: int, item: CartItemUpdate, current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)):
     """
     Actualiza la cantidad de un producto en el carrito.
     Si quantity <= 0, el item se elimina del carrito.
-    """
-    from db.base import Customer
-    
-    # Get customer_id based on user type
+    """    
     if isinstance(current_user, Customer):
         customer_id = current_user.customer_id
     else:
@@ -212,74 +115,49 @@ def update_cart_item_quantity(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No se pudo identificar el cliente"
         )
+
+    cart_item = update_cart_item(db, cart_id=cart_id, quantity=item.quantity)
+    if cart_item is None and item.quantity > 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item no encontrado en el carrito")
     
-    cart_item = update_cart_item(
-        db,
-        cart_id=cart_id,
-        quantity=item.quantity
-    )
-    
-    # Si quantity <= 0, el item se elimino correctamente
     if cart_item is None:
-        return {"message": "Item eliminado del carrito", "deleted": True}
-    
+        return {"message": "Item eliminado del carrito"}
     return cart_item
 
+""" DELETE /cart/{id} - Eliminar item del carrito """
 @router.delete("/cart/{cart_id}")
-def delete_cart_item(
-    cart_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+def delete_cart_item(cart_id: int, current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)):
     # Elimina un item del carrito
     success = remove_from_cart(db, cart_id=cart_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item no encontrado"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item no encontrado")
     return {"message": "Item eliminado del carrito"}
 
+""" DELETE /cart - Vaciar carrito """
 @router.delete("/cart")
-def clear_user_cart(
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    # Limpia el carrito del usuario
-    from db.base import Customer
-    
-    # Get customer_id based on user type
+def clear_user_cart(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Limpia el carrito del usuario    
     if isinstance(current_user, Customer):
         customer_id = current_user.customer_id
     else:
         customer_id = getattr(current_user, 'user_id', None)
     
     if not customer_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se pudo identificar el cliente"
-        )
-    
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No se pudo identificar el cliente")
+
     clear_cart(db, customer_id=customer_id)
     return {"message": "Carrito limpiado"}
 
 # --- Pedidos ---
-
 class CheckoutRequest(BaseModel):
     shipping_address_number: int = 1  # Default to address 1
 
+""" POST /checkout - Crear pedido desde el carrito """
 @router.post("/checkout", response_model=Order)
-def checkout_cart(
-    checkout_data: CheckoutRequest,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Crea un pedido desde el carrito actual
-    Calcula precios en el servidor basandose en la lista de precios del cliente
-    """
-    from db.base import Customer
-    
+def checkout_cart(checkout_data: CheckoutRequest,
+    current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+
     # Get customer_id based on user type
     if isinstance(current_user, Customer):
         customer_id = current_user.customer_id
@@ -287,38 +165,19 @@ def checkout_cart(
         customer_id = getattr(current_user, 'user_id', None)
     
     if not customer_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se pudo identificar el cliente"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No se pudo identificar el cliente")
     
     try:
-        order = create_order_from_cart(
-            db, 
-            customer_id=customer_id,
-            shipping_address_number=checkout_data.shipping_address_number
-        )
+        order = create_order_from_cart(db, customer_id=customer_id, shipping_address_number=checkout_data.shipping_address_number)
         return order
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=str(e))
 
+""" GET / - Ver mis pedidos """
 @router.get("/", response_model=List[OrderWithAddress])
 def read_orders(
-    skip: int = 0,
-    limit: int = 100,
-    status: Optional[OrderStatus] = None,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Obtiene los pedidos del usuario actual
-    """
-    from db.base import Customer, CustomerInfo
-    
-    # Get customer_id based on user type
+    skip: int = 0,limit: int = 100, status: Optional[OrderStatus] = None, current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)):    
     if isinstance(current_user, Customer):
         customer_id = current_user.customer_id
     else:
@@ -330,18 +189,10 @@ def read_orders(
             detail="No se pudo identificar el cliente"
         )
     
-    orders = get_orders_by_customer(
-        db,
-        customer_id=customer_id,
-        skip=skip,
-        limit=limit,
-        status=status
-    )
+    orders = get_orders_by_customer(db, customer_id=customer_id, skip=skip, limit=limit, status=status)
     
-    # Calculate shipping_address for each order
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == customer_id
-    ).first()
+    # Calcular direccion de envio para cada pedido
+    customer_info = get_customer_info(db, customer_id=customer_id)
     
     for order in orders:
         if order.shipping_address_number and customer_info:
@@ -349,7 +200,7 @@ def read_orders(
             shipping_address = getattr(customer_info, address_key, None)
             
             if not shipping_address:
-                # Fallback to address_1
+                # Fallback a address_1
                 shipping_address = customer_info.address_1 or customer_info.address_2 or customer_info.address_3
             
             order.shipping_address = shipping_address or "No especificada"
@@ -358,17 +209,11 @@ def read_orders(
     
     return orders
 
+""" GET /all - Ver todos los pedidos (Admin/Marketing/Seller) """
 @router.get("/all", response_model=List[Order])
-def read_all_orders(
-    skip: int = 0,
-    limit: int = 100,
-    status: Optional[str] = None,  # Changed to str to accept "assigned"
-    search: Optional[str] = None,
-    current_user: User = Depends(get_current_seller_user),
-    db: Session = Depends(get_db)
-):
-    # Obtiene todos los pedidos filtrados segun los grupos del usuario
-    # Convertir status a OrderStatus si es válido, o None si es "assigned"
+def read_all_orders(skip: int = 0, limit: int = 100, status: Optional[str] = None, 
+    search: Optional[str] = None, current_user: User = Depends(get_current_seller_user), db: Session = Depends(get_db)):
+
     order_status = None
     status_filter = None
     
@@ -384,36 +229,18 @@ def read_all_orders(
                     detail=f"Status inválido: {status}"
                 )
     
-    orders = get_orders_for_user_groups(
-        db=db,
-        user_id=current_user.user_id,
-        user_role=current_user.role,
-        skip=skip,
-        limit=limit,
-        status=order_status,
-        status_filter=status_filter,
-        search=search
-    )
+    orders = get_orders_for_user_groups(db=db, user_id=current_user.user_id, user_role=current_user.role,
+        skip=skip, limit=limit, status=order_status, status_filter=status_filter, search=search)
     return orders
 
+""" GET /{id} - Ver detalle de un pedido """
 @router.get("/{order_id}", response_model=OrderWithAddress)
-def read_order(
-    order_id: UUID,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    # Obtiene un pedido especifico
+def read_order(order_id: UUID, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+
     order = get_order(db, order_id=order_id)
     if not order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pedido no encontrado"
-        )
-    
-    # Verificar permisos
-    from db.base import UserRole, Customer
-    
-    # Get current user's identifier
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado")
+
     if isinstance(current_user, Customer):
         current_user_id = current_user.customer_id
         user_role = None
@@ -437,140 +264,110 @@ def read_order(
             detail="No tiene permiso para ver este pedido"
         )
     
-    # Calculate shipping address
+    # Calcular direccion de envio
     return calculate_order_shipping_address(db, order)
 
+""" PUT /{id}/status - Actualizar estado del pedido (Admin/Marketing/Seller) """
 @router.put("/{order_id}/status", response_model=Order)
-def update_order_status_route(
-    order_id: UUID,
-    order_update: OrderUpdate,
-    current_user: User = Depends(get_current_seller_user),
-    db: Session = Depends(get_db)
-):
-    # Actualiza el estado de un pedido con validacion de transiciones.
-    
+def update_order_status_route(order_id: UUID, order_update: OrderUpdate,
+    current_user: User = Depends(get_current_seller_user), db: Session = Depends(get_db)):    
     # Obtener el pedido actual
     order = get_order(db, order_id=order_id)
     if not order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pedido no encontrado"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado")
     
-    from db.base import UserRole
     is_admin = current_user.role == UserRole.admin
+    is_marketing = current_user.role == UserRole.marketing
+    is_seller = current_user.role == UserRole.seller
     
     # Verificar permisos por grupo (si no es admin)
     if not is_admin:
         if not user_can_manage_order(db, current_user.user_id, order.customer_id, current_user.role):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para gestionar este pedido. El cliente no pertenece a sus grupos."
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para gestionar este pedido. El cliente no pertenece a sus grupos.")
     
     current_status = order.status
     new_status = order_update.status
     
-    # Definir el flujo valido de estados
-    # pending_validation -> approved -> shipped -> delivered
-    # Solo admin puede cancelar despues de pending_validation
+    # Validar que nadie puede modificar pedidos ya cancelados o entregados
+    if current_status == OrderStatus.cancelled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede modificar un pedido que ya está cancelado"
+        )
     
-    # Transiciones base (sin cancelacion)
+    if current_status == OrderStatus.delivered:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede modificar un pedido que ya fue entregado"
+        )
+    
+    # Jerarquía de permisos:
+    # - SELLER: NO puede aprobar pedidos, NO puede cancelar, solo puede marcar como shipped/delivered
+    # - MARKETING: Puede hacer TODO excepto cancelar pedidos que ya fueron enviados (shipped)
+    # - ADMIN: Puede cancelar TODO excepto pedidos entregados (delivered)
+    
+    # Definir transiciones válidas base (flujo normal sin cancelación)
     valid_transitions = {
-        OrderStatus.pending_validation: [OrderStatus.approved],  # Puede asignarse o aprobarse directamente
+        OrderStatus.pending_validation: [],
         OrderStatus.approved: [OrderStatus.shipped],
         OrderStatus.shipped: [OrderStatus.delivered],
-        OrderStatus.delivered: [],  # Estado final, no se puede cambiar
-        OrderStatus.cancelled: []   # Estado final, no se puede cambiar
+        OrderStatus.delivered: [],
+        OrderStatus.cancelled: []
     }
     
-    # Agregar opcion de cancelar segun el rol y estado
-    if new_status == OrderStatus.cancelled:
-        if current_status == OrderStatus.delivered:
-            # Nadie puede cancelar un pedido entregado
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No se puede cancelar un pedido que ya ha sido entregado"
-            )
-        elif current_status == OrderStatus.pending_validation:
-            # Cualquiera (seller/admin) puede cancelar en pending_validation
-            valid_transitions[OrderStatus.pending_validation].append(OrderStatus.cancelled)
-        elif current_status in [OrderStatus.approved, OrderStatus.shipped]:
-            # Solo admin puede cancelar despues de pending_validation
-            if is_admin:
-                valid_transitions[current_status].append(OrderStatus.cancelled)
-            else:
-                status_labels = {
-                    OrderStatus.approved: "aprobado",
-                    OrderStatus.shipped: "enviado"
-                }
-                current_label = status_labels.get(current_status, current_status.value)
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Solo los administradores pueden cancelar pedidos que ya han sido {current_label}"
-                )
+    # Agregar transiciones según rol
+    if is_admin:
+        # Admin puede: aprobar, cancelar (excepto delivered que ya se valida arriba), y todo el flujo normal
+        valid_transitions[OrderStatus.pending_validation].extend([OrderStatus.approved, OrderStatus.cancelled])
+        valid_transitions[OrderStatus.approved].append(OrderStatus.cancelled)
+        valid_transitions[OrderStatus.shipped].append(OrderStatus.cancelled)
+        
+    elif is_marketing:
+        # Marketing puede: aprobar, cancelar solo pending_validation y approved (NO shipped), y todo el flujo normal
+        valid_transitions[OrderStatus.pending_validation].extend([OrderStatus.approved, OrderStatus.cancelled])
+        valid_transitions[OrderStatus.approved].append(OrderStatus.cancelled)
+        # Marketing NO puede cancelar shipped
+        
+    elif is_seller:
+        # Seller NO puede aprobar (pending_validation -> approved)
+        # Seller NO puede cancelar
+        # Seller solo puede avanzar en el flujo: approved -> shipped -> delivered
+        # Las transiciones approved->shipped y shipped->delivered ya están en valid_transitions base
+        pass
     
-    # Validar que la transicion sea valida
-    if new_status not in valid_transitions.get(current_status, []):
-        status_labels = {
-            OrderStatus.pending_validation: "Pendiente de Validacion",
-            OrderStatus.approved: "Aprobado",
-            OrderStatus.shipped: "Enviado",
-            OrderStatus.delivered: "Entregado",
-            OrderStatus.cancelled: "Cancelado"
-        }
-        
-        current_label = status_labels.get(current_status, current_status.value)
-        new_label = status_labels.get(new_status, new_status.value)
-        
-        # Mensajes especificos para casos comunes
-        if current_status == OrderStatus.delivered:
+    # Verificar si la transición es válida
+    if new_status not in valid_transitions[current_status]:
+        # Mensajes de error específicos según el caso
+        if is_seller and current_status == OrderStatus.pending_validation and new_status == OrderStatus.approved:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No se puede modificar un pedido que ya ha sido entregado"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Los vendedores no pueden aprobar pedidos. Solo marketing y administradores pueden hacerlo."
             )
-        elif current_status == OrderStatus.cancelled:
+        elif is_seller and new_status == OrderStatus.cancelled:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No se puede modificar un pedido que ya ha sido cancelado"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Los vendedores no pueden cancelar pedidos. Solo marketing y administradores pueden hacerlo."
             )
-        elif current_status == OrderStatus.shipped and new_status == OrderStatus.approved:
+        elif is_marketing and current_status == OrderStatus.shipped and new_status == OrderStatus.cancelled:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No se puede regresar un pedido de 'Enviado' a 'Aprobado'. El pedido ya esta en transito."
-            )
-        elif current_status == OrderStatus.approved and new_status == OrderStatus.pending_validation:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No se puede regresar un pedido de 'Aprobado' a 'Pendiente'. El pedido ya fue validado."
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Marketing no puede cancelar pedidos que ya fueron enviados. Solo administradores pueden hacerlo."
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Transicion de estado invalida: no se puede cambiar de '{current_label}' a '{new_label}'"
+                detail=f"Transición de estado inválida de '{current_status.value}' a '{new_status.value}'"
             )
     
-    # Si la validacion pasa, actualizar el estado
-    updated_order = update_order_status(
-        db,
-        order_id=order_id,
-        status=new_status,
-        seller_id=current_user.user_id if new_status == OrderStatus.approved else None
-    )
-    
+    # Actualizar el estado del pedido
+    updated_order = update_order_status(db, order_id=order_id, status=new_status)
     return updated_order
 
+""" POST /{id}/assign - Asignar vendedor a un pedido (Marketing/Admin) """
 @router.post("/{order_id}/assign", response_model=Order)
-def assign_order_to_seller(
-    order_id: UUID,
-    assign_data: OrderAssign,
-    current_user: User = Depends(get_current_seller_user),
-    db: Session = Depends(get_db)
-):
-    # Asigna un vendedor a un pedido.
-    from db.base import UserRole
-    from datetime import datetime
-    
+def assign_order_to_seller(order_id: UUID, assign_data: OrderAssign,
+    current_user: User = Depends(get_current_seller_user), db: Session = Depends(get_db)):
     # Obtener la orden
     order = get_order(db, order_id=order_id)
     if not order:
@@ -578,7 +375,6 @@ def assign_order_to_seller(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Pedido no encontrado"
         )
-    
     # Verificar que la orden NO este cancelada o entregada
     if order.status in [OrderStatus.cancelled, OrderStatus.delivered]:
         raise HTTPException(
@@ -589,28 +385,17 @@ def assign_order_to_seller(
     # Obtener el vendedor a asignar
     seller = get_user(db, assign_data.assigned_seller_id)
     if not seller:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Vendedor no encontrado"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vendedor no encontrado")
     
     # Verificar que el usuario a asignar sea un vendedor
     if seller.role != UserRole.seller:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"El usuario seleccionado no es un vendedor (rol: {seller.role.value})"
-        )
-    
-    # Verificar permisos segun el rol del usuario que asigna
-    from crud.crud_sales_group import get_user_groups
-    from db.base import CustomerInfo
-    
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"El usuario seleccionado no es un vendedor (rol: {seller.role.value})")
+
     # Obtener el grupo del cliente del pedido
     customer_info = get_customer_info(db, order.customer_id)
     
     if not customer_info or not customer_info.sales_group_id:
         # Cliente sin grupo - solo admin puede gestionar, pero no puede asignar
-        # porque no hay vendedores disponibles sin grupo
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El cliente no pertenece a ningun grupo de ventas. Asigne el cliente a un grupo primero."
@@ -648,27 +433,19 @@ def assign_order_to_seller(
     # Admin puede asignar pedidos de cualquier grupo, pero debe respetar la regla de grupos    
     return assign_order_seller(db, order, assign_data, current_user)
 
+
+""" POST /{id}/cancel - Cancelar un pedido """
 @router.post("/{order_id}/cancel", response_model=Order)
-def cancel_order_route(
-    order_id: UUID,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+def cancel_order_route(order_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Cancela un pedido.
     order = get_order(db, order_id=order_id)
     if not order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pedido no encontrado"
-        )
-    
-    from db.base import UserRole, Customer
-    
-    # Get current user's identifier
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado")    
+
     if isinstance(current_user, Customer):
         current_user_id = current_user.customer_id
         is_customer = True
-        user_role = None  # Customers don't have roles
+        user_role = None  
     else:
         current_user_id = current_user.user_id
         is_customer = False
@@ -693,9 +470,7 @@ def cancel_order_route(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tiene permiso para cancelar este pedido"
         )
-    
-    # VALIDACIoN CRiTICA: Verificar si se puede cancelar segun el estado y rol
-    
+        
     # No se puede cancelar si ya esta cancelado
     if order.status == OrderStatus.cancelled:
         raise HTTPException(
@@ -710,7 +485,7 @@ def cancel_order_route(
             detail="No se puede cancelar un pedido que ya ha sido entregado"
         )
     
-    # Validación basada en rol
+    # Validacion basada en rol
     if is_customer:
         # Los clientes solo pueden cancelar antes de que sea validado
         if order.status != OrderStatus.pending_validation:
@@ -718,12 +493,18 @@ def cancel_order_route(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Los clientes solo pueden cancelar pedidos pendientes de validación"
             )
-    elif user_role in [UserRole.marketing, UserRole.seller]:
-        # Marketing y Seller pueden cancelar antes de enviado
+    elif user_role == UserRole.seller:
+        # SELLERS NO PUEDEN CANCELAR PEDIDOS
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Los vendedores no tienen permiso para cancelar pedidos. Solo marketing y administradores pueden hacerlo."
+        )
+    elif user_role == UserRole.marketing:
+        # Marketing puede cancelar antes de enviado
         if order.status == OrderStatus.shipped:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Marketing y Vendedores solo pueden cancelar pedidos antes de que sean enviados"
+                detail="Marketing solo puede cancelar pedidos antes de que sean enviados"
             )
     elif is_admin:
         # Admin puede cancelar hasta antes de entregado (ya validado arriba)
@@ -737,6 +518,45 @@ def cancel_order_route(
     try:
         cancelled_order = cancel_order(db, order_id=order_id)
         return cancelled_order
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+""" PUT /{id}/edit - Editar un pedido (Marketing/Admin) """
+@router.put("/{order_id}/edit", response_model=Order)
+def edit_order_route(order_id: UUID, edit_data: OrderEditRequest, current_user: User = Depends(get_current_seller_user),
+    db: Session = Depends(get_db)):
+    # Verificar que el usuario sea marketing o admin
+    if current_user.role not in [UserRole.marketing, UserRole.admin]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo marketing y administradores pueden editar pedidos"
+        )
+    
+    # Obtener el pedido
+    order = get_order(db, order_id=order_id)
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    
+    # Verificar permisos por grupo (si no es admin)
+    is_admin = current_user.role == UserRole.admin
+    if not is_admin:
+        if not user_can_manage_order(db, current_user.user_id, order.customer_id, current_user.role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para editar este pedido. El cliente no pertenece a sus grupos."
+            )
+    
+    # Editar el pedido
+    try:
+        edited_order = edit_order_items(db, order_id=order_id, items=edit_data.items, customer_id=order.customer_id)
+        return edited_order
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -27,24 +27,14 @@ from dependencies import get_db, get_current_user, get_current_seller_user
 from db.base import User, Customer, CustomerInfo, UserRole, GroupSeller
 from schemas.user import UserUpdate
 from schemas.customer_info import CustomerInfo as CustomerInfoSchema, CustomerInfoUpdate
-from crud.crud_user import get_user, update_user
-from crud.crud_customer import update_customer
+from crud.crud_user import get_sellers, get_sellers_in_marketing_groups, get_user, update_user
+from crud.crud_customer import get_customer_info, update_customer
 
 router = APIRouter()
 
-
+""" GET /me - Obtener perfil del usuario autenticado actual """
 @router.get("/me")
 def read_current_user_profile(current_user = Depends(get_current_user)):
-    """
-    Obtiene el perfil del usuario autenticado actual
-    
-    Retorna informacion segun el tipo:
-    - Customer: customer_id, username, email, full_name, role="customer"
-    - User: user_id, username, email, full_name, role=<admin|seller|marketing>
-    
-    Permisos: Cualquier usuario autenticado
-    """
-    # === CONVERTIR A DICT SEGuN TIPO ===
     if isinstance(current_user, Customer):
         user_dict = {
             "customer_id": current_user.customer_id,
@@ -66,47 +56,35 @@ def read_current_user_profile(current_user = Depends(get_current_user)):
     
     return JSONResponse(content=user_dict)
 
-
+""" PUT /me - Actualizar perfil del usuario autenticado actual """
 @router.put("/me")
-def update_current_user_profile(
-    user_update: UserUpdate,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Actualiza el perfil del usuario actual
-    
-    Campos actualizables:
-    - email
-    - full_name
-    - password (se hashea automaticamente)
-    
-    Permisos: Cualquier usuario autenticado
-    
-    Raises:
-        404: Usuario/Cliente no encontrado
-    """
+def update_current_user_profile(user_update: UserUpdate, current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)):
     if isinstance(current_user, Customer):
-        # === ACTUALIZAR CUSTOMER ===
-        updated = update_customer(
-            db, 
-            customer_id=current_user.customer_id,
-            customer=user_update
-        )
-        if not updated:
+        update_data = user_update.model_dump(exclude_unset=True)
+
+        # Validar que solo se este cambiando la contraseña
+        disallowed_fields = set(update_data.keys()) - {'password'}
+        if disallowed_fields:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cliente no encontrado"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Los clientes solo pueden cambiar su contraseña. No se pueden modificar: {', '.join(disallowed_fields)}"
             )
+        
+        # Solo permitir cambio de contraseña
+        if 'password' not in update_data or not update_data['password']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Debe proporcionar una nueva contraseña"
+            )
+
+        updated = update_customer(db, customer_id=current_user.customer_id, customer=user_update)
+        if not updated:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente no encontrado")
         return JSONResponse(content={
-            "customer_id": updated.customer_id,
-            "username": updated.username,
-            "email": updated.email,
-            "full_name": updated.full_name,
-            "is_active": updated.is_active,
-            "role": "customer"
-        })
-    else:
+            "customer_id": updated.customer_id, "username": updated.username, "email": updated.email,
+            "full_name": updated.full_name, "is_active": updated.is_active,"role": "customer"})
+    elif current_user.role in {UserRole.admin}:
         # === ACTUALIZAR USER ===
         user = update_user(db, user_id=current_user.user_id, user=user_update)
         if not user:
@@ -114,50 +92,19 @@ def update_current_user_profile(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Usuario no encontrado"
             )
-        return JSONResponse(content={
-            "user_id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-            "full_name": user.full_name,
-            "role": user.role.value,
-            "is_active": user.is_active
-        })
+        return JSONResponse(content={"user_id": user.user_id, "username": user.username, "email": user.email, 
+            "full_name": user.full_name, "role": user.role.value, "is_active": user.is_active})
 
-
+""" GET /me/customer-info - Obtener la informacion comercial del cliente actual """
 @router.get("/me/customer-info", response_model=CustomerInfoSchema)
-def read_current_user_customer_info(
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Obtiene la informacion comercial del cliente actual
-    
-    Incluye:
-    - Datos fiscales (RFC, razon social)
-    - Direcciones (hasta 3)
-    - Grupo de ventas asignado
-    - Lista de precios asignada
-    
-    Permisos: Solo clientes
-    
-    Raises:
-        403: Acceso denegado (usuario no es cliente)
-        404: CustomerInfo no encontrado
-    """
-    # === VERIFICAR QUE SEA UN CLIENTE ===
+def read_current_user_customer_info(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     if not isinstance(current_user, Customer):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado. Este endpoint es solo para clientes."
-        )
-    
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado. Este endpoint es solo para clientes.")
+
     customer_id = current_user.customer_id
-    
-    # === BUSCAR CUSTOMER_INFO ===
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == customer_id
-    ).first()
-    
+
+    customer_info = get_customer_info(db, customer_id)
+
     if not customer_info:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -166,105 +113,21 @@ def read_current_user_customer_info(
     
     return customer_info
 
-
-@router.put("/me/customer-info", response_model=CustomerInfoSchema)
-def update_current_user_customer_info(
-    customer_info_update: CustomerInfoUpdate,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Actualiza la informacion comercial del cliente actual
-    
-    Campos actualizables:
-    - address_1, address_2, address_3 (direcciones)
-    - Otros campos comerciales
-    
-    Nota: price_list_id y sales_group_id solo los puede cambiar admin.
-    
-    Permisos: Solo clientes
-    
-    Raises:
-        403: Acceso denegado (usuario no es cliente)
-        404: CustomerInfo no encontrado
-    """
-    # === VERIFICAR QUE SEA UN CLIENTE ===
-    if not isinstance(current_user, Customer):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado. Este endpoint es solo para clientes."
-        )
-    
-    customer_id = current_user.customer_id
-    
-    # === BUSCAR Y ACTUALIZAR ===
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == customer_id
-    ).first()
-    
-    if not customer_info:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Informacion de cliente no encontrada"
-        )
-    
-    # Actualizar campos
-    update_data = customer_info_update.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(customer_info, field, value)
-    
-    db.commit()
-    db.refresh(customer_info)
-    return customer_info
-
-
+"""GET /sellers - Lista de vendedores disponibles segun permisos """
 @router.get("/sellers")
-def get_available_sellers(
-    current_user = Depends(get_current_seller_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Lista de vendedores disponibles segun permisos
-    
-    Retorna vendedores segun el rol:
-    - Admin: Todos los vendedores activos
-    - Marketing: Solo vendedores de sus grupos asignados
-    - Seller: N/A (no deberia poder ver esto)
-    
-    util para asignar pedidos a vendedores.
-    
-    Permisos: Admin y Marketing
-    
-    Returns:
-        Lista de dicts con user_id, username, full_name, email
-    """
-    query = db.query(User).filter(
-        User.role == UserRole.seller,
-        User.is_active == True
-    )
-    
-    # === FILTRAR POR GRUPOS SI NO ES ADMIN ===
-    if current_user.role != UserRole.admin:
-        from crud.crud_sales_group import get_user_groups
-        
-        # Obtener grupos del usuario marketing
-        user_groups = get_user_groups(db, current_user.user_id)
-        
-        if not user_groups:
-            # Marketing sin grupos no puede ver vendedores
-            return []
-        
-        # Filtrar vendedores que esten en esos grupos
-        seller_ids = db.query(GroupSeller.seller_id).filter(
-            GroupSeller.sales_group_id.in_(user_groups)
-        ).distinct().all()
-        
-        seller_ids = [sid[0] for sid in seller_ids]
-        query = query.filter(User.user_id.in_(seller_ids))
-    
-    sellers = query.all()
-    
-    # === FORMATEAR RESPUESTA ===
+def get_available_sellers(current_user = Depends(get_current_seller_user), db: Session = Depends(get_db)):
+    if current_user.role == UserRole.seller:
+        # Vendedor: solo a si mismo
+        sellers = [current_user]
+    elif current_user.role == UserRole.marketing:
+        sellers = get_sellers_in_marketing_groups(db, current_user.user_id)
+    elif current_user.role == UserRole.admin:
+        sellers = get_sellers(db)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado. Solo usuarios internos pueden acceder a esta informacion."
+        )
     return [{
         "user_id": seller.user_id,
         "username": seller.username,

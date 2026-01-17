@@ -29,7 +29,7 @@ from crud.crud_user import (
 
 router = APIRouter()
 
-
+""" GET /users - Lista de usuarios con filtros """
 @router.get("/users", response_model=List[UserSchema])
 def read_all_users(
     skip: int = Query(0, ge=0, description="Registros a saltar"),
@@ -53,15 +53,9 @@ def read_all_users(
     users = get_users(db, skip=skip, limit=limit, role=role_filter, search=search)
     return users
 
-
+""" POST /users - Crear usuario """
 @router.post("/users", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
-def create_new_user(
-    user: UserCreate,
-    current_user: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
-    # Crea un nuevo usuario interno
-    # Validar username unico
+def create_new_user(user: UserCreate, current_user: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
     db_user = get_user_by_username(db, username=user.username)
     db_customer = get_customer_by_username(db, username=user.username)
     if db_user or db_customer:
@@ -82,14 +76,9 @@ def create_new_user(
     
     return create_user(db=db, user=user)
 
-
+""" GET /users/{user_id} - Detalle de usuario """
 @router.get("/users/{user_id}", response_model=UserSchema)
-def read_user_by_id(
-    user_id: int,
-    current_user: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
-    # Detalle de un usuario especifico
+def read_user_by_id(user_id: int, current_user: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
     user = get_user(db, user_id=user_id)
     if not user:
         raise HTTPException(
@@ -98,14 +87,10 @@ def read_user_by_id(
         )
     return user
 
-
+""" PUT /users/{user_id} - Actualizar usuario """
 @router.put("/users/{user_id}", response_model=UserSchema)
-def update_user_info(
-    user_id: int,
-    user_update: UserUpdate,
-    current_user: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
+def update_user_info(user_id: int, user_update: UserUpdate, current_user: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
+    
     db_customer = get_customer_by_username(db, username=user_update.username) if user_update.username else None
     db_customer_email = get_customer_by_email(db, email=user_update.email) if user_update.email else None
     if  db_customer or db_customer_email:
@@ -122,7 +107,8 @@ def update_user_info(
         )
     return user
     
-
+    
+""" DELETE /users/{user_id} - Eliminar usuario """
 @router.delete("/users/{user_id}")
 def delete_user_account(
     user_id: int,

@@ -54,24 +54,6 @@ export const userService = {
     return response.json();
   },
 
-  // Actualizar información de cliente del usuario actual
-  async updateCurrentUserCustomerInfo(customerInfoData) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/users/me/customer-info`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(customerInfoData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al actualizar información de cliente');
-    }
-
-    return response.json();
-  },
 
   // Admin: Obtener información de cliente de un usuario específico
   async getUserCustomerInfo(userId) {

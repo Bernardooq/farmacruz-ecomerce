@@ -34,7 +34,7 @@ from crud.crud_category import (
 
 router = APIRouter()
 
-
+""" GET / - Lista de categorias """
 @router.get("/", response_model=List[Category])
 def read_categories(
     skip: int = Query(0, ge=0, description="Registros a saltar"),
@@ -49,7 +49,7 @@ def read_categories(
         categories = get_categories(db, skip=skip, limit=limit)
     return categories
 
-
+""" GET /{id} - Detalle de categoria """
 @router.get("/{category_id}", response_model=Category)
 def read_category(category_id: int, db: Session = Depends(get_db)):
     # Detalle de una categoria especifica
@@ -61,7 +61,7 @@ def read_category(category_id: int, db: Session = Depends(get_db)):
         )
     return category
 
-
+""" POST / - Crear categoria """
 @router.post("/", response_model=Category, status_code=status.HTTP_201_CREATED)
 def create_new_category(
     category: CategoryCreate,
@@ -79,7 +79,7 @@ def create_new_category(
     
     return create_category(db=db, category=category)
 
-
+""" PUT /{id} - Actualizar categoria """
 @router.put("/{category_id}", response_model=Category)
 def update_existing_category(
     category_id: int,
@@ -105,7 +105,7 @@ def update_existing_category(
         )
     return db_category
 
-
+""" DELETE /{id} - Eliminar categoria """
 @router.delete("/{category_id}")
 def delete_existing_category(
     category_id: int,

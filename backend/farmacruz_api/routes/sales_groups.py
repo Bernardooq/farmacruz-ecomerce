@@ -49,45 +49,28 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from db.base import User as UserModel, UserRole
+
 
 from dependencies import get_db, get_current_admin_user, get_current_seller_user
-from schemas.sales_group import (
-    SalesGroup,
-    SalesGroupCreate,
-    SalesGroupUpdate,
-    SalesGroupWithMembers,
-    GroupMarketingManager,
-    GroupSeller
-)
+from schemas.sales_group import ( SalesGroup, SalesGroupCreate,
+SalesGroupUpdate, SalesGroupWithMembers, GroupMarketingManager, GroupSeller, UserAssignment)
+
 from schemas.user import User
-from crud.crud_sales_group import (
-    create_sales_group,
-    get_sales_group,
-    get_sales_groups,
-    update_sales_group,
-    delete_sales_group,
-    get_sales_group_with_counts,
-    assign_marketing_to_group,
-    assign_seller_to_group,
-    remove_marketing_from_group,
-    remove_seller_from_group,
-    get_group_marketing_managers,
-    get_group_sellers
+from crud.crud_sales_group import ( get_available_customers, create_sales_group, get_available_marketing_managers, get_available_sellers, 
+    get_group_customers_paginated, get_group_sellers_paginated, get_sales_group, get_sales_groups, get_user_groups, remove_customer_from_sales_group, 
+    update_sales_group, delete_sales_group, get_sales_group_with_counts, assign_marketing_to_group, assign_seller_to_group, remove_marketing_from_group, 
+    remove_seller_from_group, get_group_marketing_managers, get_group_sellers, get_group_marketing_managers_paginated, user_belongs_to_group
 )
 
 router = APIRouter()
 
+### Sales Group Endpoints ###
 
-# Sales Group CRUD Endpoints
-
+""" GET / - Obtener todos los grupos de ventas con conteos de miembros """
 @router.get("/", response_model=List[SalesGroupWithMembers])
-def read_sales_groups(
-    skip: int = 0,
-    limit: int = 100,
-    is_active: Optional[bool] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def read_sales_groups(skip: int = 0, limit: int = 100, is_active: Optional[bool] = None,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Obtiene todos los grupos de ventas con conteos de miembros.
     groups = get_sales_groups(db, skip=skip, limit=limit, is_active=is_active)
     
@@ -101,22 +84,15 @@ def read_sales_groups(
     return groups_with_counts
 
 
-# My Groups Endpoint (for marketing/sellers)
-
+""" GET /my-groups - Obtener los grupos de ventas asignados al usuario actual (marketing/seller) """
 @router.get("/my-groups", response_model=List[SalesGroupWithMembers])
-def read_my_sales_groups(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_seller_user)
-):
+def read_my_sales_groups(db: Session = Depends(get_db), current_user: User = Depends(get_current_seller_user)):
     # Obtiene los grupos de ventas asignados al usuario actual (marketing/seller).
-    from crud.crud_sales_group import get_user_groups, get_sales_group_with_counts
-    
     # Obtener IDs de grupos del usuario
     group_ids = get_user_groups(db, current_user.user_id)
     
     if not group_ids:
         return []
-    
     # Obtener detalles de cada grupo con conteos
     groups = []
     for group_id in group_ids:
@@ -126,13 +102,9 @@ def read_my_sales_groups(
     
     return groups
 
-
+""" GET /{group_id} - Obtener un grupo de ventas por ID con conteos de miembros """
 @router.get("/{group_id}", response_model=SalesGroupWithMembers)
-def read_sales_group(
-    group_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def read_sales_group(group_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Obtiene un grupo de ventas por ID con conteos de miembros
     group = get_sales_group_with_counts(db, group_id=group_id)
     if not group:
@@ -142,40 +114,25 @@ def read_sales_group(
         )
     return group
 
-
+""" POST / - Crear un nuevo grupo de ventas """
 @router.post("/", response_model=SalesGroup, status_code=status.HTTP_201_CREATED)
-def create_new_sales_group(
-    group: SalesGroupCreate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def create_new_sales_group(group: SalesGroupCreate, db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Crea un nuevo grupo de ventas
     return create_sales_group(db=db, group=group)
 
-
+""" PUT /{group_id} - Actualizar un grupo de ventas existente """
 @router.put("/{group_id}", response_model=SalesGroup)
-def update_existing_sales_group(
-    group_id: int,
-    group: SalesGroupUpdate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def update_existing_sales_group(group_id: int, group: SalesGroupUpdate,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Actualiza un grupo de ventas existente
     db_group = update_sales_group(db, group_id=group_id, group=group)
     if not db_group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grupo de ventas no encontrado"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Grupo de ventas no encontrado")
     return db_group
 
-
+""" DELETE /{group_id} - Eliminar un grupo de ventas """
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_existing_sales_group(
-    group_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def delete_existing_sales_group(group_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Elimina un grupo de ventas
     db_group = delete_sales_group(db, group_id=group_id)
     if not db_group:
@@ -186,166 +143,68 @@ def delete_existing_sales_group(
     return None
 
 
-# Marketing Manager Membership Endpoints
-
-class AssignUserRequest(BaseModel):
-    user_id: int
-
-
+### Marketing Manager Membership Endpoints ###
+""" POST /{group_id}/marketing - Asignar marketing manager a un grupo de ventas """
 @router.post("/{group_id}/marketing", response_model=GroupMarketingManager, status_code=status.HTTP_201_CREATED)
-def assign_marketing_manager(
-    group_id: int,
-    request: AssignUserRequest,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def assign_marketing_manager(group_id: int, assignment: UserAssignment,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Asigna un marketing manager a un grupo de ventas.
-    return assign_marketing_to_group(
-        db=db,
-        group_id=group_id,
-        marketing_id=request.user_id
-    )
+    return assign_marketing_to_group(db=db, group_id=group_id, marketing_id=assignment.user_id)
 
-
+""" DELETE /{group_id}/marketing/{user_id} - Remover marketing manager de un grupo de ventas """
 @router.delete("/{group_id}/marketing/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_marketing_manager(
-    group_id: int,
-    user_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def remove_marketing_manager(group_id: int, user_id: int,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Remueve un marketing manager de un grupo de ventas.
     success = remove_marketing_from_group(db, group_id=group_id, marketing_id=user_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Asignacion no encontrada"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asignacion no encontrada")
     return None
 
-
+""" GET /{group_id}/marketing - Obtener marketing managers de un grupo con paginacion y busqueda server-side """
 @router.get("/{group_id}/marketing", response_model=List[User])
-def read_group_marketing_managers(
-    group_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
-    # Obtiene marketing managers de un grupo con paginacion y busqueda server-side.
-    from crud.crud_sales_group import get_group_marketing_managers_paginated
+def read_group_marketing_managers(group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     
     # Verificar que el grupo existe
     group = get_sales_group(db, group_id)
     if not group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grupo de ventas no encontrado"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Grupo de ventas no encontrado")
     
-    return get_group_marketing_managers_paginated(
-        db, 
-        group_id=group_id,
-        skip=skip,
-        limit=limit,
-        search=search
-    )
+    return get_group_marketing_managers_paginated(db, group_id=group_id, skip=skip, limit=limit, search=search)
 
-
+""" GET /{group_id}/available-marketing - Obtener marketing managers que NO estan en el grupo (disponibles) """
 @router.get("/{group_id}/available-marketing", response_model=List[User])
-def read_available_marketing_managers(
-    group_id: int,
-    skip: int = 0,
-    limit: int = 20,
-    search: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def read_available_marketing_managers(group_id: int, skip: int = 0, limit: int = 20, search: Optional[str] = None,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):    
     # Obtiene marketing managers que NO estan en el grupo (disponibles)
-    from db.base import User as UserModel, UserRole
-    
-    # Verificar que el grupo existe
-    group = get_sales_group(db, group_id)
-    if not group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grupo de ventas no encontrado"
-        )
-    
-    # Obtener IDs de marketing ya en el grupo
-    from crud.crud_sales_group import get_group_marketing_managers
-    current_members = get_group_marketing_managers(db, group_id)
-    current_member_ids = [m.user_id for m in current_members]
-    
-    # Query de todos los marketing
-    query = db.query(UserModel).filter(UserModel.role == UserRole.marketing)
-    
-    # Excluir los que ya estan en el grupo
-    if current_member_ids:
-        query = query.filter(~UserModel.user_id.in_(current_member_ids))
-    
-    # Aplicar busqueda
-    if search:
-        search_pattern = f"%{search}%"
-        query = query.filter(
-            (UserModel.full_name.ilike(search_pattern)) |
-            (UserModel.username.ilike(search_pattern)) |
-            (UserModel.email.ilike(search_pattern))
-        )
-    
-    # Paginacion
-    return query.order_by(UserModel.full_name).offset(skip).limit(limit).all()
+    return get_available_marketing_managers(db, group_id=group_id, skip=skip, limit=limit, search=search )
 
 
-# Seller Membership Endpoints
-
+### Seller Membership Endpoints ###
+""" POST /{group_id}/sellers - Asignar seller a un grupo de ventas """
 @router.post("/{group_id}/sellers", response_model=GroupSeller, status_code=status.HTTP_201_CREATED)
-def assign_seller_to_sales_group(
-    group_id: int,
-    request: AssignUserRequest,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def assign_seller_to_sales_group(group_id: int, assignment: UserAssignment,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Asigna un seller a un grupo de ventas.
-    return assign_seller_to_group(
-        db=db,
-        group_id=group_id,
-        seller_id=request.user_id
-    )
+    return assign_seller_to_group(db=db, group_id=group_id, user_id=assignment.user_id)
 
 
+""" DELETE /{group_id}/sellers/{user_id} - Remover seller de un grupo de ventas """
 @router.delete("/{group_id}/sellers/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_seller_from_sales_group(
-    group_id: int,
-    user_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def remove_seller_from_sales_group(group_id: int, user_id: int,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Remueve un vendedor de un grupo de ventas.
-    success = remove_seller_from_group(db, group_id=group_id, seller_id=user_id)
+    success = remove_seller_from_group(db, group_id=group_id, user_id=user_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Asignacion no encontrada"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Asignacion no encontrada")
     return None
 
 
-
+""" GET /{group_id}/sellers - Obtener sellers de un grupo con paginacion y busqueda server-side """
 @router.get("/{group_id}/sellers", response_model=List[User])
-def read_group_sellers(
-    group_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_seller_user)
-):
-    # Obtiene sellers de un grupo con paginacion y busqueda server-side
-    from db.base import UserRole
-    from crud.crud_sales_group import user_belongs_to_group, get_group_sellers_paginated
-    
+def read_group_sellers(group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None, 
+    db: Session = Depends(get_db), current_user = Depends(get_current_seller_user)):    
     # Verificar que el grupo existe
     group = get_sales_group(db, group_id)
     if not group:
@@ -361,237 +220,68 @@ def read_group_sellers(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso para ver los vendedores de este grupo"
             )
-    
-    return get_group_sellers_paginated(
-        db,
-        group_id=group_id,
-        skip=skip,
-        limit=limit,
-        search=search
-    )
+
+    return get_group_sellers_paginated(db, group_id=group_id, skip=skip, limit=limit, search=search)
 
 
+""" GET /{group_id}/available-sellers - Obtener sellers que NO estan en el grupo (disponibles) """
 @router.get("/{group_id}/available-sellers", response_model=List[User])
-def read_available_sellers(
-    group_id: int,
-    skip: int = 0,
-    limit: int = 20,
-    search: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def read_available_sellers(group_id: int, skip: int = 0, limit: int = 20, search: Optional[str] = None,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Obtiene sellers que NO estan en el grupo (disponibles)
-    from db.base import User as UserModel, UserRole
-    
-    # Verificar que el grupo existe
-    group = get_sales_group(db, group_id)
-    if not group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grupo de ventas no encontrado"
-        )
-    
-    # Obtener IDs de sellers ya en el grupo
-    from crud.crud_sales_group import get_group_sellers
-    current_members = get_group_sellers(db, group_id)
-    current_member_ids = [s.user_id for s in current_members]
-    
-    # Query de todos los sellers
-    query = db.query(UserModel).filter(UserModel.role == UserRole.seller)
-    
-    # Excluir los que ya estan en el grupo
-    if current_member_ids:
-        query = query.filter(~UserModel.user_id.in_(current_member_ids))
-    
-    # Aplicar busqueda
-    if search:
-        search_pattern = f"%{search}%"
-        query = query.filter(
-            (UserModel.full_name.ilike(search_pattern)) |
-            (UserModel.username.ilike(search_pattern)) |
-            (UserModel.email.ilike(search_pattern))
-        )
-    
-    # Paginacion
-    return query.order_by(UserModel.full_name).offset(skip).limit(limit).all()
+    return get_available_sellers(db, group_id=group_id, skip=skip, limit=limit, search=search )
 
 
-
-# Combined Members Endpoint
-
+#### Combined Members Endpoint ###
 class GroupMembers(BaseModel):
     marketing_managers: List[User]
     sellers: List[User]
 
-
+""" GET /{group_id}/members - Obtener todos los miembros (marketing + sellers) de un grupo de ventas """
 @router.get("/{group_id}/members", response_model=GroupMembers)
-def read_all_group_members(
-    group_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def read_all_group_members(group_id: int,db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin_user)):
     # Obtiene todos los miembros (marketing + sellers) de un grupo de ventas.
-    # Verificar que el grupo existe
     group = get_sales_group(db, group_id)
     if not group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grupo de ventas no encontrado"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Grupo de ventas no encontrado")
     
     marketing_managers = get_group_marketing_managers(db, group_id=group_id)
     sellers = get_group_sellers(db, group_id=group_id)
-    
-    return GroupMembers(
-        marketing_managers=marketing_managers,
-        sellers=sellers
-    )
 
+    return GroupMembers(marketing_managers=marketing_managers, sellers=sellers)
 
-# Customer Assignment Endpoints
-
+### Customer Assignment Endpoints ###
+""" POST /{group_id}/customers/{customer_id} - Asignar un customer a un grupo de ventas """
 @router.post("/{group_id}/customers/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
-def assign_customer_to_group(
-    group_id: int,
-    customer_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
+def assign_customer_to_group(group_id: int, customer_id: int,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Asigna un customer a un grupo de ventas
-    from db.base import Customer, CustomerInfo
-    from sqlalchemy import func as sqlalchemy_func
-    
-    # Verificar que el grupo existe
-    group = get_sales_group(db, group_id)
-    if not group:
+    try:
+        assign_customer_to_sales_group(db, group_id=group_id, customer_id=customer_id)
+    except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grupo de ventas no encontrado"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
         )
-    
-    # Verificar que el customer existe
-    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
-    if not customer:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cliente no encontrado"
-        )
-    
-    # Obtener o crear CustomerInfo
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == customer_id
-    ).first()
-    
-    if not customer_info:
-        # Crear CustomerInfo si no existe
-        # Auto-generate customer_info_id
-        max_id = db.query(sqlalchemy_func.max(CustomerInfo.customer_info_id)).scalar()
-        new_customer_info_id = (max_id or 0) + 1
-        
-        customer_info = CustomerInfo(
-            customer_info_id=new_customer_info_id,
-            customer_id=customer_id,
-            business_name=customer.full_name or customer.username,
-            sales_group_id=group_id
-        )
-        db.add(customer_info)
-    else:
-        # Actualizar el grupo del cliente
-        customer_info.sales_group_id = group_id
-    
-    db.commit()
-    
-    return None
 
-
+""" DELETE /{group_id}/customers/{customer_id} - Remover un customer de un grupo de ventas """
 @router.delete("/{group_id}/customers/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_customer_from_group(
-    group_id: int,
-    customer_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
-    # Remueve un customer de un grupo de ventas
-    from db.base import CustomerInfo
-    
-    # Obtener CustomerInfo
-    customer_info = db.query(CustomerInfo).filter(
-        CustomerInfo.customer_id == customer_id,
-        CustomerInfo.sales_group_id == group_id
-    ).first()
-    
-    if not customer_info:
+def remove_customer_from_group(group_id: int, customer_id: int, db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin_user)):
+    success = remove_customer_from_sales_group(db, group_id=group_id, customer_id=customer_id)
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cliente no encontrado en este grupo"
+            detail="Asignacion no encontrada"
         )
-    
-    
-    # Remover del grupo (establecer a NULL)
-    customer_info.sales_group_id = None
-    db.commit()
-    
     return None
 
 
-
-
+""" GET /{group_id}/customers - Obtener customers de un grupo con paginacion y busqueda server-side """
 @router.get("/{group_id}/customers")
-def read_group_customers(
-    group_id: int,
-    skip: int = 0,
-    limit: int = 100,
-    search: str = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_seller_user)
-):
-    # Obtiene customers de un grupo con paginacion y busqueda server-side
-    from db.base import CustomerInfo, Customer, UserRole
-    from crud.crud_sales_group import user_belongs_to_group
-    
-    # Verificar permisos
-    if current_user.role != UserRole.admin:
-        if not user_belongs_to_group(db, current_user.user_id, group_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tiene permiso para ver los clientes de este grupo"
-            )
-    
-    # Obtener clientes del grupo (de la tabla Customer, NO User)
-    query = db.query(Customer).join(
-        CustomerInfo,
-        Customer.customer_id == CustomerInfo.customer_id
-    ).filter(
-        CustomerInfo.sales_group_id == group_id
-    )
-    
-    # Aplicar busqueda si se proporciona
-    if search:
-        search_pattern = f"%{search}%"
-        query = query.filter(
-            (Customer.full_name.ilike(search_pattern)) |
-            (Customer.username.ilike(search_pattern)) |
-            (Customer.email.ilike(search_pattern))
-        )
-    
-    # Aplicar paginacion
-    customers = query.offset(skip).limit(limit).all()
-    
-    return customers
-
-
-@router.get("/{group_id}/available-customers")
-def read_available_customers(
-    group_id: int,
-    skip: int = 0,
-    limit: int = 20,
-    search: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin_user)
-):
-    # Obtiene customers que NO estan en el grupo (disponibles)
-    from db.base import CustomerInfo, Customer
-    
+def read_group_customers(group_id: int, skip: int = 0,limit: int = 100, search: str = None, 
+    db: Session = Depends(get_db), current_user = Depends(get_current_seller_user)):
     # Verificar que el grupo existe
     group = get_sales_group(db, group_id)
     if not group:
@@ -599,27 +289,15 @@ def read_available_customers(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Grupo de ventas no encontrado"
         )
-    
-    # Query: Clientes que NO tienen este grupo
-    # Incluye: sin customer_info, con customer_info.sales_group_id NULL, o con otro grupo
-    query = db.query(Customer).outerjoin(
-        CustomerInfo,
-        Customer.customer_id == CustomerInfo.customer_id
-    ).filter(
-        # Sin customer_info O con sales_group_id NULL O con otro grupo
-        (CustomerInfo.customer_id.is_(None)) |
-        (CustomerInfo.sales_group_id.is_(None)) |
-        (CustomerInfo.sales_group_id != group_id)
-    )
-    
-    # Aplicar busqueda
-    if search:
-        search_pattern = f"%{search}%"
-        query = query.filter(
-            (Customer.full_name.ilike(search_pattern)) |
-            (Customer.username.ilike(search_pattern)) |
-            (Customer.email.ilike(search_pattern))
-        )
-    
-    # Paginacion
-    return query.order_by(Customer.full_name).offset(skip).limit(limit).all()
+    # Verificar permisos
+    if current_user.role != UserRole.admin and current_user.role != UserRole.marketing:
+        if not user_belongs_to_group(db, current_user.user_id, group_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tiene permiso para ver los clientes de este grupo")
+    return get_group_customers_paginated(db, group_id=group_id, skip=skip, limit=limit, search=search)
+
+""" GET /{group_id}/available-customers - Obtener customers que NO estan en el grupo (disponibles) """
+@router.get("/{group_id}/available-customers")
+def read_available_customers(group_id: int, skip: int = 0, limit: int = 20, search: Optional[str] = None,
+    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
+    # Obtiene customers que NO estan en el grupo (disponibles)
+    return get_available_customers(db, group_id=group_id, skip=skip, limit=limit, search=search )

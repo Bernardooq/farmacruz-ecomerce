@@ -73,6 +73,11 @@ export const orderService = {
       assigned_seller_id: sellerId,
       assignment_notes: notes
     })
+  },
+
+  // Editar items de una orden (solo marketing y admin)
+  async editOrder(id, editData) {
+    return apiService.put(`/orders/${id}/edit`, editData)
   }
 }
 

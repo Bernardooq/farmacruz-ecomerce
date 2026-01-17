@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus, faSearch, faUserCircle, faPencilAlt, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import customerService from '../services/customerService';
 import priceListService from '../services/priceListService';
+import { userService } from '../services/userService';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import PaginationButtons from './PaginationButtons';
@@ -17,6 +18,7 @@ export default function ClientManagement() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [priceLists, setPriceLists] = useState([]);
+  const [sellers, setSellers] = useState([]);
   const itemsPerPage = 10;
   const [formData, setFormData] = useState({
     customer_id: '',
@@ -24,7 +26,8 @@ export default function ClientManagement() {
     email: '',
     password: '',
     full_name: '',
-    is_active: true
+    is_active: true,
+    agent_id: null  // Agente asignado
   });
   const [customerInfoData, setCustomerInfoData] = useState({
     customer_info_id: '',
@@ -44,6 +47,7 @@ export default function ClientManagement() {
   useEffect(() => {
     loadClients();
     loadPriceLists();
+    loadSellers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, searchTerm]); // Agregar searchTerm para recargar al buscar
 
@@ -86,6 +90,15 @@ export default function ClientManagement() {
     }
   };
 
+  const loadSellers = async () => {
+    try {
+      const allSellers = await userService.getAvailableSellers();
+      setSellers(allSellers);
+    } catch (err) {
+      console.error('Failed to load sellers:', err);
+    }
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
     // Resetear a página 0 cuando se busca
@@ -101,7 +114,8 @@ export default function ClientManagement() {
       email: '',
       password: '',
       full_name: '',
-      is_active: true
+      is_active: true,
+      agent_id: null
     });
     setCustomerInfoData({
       customer_info_id: '',
@@ -127,7 +141,8 @@ export default function ClientManagement() {
       email: client.email || '',
       password: '',
       full_name: client.full_name || '',
-      is_active: client.is_active
+      is_active: client.is_active,
+      agent_id: client.agent_id || null
     });
 
     try {
@@ -210,6 +225,12 @@ export default function ClientManagement() {
         const createData = { ...formData };
         if (createData.customer_id) {
           createData.customer_id = parseInt(createData.customer_id);
+        }
+        // Convertir agent_id a int o null
+        if (createData.agent_id) {
+          createData.agent_id = parseInt(createData.agent_id);
+        } else {
+          createData.agent_id = null;
         }
 
         const newCustomer = await customerService.createCustomer(createData);
@@ -434,6 +455,27 @@ export default function ClientManagement() {
                     disabled={formLoading}
                     placeholder={editingClient ? 'Dejar vacío para mantener la actual' : 'Ingresa una contraseña'}
                   />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="agent_id">Agente Asignado</label>
+                  <select
+                    id="agent_id"
+                    name="agent_id"
+                    value={formData.agent_id || ''}
+                    onChange={handleFormChange}
+                    disabled={formLoading}
+                  >
+                    <option value="">Sin agente asignado</option>
+                    {sellers.map(seller => (
+                      <option key={seller.user_id} value={seller.user_id}>
+                        {seller.full_name} (ID: {seller.user_id})
+                      </option>
+                    ))}
+                  </select>
+                  <small style={{ display: 'block', marginTop: '0.25rem', color: '#666' }}>
+                    Los pedidos del cliente se asignarán automáticamente a este agente
+                  </small>
                 </div>
 
                 <div className="form-group">

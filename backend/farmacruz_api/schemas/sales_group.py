@@ -116,6 +116,13 @@ class GroupSeller(GroupSellerInDBBase):
     pass
 
 
+# ASSIGNMENT SCHEMAS (para requests de asignacion)
+
+class UserAssignment(BaseModel):
+    """Schema para asignar un usuario a un grupo via POST body"""
+    user_id: int
+
+
 # SCHEMAS EXTENDIDOS
 
 class SalesGroupWithMembers(SalesGroupInDBBase):

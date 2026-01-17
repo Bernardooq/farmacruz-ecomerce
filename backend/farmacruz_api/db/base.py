@@ -54,11 +54,16 @@ class User(Base):
     
     Esta tabla NO incluye clientes. Los clientes estan en 'customers'.
     Estos usuarios son empleados o personal interno de FARMACRUZ.
+    
+    NOTA: user_id puede ser asignado manualmente por admin o auto-generado.
     """
     __tablename__ = "users"
 
     # Campos principales
-    user_id = Column(Integer, primary_key=True)
+    # IMPORTANTE: autoincrement=False fuerza a SQLAlchemy a enviar el user_id en el INSERT
+    # Esto permite asignación manual de IDs
+    # RANGOS: Sellers 1-9000, Admin/Marketing 9001+
+    user_id = Column(Integer, primary_key=True, autoincrement=False)
     username = Column(String(255), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, index=True)
     password_hash = Column(String(255), nullable=False)  # Hash Argon2
@@ -66,6 +71,11 @@ class User(Base):
     role = Column(SQLAlchemyEnum(UserRole), nullable=False)  # admin, marketing o seller
     is_active = Column(Boolean, default=True)  # Para desactivar usuarios sin eliminarlos
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    # Constraint: user_id debe ser positivo
+    __table_args__ = (
+        CheckConstraint('user_id > 0', name='check_user_id_positive'),
+    )
 
     # Relaciones con otras tablas
     # Pedidos donde este usuario es el vendedor asignado
@@ -76,6 +86,8 @@ class User(Base):
     marketing_groups = relationship("GroupMarketingManager", back_populates="marketing_user", cascade="all, delete-orphan")
     # Grupos de ventas donde es vendedor
     seller_groups = relationship("GroupSeller", back_populates="seller_user", cascade="all, delete-orphan")
+    # Clientes asignados a este usuario como agente (para sellers del DBF)
+    customers_as_agent = relationship("Customer", back_populates="agent", foreign_keys="[Customer.agent_id]")
 
 
 class Customer(Base):
@@ -84,6 +96,8 @@ class Customer(Base):
     
     Los clientes son usuarios externos que compran productos.
     Tienen su propia tabla separada de usuarios internos.
+    
+    NOTA: agent_id vincula al cliente con un vendedor especifico (agente del DBF).
     """
     __tablename__ = "customers"
 
@@ -95,6 +109,8 @@ class Customer(Base):
     full_name = Column(String(255))
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    # Agente/vendedor asignado desde el DBF (opcional)
+    agent_id = Column(Integer, ForeignKey("users.user_id"), nullable=True, index=True)
 
     # Relaciones con otras tablas
     # Informacion adicional del cliente (direcciones, grupo, lista de precios)
@@ -103,6 +119,8 @@ class Customer(Base):
     orders = relationship("Order", back_populates="customer")
     # Carrito de compras temporal
     cart_cache = relationship("CartCache", back_populates="customer", cascade="all, delete")
+    # Agente/vendedor asignado a este cliente
+    agent = relationship("User", back_populates="customers_as_agent", foreign_keys=[agent_id])
 
 
 class SalesGroup(Base):

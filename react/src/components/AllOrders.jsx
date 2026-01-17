@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faSpinner, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSpinner, faSync, faFileAlt, faEdit } from '@fortawesome/free-solid-svg-icons';
 import orderService from '../services/orderService';
 import { userService } from '../services/userService';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ModalOrderDetails from './ModalOrderDetails';
 import ModalAssignSeller from './ModalAssignSeller';
+import ModalEditOrder from './ModalEditOrder';
 import PaginationButtons from './PaginationButtons';
 import { useAuth } from '../context/AuthContext';
 
@@ -30,6 +31,10 @@ export default function AllOrders() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [orderToAssign, setOrderToAssign] = useState(null);
   const [availableSellers, setAvailableSellers] = useState([]);
+
+  // Edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState(null);
 
   useEffect(() => {
     loadOrders();
@@ -180,6 +185,39 @@ export default function AllOrders() {
     setOrderToAssign(null);
   };
 
+  const handleDownloadTXT = async (orderId) => {
+    // TODO: Implementar generación de TXT
+    alert(`Descarga TXT para pedido ${orderId} - Próximamente`);
+  };
+
+  const handleEditOrder = async (order) => {
+    try {
+      setActionLoading(order.order_id);
+      const orderDetails = await orderService.getOrderById(order.order_id);
+      setOrderToEdit(orderDetails);
+      setShowEditModal(true);
+    } catch (err) {
+      setError('Error al cargar el pedido para editar');
+      console.error('Failed to load order for editing:', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setOrderToEdit(null);
+  };
+
+  const handleSaveEditedOrder = async (orderId, editData) => {
+    try {
+      await orderService.editOrder(orderId, editData);
+      await loadOrders(); // Recargar pedidos
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || err.message || 'Error al guardar cambios');
+    }
+  };
+
   if (loading && orders.length === 0) {
     return (
       <section className="dashboard-section">
@@ -247,6 +285,7 @@ export default function AllOrders() {
           <table className="data-table">
             <thead>
               <tr>
+                {(user?.role === 'admin' || user?.role === 'marketing') && <th>Admin</th>}
                 <th>Cliente</th>
                 <th>Contacto</th>
                 <th>N° Pedido</th>
@@ -269,6 +308,8 @@ export default function AllOrders() {
                   onCancel={handleCancel}
                   onAssign={handleAssignClick}
                   onViewDetails={handleViewDetails}
+                  onDownloadTXT={handleDownloadTXT}
+                  onEdit={handleEditOrder}
                   userRole={user?.role}
                   isLoading={actionLoading === order.order_id}
                 />
@@ -301,12 +342,19 @@ export default function AllOrders() {
         onAssign={handleAssign}
         onClose={handleCloseAssignModal}
       />
+
+      <ModalEditOrder
+        visible={showEditModal}
+        order={orderToEdit}
+        onSave={handleSaveEditedOrder}
+        onClose={handleCloseEditModal}
+      />
     </section>
   );
 }
 
 // Component for rendering each order row with status-specific actions
-function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAssign, onViewDetails, userRole, isLoading }) {
+function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAssign, onViewDetails, onDownloadTXT, onEdit, userRole, isLoading }) {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -351,6 +399,36 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
 
   return (
     <tr>
+      {/* Admin Actions Column - Only for admin/marketing */}
+      {(userRole === 'admin' || userRole === 'marketing') && (
+        <td data-label="Admin" className="actions-cell">
+          {isLoading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <div className="action-buttons">
+              {/* Botón Descargar TXT */}
+              <button
+                className="btn-action btn-action--txt"
+                onClick={() => onDownloadTXT(order.order_id)}
+                title="Descargar TXT"
+              >
+                <FontAwesomeIcon icon={faFileAlt} />
+              </button>
+
+              {/* Botón Editar - solo si no está cancelado o entregado */}
+              {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                <button
+                  className="btn-action btn-action--edit"
+                  onClick={() => onEdit(order)}
+                  title="Editar Pedido"
+                >
+                  <FontAwesomeIcon icon={faEdit} />
+                </button>
+              )}
+            </div>
+          )}
+        </td>
+      )}
       <td data-label="Cliente">{clientName}</td>
       <td data-label="Contacto">{clientContact}</td>
       <td data-label="N° Pedido">{order.order_id}</td>
@@ -368,22 +446,25 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
           <FontAwesomeIcon icon={faSpinner} spin />
         ) : (
           <div className="action-buttons">
+
             {order.status === 'pending_validation' && (
               <button
-                className="btn-action btn-action--approve"
+                className={`btn-action ${userRole === 'seller' ? 'btn-action--disabled' : 'btn-action--approve'}`}
                 onClick={() => onApprove(order.order_id)}
-                title="Aprobar"
+                title={userRole === 'seller' ? 'Solo marketing y administradores pueden aprobar' : 'Aprobar'}
+                disabled={userRole === 'seller'}
               >
-                Aprobar
+                {userRole === 'seller' ? 'Validando...' : 'Aprobar'}
               </button>
             )}
             {order.status === 'assigned' && (
               <button
-                className="btn-action btn-action--approve"
+                className={`btn-action ${userRole === 'seller' ? 'btn-action--disabled' : 'btn-action--approve'}`}
                 onClick={() => onApprove(order.order_id)}
-                title="Aprobar"
+                title={userRole === 'seller' ? 'Solo marketing y administradores pueden aprobar' : 'Aprobar'}
+                disabled={userRole === 'seller'}
               >
-                Aprobar
+                {userRole === 'seller' ? 'Esperando validación' : 'Aprobar'}
               </button>
             )}
             {order.status === 'approved' && (
@@ -418,8 +499,8 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
                   </button>
                 );
               }
-              // Marketing y Seller pueden cancelar antes de 'shipped'
-              if (userRole === 'marketing' || userRole === 'seller') {
+              // Marketing puede cancelar solo pending_validation, assigned, y approved (NO shipped)
+              if (userRole === 'marketing') {
                 return (order.status === 'pending_validation' || order.status === 'assigned' || order.status === 'approved') && (
                   <button
                     className="btn-action btn-action--cancel"
@@ -430,6 +511,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
                   </button>
                 );
               }
+              // Sellers NO pueden cancelar pedidos
               return null;
             })()}
 
