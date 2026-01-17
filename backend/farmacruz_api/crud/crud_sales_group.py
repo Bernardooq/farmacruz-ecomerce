@@ -304,23 +304,25 @@ def assign_customer_to_sales_group(db: Session, group_id: int, customer_id: int)
         )
 
     # Validar customer
-    customer = db.query(CustomerInfo).filter(CustomerInfo.customer_info_id == customer_id).first()
+    customer = db.query(CustomerInfo).filter(CustomerInfo.customer_id == customer_id).first()
     if not customer:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Customer no encontrado"
         )
 
-    # Verificar que no este ya asignado
-    existing = db.query(CustomerInfo).filter(
-        CustomerInfo.sales_group_id == group_id
-    ).first()
-
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El customer ya esta asignado a este grupo"
-        )
+    # Verificar si ya tiene un grupo asignado (N:1)
+    if customer.sales_group_id is not None:
+        if customer.sales_group_id == group_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El cliente ya esta en este grupo"
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"El cliente ya pertenece a otro grupo (ID: {customer.sales_group_id})"
+            )
 
     # Actualizar asignacion
     customer.sales_group_id = group_id
@@ -359,19 +361,16 @@ def get_group_customers_paginated(db: Session, group_id: int, skip: int = 0, lim
     return query.offset(skip).limit(limit).all()
 
 """ Remueve un customer de un grupo """
-def remove_customer_from_sales_group(group_id: int, customer_id: int, db: Session) -> bool:
+def remove_customer_from_sales_group(db: Session, group_id: int, customer_id: int) -> bool:
     customer_info = db.query(CustomerInfo).filter(
         CustomerInfo.customer_id == customer_id,
         CustomerInfo.sales_group_id == group_id
     ).first()
     
     if not customer_info:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="El cliente no esta asignado a este grupo"
-        )
+        return False
     
-    db.delete(customer_info)
+    customer_info.sales_group_id = None
     db.commit()
     return True
 

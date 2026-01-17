@@ -21,11 +21,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import SearchBar from '../layout/SearchBar';
-import Footer from '../layout/Footer';
-import OrderHistory from '../components/OrderHistory';
-import PaginationButtons from '../components/PaginationButtons';
-import OrderModal from '../components/OrderModal';
+import SearchBar from '../components/layout/SearchBar';
+import Footer from '../components/layout/Footer';
+import OrderHistory from '../components/orders/OrderHistory';
+import PaginationButtons from '../components/common/PaginationButtons';
+import OrderModal from '../components/orders/OrderModal';
 import { userService } from '../services/userService';
 import orderService from '../services/orderService';
 

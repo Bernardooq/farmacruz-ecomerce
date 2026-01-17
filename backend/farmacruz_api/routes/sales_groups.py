@@ -60,7 +60,7 @@ from schemas.user import User
 from crud.crud_sales_group import ( get_available_customers, create_sales_group, get_available_marketing_managers, get_available_sellers, 
     get_group_customers_paginated, get_group_sellers_paginated, get_sales_group, get_sales_groups, get_user_groups, remove_customer_from_sales_group, 
     update_sales_group, delete_sales_group, get_sales_group_with_counts, assign_marketing_to_group, assign_seller_to_group, remove_marketing_from_group, 
-    remove_seller_from_group, get_group_marketing_managers, get_group_sellers, get_group_marketing_managers_paginated, user_belongs_to_group
+    remove_seller_from_group, get_group_marketing_managers, get_group_sellers, get_group_marketing_managers_paginated, user_belongs_to_group, assign_customer_to_sales_group
 )
 
 router = APIRouter()
@@ -195,7 +195,7 @@ def assign_seller_to_sales_group(group_id: int, assignment: UserAssignment,
 def remove_seller_from_sales_group(group_id: int, user_id: int,
     db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Remueve un vendedor de un grupo de ventas.
-    success = remove_seller_from_group(db, group_id=group_id, user_id=user_id)
+    success = remove_seller_from_group(db, group_id=group_id, seller_id=user_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Asignacion no encontrada")
     return None

@@ -22,17 +22,17 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { adminService } from '../services/adminService';
-import Header from '../layout/Header2';
-import Footer from '../layout/Footer';
-import SummaryCards from '../components/SummaryCards';
-import AllOrders from '../components/AllOrders';
-import InventoryManager from '../components/InventoryManager';
-import CategoryManagement from '../components/CategoryManagement';
-import ClientManagement from '../components/ClientManagement';
-import SalesTeamManagement from '../components/SalesTeamManagement';
-import SalesReport from '../components/SalesReport';
-import PriceListManager from '../components/PriceListManager';
-import LoadingSpinner from '../components/LoadingSpinner';
+import Header from '../components/layout/Header2';
+import Footer from '../components/layout/Footer';
+import SummaryCards from '../components/sales/SummaryCards';
+import AllOrders from '../components/orders/AllOrders';
+import InventoryManager from '../components/products/InventoryManager';
+import CategoryManagement from '../components/products/CategoryManagement';
+import ClientManagement from '../components/admin/ClientManagement';
+import SalesTeamManagement from '../components/admin/SalesTeamManagement';
+import SalesReport from '../components/sales/SalesReport';
+import PriceListManager from '../components/admin/PriceListManager';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 // ============================================
 // CONSTANTES

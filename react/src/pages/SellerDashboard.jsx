@@ -21,14 +21,14 @@
 
 import { useEffect, useState } from 'react';
 import dashboardService from '../services/dashboardService';
-import Header from '../layout/Header2';
-import Footer from '../layout/Footer';
-import SummaryCards from '../components/SummaryCards';
-import AllOrders from '../components/AllOrders';
-import InventoryManager from '../components/InventoryManager';
-import CategoryManagement from '../components/CategoryManagement';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
+import Header from '../components/layout/Header2';
+import Footer from '../components/layout/Footer';
+import SummaryCards from '../components/sales/SummaryCards';
+import AllOrders from '../components/orders/AllOrders';
+import InventoryManager from '../components/products/InventoryManager';
+import CategoryManagement from '../components/products/CategoryManagement';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
 
 export default function SellerDashboard() {
   // ============================================

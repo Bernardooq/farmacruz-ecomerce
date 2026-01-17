@@ -111,12 +111,11 @@ def update_product(db: Session, product_id: str,product: ProductUpdate) -> Optio
 
 """ Elimina (soft delete) un producto """
 def delete_product(db: Session, product_id: str) -> Optional[Product]:
-    # Elimina un producto (soft delete)
+    # Elimina un producto
     db_product = get_product(db, product_id)
     if db_product:
-        db_product.is_active = False
+        db.delete(db_product)
         db.commit()
-        db.refresh(db_product)
     return db_product
 
 """ Actualiza el stock de un producto """

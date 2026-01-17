@@ -13,15 +13,15 @@
  */
 
 import { useAuth } from '../context/AuthContext';
-import Header from '../layout/Header';
-import Header2 from '../layout/Header2';
-import SearchBar from '../layout/SearchBar';
-import Footer from '../layout/Footer';
-import Hero from '../components/Hero';
-import IntroText from '../components/IntroText';
-import Featured from '../components/Featured';
-import Advantages from '../components/Advantages';
-import Labs from '../components/Labs';
+import Header from '../components/layout/Header';
+import Header2 from '../components/layout/Header2';
+import SearchBar from '../components/layout/SearchBar';
+import Footer from '../components/layout/Footer';
+import Hero from '../components/hero/Hero';
+import IntroText from '../components/hero/IntroText';
+import Featured from '../components/hero/Featured';
+import Advantages from '../components/hero/Advantages';
+import Labs from '../components/common/Labs';
 
 export default function Home() {
   // ============================================

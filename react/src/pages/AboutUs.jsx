@@ -19,10 +19,10 @@
  */
 
 import { useAuth } from '../context/AuthContext';
-import Header from '../layout/Header';
-import Header2 from '../layout/Header2';
-import SearchBar from '../layout/SearchBar';
-import Footer from '../layout/Footer';
+import Header from '../components/layout/Header';
+import Header2 from '../components/layout/Header2';
+import SearchBar from '../components/layout/SearchBar';
+import Footer from '../components/layout/Footer';
 import { Link } from 'react-router-dom';
 
 export default function AboutUs() {

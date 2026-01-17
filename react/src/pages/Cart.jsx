@@ -23,12 +23,12 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/userService';
-import SearchBar from '../layout/SearchBar';
-import Footer from '../layout/Footer';
-import CartItemList from '../components/CartItemList';
-import CartSummary from '../components/CartSummary';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
+import SearchBar from '../components/layout/SearchBar';
+import Footer from '../components/layout/Footer';
+import CartItemList from '../components/cart/CartItemList';
+import CartSummary from '../components/cart/CartSummary';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
 
 // ============================================
 // CONSTANTES

@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
-import ScrollToTop from './components/ScrollToTop';
+import ScrollToTop from './components/common/ScrollToTop';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Products from './pages/Products';

@@ -14,8 +14,8 @@
  */
 
 import React from 'react';
-import Footer from '../layout/Footer';
-import LoginForm from '../components/LoginForm';
+import Footer from '../components/layout/Footer';
+import LoginForm from '../components/users/LoginForm';
 import '../styles/styles.css';
 
 export default function Login() {

@@ -26,14 +26,14 @@ import { productService } from '../services/productService';
 import catalogService from '../services/catalogService';
 import { categoryService } from '../services/categoryService';
 import { useAuth } from '../context/AuthContext';
-import SearchBar from '../layout/SearchBar';
-import Footer from '../layout/Footer';
-import FiltersBar from '../components/FiltersBar';
-import ProductGrid from '../components/ProductGrid';
-import PaginationButtons from '../components/PaginationButtons';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
-import ModalProductDetails from '../components/ModalProductDetails';
+import SearchBar from '../components/layout/SearchBar';
+import Footer from '../components/layout/Footer';
+import FiltersBar from '../components/products/FiltersBar';
+import ProductGrid from '../components/products/ProductGrid';
+import PaginationButtons from '../components/common/PaginationButtons';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
+import ModalProductDetails from '../components/modals/products/ModalProductDetails';
 
 // ============================================
 // CONSTANTES
