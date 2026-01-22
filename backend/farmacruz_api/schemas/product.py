@@ -10,6 +10,7 @@ Sistema de precios:
 4. final_price = (base_price * (1 + markup)) * (1 + iva)
 """
 
+from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
 from decimal import Decimal
@@ -99,6 +100,7 @@ class ProductCreate2(BaseModel):
     stock_count: int = Field(0, ge=0)  # Cantidad en inventario
     is_active: bool = True  # Si el producto esta visible
     category_name: Optional[str] = None  # Nombre de la categoria
+    updated_at: Optional[datetime] = None  # Fecha de ultima actualizacion en formato timestamp
 
 
 

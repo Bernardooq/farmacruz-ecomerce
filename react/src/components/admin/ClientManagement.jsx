@@ -46,10 +46,9 @@ export default function ClientManagement() {
 
   useEffect(() => {
     loadClients();
-    loadPriceLists();
-    loadSellers();
+    // Solo cargar clientes al inicio, no price lists ni sellers
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchTerm]); // Agregar searchTerm para recargar al buscar
+  }, [page, searchTerm]);
 
   const loadClients = async () => {
     try {
@@ -107,6 +106,10 @@ export default function ClientManagement() {
   };
 
   const openAddModal = () => {
+    // Cargar listas y vendedores solo cuando se abre el modal
+    loadPriceLists();
+    loadSellers();
+
     setEditingClient(null);
     setFormData({
       customer_id: '',
@@ -134,6 +137,10 @@ export default function ClientManagement() {
   };
 
   const openEditModal = async (client) => {
+    // Cargar listas y vendedores solo cuando se abre el modal
+    loadPriceLists();
+    loadSellers();
+
     setEditingClient(client);
     setFormData({
       customer_id: client.customer_id,

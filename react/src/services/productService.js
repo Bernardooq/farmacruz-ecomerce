@@ -5,7 +5,7 @@ export const productService = {
 
   // Traer productos con filtros opcionales (paginación, categoría, búsqueda, etc.)
   async getProducts(params = {}) {
-    return apiService.get('/products', params)
+    return apiService.get('/products/', params)
   },
 
   // Obtener un producto por su ID

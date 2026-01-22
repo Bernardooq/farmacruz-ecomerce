@@ -43,10 +43,12 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
 
   useEffect(() => {
     if (group) loadAvailableUsers(availablePage, searchAvailable);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, availablePage]);
 
   useEffect(() => {
     if (group) loadInGroupUsers(inGroupPage, searchInGroup);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, inGroupPage]);
 
   useEffect(() => {
@@ -56,7 +58,8 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
       if (group) loadAvailableUsers(0, searchAvailable);
     }, 500);
     setSearchAvailableTimeout(timeout);
-    return () => { if (searchAvailableTimeout) clearTimeout(searchAvailableTimeout); };
+    return () => { if (timeout) clearTimeout(timeout); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchAvailable]);
 
   useEffect(() => {
@@ -66,7 +69,8 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
       if (group) loadInGroupUsers(0, searchInGroup);
     }, 500);
     setSearchInGroupTimeout(timeout);
-    return () => { if (searchInGroupTimeout) clearTimeout(searchInGroupTimeout); };
+    return () => { if (timeout) clearTimeout(timeout); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInGroup]);
 
   const loadAvailableUsers = async (page, search = '') => {
@@ -131,7 +135,8 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
       }
       loadAvailableUsers(availablePage, searchAvailable);
       loadInGroupUsers(inGroupPage, searchInGroup);
-      if (onUpdate) onUpdate();
+      // onUpdate() causa una petición extra innecesaria para recargar el grupo
+      // if (onUpdate) onUpdate();
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al añadir miembro al grupo.');
     }
@@ -150,7 +155,8 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
       }
       loadAvailableUsers(availablePage, searchAvailable);
       loadInGroupUsers(inGroupPage, searchInGroup);
-      if (onUpdate) onUpdate();
+      // onUpdate() causa una petición extra innecesaria para recargar el grupo
+      // if (onUpdate) onUpdate();
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al remover miembro del grupo.');
     }

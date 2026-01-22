@@ -51,6 +51,7 @@ CREATE TABLE customers (
     full_name VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     -- NUEVO: Agente/vendedor asignado desde DBF
     agent_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
@@ -157,6 +158,7 @@ CREATE TABLE pricelistitems (
     price_list_id INTEGER NOT NULL REFERENCES pricelists(price_list_id) ON DELETE CASCADE,
     product_id VARCHAR(50) NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
     markup_percentage NUMERIC(5, 2) NOT NULL,
+    final_price NUMERIC(10, 2) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     

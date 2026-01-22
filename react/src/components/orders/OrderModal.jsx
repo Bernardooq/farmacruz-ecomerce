@@ -1,9 +1,6 @@
 export default function OrderModal({ order, onClose }) {
   if (!order) return null;
 
-  // Debug: ver el formato de los items
-  console.log('Order items format:', order.items);
-
   const handleDownloadPDF = () => {
     // Create a printable version
     const printWindow = window.open('', '_blank');

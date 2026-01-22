@@ -42,6 +42,7 @@ class PriceListCreate(PriceListBase):
     """
     price_list_id: int  # REQUERIDO: ID del DBF para UPSERT
     is_active: Optional[bool] = True  # Activa por defecto
+    updated_at: Optional[datetime] = None  # Fecha de ultima actualizacion
 
 
 class PriceListUpdate(BaseModel):
@@ -87,11 +88,32 @@ class PriceListItemBase(BaseModel):
         if v < 0:
             raise ValueError('El porcentaje de markup debe ser mayor o igual a 0')
         return v
-
-
+    
 class PriceListItemCreate(PriceListItemBase):
     """Schema para crear un item de lista"""
     pass
+class PriceListItemCreateBulk(PriceListItemBase):
+    """Schema para crear un item de lista"""
+    final_price: Decimal = Field(None, ge=0, decimal_places=2)  # Precio final calculado (opcional)
+
+
+class PriceListItemSync(BaseModel):
+    """
+    Schema para sincronización masiva de items desde DBF
+    """
+    price_list_id: int  # ID de la lista a la que pertenece
+    product_id: str  # ID del producto
+    markup_percentage: Decimal = Field(..., ge=0, decimal_places=2)  # % de ganancia
+    final_price: Optional[Decimal] = Field(None, ge=0, decimal_places=2)  # Precio final (opcional)
+    updated_at: Optional[datetime] = None  # Fecha de actualización
+
+    @field_validator('markup_percentage')
+    @classmethod
+    def validate_markup(cls, v):
+        """Valida que el markup no sea negativo"""
+        if v < 0:
+            raise ValueError('El porcentaje de markup debe ser mayor o igual a 0')
+        return v
 
 
 class PriceListItemUpdate(BaseModel):
@@ -150,22 +172,9 @@ class PriceListItemsBulkUpdate(BaseModel):
 
 class PriceCalculation(BaseModel):
     """
-    Resultado del calculo de precio final para un producto
-    
-    Muestra el desglose completo:
-    1. Precio base del producto
-    2. Markup aplicado segun lista del cliente
-    3. IVA aplicado
-    4. Precio final total
-    
-    Formula:
-    - price_with_markup = base_price * (1 + markup_percentage/100)
-    - iva_amount = price_with_markup * (iva_percentage/100)
-    - final_price = price_with_markup + iva_amount
+    Desglose completo del calculo de precio final
     """
     base_price: Decimal  # Precio base del producto
     markup_percentage: Decimal  # % de markup del cliente
     iva_percentage: Decimal  # % de IVA del producto
-    price_with_markup: Decimal  # Precio con markup aplicado
-    iva_amount: Decimal  # Monto del IVA
     final_price: Decimal  # Precio final total

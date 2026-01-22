@@ -48,7 +48,7 @@ def read_products(
     skip: int = Query(0, ge=0, description="Registros a saltar"),
     limit: int = Query(100, ge=1, le=200, description="Maximo de registros"),
     category_id: Optional[int] = Query(None, description="Filtrar por categoria"),
-    is_active: Optional[bool] = Query(True, description="Filtrar por estado"),
+    is_active: Optional[bool] = Query(None, description="Filtrar por estado: True=activos, False=inactivos, None=todos"),
     search: Optional[str] = Query(None, description="Buscar por nombre/descripcion"),
     stock_filter: Optional[str] = Query(None, description="Filtrar por stock: in_stock, out_of_stock, low_stock"),
     sort_by: Optional[str] = Query(None, description="Ordenar por: price, name"),

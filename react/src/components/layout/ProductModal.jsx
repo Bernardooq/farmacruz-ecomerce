@@ -20,7 +20,6 @@ export default function ProductModal({ visible, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Nuevo producto:', formData);
     handleClose(); // limpia y cierra
   };
 

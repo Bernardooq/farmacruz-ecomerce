@@ -18,7 +18,6 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  console.log('ModalAddProduct render - isOpen:', isOpen);
 
   useEffect(() => {
     if (isOpen) {

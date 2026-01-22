@@ -111,6 +111,7 @@ class Customer(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     # Agente/vendedor asignado desde el DBF (opcional)
     agent_id = Column(Integer, ForeignKey("users.user_id"), nullable=True, index=True)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relaciones con otras tablas
     # Informacion adicional del cliente (direcciones, grupo, lista de precios)
@@ -282,6 +283,7 @@ class PriceListItem(Base):
     price_list_id = Column(Integer, ForeignKey("pricelists.price_list_id", ondelete="CASCADE"), nullable=False, index=True)
     product_id = Column(String(50), ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False, index=True)
     markup_percentage = Column(Numeric(5, 2), nullable=False)  # % de ganancia (ej: 25.00)
+    final_price = Column(Numeric(10, 2), nullable=False)  # Precio final calculado 
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 

@@ -3,7 +3,7 @@ import apiService from './apiService';
 const salesGroupService = {
   // Sales Groups CRUD
   async getSalesGroups(params = {}) {
-    return apiService.get('/sales-groups', params);
+    return apiService.get('/sales-groups/', params);
   },
 
   async getSalesGroup(groupId) {
@@ -11,7 +11,7 @@ const salesGroupService = {
   },
 
   async createSalesGroup(groupData) {
-    return apiService.post('/sales-groups', groupData);
+    return apiService.post('/sales-groups/', groupData);
   },
 
   async updateSalesGroup(groupId, groupData) {

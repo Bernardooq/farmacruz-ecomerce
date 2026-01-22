@@ -405,7 +405,7 @@ def get_available_sellers(db: Session, group_id: int, skip: int = 0, limit: int 
     # Subquery: IDs de sellers YA en el grupo
     assigned_ids = db.query(GroupSeller.seller_id).filter(
         GroupSeller.sales_group_id == group_id
-    ).subquery()
+    ).scalar_subquery()
     
     # Query: sellers NO en esa subquery
     query = db.query(User).filter(
@@ -429,7 +429,7 @@ def get_available_customers(db: Session, group_id: int, skip: int = 0, limit: in
     # Subquery: IDs de customers YA en el grupo
     assigned_ids = db.query(CustomerInfo.customer_id).filter(
         CustomerInfo.sales_group_id == group_id
-    ).subquery()
+    ).scalar_subquery()
     
     # Query: customers NO en esa subquery
     query = db.query(Customer).filter(

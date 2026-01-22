@@ -28,7 +28,7 @@
  * <InventoryManager />
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { productService } from '../../services/productService';
 import { categoryService } from '../../services/categoryService';
@@ -65,6 +65,7 @@ export default function InventoryManager() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [stockFilter, setStockFilter] = useState('');
   const [imageFilter, setImageFilter] = useState('');
+  const [isActiveFilter, setIsActiveFilter] = useState('true'); // Por defecto mostrar solo activos
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -81,10 +82,14 @@ export default function InventoryManager() {
   // ============================================
 
   /**
-   * Cargar categorías al montar
+   * Cargar categorías al montar (solo una vez)
    */
+  const categoriesLoaded = useRef(false);
   useEffect(() => {
-    loadCategories();
+    if (!categoriesLoaded.current) {
+      loadCategories();
+      categoriesLoaded.current = true;
+    }
   }, []);
 
   /**
@@ -93,7 +98,7 @@ export default function InventoryManager() {
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, selectedCategory, stockFilter, searchName, imageFilter]);
+  }, [page, selectedCategory, stockFilter, searchName, imageFilter, isActiveFilter]);
 
   // ============================================
   // DATA FETCHING
@@ -145,6 +150,11 @@ export default function InventoryManager() {
       // Filtro por imagen
       if (imageFilter !== '') {
         params.image = imageFilter === 'true';
+      }
+
+      // Filtro por estado activo/inactivo
+      if (isActiveFilter !== '') {
+        params.is_active = isActiveFilter === 'true';
       }
 
       const data = await productService.getProducts(params);
@@ -368,6 +378,20 @@ export default function InventoryManager() {
             <option value="ok">En Stock</option>
             <option value="low">Bajo Stock</option>
             <option value="out">Agotado</option>
+          </select>
+        </div>
+
+        {/* Filtro por estado */}
+        <div className="filter-group">
+          <label htmlFor="filterActive">Estado:</label>
+          <select
+            id="filterActive"
+            value={isActiveFilter}
+            onChange={(e) => setIsActiveFilter(e.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
           </select>
         </div>
 

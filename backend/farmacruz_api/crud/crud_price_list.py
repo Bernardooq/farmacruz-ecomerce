@@ -100,10 +100,11 @@ def get_price_list_item(db: Session, price_list_id: int, product_id: str) -> Opt
 """ Crea o actualiza un item en la lista de precios """
 def create_price_list_item(db: Session, price_list_id: int, item: PriceListItemCreate) -> PriceListItem:
     existing = get_price_list_item(db, price_list_id, item.product_id)
-    
+    base_price = db.query(Product).filter(Product.product_id == item.product_id).first().base_price or 0
     if existing:
         # Actualizar markup existente
         existing.markup_percentage = item.markup_percentage
+        existing.final_price = base_price * (1 + item.markup_percentage / 100)
         db.commit()
         db.refresh(existing)
         return existing
@@ -112,7 +113,8 @@ def create_price_list_item(db: Session, price_list_id: int, item: PriceListItemC
         db_item = PriceListItem(
             price_list_id=price_list_id,
             product_id=item.product_id,
-            markup_percentage=item.markup_percentage
+            markup_percentage=item.markup_percentage,
+            final_price=base_price * (1 + item.markup_percentage / 100)
         )
         db.add(db_item)
         db.commit()
@@ -158,7 +160,7 @@ def get_product_markup(db: Session, price_list_id: int, product_id: str) -> Opti
 def get_products_not_in_price_list(db: Session, price_list_id: int, skip: int = 0, limit: int = 10, search: Optional[str] = None) -> List[Product]:
     product_ids_in_list = db.query(PriceListItem.product_id).filter(
         PriceListItem.price_list_id == price_list_id
-    ).subquery()
+    ).scalar_subquery()
     
     # Query: productos que NO estan en esa subquery
     query = db.query(Product).filter(

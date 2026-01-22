@@ -84,7 +84,6 @@ export default function SellerManagement() {
   };
 
   const openAddModal = () => {
-    console.log('Opening add seller modal...');
     setEditingSeller(null);
     setFormData({
       username: '',
@@ -96,7 +95,6 @@ export default function SellerManagement() {
     });
     setFormError(null);
     setShowModal(true);
-    console.log('Seller modal state set to true');
   };
 
   const openEditModal = (seller) => {
@@ -122,7 +120,6 @@ export default function SellerManagement() {
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
-    console.log(`Form field changed: ${name} = ${newValue}`);
     setFormData(prev => ({
       ...prev,
       [name]: newValue
@@ -142,11 +139,9 @@ export default function SellerManagement() {
         if (!updateData.password || updateData.password.trim() === '') {
           delete updateData.password;
         }
-        console.log('Updating seller with data:', updateData);
         await adminService.updateUser(editingSeller.user_id, updateData);
       } else {
         // Create new seller
-        console.log('Creating seller with data:', formData);
         await adminService.createUser(formData);
       }
 

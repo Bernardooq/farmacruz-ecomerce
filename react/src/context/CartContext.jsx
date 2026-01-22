@@ -6,18 +6,18 @@ import { useAuth } from './AuthContext';
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Load cart when user is authenticated
+  // Load cart only for customers (not for admin, seller, marketing)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.role === 'customer') {
       loadCart();
     } else {
       setItems([]);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   const loadCart = async () => {
     try {

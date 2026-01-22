@@ -90,7 +90,6 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
       setListLoading(true);
       setError(null);
       const items = await priceListService.getItemsWithDetails(priceList.price_list_id, params);
-      console.log('📦 Items loaded from API:', items);
 
       const hasMore = items.length > itemsPerPage;
       setAvailableListHasMore(hasMore);

@@ -6,6 +6,7 @@ Tienen informacion adicional en CustomerInfo (direccion, RFC, etc.)
 """
 
 from typing import Optional
+from datetime import datetime
 from pydantic import BaseModel, Field
 
 
@@ -73,6 +74,8 @@ class CustomerSync(BaseModel):
     customer_id: int = Field(..., description="ID del cliente (del DBF)")
     username: str = Field(..., min_length=3, max_length=255, description="Nombre de usuario")
     password: str = Field(..., min_length=8, description="Contraseña inicial")
+    updated_at: Optional[datetime] = Field(None, description="Fecha de ultima actualizacion") 
+    agent_id: Optional[int] = Field(None, description="ID del agente/seller asignado")
     
     # === CUSTOMER (opcionales) ===
     email: Optional[str] = Field(None, max_length=255, description="Email del cliente")

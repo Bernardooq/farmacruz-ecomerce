@@ -5,7 +5,7 @@ export const categoryService = {
 
   // Traer todas las categorías (con paginación opcional)
   async getCategories(params = {}) {
-    return apiService.get('/categories', params)
+    return apiService.get('/categories/', params)
   },
 
   // Obtener una categoría por ID
