@@ -24,7 +24,7 @@ def leer_dbf_auto(dbf_path, encoding="latin-1"):
         print(f"Error leyendo {dbf_path.name}: {e}")
         return pd.DataFrame() 
 if __name__ == "__main__":
-    archivo_especifico = Path(r"C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\backend\dbfs\pro_desc.dbf")
+    archivo_especifico = Path(r"/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs/agentes.dbf")
     
     df, cols = leer_dbf_auto(archivo_especifico)
     print(cols)

@@ -1,20 +1,3 @@
-/**
- * IntroText.jsx
- * =============
- * Componente de texto introductorio de la empresa
- * 
- * Presenta una descripción breve de FarmaCruz, sus servicios y
- * cumplimiento de regulaciones en la página principal.
- * 
- * Contenido:
- * - Descripción de servicios (medicamentos, equipo médico, etc.)
- * - Mención de cumplimiento con Secretaría de Salud
- * - Compromiso con la mejora continua
- * 
- * Uso:
- * <IntroText />
- */
-
 export default function IntroText() {
   return (
     <section className="intro-text">

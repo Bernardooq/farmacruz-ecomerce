@@ -1,30 +1,3 @@
-/**
- * PriceListManager.jsx
- * ====================
- * Componente de gestión de listas de precios
- * 
- * Permite a los administradores gestionar las listas de precios del sistema.
- * Cada lista contiene precios personalizados para productos específicos
- * y se asigna a clientes.
- * 
- * Funcionalidades:
- * - Listar todas las listas de precios
- * - Crear nueva lista de precios
- * - Editar lista existente
- * - Eliminar lista
- * - Gestionar productos/precios de cada lista
- * 
- * Permisos:
- * - Solo para administradores
- * 
- * Componentes relacionados:
- * - ModalPriceListForm: Crear/editar lista
- * - ModalPriceListItems: Gestionar productos de la lista
- * 
- * Uso:
- * <PriceListManager />
- */
-
 import { useState, useEffect } from 'react';
 import priceListService from '../../services/priceListService';
 import ModalPriceListForm from '../modals/priceLists/ModalPriceListForm';
@@ -35,9 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrashAlt, faList } from '@fortawesome/free-solid-svg-icons';
 
 export default function PriceListManager() {
-  // ============================================
-  // STATE
-  // ============================================
+
   const [priceLists, setPriceLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,25 +17,16 @@ export default function PriceListManager() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [selectedPriceList, setSelectedPriceList] = useState(null);
-
-  // ============================================
-  // EFFECTS
-  // ============================================
-
-  /**
-   * Cargar listas al montar el componente
-   */
+  
+  // Cargar listas al montar el componente
   useEffect(() => {
     loadPriceLists();
   }, []);
 
-  // ============================================
-  // DATA FETCHING
-  // ============================================
 
-  /**
-   * Carga todas las listas de precios del sistema
-   */
+
+   // Carga todas las listas de precios del sistema
+
   const loadPriceLists = async () => {
     try {
       setLoading(true);
@@ -79,37 +41,28 @@ export default function PriceListManager() {
     }
   };
 
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
 
-  /**
-   * Abre modal para crear nueva lista
-   */
+   // Abre modal para crear nueva lista
+
   const handleCreate = () => {
     setSelectedPriceList(null);
     setShowFormModal(true);
   };
 
-  /**
-   * Abre modal para editar lista seleccionada
-   */
+ 
+  // Abre modal para editar lista existente
   const handleEdit = (priceList) => {
     setSelectedPriceList(priceList);
     setShowFormModal(true);
   };
 
-  /**
-   * Abre modal para gestionar productos de la lista
-   */
+  // Abre modal para gestionar productos de la lista
   const handleManageItems = (priceList) => {
     setSelectedPriceList(priceList);
     setShowItemsModal(true);
   };
 
-  /**
-   * Elimina una lista de precios con confirmación
-   */
+  // Elimina una lista de precios
   const handleDelete = async (priceList) => {
     if (!window.confirm(`¿Estás seguro de eliminar la lista "${priceList.list_name}"?`)) {
       return;
@@ -124,18 +77,14 @@ export default function PriceListManager() {
     }
   };
 
-  /**
-   * Callback después de crear/editar exitosamente
-   */
+  // Maneja el éxito del formulario (crear/editar)
   const handleFormSuccess = async () => {
     setShowFormModal(false);
     setSelectedPriceList(null);
     await loadPriceLists();
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+ 
   return (
     <section className="dashboard-section">
       {/* Header con botón crear */}

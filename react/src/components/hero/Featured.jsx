@@ -1,33 +1,10 @@
-/**
- * Featured.jsx
- * ============
- * Componente de productos destacados en la landing page
- * 
- * Muestra una sección con información sobre los productos y servicios
- * de FarmaCruz mediante tarjetas informativas con imágenes.
- * 
- * Características:
- * - Grid de 4 tarjetas informativas
- * - Imágenes de productos
- * - Descripciones de valor agregado
- * - Diseño responsive
- * 
- * Uso:
- * <Featured />
- */
-
 import p1 from '../../images/prods/p1.png';
 import p2 from '../../images/prods/p2.png';
 import p3 from '../../images/prods/p3.png';
 import p4 from '../../images/prods/p4.png';
 
-// ============================================
-// CONSTANTES
-// ============================================
 
-/**
- * Datos de las tarjetas de productos destacados
- */
+// Datos de los productos destacados
 const FEATURED_ITEMS = [
   {
     img: p1,

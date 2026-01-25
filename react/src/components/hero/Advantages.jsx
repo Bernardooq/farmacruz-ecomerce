@@ -1,35 +1,7 @@
-/**
- * Advantages.jsx
- * ==============
- * Componente de ventajas/beneficios en la landing page
- * 
- * Muestra las principales ventajas competitivas de FarmaCruz
- * en un grid atractivo con iconos de FontAwesome.
- * 
- * Ventajas mostradas:
- * - Entregas Rápidas
- * - Amplio Catálogo
- * - Soporte Dedicado
- * 
- * Características:
- * - Grid responsive de 3 columnas
- * - Iconos de FontAwesome
- * - Diseño limpio y profesional
- * 
- * Uso:
- * <Advantages />
- */
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTruckFast, faBoxOpen, faHeadset } from '@fortawesome/free-solid-svg-icons';
 
-// ============================================
-// CONSTANTES
-// ============================================
-
-/**
- * Lista de ventajas/beneficios a mostrar
- */
+// Datos de las ventajas a mostrar
 const ADVANTAGES_DATA = [
   {
     icon: faTruckFast,

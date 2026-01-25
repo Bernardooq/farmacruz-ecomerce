@@ -71,6 +71,7 @@ class User(Base):
     role = Column(SQLAlchemyEnum(UserRole), nullable=False)  # admin, marketing o seller
     is_active = Column(Boolean, default=True)  # Para desactivar usuarios sin eliminarlos
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Constraint: user_id debe ser positivo
     __table_args__ = (

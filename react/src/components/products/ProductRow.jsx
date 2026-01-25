@@ -1,44 +1,7 @@
-/**
- * ProductRow.jsx
- * ==============
- * Fila de producto en tabla de inventario
- * 
- * Muestra la información completa de un producto en el inventario
- * con acciones de edición, eliminación y actualización de stock.
- * 
- * Props:
- * @param {Object} product - Objeto de producto
- * @param {function} onEdit - Callback para editar producto
- * @param {function} onDelete - Callback para eliminar producto
- * @param {function} onUpdateStock - Callback para actualizar stock
- * @param {boolean} isAdmin - Si el usuario tiene permisos de admin (default: true)
- * 
- * Cálculos mostrados:
- * - Precio Base
- * - IVA (calculado: base_price * iva_percentage)
- * - Precio Final (base_price + IVA)
- * 
- * Estados de stock:
- * - out: Stock = 0 (Agotado)
- * - low: Stock < 10 (Bajo)
- * - ok: Stock >= 10 (Disponible)
- * 
- * Uso:
- * <ProductRow
- *   product={productData}
- *   onEdit={(p) => editProduct(p)}
- *   onDelete={(p) => deleteProduct(p)}
- *   onUpdateStock={(p) => updateStock(p)}
- *   isAdmin={isAdmin}
- * />
- */
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrashAlt, faBoxes } from '@fortawesome/free-solid-svg-icons';
 
-// ============================================
-// CONSTANTES
-// ============================================
+
 const LOW_STOCK_THRESHOLD = 10;
 const DEFAULT_IVA = 16;
 
@@ -49,9 +12,6 @@ export default function ProductRow({
   onUpdateStock,
   isAdmin = true
 }) {
-  // ============================================
-  // HELPERS
-  // ============================================
 
   /**
    * Determina la clase CSS según el nivel de stock
@@ -62,9 +22,7 @@ export default function ProductRow({
     return 'ok';
   };
 
-  // ============================================
-  // CALCULATIONS
-  // ============================================
+  // Calcular nivel de stock
 
   const stockCount = product.stock_count ?? 0;
   const stockClass = getStockClass(stockCount);
@@ -78,9 +36,7 @@ export default function ProductRow({
   const ivaAmount = basePrice * (ivaPercentage / 100);
   const finalPrice = basePrice + ivaAmount;
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Renderizado
   return (
     <tr>
       <td data-label="ID">{product.product_id}</td>

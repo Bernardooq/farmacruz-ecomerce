@@ -32,6 +32,7 @@ CREATE TABLE users (
     role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'marketing', 'seller')),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     -- Constraint: user_id debe ser positivo
     CONSTRAINT check_user_id_positive CHECK (user_id > 0)

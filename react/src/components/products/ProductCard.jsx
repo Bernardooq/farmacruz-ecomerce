@@ -1,65 +1,18 @@
-/**
- * ProductCard.jsx
- * ===============
- * Componente de tarjeta de producto en el catálogo
- * 
- * Muestra información de un producto individual con la opción de
- * agregarlo al carrito o ver sus detalles completos.
- * 
- * Props:
- * @param {Object} product - Objeto de producto del backend
- * @param {function} onProductClick - Callback para ver detalles del producto
- * 
- * Estructura de product:
- * - product_id: ID único del producto
- * - name: Nombre del producto
- * - image_url: URL de la imagen
- * - category_id: ID de categoría
- * - stock_count: Cantidad en stock
- * - is_active: Si el producto está activo
- * - final_price: Precio con IVA (clientes)
- * - base_price: Precio base (staff)
- * 
- * Lógica de precios:
- * - Clientes: ven final_price (incluye markup + IVA)
- * - Staff: ven base_price
- * 
- * Características:
- * - Agregar al carrito con validación de autenticación
- * - Mensajes de feedback (éxito/error)
- * - Estados de disponibilidad
- * - Imagen con fallback
- * 
- * Uso:
- * <ProductCard
- *   product={productData}
- *   onProductClick={(product) => showDetails(product)}
- * />
- */
-
 import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
-// ============================================
-// CONSTANTES
-// ============================================
 const MESSAGE_TIMEOUT = 3000; // Duración de mensajes de feedback (3s)
 const SUCCESS_TIMEOUT = 2000; // Duración de mensaje de éxito (2s)
 
 export default function ProductCard({ product, onProductClick }) {
-  // ============================================
-  // HOOKS & STATE
-  // ============================================
+
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
 
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState('');
 
-  // ============================================
-  // DERIVADAS Y CÁLCULOS
-  // ============================================
 
   // Extraer datos del producto
   const {
@@ -86,9 +39,6 @@ export default function ProductCard({ product, onProductClick }) {
     ? 'Precio (IVA incluido)'
     : 'Precio base';
 
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
 
   /**
    * Maneja la adición del producto al carrito
@@ -115,9 +65,7 @@ export default function ProductCard({ product, onProductClick }) {
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Renderizado
   return (
     <article className="product-card">
       {/* Imagen del producto con fallback */}

@@ -1,42 +1,3 @@
-/**
- * OrderRowAdmin.jsx
- * =================
- * Fila de pedido para vista de administrador
- * 
- * Muestra información de un pedido con acciones administrativas:
- * aprobar, rechazar y ver detalles.
- * 
- * Props:
- * @param {Object} order - Objeto de pedido del backend
- * @param {function} onApprove - Callback para aprobar pedido
- * @param {function} onCancel - Callback para rechazar/cancelar pedido
- * @param {function} onViewDetails - Callback para ver detalles
- * @param {boolean} isLoading - Si la fila está en estado de carga
- * 
- * Estructura de order:
- * - order_id: ID del pedido
- * - customer: Objeto de cliente
- * - created_at: Fecha de creación
- * - items: Array de productos
- * - total_amount: Total del pedido
- * 
- * Características:
- * - Formato de fecha local (es-MX)
- * - Formato de moneda
- * - Tres acciones rápidas con iconos
- * - Estado de loading con spinner
- * - Responsive con data-labels
- * 
- * Uso:
- * <OrderRowAdmin
- *   order={orderData}
- *   onApprove={(id) => approveOrder(id)}
- *   onCancel={(id) => cancelOrder(id)}
- *   onViewDetails={(id) => viewOrder(id)}
- *   isLoading={processing}
- * />
- */
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes, faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
@@ -47,12 +8,9 @@ export default function OrderRowAdmin({
   onViewDetails,
   isLoading
 }) {
-  // ============================================
-  // HELPERS
-  // ============================================
-
+  // FORMATTERS
   /**
-   * Formatea una fecha a formato local español
+   * Formatea una fecha en formato local
    */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -70,17 +28,11 @@ export default function OrderRowAdmin({
     return `$${parseFloat(amount).toFixed(2)}`;
   };
 
-  // ============================================
-  // DATA EXTRACTION
-  // ============================================
-
   const clientName = order.customer?.full_name || order.customer?.username || 'N/A';
   const clientContact = order.customer?.email || 'N/A';
   const itemCount = order.items?.length || 0;
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Render
   return (
     <tr>
       <td data-label="Cliente">{clientName}</td>

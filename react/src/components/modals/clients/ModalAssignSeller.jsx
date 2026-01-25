@@ -1,50 +1,7 @@
-/**
- * ModalAssignSeller.jsx
- * =====================
- * Modal para asignar vendedor a un pedido
- * 
- * Permite al administrador asignar un vendedor específico a un pedido
- * pendiente de validación. Muestra lista de vendedores disponibles.
- * 
- * Props:
- * @param {boolean} visible - Si el modal está visible
- * @param {Object} order - Pedido a asignar
- * @param {Array} availableSellers - Array de vendedores disponibles
- * @param {function} onAssign - Callback para asignar (sellerId, notes)
- * @param {function} onClose - Callback para cerrar modal
- * 
- * Estructura de order:
- * - order_id: ID del pedido
- * - customer: Objeto de cliente con full_name y username
- * 
- * Estructura de seller:
- * - user_id: ID del vend edor
- * - full_name: Nombre completo
- * - username: Usuario
- * 
- * Características:
- * - Select con tamaño dinámico (max 8 opciones visibles)
- * - Validación de selección requerida
- * - Tip de navegación para listas largas
- * - Loading state durante asignación
- * 
- * Uso:
- * <ModalAssignSeller
- *   visible={showModal}
- *   order={selectedOrder}
- *   availableSellers={sellers}
- *   onAssign={(sellerId, notes) => assignSeller(sellerId, notes)}
- *   onClose={() => setShowModal(false)}
- * />
- */
-
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-// ============================================
-// CONSTANTES
-// ============================================
 const MAX_VISIBLE_OPTIONS = 8;
 const MIN_SELECT_SIZE = 3;
 
@@ -55,20 +12,12 @@ export default function ModalAssignSeller({
     onAssign,
     onClose
 }) {
-    // ============================================
-    // STATE
-    // ============================================
+
     const [selectedSellerId, setSelectedSellerId] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // ============================================
-    // EFFECTS
-    // ============================================
-
-    /**
-     * Resetear formulario cuando el modal se abre
-     */
+    // Resetear estado al abrir el modal
     useEffect(() => {
         if (visible) {
             setSelectedSellerId('');
@@ -76,13 +25,7 @@ export default function ModalAssignSeller({
         }
     }, [visible]);
 
-    // ============================================
-    // EVENT HANDLERS
-    // ============================================
-
-    /**
-     * Maneja el envío del formulario de asignación
-     */
+    // Manejador de envío del formulario
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -104,21 +47,12 @@ export default function ModalAssignSeller({
         }
     };
 
-    // ============================================
-    // HELPERS
-    // ============================================
-
-    /**
-     * Calcula el tamaño del select para mostrar opciones visibles
-     * Max 8 opciones, o menos si hay pocos vendedores
-     */
+    // Determinar el tamaño del select
     const selectSize = availableSellers.length > MAX_VISIBLE_OPTIONS
         ? MAX_VISIBLE_OPTIONS
         : Math.max(availableSellers.length + 1, MIN_SELECT_SIZE);
 
-    // ============================================
-    // RENDER
-    // ============================================
+    // Renderizar el modal
     if (!visible) return null;
 
     return (
@@ -126,8 +60,7 @@ export default function ModalAssignSeller({
             <div
                 className="modal-content"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: '450px' }}
-            >
+                style={{ maxWidth: '450px' }}>
                 <button className="modal-close" onClick={onClose}>
                     &times;
                 </button>

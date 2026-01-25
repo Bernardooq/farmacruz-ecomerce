@@ -1,21 +1,3 @@
-/**
- * Hero.jsx
- * ========
- * Componente Hero de la página principal
- * 
- * Sección principal (above the fold) de la landing page que presenta
- * el título y subtítulo de la empresa con una imagen de fondo atractiva.
- * 
- * Características:
- * - Imagen de fondo con overlay
- * - Título y subtítulo centrados
- * - Diseño responsive
- * - Primera impresión visual de la marca
- * 
- * Uso:
- * <Hero />
- */
-
 export default function Hero() {
   return (
     <section className="hero">

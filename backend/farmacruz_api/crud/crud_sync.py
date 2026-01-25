@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime
 
-from db.base import PriceList, Product, PriceListItem, Category, Customer, CustomerInfo
+from db.base import PriceList, Product, PriceListItem, Category, Customer, CustomerInfo, User
 from crud.crud_customer import get_password_hash
 
 
@@ -182,6 +182,83 @@ def guardar_o_actualizar_producto(db: Session, producto_id: str, codebar: str, n
         return False, str(error)
 
 
+""" BULK UPSERT de productos (OPTIMIZADO) """
+def bulk_sync_prods(db: Session, productos: List[dict]) -> Tuple[int, int, List[str]]:
+    if not productos:
+        return 0, 0, []
+    
+    creados = 0
+    actualizados = 0
+    errores = []
+    
+    try:
+        # 1. Resolver categorías en bulk
+        category_names = {p['category_name'] for p in productos if p.get('category_name')}
+        categories = db.query(Category).filter(Category.name.in_(category_names)).all()
+        cat_map = {c.name: c.category_id for c in categories}
+        
+        # 2. Obtener IDs de productos existentes para contar
+        product_ids = [p['product_id'] for p in productos]
+        existing_products = db.query(Product.product_id).filter(
+            Product.product_id.in_(product_ids)
+        ).all()
+        existing_ids = {p.product_id for p in existing_products}
+        
+        # 3. Preparar datos para el UPSERT
+        prod_data_list = []
+        for p in productos:
+            category_id = cat_map.get(p.get('category_name'))
+            
+            # Contar creados vs actualizados
+            if p['product_id'] in existing_ids:
+                actualizados += 1
+            else:
+                creados += 1
+                
+            prod_data_list.append({
+                "product_id": p['product_id'],
+                "codebar": p['codebar'],
+                "name": p['name'],
+                "description": p.get('description'),
+                "descripcion_2": p.get('descripcion_2'),
+                "unidad_medida": p.get('unidad_medida'),
+                "base_price": p['base_price'],
+                "iva_percentage": p.get('iva_percentage', 0.0),
+                "stock_count": p.get('stock_count', 0),
+                "is_active": p.get('is_active', True),
+                "category_id": category_id,
+                "image_url": p.get('image_url'),
+                "updated_at": p.get('updated_at') or datetime.now()
+            })
+            
+        # 4. Ejecutar el BULK UPSERT con PostgreSQL ON CONFLICT
+        stmt = insert(Product).values(prod_data_list)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['product_id'],
+            set_={
+                'codebar': stmt.excluded.codebar,
+                'name': stmt.excluded.name,
+                'description': stmt.excluded.description,
+                'descripcion_2': stmt.excluded.descripcion_2,
+                'unidad_medida': stmt.excluded.unidad_medida,
+                'base_price': stmt.excluded.base_price,
+                'iva_percentage': stmt.excluded.iva_percentage,
+                'stock_count': stmt.excluded.stock_count,
+                'is_active': stmt.excluded.is_active,
+                'category_id': stmt.excluded.category_id,
+                'image_url': stmt.excluded.image_url,
+                'updated_at': stmt.excluded.updated_at
+            }
+        )
+        
+        db.execute(stmt)
+        return creados, actualizados, errores
+        
+    except Exception as error:
+        errores.append(f"Error en bulk UPSERT de productos: {str(error)}")
+        return 0, 0, errores
+
+
 # RELACIONES PRODUCTO-LISTA (MARKUPS)
 """ Verifica si una relacion producto-lista existe """
 def verificar_si_relacion_existe(db: Session, lista_id: int, producto_id: str) -> bool:
@@ -245,9 +322,6 @@ def guardar_o_actualizar_markup(db: Session, lista_id: int, producto_id: str, po
 
 """ BULK UPSERT de items de listas de precios (OPTIMIZADO) """
 def bulk_upsert_price_list_items(db: Session, items: List[dict]) -> Tuple[int, int, int, List[str]]:
-    """
-    Inserta o actualiza múltiples items de listas de precios en una sola operación.
-    """
     if not items:
         return 0, 0, 0, []
     
@@ -391,7 +465,7 @@ def guardar_o_actualizar_cliente(db: Session, customer_id: int, username: str, e
 """ BULK UPSERT de clientes"""
 def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int, List[str]]:
     """
-    Inserta o actualiza múltiples clientes en una sola operación.
+    Inserta o actualiza multiples clientes en una sola operacion
     """
     if not customers:
         return 0, 0, []
@@ -481,6 +555,67 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
         return 0, 0, errores
 
 
+# VENDEDORES (SELLERS)
+def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, List[str]]:
+    """
+    Inserta o actualiza multiples vendedores en una sola operacion
+    """
+    if not sellers:
+        return 0, 0, []
+    
+    creados = 0
+    actualizados = 0
+    errores = []
+    
+    try:
+        # Obtener user_ids existentes
+        user_ids = [s['user_id'] for s in sellers]
+        existing_users = db.query(User.user_id).filter(
+            User.user_id.in_(user_ids)
+        ).all()
+        existing_ids = {u.user_id for u in existing_users}
+        
+        # Contar creados vs actualizados
+        for seller in sellers:
+            if seller['user_id'] in existing_ids:
+                actualizados += 1
+            else:
+                creados += 1
+        
+        # Preparar datos de User con contraseñas hasheadas y rol seller
+        sellers_data = []
+        for s in sellers:
+            sellers_data.append({
+                "user_id": s['user_id'],
+                "username": s['username'],
+                "email": s['email'],
+                "full_name": s['full_name'],
+                "password_hash": get_password_hash(s['password']),
+                "role": 'seller',
+                "is_active": s.get('is_active', True),
+                "updated_at": s.get('updated_at') or datetime.now()
+            })
+        
+        # BULK UPSERT User
+        stmt = insert(User).values(sellers_data)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['user_id'],
+            set_={
+                'email': stmt.excluded.email,
+                'full_name': stmt.excluded.full_name,
+                'is_active': stmt.excluded.is_active,
+                'updated_at': stmt.excluded.updated_at
+            }
+        )
+        db.execute(stmt)
+        
+        return creados, actualizados, errores
+        
+    except Exception as error:
+        errores.append(f"Error en bulk upsert de vendedores: {str(error)}")
+        return 0, 0, errores
+
+
 def limpiar_items_no_sincronizados(db: Session, last_sync: datetime):
     """
     Desactiva o elimina items que no fueron actualizados desde la fecha de ultima sincronizacion.
@@ -489,6 +624,7 @@ def limpiar_items_no_sincronizados(db: Session, last_sync: datetime):
     - Listas de precios no actualizadas: Se eliminan
     - Relaciones producto-lista no actualizadas: Se eliminan
     - Clientes no actualizados: Se desactivan (is_active = False)
+    - Vendedores no actualizados: Se desactivan (is_active = False)
     """
     # Desactivar productos no actualizados
     db.query(Product).filter(Product.updated_at < last_sync).update({Product.is_active: False})
@@ -501,5 +637,10 @@ def limpiar_items_no_sincronizados(db: Session, last_sync: datetime):
     
     # Desactivar clientes no actualizados
     db.query(Customer).filter(Customer.updated_at < last_sync).update({Customer.is_active: False})
+
+    # Desactivar vendedores no actualizados
+    db.query(User).filter(
+        User.role == 'seller',
+        User.updated_at < last_sync
+    ).update({User.is_active: False})
     
-    # No hacer commit aquí - el endpoint lo maneja

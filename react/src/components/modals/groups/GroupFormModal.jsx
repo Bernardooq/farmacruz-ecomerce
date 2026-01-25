@@ -1,42 +1,9 @@
-/**
- * GroupFormModal.jsx
- * ==================
- * Modal para crear/editar grupos de ventas
- * 
- * Permite crear nuevos grupos o editar grupos existentes.
- * Los grupos de ventas se usan para organizar clientes, sellers
- * y marketing managers.
- * 
- * Props:
- * @param {Object} group - Grupo a editar (null para crear nuevo)
- * @param {function} onClose - Callback para cerrar modal
- * @param {function} onSaved - Callback después de guardar exitosamente
- * 
- * Campos del formulario:
- * - group_name: Nombre del grupo (requerido)
- * - description: Descripción opcional
- * - is_active: Estado activo/inactivo
- * 
- * Modos:
- * - Crear: group = null
- * - Editar: group = objeto de grupo
- * 
- * Uso:
- * <GroupFormModal
- *   group={selectedGroup}
- *   onClose={() => setShowModal(false)}
- *   onSaved={() => refreshGroups()}
- * />
- */
-
 import { useState, useEffect } from 'react';
 import salesGroupService from '../../../services/salesGroupService';
 import ErrorMessage from '../../common/ErrorMessage';
 
 export default function GroupFormModal({ group, onClose, onSaved }) {
-  // ============================================
-  // STATE
-  // ============================================
+
   const [formData, setFormData] = useState({
     group_name: '',
     description: '',
@@ -45,13 +12,7 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ============================================
-  // EFFECTS
-  // ============================================
-
-  /**
-   * Cargar datos del grupo si estamos editando
-   */
+  // Cargar datos del grupo al editar
   useEffect(() => {
     if (group) {
       setFormData({
@@ -62,13 +23,7 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
     }
   }, [group]);
 
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
-
-  /**
-   * Maneja cambios en los campos del formulario
-   */
+  // Manejador de cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -105,9 +60,7 @@ export default function GroupFormModal({ group, onClose, onSaved }) {
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Renderizar el modal
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>

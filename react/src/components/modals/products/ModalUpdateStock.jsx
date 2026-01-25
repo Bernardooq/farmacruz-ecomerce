@@ -1,46 +1,10 @@
-/**
- * ModalUpdateStock.jsx
- * ====================
- * Modal para actualizar stock de productos
- * 
- * Permite incrementar o decrementar el stock de un producto.
- * Incluye validación para evitar stock negativo y preview del nuevo valor.
- * 
- * Props:
- * @param {boolean} isOpen - Si el modal está visible
- * @param {function} onClose - Callback para cerrar el modal
- * @param {function} onSubmit - Callback para actualizar stock (productId, quantity)
- * @param {Object} product - Objeto de producto a actualizar
- * 
- * Funcionalidades:
- * - Agregar stock (números positivos)
- * - Restar stock (números negativos)
- * - Validación de stock negativo
- * - Preview del nuevo stock en tiempo real
- * - Información del producto (nombre, codebar, stock actual)
- * 
- * Uso:
- * <ModalUpdateStock
- *   isOpen={showModal}
- *   onClose={() => setShowModal(false)}
- *   onSubmit={(id, qty) => updateStock(id, qty)}
- *   product={selectedProduct}
- * />
- */
-
 import { useState } from 'react';
 
 export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product }) {
-  // ============================================
-  // STATE
-  // ============================================
+
   const [quantity, setQuantity] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
 
   /**
    * Maneja el envío del formulario
@@ -74,9 +38,7 @@ export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product })
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Render del modal
 
   // No renderizar si está cerrado o no hay producto
   if (!isOpen || !product) return null;

@@ -77,3 +77,16 @@ class UserInDB(UserInDBBase):
     Solo se usa internamente, NUNCA se envia al frontend.
     """
     password_hash: str
+
+
+class SellerSync(BaseModel):
+    """
+    Schema para sincronización masiva de vendedores desde DBF
+    """
+    user_id: int
+    username: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    password: str
+    is_active: bool = True
+    updated_at: Optional[datetime] = None

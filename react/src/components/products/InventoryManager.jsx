@@ -1,33 +1,3 @@
-/**
- * InventoryManager.jsx
- * ====================
- * Componente principal de gestión de inventario
- * 
- * Permite a los administradores gestionar el inventario completo de productos.
- * Incluye búsqueda, filtrado, paginación y operaciones CRUD completas.
- * 
- * Funcionalidades:
- * - Listar productos con paginación
- * - Buscar por nombre y codebar
- * - Filtrar por categoría y nivel de stock
- * - Crear nuevo producto (admin only)
- * - Editar producto existente (admin only)
- * - Actualizar stock
- * - Eliminar producto (admin only)
- * 
- * Filtros de stock:
- * - ok: Stock >= 10
- * - low: 0 < Stock < 10
- * - out: Stock = 0
- * 
- * Permisos:
- * - Admin: CRUD completo
- * - Seller: Solo lectura
- * 
- * Uso:
- * <InventoryManager />
- */
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { productService } from '../../services/productService';
@@ -40,16 +10,12 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import PaginationButtons from '../common/PaginationButtons';
 
-// ============================================
-// CONSTANTES
-// ============================================
+
 const ITEMS_PER_PAGE = 10;
 const LOW_STOCK_THRESHOLD = 10;
 
 export default function InventoryManager() {
-  // ============================================
-  // HOOKS & STATE
-  // ============================================
+
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
@@ -77,9 +43,7 @@ export default function InventoryManager() {
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // ============================================
-  // EFFECTS
-  // ============================================
+
 
   /**
    * Cargar categorías al montar (solo una vez)
@@ -100,9 +64,6 @@ export default function InventoryManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, selectedCategory, stockFilter, searchName, imageFilter, isActiveFilter]);
 
-  // ============================================
-  // DATA FETCHING
-  // ============================================
 
   /**
    * Carga todas las categorías disponibles
@@ -111,8 +72,7 @@ export default function InventoryManager() {
     try {
       const data = await categoryService.getCategories();
       setCategories(data);
-    } catch (err) {
-    }
+    } catch (err) { /* empty */ }
   };
 
   /**
@@ -184,10 +144,7 @@ export default function InventoryManager() {
     }
   };
 
-  // ============================================
-  // HELPERS
-  // ============================================
-
+  // Helpers
   /**
    * Aplica filtros del lado del cliente
    * NOTA: Búsqueda y stock filtering ahora son server-side
@@ -210,9 +167,7 @@ export default function InventoryManager() {
     return filtered;
   };
 
-  // ============================================
-  // EVENT HANDLERS - CRUD Operations
-  // ============================================
+  // HANDLERS
 
   /**
    * Crea un nuevo producto
@@ -257,9 +212,7 @@ export default function InventoryManager() {
     }
   };
 
-  // ============================================
-  // EVENT HANDLERS - Search
-  // ============================================
+  // Search Handlers
 
   /**
    * Maneja el envío del formulario de búsqueda
@@ -269,9 +222,7 @@ export default function InventoryManager() {
     loadProducts();
   };
 
-  // ============================================
-  // RENDER - Error Boundary
-  // ============================================
+  // Renderizado de errores críticos
 
   if (error && products.length === 0 && !loading) {
     return (
@@ -295,9 +246,7 @@ export default function InventoryManager() {
     );
   }
 
-  // ============================================
-  // RENDER - Main Component
-  // ============================================
+  // Renderizado principal
   return (
     <section className="dashboard-section">
       {/* Header con botón añadir */}

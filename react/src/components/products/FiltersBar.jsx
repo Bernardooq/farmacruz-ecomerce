@@ -1,35 +1,3 @@
-/**
- * FiltersBar.jsx
- * ==============
- * Componente de barra de filtros para productos
- * 
- * Proporciona controles de filtrado y ordenamiento para la página
- * de productos. Incluye selector de categoría y opciones de ordenamiento.
- * 
- * Props:
- * @param {Array} categories - Array de categorías disponibles
- * @param {string} selectedCategory - ID de categoría actualmente seleccionada
- * @param {function} onCategoryChange - Callback cuando cambia la categoría
- * @param {string} sortOrder - Orden de clasificación actual
- * @param {function} onSortChange - Callback cuando cambia el orden
- * 
- * Opciones de ordenamiento:
- * - relevance: Más recientes
- * - price_asc: Precio menor a mayor
- * - price_desc: Precio mayor a menor
- * - name_asc: Nombre A-Z
- * - name_desc: Nombre Z-A
- * 
- * Uso:
- * <FiltersBar
- *   categories={categoryList}
- *   selectedCategory={selectedCat}
- *   onCategoryChange={(cat) => setCategory(cat)}
- *   sortOrder={order}
- *   onSortChange={(order) => setOrder(order)}
- * />
- */
-
 export default function FiltersBar({
   categories,
   selectedCategory,

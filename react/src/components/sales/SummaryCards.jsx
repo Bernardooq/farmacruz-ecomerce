@@ -1,35 +1,3 @@
-/**
- * SummaryCards.jsx
- * ================
- * Componente de tarjetas de resumen para dashboards
- * 
- * Muestra métricas clave del sistema en tarjetas visuales.
- * Se adapta dinámicamente según las métricas disponibles en el summary.
- * 
- * Props:
- * @param {Object} summary - Objeto con métricas del dashboard
- * 
- * Métricas soportadas:
- * - pending_orders: Pedidos pendientes
- * - delivered_orders: Pedidos entregados
- * - other_orders: Pedidos en otros estados
- * - total_revenue: Ingresos totales
- * - total_customers: Clientes registrados
- * - total_sellers: Vendedores activos
- * - total_marketing: Marketing managers activos
- * - total_products: Productos en catálogo
- * - low_stock_count: Productos con bajo stock
- * 
- * Características:
- * - Renderizado condicional de tarjetas
- * - Formato de moneda automático
- * - Iconos de FontAwesome
- * - Grid responsive
- * 
- * Uso:
- * <SummaryCards summary={dashboardStats} />
- */
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faInbox,
@@ -44,9 +12,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function SummaryCards({ summary }) {
-  // ============================================
-  // HELPERS
-  // ============================================
 
   /**
    * Formatea un número como moneda mexicana
@@ -58,9 +23,7 @@ export default function SummaryCards({ summary }) {
     }).format(amount || 0);
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Renderizado
   return (
     <section className="summary-cards">
       {/* Pedidos Pendientes */}

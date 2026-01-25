@@ -1,35 +1,6 @@
-/**
- * LoginForm.jsx
- * =============
- * Formulario de inicio de sesión
- * 
- * Maneja la autenticación de usuarios y redirección basada en roles.
- * Soporta clientes, admin, sellers y marketing managers.
- * 
- * Características:
- * - Validación de credenciales
- * - Mostrar/ocultar contraseña
- * - Redirección automática según rol
- * - Estados de loading y error
- * - Campos deshabilitados durante autenticación
- * 
- * Redirecciones por rol:
- * - admin → /admindash
- * - seller → /sellerdash
- * - marketing → /marketingdash
- * - customer → /products
- * 
- * Uso:
- * <LoginForm />
- */
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-
-// ============================================
-// CONSTANTES
-// ============================================
 
 /**
  * Rutas de redirección según rol de usuario
@@ -42,9 +13,6 @@ const ROLE_ROUTES = {
 };
 
 export default function LoginForm() {
-  // ============================================
-  // HOOKS & STATE
-  // ============================================
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -56,10 +24,6 @@ export default function LoginForm() {
   // Estado de UI
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
 
   /**
    * Maneja el envío del formulario de login

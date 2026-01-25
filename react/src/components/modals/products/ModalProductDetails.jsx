@@ -1,52 +1,13 @@
-/**
- * ModalProductDetails.jsx
- * =======================
- * Modal de detalles de producto con funcionalidad de agregar al carrito
- * 
- * Muestra información completa del producto: imagen, nombre, codebar, precio,
- * stock disponible, descripción y selector de cantidad.
- * 
- * Props:
- * @param {Object} product - Objeto de producto
- * @param {boolean} isOpen - Si el modal está visible
- * @param {function} onClose - Callback para cerrar modal
- * 
- * Funcionalidades:
- * - Ver detalles completos del producto
- * - Selector de cantidad con validación de stock
- * - Agregar al carrito con feedback
- * - Mostrar cantidad ya en carrito
- * - Validación de autenticación
- * - Auto-cierre después de agregar exitosamente
- * - Prevención de doble-click
- * 
- * Estados de producto:
- * - Disponible: stock > 0 && is_active
- * - Agotado: stock = 0 || !is_active
- * 
- * Uso:
- * <ModalProductDetails
- *   product={selectedProduct}
- *   isOpen={showModal}
- *   onClose={() => setShowModal(false)}
- * />
- */
-
 import { useState, useEffect } from 'react';
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../context/AuthContext';
 
-// ============================================
-// CONSTANTES
-// ============================================
 const MESSAGE_TIMEOUT = 3000;
 const SUCCESS_CLOSE_DELAY = 1500;
 const WARNING_TIMEOUT = 4000;
 
 export default function ModalProductDetails({ product, isOpen, onClose }) {
-  // ============================================
-  // HOOKS & STATE
-  // ============================================
+
   const { addToCart, items } = useCart();
   const { isAuthenticated } = useAuth();
 
@@ -54,13 +15,7 @@ export default function ModalProductDetails({ product, isOpen, onClose }) {
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState('');
 
-  // ============================================
-  // EFFECTS
-  // ============================================
-
-  /**
-   * Resetear estado cuando se abre el modal
-   */
+  // Resetear estado al abrir el modal
   useEffect(() => {
     if (isOpen) {
       setQuantity(1);
@@ -69,9 +24,6 @@ export default function ModalProductDetails({ product, isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  // ============================================
-  // DERIVADAS
-  // ============================================
 
   if (!isOpen || !product) return null;
 
@@ -80,10 +32,6 @@ export default function ModalProductDetails({ product, isOpen, onClose }) {
   // Calcular cuántas unidades ya tiene en el carrito
   const existingItem = items.find(item => item.product?.product_id === product.product_id);
   const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
-
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
 
   /**
    * Maneja la adición del producto al carrito
@@ -159,9 +107,7 @@ export default function ModalProductDetails({ product, isOpen, onClose }) {
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Render del modal
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div

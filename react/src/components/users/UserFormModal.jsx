@@ -1,49 +1,9 @@
-/**
- * UserFormModal.jsx
- * =================
- * Modal para crear/editar usuarios del sistema (sellers y marketing)
- * 
- * Permite al administrador gestionar usuarios internos del sistema.
- * Soporta creación y edición de sellers y marketing managers.
- * 
- * Props:
- * @param {Object} user - Usuario a editar (null para crear nuevo)
- * @param {string} role - Rol del usuario ('seller' o 'marketing')
- * @param {function} onClose - Callback para cerrar modal
- * @param {function} onSaved - Callback después de guardar exitosamente
- * 
- * Campos del formulario:
- * - full_name: Nombre completo (requerido)
- * - username: Usuario para login (requerido)
- * - email: Email (requerido)
- * - password: Contraseña (requerido al crear, opcional al editar)
- * - is_active: Estado activo/inactivo
- * 
- * Modos:
- * - Crear: user = null, password requerido
- * - Editar: user = objeto, password opcional (solo si se quiere cambiar)
- * 
- * Roles soportados:
- * - seller: Vendedor
- * - marketing: Marketing Manager
- * 
- * Uso:
- * <UserFormModal
- *   user={selectedUser}
- *   role="seller"
- *   onClose={() => setShowModal(false)}
- *   onSaved={() => refreshUsers()}
- * />
- */
-
 import { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import ErrorMessage from '../common/ErrorMessage';
 
 export default function UserFormModal({ user, role, onClose, onSaved }) {
-  // ============================================
-  // STATE
-  // ============================================
+
   const [formData, setFormData] = useState({
     user_id: '',  // ID manual (opcional)
     username: '',
@@ -55,10 +15,6 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // ============================================
-  // EFFECTS
-  // ============================================
 
   /**
    * Cargar datos del usuario si estamos editando
@@ -76,10 +32,6 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
       });
     }
   }, [user]);
-
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
 
   /**
    * Maneja cambios en campos del formulario
@@ -133,9 +85,6 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
     }
   };
 
-  // ============================================
-  // HELPERS
-  // ============================================
 
   /**
    * Obtiene la etiqueta del rol en español
@@ -148,9 +97,7 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Renderizado
   return (
     <div className="modal-overlay enable" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>

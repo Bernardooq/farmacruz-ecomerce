@@ -1,31 +1,3 @@
-/**
- * CategoryManagement.jsx
- * ======================
- * Componente de gestión de categorías de productos
- * 
- * Permite administrar las categorías que se usan para clasificar
- * productos en el sistema. Solo administradores pueden crear/editar/eliminar.
- * Otros roles tienen acceso de solo lectura.
- * 
- * Funcionalidades:
- * - Listar todas las categorías
- * - Crear nueva categoría (admin only)
- * - Editar categoría existente (admin only)
- * - Eliminar categoría (admin only)
- * - Vista de solo lectura para no-admin
- * 
- * Permisos:
- * - Admin: CRUD completo
- * - Seller/Marketing: Solo lectura
- * 
- * Campos de categoría:
- * - name: Nombre de la categoría (requerido)
- * - description: Descripción opcional
- * 
- * Uso:
- * <CategoryManagement />
- */
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -35,9 +7,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 
 export default function CategoryManagement() {
-  // ============================================
-  // HOOKS & STATE
-  // ============================================
+
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
@@ -58,10 +28,6 @@ export default function CategoryManagement() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
 
-  // ============================================
-  // EFFECTS
-  // ============================================
-
   /**
    * Cargar categorías al montar
    */
@@ -69,9 +35,6 @@ export default function CategoryManagement() {
     loadCategories();
   }, []);
 
-  // ============================================
-  // DATA FETCHING
-  // ============================================
 
   /**
    * Carga todas las categorías del sistema
@@ -90,9 +53,6 @@ export default function CategoryManagement() {
     }
   };
 
-  // ============================================
-  // EVENT HANDLERS - Modal
-  // ============================================
 
   /**
    * Abre modal para crear nueva categoría
@@ -128,10 +88,6 @@ export default function CategoryManagement() {
     setEditingCategory(null);
     setFormError(null);
   };
-
-  // ============================================
-  // EVENT HANDLERS - Form
-  // ============================================
 
   /**
    * Maneja cambios en campos del formulario
@@ -190,9 +146,7 @@ export default function CategoryManagement() {
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Renderizado
 
   if (loading && categories.length === 0) {
     return <LoadingSpinner message="Cargando categorías..." />;

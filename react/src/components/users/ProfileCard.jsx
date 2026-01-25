@@ -1,33 +1,3 @@
-/**
- * ProfileCard.jsx
- * ===============
- * Componente de tarjeta de perfil de usuario
- * 
- * Muestra información resumida del perfil del usuario incluyendo
- * avatar, nombre, email y dirección de envío.
- * 
- * Props:
- * @param {Object} profile - Objeto de perfil de usuario
- * 
- * Estructura de profile esperada:
- * - name: Nombre completo del usuario
- * - email: Email del usuario
- * - address: Dirección de envío
- * 
- * Características:
- * - Avatar con icono de FontAwesome
- * - Botón de editar (sin funcionalidad actual)
- * - Layout de tarjeta visual
- * 
- * Nota:
- * - Este componente parece no estar en uso actualmente
- * - El botón "Editar" no tiene onClick handler
- * - Considera integrarlo o removerlo
- * 
- * Uso:
- * <ProfileCard profile={userData} />
- */
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 

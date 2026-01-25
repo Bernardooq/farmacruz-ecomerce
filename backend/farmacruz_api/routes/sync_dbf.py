@@ -12,18 +12,11 @@ Permite mantener sincronizados los datos entre:
 
 ¿Como funciona?
 --------------
-1. Recibes datos del DBF en lotes (batches)
+1. Se reciben datos del DBF en lotes (batches)
 2. Para cada registro:
    - Si ya EXISTE (por ID) → Se ACTUALIZA
    - Si NO existe → Se CREA nuevo
-3. Retornas un resumen: cuantos creados, actualizados, errores
-
-ORDEN IMPORTANTE:
-----------------
-Debes sincronizar en este orden (porque hay dependencias):
-1. PRIMERO → Listas de precios (son contenedores)
-2. SEGUNDO → Productos (dependen de categorias)
-3. TERCERO → Relaciones producto-lista (dependen de ambos anteriores)
+3. Retornar resumen: cuantos creados, actualizados, errores
 
 Permisos:
 --------
@@ -42,6 +35,7 @@ from db.base import User
 from schemas.price_list import PriceListCreate, PriceListItemCreate, PriceListItemCreateBulk, PriceListItemSync
 from schemas.product import ProductCreate, ProductCreate2
 from schemas.customer import CustomerSync  # Nuevo import
+from schemas.user import SellerSync  # Nuevo import
 from crud import crud_sync
 
 
@@ -54,30 +48,16 @@ class CleanupSchema(BaseModel):
     last_sync: datetime
 
 class ResultadoSincronizacion(BaseModel):
-    """
-    Resultado de una operacion de sincronizacion
-    
-    Te dice exactamente que paso con tus datos:
-    - Cuantos se recibieron
-    - Cuantos se crearon (nuevos)
-    - Cuantos se actualizaron (ya existian)
-    - Cuantos tuvieron errores
-    - Detalle de los errores
-    """
-    total_recibidos: int  # Total de registros que enviaste
+    total_recibidos: int  # Total de registros enviados
     creados: int  # Registros nuevos que se crearon
     actualizados: int  # Registros que ya existian y se actualizaron
     errores: int  # Registros que tuvieron algun problema
     detalle_errores: List[str] = []  # Descripcion de cada error
 
 
-# ENDPOINT: SINCRONIZAR LISTAS DE PRECIOS
-
+""" POST /price-lists - Sincronizar listas de precios """
 @router.post("/price-lists", response_model=ResultadoSincronizacion)
 def sincronizar_listas_de_precios(listas: List[PriceListCreate], usuario_actual: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
-    """
-    Sincroniza listas de precios desde el DBF (en lote)
-    """
     # Preparar el contador de resultados
     resultado = ResultadoSincronizacion(total_recibidos=len(listas), creados=0, actualizados=0, errores=0, detalle_errores=[])
     
@@ -122,12 +102,9 @@ def sincronizar_listas_de_precios(listas: List[PriceListCreate], usuario_actual:
     return resultado
 
 
-
+""" POST /categories - Sincronizar categorias"""
 @router.post("/categories", response_model=ResultadoSincronizacion)
 def sincronizar_categorias(categorias: List[CategorySync], usuario_actual: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
-    """
-    Sincroniza categorias desde el DBF (en lote)
-    """
     resultado = ResultadoSincronizacion(total_recibidos=len(categorias), creados=0, actualizados=0, errores=0, detalle_errores=[])
     
     for categoria in categorias:
@@ -163,52 +140,40 @@ def sincronizar_categorias(categorias: List[CategorySync], usuario_actual: User 
     return resultado
 
 
-# ENDPOINT: SINCRONIZAR PRODUCTOS
-
+""" POST /products - Sincronizar productos """
 @router.post("/products", response_model=ResultadoSincronizacion)
 def sincronizar_productos(productos: List[ProductCreate2], usuario_actual: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
-    """
-    Sincroniza productos del catalogo desde el DBF (en lote)
-    """
-    # Preparar el contador de resultados
-    resultado = ResultadoSincronizacion(total_recibidos=len(productos), creados=0, actualizados=0, errores=0, detalle_errores=[])
+    # Convertir productos de Pydantic a dict para bulk upsert
+    productos_dict = [
+        {
+            "product_id": p.product_id,
+            "codebar": p.codebar,
+            "name": p.name,
+            "description": p.description,
+            "descripcion_2": p.descripcion_2,
+            "unidad_medida": p.unidad_medida,
+            "base_price": float(p.base_price),
+            "iva_percentage": float(p.iva_percentage) if p.iva_percentage else 0.0,
+            "stock_count": p.stock_count if p.stock_count else 0,
+            "is_active": p.is_active if p.is_active is not None else True,
+            "category_name": p.category_name,
+            "image_url": p.image_url,
+            "updated_at": p.updated_at if p.updated_at else None
+        }
+        for p in productos
+    ]
     
-    # Procesar cada producto uno por uno con savepoints
-    for producto in productos:
-        # Crear un savepoint para este producto (sub-transaccion)
-        savepoint = db.begin_nested()
-        
-        try:
-            # Intentar guardar o actualizar el producto
-            fue_creado, mensaje_error = crud_sync.guardar_o_actualizar_producto(
-                db=db, producto_id=producto.product_id, codebar=producto.codebar, nombre=producto.name, descripcion=producto.description,
-                descripcion_2=producto.descripcion_2, unidad_medida=producto.unidad_medida, precio_base=float(producto.base_price), porcentaje_iva=float(producto.iva_percentage) if producto.iva_percentage else 0.0,
-                cantidad_stock=producto.stock_count if producto.stock_count else 0, esta_activo=producto.is_active if producto.is_active is not None else True,
-                category_name=producto.category_name, url_imagen=producto.image_url, updated_at=producto.updated_at if producto.updated_at else None)
-            
-            # Si hubo error, hacer rollback del savepoint y registrarlo
-            if mensaje_error:
-                savepoint.rollback()
-                resultado.errores += 1
-                resultado.detalle_errores.append(
-                    f"Producto ID {producto.product_id} (codebar: {producto.codebar}): {mensaje_error}"
-                )
-            # Si todo bien, confirmar savepoint y contar
-            else:
-                savepoint.commit()
-                if fue_creado:
-                    resultado.creados += 1
-                else:
-                    resultado.actualizados += 1
-                
-        except Exception as error_inesperado:
-            # Hacer rollback del savepoint en caso de error
-            savepoint.rollback()
-            resultado.errores += 1
-            resultado.detalle_errores.append(
-                f"Producto ID {producto.product_id} (codebar: {producto.codebar}): "
-                f"Error inesperado - {str(error_inesperado)}"
-            )
+    # Ejecutar bulk upsert
+    creados, actualizados, errores_lista = crud_sync.bulk_sync_prods(db, productos_dict)
+    
+    # Preparar resultado
+    resultado = ResultadoSincronizacion(
+        total_recibidos=len(productos),
+        creados=creados,
+        actualizados=actualizados,
+        errores=len(errores_lista),
+        detalle_errores=errores_lista
+    )
     
     # Guardar todos los cambios en la base de datos
     try:
@@ -223,16 +188,10 @@ def sincronizar_productos(productos: List[ProductCreate2], usuario_actual: User 
     return resultado
 
 
-# ENDPOINT: SINCRONIZAR ITEMS DE LISTAS (BULK)
+""" POST /price-list-items - Sincronizar items de listas de precios """
 @router.post("/price-list-items", response_model=ResultadoSincronizacion)
-def sincronizar_items(
-    items: List[PriceListItemSync], 
-    usuario_actual: User = Depends(get_current_admin_user), 
-    db: Session = Depends(get_db)
-):
-    """
-    Sincroniza items de listas de precios en modo BULK
-    """
+def sincronizar_items(items: List[PriceListItemSync], 
+    usuario_actual: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
     # Convertir items de Pydantic a dict para bulk upsert
     items_dict = [
         {
@@ -269,16 +228,13 @@ def sincronizar_items(
 
 
 
-# ENDPOINT: SINCRONIZAR CLIENTES
+""" POST /customers - Sincronizar clientes """
 @router.post("/customers", response_model=ResultadoSincronizacion)
 def sincronizar_clientes(
     clientes: List[CustomerSync],  # Cambiado a CustomerSync
     usuario_actual: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Sincroniza clientes del archivo CLIENTES.DBF (en lote)
-    """
     # Convertir clientes de Pydantic a dict para bulk upsert
     clientes_dict = [
         {
@@ -324,17 +280,53 @@ def sincronizar_clientes(
     
     return resultado
 
+""" POST /sellers - Sincronizar vendedores """
+@router.post("/sellers", response_model=ResultadoSincronizacion)
+def sincronizar_vendedores(vendedores: List[SellerSync], usuario_actual: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
+    # Convertir a dict para bulk upsert
+    vendedores_dict = [
+        {
+            "user_id": v.user_id,
+            "username": v.username,
+            "email": v.email or f"{v.username}@farmacruz.local",
+            "full_name": v.full_name or v.username,
+            "password": v.password,
+            "is_active": v.is_active,
+            "updated_at": v.updated_at if v.updated_at else None
+        }
+        for v in vendedores
+    ]
+    
+    # Ejecutar bulk upsert
+    creados, actualizados, errores_lista = crud_sync.bulk_upsert_sellers(db, vendedores_dict)
+    resultado = ResultadoSincronizacion(
+        total_recibidos=len(vendedores),
+        creados=creados,
+        actualizados=actualizados,
+        errores=len(errores_lista),
+        detalle_errores=errores_lista
+    )
 
-# ENDPOINT: LIMPIEZA POST-SINCRONIZACION
+    try:
+        db.commit()
+    except Exception as error_commit:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al guardar los cambios: {str(error_commit)}"
+        )
+    
+    return resultado
+
+
+""" POST /cleanup - Limpiar items no sincronizados """
 @router.post("/cleanup", response_model=CleanupSchema)
 def limpieza_post_sincronizacion(
     last_sync: CleanupSchema,
     usuario_actual: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Desactiva o elimina items que no fueron actualizados desde la ultima sincronizacion
-    """
+    # Desactiva o elimina items que no fueron sincronizados
     try:
         crud_sync.limpiar_items_no_sincronizados(db=db, last_sync=last_sync.last_sync)
         db.commit()

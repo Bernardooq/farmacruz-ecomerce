@@ -1,47 +1,8 @@
-/**
- * ModalPriceListForm.jsx
- * ======================
- * Modal para crear/editar listas de precios
- * 
- * Permite gestionar listas de precios que se asignan a clientes.
- * Cada lista de precios contiene precios personalizados por producto.
- * 
- * Props:
- * @param {boolean} isOpen - Si el modal está visible
- * @param {function} onClose - Callback para cerrar modal
- * @param {function} onSuccess - Callback después de guardar exitosamente
- * @param {Object} priceList - Lista a editar (null para crear nueva)
- * 
- * Campos del formulario:
- * - price_list_id: ID opcional al crear (auto-generado si se omite)
- * - list_name: Nombre de la lista (requerido)
- * - description: Descripción opcional
- * - is_active: Estado activo/inactivo
- * 
- * Modos:
- * - Crear: priceList = null, muestra campo de ID opcional
- * - Editar: priceList = objeto, ID no editable
- * 
- * Nota:
- * - El ID solo se muestra en modo crear
- * - Si no se proporciona ID, el backend lo auto-genera
- * 
- * Uso:
- * <ModalPriceListForm
- *   isOpen={showModal}
- *   onClose={() => setShowModal(false)}
- *   onSuccess={() => refreshLists()}
- *   priceList={selectedList}
- * />
- */
-
 import { useState, useEffect } from 'react';
 import priceListService from '../../../services/priceListService';
 
 export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceList }) {
-  // ============================================
-  // STATE
-  // ============================================
+
   const [formData, setFormData] = useState({
     price_list_id: '',
     list_name: '',
@@ -51,13 +12,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ============================================
-  // EFFECTS
-  // ============================================
-
-  /**
-   * Inicializar formulario según el modo (crear/editar)
-   */
+  // Inicializar o cargar datos al abrir el modal
   useEffect(() => {
     if (isOpen && priceList) {
       // Modo editar: cargar datos existentes
@@ -77,13 +32,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
     }
   }, [isOpen, priceList]);
 
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
-
-  /**
-   * Maneja cambios en campos del formulario
-   */
+  //Manejador de cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -127,9 +76,7 @@ export default function ModalPriceListForm({ isOpen, onClose, onSuccess, priceLi
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // Renderizar el modal
   if (!isOpen) return null;
 
   return (

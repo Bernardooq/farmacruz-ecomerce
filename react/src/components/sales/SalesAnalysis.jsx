@@ -1,47 +1,12 @@
-/**
- * SalesAnalysis.jsx
- * =================
- * Componente de análisis de ventas con filtros de fecha
- * 
- * Muestra métricas clave de ventas para un período específico
- * con capacidad de filtrar por rango de fechas.
- * 
- * Props:
- * @param {Object} summary - Objeto con métricas de ventas
- * @param {function} onFilter - Callback para aplicar filtro de fechas
- * 
- * Métricas mostradas:
- * - totalSales: Ventas totales del período
- * - totalOrders: Pedidos totales
- * - avgTicket: Ticket promedio
- * 
- * Características:
- * - Filtro por rango de fechas
- * - Cards con métricas visuales
- * - Iconos de FontAwesome
- * - Espacio para gráficos (placeholder)
- * 
- * Uso:
- * <SalesAnalysis
- *   summary={salesData}
- *   onFilter={(start, end) => filterData(start, end)}
- * />
- */
-
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDollarSign, faReceipt, faChartLine } from '@fortawesome/free-solid-svg-icons';
 
 export default function SalesAnalysis({ summary, onFilter }) {
-  // ============================================
-  // STATE
-  // ============================================
+
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
 
   /**
    * Aplica el filtro de fechas si ambas están seleccionadas
@@ -52,9 +17,7 @@ export default function SalesAnalysis({ summary, onFilter }) {
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
+  //Renderizado
   return (
     <section className="dashboard-section">
       {/* Header con filtro de fechas */}

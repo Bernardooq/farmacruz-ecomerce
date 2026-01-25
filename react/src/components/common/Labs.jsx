@@ -1,40 +1,8 @@
-/**
- * Labs.jsx
- * ========
- * Componente de logos de laboratorios en la landing page
- * 
- * Muestra un grid de logos de los principales laboratorios farmacéuticos
- * con los que FarmaCruz trabaja como distribuidor.
- * 
- * Características:
- * - Carga dinámica de imágenes desde /images/labs/*.jpg
- * - Grid responsive de logos
- * - Lazy loading de imágenes para mejor performance
- * - Auto-detecta todas las imágenes en la carpeta labs
- * 
- * Estructura esperada:
- * - Imágenes en: src/images/labs/*.jpg
- * - Formato: JPG
- * - Nombres: cualquier nombre.jpg
- * 
- * Uso:
- * <Labs />
- */
-
-import React from 'react';
-
-// ============================================
-// DYNAMIC IMAGE LOADING
-// ============================================
-
-/**
- * Importa dinámicamente todas las imágenes de laboratorios
- * desde la carpeta images/labs/
- */
+// Importa todas las imagenes de laboratorios desde la carpeta especificada
 const modules = import.meta.glob('../../images/labs/*.jpg', { eager: true });
 
 /**
- * Convierte los módulos importados en un array de objetos
+ * Convierte los modulos importados en un array de objetos
  * con id y src para cada logo de laboratorio
  */
 const labImages = Object.keys(modules).map((path, index) => {
