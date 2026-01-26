@@ -13,6 +13,7 @@ export default function ClientManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(''); // Search term con debounce
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [page, setPage] = useState(0);
@@ -44,11 +45,21 @@ export default function ClientManagement() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
 
+  // Debounce: Solo buscar 500ms después de que el usuario deje de escribir
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(0); // Resetear a página 0 cuando cambia búsqueda
+    }, 500); // 500ms de debounce
+
+    return () => clearTimeout(timer); // Limpiar timeout si el usuario sigue escribiendo
+  }, [searchTerm]);
+
   useEffect(() => {
     loadClients();
     // Solo cargar clientes al inicio, no price lists ni sellers
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchTerm]);
+  }, [page, debouncedSearchTerm]); // Usar debouncedSearchTerm en lugar de searchTerm
 
   const loadClients = async () => {
     try {
@@ -61,8 +72,8 @@ export default function ClientManagement() {
       };
 
       // Enviar búsqueda al backend
-      if (searchTerm) {
-        params.search = searchTerm;
+      if (debouncedSearchTerm) {
+        params.search = debouncedSearchTerm;
       }
 
       const customers = await customerService.getCustomers(params);
@@ -100,9 +111,9 @@ export default function ClientManagement() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    // Resetear a página 0 cuando se busca
+    // Forzar búsqueda inmediata al presionar Enter o botón
+    setDebouncedSearchTerm(searchTerm);
     setPage(0);
-    // loadClients se llamará automáticamente por el useEffect
   };
 
   const openAddModal = () => {
@@ -573,7 +584,7 @@ export default function ClientManagement() {
                     onChange={handleCustomerInfoChange}
                     disabled={formLoading}
                     maxLength="15"
-                    placeholder="10 dígitos"
+                    placeholder="15 dígitos máximo"
                   />
                 </div>
 
@@ -587,7 +598,7 @@ export default function ClientManagement() {
                     onChange={handleCustomerInfoChange}
                     disabled={formLoading}
                     maxLength="15"
-                    placeholder="Opcional"
+                    placeholder="Opcional, 15 dígitos máximo"
                   />
                 </div>
 

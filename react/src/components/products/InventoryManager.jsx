@@ -27,7 +27,9 @@ export default function InventoryManager() {
 
   // Filter state
   const [searchName, setSearchName] = useState('');
+  const [debouncedSearchName, setDebouncedSearchName] = useState('');
   const [searchcodebar, setSearchcodebar] = useState('');
+  const [debouncedSearchcodebar, setDebouncedSearchcodebar] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [stockFilter, setStockFilter] = useState('');
   const [imageFilter, setImageFilter] = useState('');
@@ -57,12 +59,31 @@ export default function InventoryManager() {
   }, []);
 
   /**
+   * Debounce search inputs
+   */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchName(searchName);
+      setPage(0); // Reset to page 0 when search changes
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchName]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchcodebar(searchcodebar);
+      setPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchcodebar]);
+
+  /**
    * Cargar productos cuando cambian página o filtros
    */
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, selectedCategory, stockFilter, searchName, imageFilter, isActiveFilter]);
+  }, [page, selectedCategory, stockFilter, debouncedSearchName, debouncedSearchcodebar, imageFilter, isActiveFilter]);
 
 
   /**
@@ -89,8 +110,8 @@ export default function InventoryManager() {
       };
 
       // Enviar búsqueda al backend
-      if (searchName) {
-        params.search = searchName; // Backend busca en nombre Y descripción
+      if (debouncedSearchName) {
+        params.search = debouncedSearchName; // Backend busca en nombre Y descripción
       }
 
       if (selectedCategory) {
@@ -156,9 +177,9 @@ export default function InventoryManager() {
     // BÚSQUEDA POR NOMBRE ELIMINADA - Ahora server-side
 
     // Filtro por codebar (client-side)
-    if (searchcodebar) {
+    if (debouncedSearchcodebar) {
       filtered = filtered.filter(p =>
-        p.codebar && p.codebar.toLowerCase().includes(searchcodebar.toLowerCase())
+        p.codebar && p.codebar.toLowerCase().includes(debouncedSearchcodebar.toLowerCase())
       );
     }
 
@@ -219,7 +240,9 @@ export default function InventoryManager() {
    */
   const handleSearch = (e) => {
     e.preventDefault();
-    loadProducts();
+    // Force immediate search on Enter/button
+    setDebouncedSearchName(searchName);
+    setDebouncedSearchcodebar(searchcodebar);
   };
 
   // Renderizado de errores críticos

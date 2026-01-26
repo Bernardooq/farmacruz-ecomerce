@@ -44,7 +44,7 @@ from schemas.cart import CartItem
 from db.base import OrderStatus, User, UserRole, Customer, CustomerInfo, PriceListItem
 
 from crud.crud_order import (assign_order_seller, calculate_order_shipping_address, get_order, get_orders_by_customer, get_orders, 
-    get_orders_for_user_groups, create_order_from_cart, update_order_status, cancel_order)
+    get_orders_for_user_groups, create_order_from_cart, update_order_status, cancel_order, generate_order_txt)
 
 from crud.crud_order_edit import edit_order_items
 
@@ -562,3 +562,55 @@ def edit_order_route(order_id: UUID, edit_data: OrderEditRequest, current_user: 
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+""" GET /{id}/download-txt - Descargar pedido en formato TXT """
+@router.get("/{order_id}/download-txt")
+def download_order_txt(
+    order_id: UUID,
+    current_user: User = Depends(get_current_seller_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Descarga un archivo TXT con formato de ancho fijo para el pedido especificado.
+    Solo accesible para admin, marketing y el vendedor asignado.
+    """
+    # Obtener el pedido
+    order = get_order(db, order_id=order_id)
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    
+    # Verificar permisos por grupo (si no es admin)
+    is_admin = current_user.role == UserRole.admin
+    if not is_admin:
+        if not user_can_manage_order(db, current_user.user_id, order.customer_id, current_user.role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para descargar este pedido. El cliente no pertenece a sus grupos."
+            )
+    
+    # Generar contenido TXT
+    try:
+        txt_content = generate_order_txt(db, order_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    
+    # Retornar archivo TXT
+    from fastapi.responses import Response
+    
+    filename = f"pedido_{order_id}.txt"
+    
+    return Response(
+        content=txt_content,
+        media_type="text/plain",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+

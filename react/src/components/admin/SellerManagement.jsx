@@ -11,6 +11,7 @@ export default function SellerManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingSeller, setEditingSeller] = useState(null);
   const [page, setPage] = useState(0);
@@ -26,6 +27,24 @@ export default function SellerManagement() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Trigger search when debounced term changes
+  useEffect(() => {
+    if (debouncedSearchTerm.trim()) {
+      performSearch();
+    } else {
+      loadSellers(); // Reset to normal view when search is cleared
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     loadSellers();
@@ -56,31 +75,29 @@ export default function SellerManagement() {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setPage(0); // Reset page when searching
+  const performSearch = async () => {
+    setPage(0);
     try {
       setLoading(true);
       setError(null);
-
-      if (searchTerm.trim()) {
-        // Si hay término de búsqueda, buscar sin paginación
-        const users = await adminService.getUsers({
-          role: 'seller',
-          search: searchTerm
-        });
-        setSellers(users);
-        setHasMore(false); // Deshabilitar paginación en búsqueda
-      } else {
-        // Si no hay término, cargar normalmente con paginación
-        loadSellers();
-      }
+      const users = await adminService.getUsers({
+        role: 'seller',
+        search: debouncedSearchTerm
+      });
+      setSellers(users);
+      setHasMore(false);
     } catch (err) {
       setError('Error al buscar vendedores.');
       console.error('Search failed:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    // Force immediate search on Enter/button
+    setDebouncedSearchTerm(searchTerm);
   };
 
   const openAddModal = () => {

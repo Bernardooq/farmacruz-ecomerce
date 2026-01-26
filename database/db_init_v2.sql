@@ -26,7 +26,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE users (
     user_id INTEGER PRIMARY KEY,  -- NO SERIAL - asignado manualmente o por backend
     username VARCHAR(255) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE,
+    email VARCHAR(255),
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
     role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'marketing', 'seller')),
@@ -47,7 +47,7 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE TABLE customers (
     customer_id SERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE,
+    email VARCHAR(255),  -- Email NO es unico - varios clientes pueden compartir email
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
@@ -57,12 +57,12 @@ CREATE TABLE customers (
     -- NUEVO: Agente/vendedor asignado desde DBF
     agent_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
     
-    CONSTRAINT customers_username_unique UNIQUE (username),
-    CONSTRAINT customers_email_unique UNIQUE (email)
+    CONSTRAINT customers_username_unique UNIQUE (username)
+    -- Removido: CONSTRAINT customers_email_unique UNIQUE (email)
 );
 
 CREATE INDEX idx_customers_username ON customers(username);
-CREATE INDEX idx_customers_email ON customers(email);
+CREATE INDEX idx_customers_email ON customers(email);  -- Mantener index para búsquedas rápidas
 CREATE INDEX idx_customers_agent_id ON customers(agent_id);
 
 -- =====================================================

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../context/AuthContext';
+import SimilarProducts from '../../products/SimilarProducts';
 
 const MESSAGE_TIMEOUT = 3000;
 const SUCCESS_CLOSE_DELAY = 1500;
 const WARNING_TIMEOUT = 4000;
 
-export default function ModalProductDetails({ product, isOpen, onClose }) {
+export default function ModalProductDetails({ product, isOpen, onClose, onProductSelect }) {
 
   const { addToCart, items } = useCart();
   const { isAuthenticated } = useAuth();
@@ -119,118 +120,133 @@ export default function ModalProductDetails({ product, isOpen, onClose }) {
           &times;
         </button>
 
-        <div className="product-details">
-          {/* Imagen del producto */}
-          <div className="product-details__image">
-            <img
-              src={product.image_url || '../../../images/default-product.jpg'}
-              alt={product.name}
-            />
-          </div>
-
-          {/* Información del producto */}
-          <div className="product-details__info">
-            <h2 className="product-details__title">
-              {product.name}
-            </h2>
-
-            <p className="product-details__codebar">
-              Codifo de barras: {product.codebar}
-            </p>
-
-            <div className="product-details__price">
-              ${Number(product.final_price || product.base_price || 0).toFixed(2)} MXN
+        {/* Wrapper con scroll para todo el contenido */}
+        <div style={{ maxHeight: '85vh', overflowY: 'auto', padding: '1rem' }}>
+          <div className="product-details">
+            {/* Imagen del producto */}
+            <div className="product-details__image">
+              <img
+                src={product.image_url || '../../../images/default-product.jpg'}
+                alt={product.name}
+              />
             </div>
 
-            {/* Estado de stock */}
-            <div className={`product-details__stock ${isAvailable ? 'product-details__stock--available' : 'product-details__stock--unavailable'}`}>
-              {isAvailable ? (
-                <>
-                  <span className="stock-available">
-                    ✓ En stock ({product.stock_count} unidades disponibles)
-                  </span>
-                  {currentQuantityInCart > 0 && (
-                    <span className="stock-in-cart">
-                      Ya tienes {currentQuantityInCart} en tu carrito
+            {/* Información del producto */}
+            <div className="product-details__info">
+              <h2 className="product-details__title">
+                {product.name}
+              </h2>
+
+              <p className="product-details__codebar">
+                Codifo de barras: {product.codebar}
+              </p>
+
+              <div className="product-details__price">
+                ${Number(product.final_price || product.base_price || 0).toFixed(2)} MXN
+              </div>
+
+              {/* Estado de stock */}
+              <div className={`product-details__stock ${isAvailable ? 'product-details__stock--available' : 'product-details__stock--unavailable'}`}>
+                {isAvailable ? (
+                  <>
+                    <span className="stock-available">
+                      ✓ En stock ({product.stock_count} unidades disponibles)
                     </span>
+                    {currentQuantityInCart > 0 && (
+                      <span className="stock-in-cart">
+                        Ya tienes {currentQuantityInCart} en tu carrito
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="stock-unavailable">
+                    ✗ Producto agotado
+                  </span>
+                )}
+              </div>
+
+              {/* Descripción */}
+              <div className="product-details__description">
+                <h3>Descripción</h3>
+                <p>
+                  {product.description || 'Sin descripción disponible'}
+                </p>
+                <br />
+                {product.descripcion_2 && (
+                  <p>
+                    {product.descripcion_2}
+                  </p>
+                )}
+              </div>
+
+              {/* Acciones (solo si está disponible) */}
+              {isAvailable && (
+                <div className="product-details__actions">
+                  {/* Selector de cantidad */}
+                  <div className="quantity-selector">
+                    <label>Cantidad:</label>
+                    <div className="quantity-controls">
+                      <button
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        className="qty-btn"
+                        aria-label="Disminuir cantidad"
+                      >
+                        -
+                      </button>
+
+                      <input
+                        type="number"
+                        className="qty-input"
+                        value={quantity}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        min="1"
+                        max={product.stock_count}
+                        onKeyDown={(e) => {
+                          if (e.key === '-' || e.key === 'e' || e.key === '.' || e.key === ',') {
+                            e.preventDefault();
+                          }
+                        }}
+                        aria-label="Cantidad"
+                      />
+
+                      <button
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={quantity >= product.stock_count}
+                        className="qty-btn"
+                        aria-label="Aumentar cantidad"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mensaje de feedback */}
+                  {message && (
+                    <div className={`message ${message.includes('Error') ? 'message--error' : 'message--success'}`}>
+                      {message}
+                    </div>
                   )}
-                </>
-              ) : (
-                <span className="stock-unavailable">
-                  ✗ Producto agotado
-                </span>
+
+                  {/* Botón agregar al carrito */}
+                  <button
+                    className="btn-add-to-cart"
+                    onClick={handleAddToCart}
+                    disabled={adding}
+                  >
+                    {adding ? 'Agregando...' : 'Agregar al Carrito'}
+                  </button>
+                </div>
               )}
             </div>
-
-            {/* Descripción */}
-            <div className="product-details__description">
-              <h3>Descripción</h3>
-              <p>
-                {product.description || 'Sin descripción disponible'}
-              </p>
-            </div>
-
-            {/* Acciones (solo si está disponible) */}
-            {isAvailable && (
-              <div className="product-details__actions">
-                {/* Selector de cantidad */}
-                <div className="quantity-selector">
-                  <label>Cantidad:</label>
-                  <div className="quantity-controls">
-                    <button
-                      onClick={() => handleQuantityChange(-1)}
-                      disabled={quantity <= 1}
-                      className="qty-btn"
-                      aria-label="Disminuir cantidad"
-                    >
-                      -
-                    </button>
-
-                    <input
-                      type="number"
-                      className="qty-input"
-                      value={quantity}
-                      onChange={handleInputChange}
-                      onBlur={handleInputBlur}
-                      min="1"
-                      max={product.stock_count}
-                      onKeyDown={(e) => {
-                        if (e.key === '-' || e.key === 'e' || e.key === '.' || e.key === ',') {
-                          e.preventDefault();
-                        }
-                      }}
-                      aria-label="Cantidad"
-                    />
-
-                    <button
-                      onClick={() => handleQuantityChange(1)}
-                      disabled={quantity >= product.stock_count}
-                      className="qty-btn"
-                      aria-label="Aumentar cantidad"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* Mensaje de feedback */}
-                {message && (
-                  <div className={`message ${message.includes('Error') ? 'message--error' : 'message--success'}`}>
-                    {message}
-                  </div>
-                )}
-
-                {/* Botón agregar al carrito */}
-                <button
-                  className="btn-add-to-cart"
-                  onClick={handleAddToCart}
-                  disabled={adding}
-                >
-                  {adding ? 'Agregando...' : 'Agregar al Carrito'}
-                </button>
-              </div>
-            )}
           </div>
+
+          {/* Productos Similares */}
+          <SimilarProducts
+            productId={product.product_id}
+            onProductSelect={onProductSelect}
+          />
         </div>
       </div>
     </div>

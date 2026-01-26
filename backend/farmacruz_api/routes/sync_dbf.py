@@ -23,7 +23,7 @@ Permisos:
 Solo administradores pueden usar estos endpoints.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from schemas.category import CategorySync
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -33,9 +33,9 @@ from pydantic import BaseModel
 from dependencies import get_db, get_current_admin_user
 from db.base import User
 from schemas.price_list import PriceListCreate, PriceListItemCreate, PriceListItemCreateBulk, PriceListItemSync
-from schemas.product import ProductCreate, ProductCreate2
-from schemas.customer import CustomerSync  # Nuevo import
-from schemas.user import SellerSync  # Nuevo import
+from schemas.product import ProductCreate2
+from schemas.customer import CustomerSync  
+from schemas.user import SellerSync  
 from crud import crud_sync
 
 
@@ -149,15 +149,15 @@ def sincronizar_productos(productos: List[ProductCreate2], usuario_actual: User 
             "product_id": p.product_id,
             "codebar": p.codebar,
             "name": p.name,
-            "description": p.description,
-            "descripcion_2": p.descripcion_2,
+            "description": p.description if p.description else None,
+            "descripcion_2": p.descripcion_2 if p.descripcion_2 else None,
             "unidad_medida": p.unidad_medida,
             "base_price": float(p.base_price),
             "iva_percentage": float(p.iva_percentage) if p.iva_percentage else 0.0,
             "stock_count": p.stock_count if p.stock_count else 0,
             "is_active": p.is_active if p.is_active is not None else True,
-            "category_name": p.category_name,
-            "image_url": p.image_url,
+            "category_name": p.category_name if p.category_name else None,
+            "image_url": p.image_url if p.image_url else None,
             "updated_at": p.updated_at if p.updated_at else None
         }
         for p in productos
@@ -199,7 +199,7 @@ def sincronizar_items(items: List[PriceListItemSync],
             "product_id": item.product_id,
             "markup_percentage": float(item.markup_percentage),
             "final_price": float(item.final_price) if item.final_price else None,
-            "updated_at": item.updated_at or datetime.now()
+            "updated_at": item.updated_at or datetime.now(timezone.utc)
         }
         for item in items
     ]
@@ -243,13 +243,14 @@ def sincronizar_clientes(
             "email": cliente.email or f"{cliente.username}@farmacruz.com",
             "full_name": cliente.full_name or cliente.username,
             "password": cliente.password,
-            "business_name": cliente.business_name,
-            "rfc": cliente.rfc,
-            "price_list_id": cliente.price_list_id,
-            "sales_group_id": cliente.sales_group_id,
-            "address_1": cliente.address_1,
-            "address_2": cliente.address_2,
-            "address_3": cliente.address_3,
+            "business_name": cliente.business_name if cliente.business_name else None,
+            "rfc": cliente.rfc if cliente.rfc else None,
+            "price_list_id": cliente.price_list_id if cliente.price_list_id else None,
+            "address_1": cliente.address_1 if cliente.address_1 else None,
+            "address_2": cliente.address_2 if cliente.address_2 else None,
+            "address_3": cliente.address_3 if cliente.address_3 else None,
+            "telefono_1": cliente.telefono_1 if cliente.telefono_1 else None,
+            "telefono_2": cliente.telefono_2 if cliente.telefono_2 else None,
             "agent_id": cliente.agent_id if cliente.agent_id else None,
             "updated_at": cliente.updated_at if cliente.updated_at else None
         }

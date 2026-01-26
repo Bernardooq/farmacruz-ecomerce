@@ -49,7 +49,8 @@ def get_users(db: Session, skip: int = 0, limit: int = 100, role: Optional[UserR
         query = query.filter(
             or_(
                 User.full_name.ilike(search_term),
-                User.username.ilike(search_term)
+                User.username.ilike(search_term),
+                User.email.ilike(search_term)
             )
         )
     
@@ -171,7 +172,7 @@ def update_user(db: Session, user_id: int, user: UserUpdate) -> Optional[User]:
             )
 
     # Validar unicidad del email
-    if "email" in update_data and update_data["email"] != db_user.email:
+    """if "email" in update_data and update_data["email"] != db_user.email:
         existing_email = (
             db.query(User)
             .filter(User.email == update_data["email"], User.user_id != user_id)
@@ -181,7 +182,7 @@ def update_user(db: Session, user_id: int, user: UserUpdate) -> Optional[User]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El correo electrónico ya está en uso por otro usuario."
-            )
+            )"""
 
     # Hashear nueva contraseña
     if "password" in update_data and update_data["password"]:

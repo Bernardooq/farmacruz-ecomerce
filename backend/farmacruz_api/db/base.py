@@ -10,6 +10,7 @@ Arquitectura de base de datos:
 """
 
 import enum
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column, Integer, String, Boolean, Enum as SQLAlchemyEnum, 
     ForeignKey, Numeric, TIMESTAMP, func, Text, UniqueConstraint, CheckConstraint
@@ -65,13 +66,13 @@ class User(Base):
     # RANGOS: Sellers 1-9000, Admin/Marketing 9001+
     user_id = Column(Integer, primary_key=True, autoincrement=False)
     username = Column(String(255), unique=True, nullable=False, index=True)
-    email = Column(String(255), unique=True, index=True)
+    email = Column(String(255), index=True)
     password_hash = Column(String(255), nullable=False)  # Hash Argon2
     full_name = Column(String(255))
     role = Column(SQLAlchemyEnum(UserRole), nullable=False)  # admin, marketing o seller
     is_active = Column(Boolean, default=True)  # Para desactivar usuarios sin eliminarlos
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Constraint: user_id debe ser positivo
     __table_args__ = (
@@ -105,14 +106,14 @@ class Customer(Base):
     # Campos principales (similares a User pero en tabla separada)
     customer_id = Column(Integer, primary_key=True)
     username = Column(String(255), unique=True, nullable=False, index=True)
-    email = Column(String(255), unique=True, index=True)
+    email = Column(String(255), index=True)  # Email NO es único - varios clientes pueden compartirlo
     password_hash = Column(String(255), nullable=False)  # Hash Argon2
     full_name = Column(String(255))
     is_active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     # Agente/vendedor asignado desde el DBF (opcional)
     agent_id = Column(Integer, ForeignKey("users.user_id"), nullable=True, index=True)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relaciones con otras tablas
     # Informacion adicional del cliente (direcciones, grupo, lista de precios)
@@ -140,7 +141,7 @@ class SalesGroup(Base):
     group_name = Column(String(255), nullable=False)  # Ej: "Farmacias Zona Norte"
     description = Column(Text)  # Descripcion opcional del grupo
     is_active = Column(Boolean, default=True)  # Para desactivar sin eliminar
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relaciones N:M (muchos a muchos)
     # Marketing managers asignados a este grupo
@@ -163,7 +164,7 @@ class GroupMarketingManager(Base):
     group_marketing_id = Column(Integer, primary_key=True)
     sales_group_id = Column(Integer, ForeignKey("salesgroups.sales_group_id", ondelete="CASCADE"), nullable=False, index=True)
     marketing_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
-    assigned_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Cuando se asigno
+    assigned_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))  # Cuando se asigno
 
     # Constraint para evitar duplicados (mismo manager en mismo grupo)
     __table_args__ = (
@@ -187,7 +188,7 @@ class GroupSeller(Base):
     group_seller_id = Column(Integer, primary_key=True)
     sales_group_id = Column(Integer, ForeignKey("salesgroups.sales_group_id", ondelete="CASCADE"), nullable=False, index=True)
     seller_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
-    assigned_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Cuando se asigno
+    assigned_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))  # Cuando se asigno
 
     # Constraint para evitar duplicados (mismo vendedor en mismo grupo)
     __table_args__ = (
@@ -210,7 +211,7 @@ class Category(Base):
     category_id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)  # Nombre de la categoria
     description = Column(Text)  # Descripcion opcional
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Productos que pertenecen a esta categoria
     products = relationship("Product", back_populates="category")
@@ -238,7 +239,7 @@ class Product(Base):
     stock_count = Column(Integer, default=0)  # Cantidad en inventario
     is_active = Column(Boolean, default=True, index=True)  # Para ocultar productos sin eliminarlos
     category_id = Column(Integer, ForeignKey("categories.category_id"), index=True)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relaciones
     category = relationship("Category", back_populates="products")
@@ -261,8 +262,8 @@ class PriceList(Base):
     list_name = Column(String(100), nullable=False)  # Ej: "Farmacias Premium", "Hospitales"
     description = Column(Text)  # Descripcion de a quien aplica
     is_active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relaciones
     # Clientes asignados a esta lista
@@ -285,8 +286,8 @@ class PriceListItem(Base):
     product_id = Column(String(50), ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False, index=True)
     markup_percentage = Column(Numeric(5, 2), nullable=False)  # % de ganancia (ej: 25.00)
     final_price = Column(Numeric(10, 2), nullable=False)  # Precio final calculado 
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Constraint: un producto solo puede aparecer una vez por lista
     __table_args__ = (
@@ -350,7 +351,7 @@ class Order(Base):
     total_amount = Column(Numeric(12, 2), default=0.00)  # Monto total calculado
     shipping_address_number = Column(Integer)  # 1, 2 o 3 (cual de las 3 direcciones usar)
     assignment_notes = Column(Text)  # Notas del admin al asignar vendedor
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), index=True)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     assigned_at = Column(TIMESTAMP(timezone=True))  # Cuando se asigno vendedor
     validated_at = Column(TIMESTAMP(timezone=True))  # Cuando el vendedor lo aprobo
 
@@ -409,8 +410,8 @@ class CartCache(Base):
     customer_id = Column(Integer, ForeignKey("customers.customer_id", ondelete="CASCADE"), nullable=False, index=True)
     product_id = Column(String(50), ForeignKey("products.product_id"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)  # Cantidad a ordenar
-    added_at = Column(TIMESTAMP(timezone=True), server_default=func.now())  # Primera vez agregado
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())  # ultima modificacion
+    added_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))  # Primera vez agregado
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))  # ultima modificacion
 
     __table_args__ = (
         # Un producto solo puede aparecer una vez en el carrito de un cliente

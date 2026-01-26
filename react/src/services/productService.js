@@ -41,6 +41,15 @@ export const productService = {
   // Eliminar un producto por ID
   async deleteProduct(id) {
     return apiService.delete(`/products/${id}`)
+  },
+
+  // Obtener productos similares basados en componentes activos
+  async getSimilarProducts(productId, priceListId = null, limit = 5, minSimilarity = 0.3) {
+    const params = { limit, min_similarity: minSimilarity }
+    if (priceListId) {
+      params.price_list_id = priceListId
+    }
+    return apiService.get(`/products/${productId}/similar`, params)
   }
 }
 

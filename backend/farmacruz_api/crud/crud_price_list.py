@@ -17,7 +17,7 @@ precio_final = (base_price * (1 + markup/100)) * (1 + iva/100)
 
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 from decimal import Decimal
 
 from db.base import PriceList, PriceListItem, Product
@@ -25,6 +25,7 @@ from schemas.price_list import (
     PriceListCreate, PriceListUpdate,
     PriceListItemCreate, PriceListItemUpdate
 )
+from utils.price_utils import get_product_final_price, format_price_info, calculate_final_price_with_markup
 
 """ Obtiene una lista de precios por ID """
 def get_price_list(db: Session, price_list_id: int) -> Optional[PriceList]:
@@ -204,28 +205,26 @@ def get_products_in_price_list_with_details(db: Session, price_list_id: int, ski
     # Formatear resultados con cálculo de precios
     formatted_results = []
     for price_list_item, product in results:
-        base_price = float(product.base_price or 0)
-        iva_percentage = float(product.iva_percentage or 0)
-        markup_percentage = float(price_list_item.markup_percentage)
+        # Calcular precio usando utilidad centralizada
+        base_price = Decimal(str(product.base_price or 0))
+        markup_percentage = Decimal(str(price_list_item.markup_percentage or 0))
+        stored_final_price = Decimal(str(price_list_item.final_price)) if price_list_item.final_price else None
         
-        # Calcular precio con markup
-        markup_amount = base_price * (markup_percentage / 100)
-        price_with_markup = base_price + markup_amount
+        final_price = calculate_final_price_with_markup(
+            base_price=base_price,
+            markup_percentage=markup_percentage,
+            stored_final_price=stored_final_price
+        )
         
-        # Calcular IVA
-        iva_amount = price_with_markup * (iva_percentage / 100)
-        
-        # Precio final
-        final_price = price_with_markup + iva_amount
+        markup_amount = final_price - base_price
         
         formatted_results.append({
             "product": product,
-            "markup_percentage": markup_percentage,
-            "markup_amount": round(markup_amount, 2),
-            "iva_amount": round(iva_amount, 2),
-            "final_price": round(final_price, 2),
+            "base_price": round(float(base_price), 2),
+            "markup_percentage": round(float(markup_percentage), 2),
+            "markup_amount": round(float(markup_amount), 2),
+            "final_price": round(float(final_price), 2),
             "price_list_item_id": price_list_item.price_list_item_id
         })
     
     return formatted_results
-

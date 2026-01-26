@@ -14,6 +14,8 @@ from typing import List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
+from utils.price_utils import get_product_final_price
+
 
 from db.base import CartCache, CustomerInfo, PriceListItem, Product
 
@@ -32,25 +34,25 @@ def get_cart(db: Session, customer_id: int) -> List[CartCache]:
     # Enriquecer con informacion del producto en formato anidado
     result = []
     for item in cart_items:
-        # Calcular precio final con markup e IVA si aplica
+        # Obtener precio del producto para este cliente
         final_price = None
         markup_percentage = 0.0
         
-        if customer_info and customer_info.price_list_id and item.product:
-            # Buscar item de lista de precios
-            price_item = db.query(PriceListItem).filter(
-                PriceListItem.price_list_id == customer_info.price_list_id,
-                PriceListItem.product_id == item.product_id
-            ).first()
+        if item.product and customer_info and customer_info.price_list_id:
             
-            if price_item:
-                base_price = Decimal(str(item.product.base_price or 0))
-                markup = Decimal(str(price_item.markup_percentage or 0))
-                iva = Decimal(str(item.product.iva_percentage or 0))
-                
-                price_with_markup = base_price * (1 + markup / 100)
-                final_price = float(price_with_markup * (1 + iva / 100))
-                markup_percentage = float(markup)
+            price_data = get_product_final_price(
+                db=db,
+                product=item.product,
+                price_list_id=customer_info.price_list_id
+            )
+            
+            if price_data:
+                final_price = float(price_data["final_price"])
+                markup_percentage = float(price_data["markup_percentage"])
+        
+        # Si no se pudo calcular precio, usar base_price
+        if final_price is None and item.product:
+            final_price = float(item.product.base_price or 0)
         
         cart_data = {
             "cart_cache_id": item.cart_cache_id,

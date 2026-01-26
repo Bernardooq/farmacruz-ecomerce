@@ -11,6 +11,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional, Tuple
 from decimal import Decimal
+from utils.price_utils import get_product_final_price, calculate_final_price_with_markup
+
 
 from db.base import Customer, CustomerInfo, Product, PriceListItem
 from schemas.product import CatalogProduct
@@ -37,19 +39,21 @@ def _get_customer_price_list(current_user, db: Session) -> int:
     
     return customer_info.price_list_id
 
-"""Calcula el precio final de un producto aplicando markup e IVA"""
+"""Calcula el precio final de un producto aplicando markup (IVA ya incluido en base_price)"""
 def _calculate_price(product: Product, price_item: PriceListItem) -> Tuple[Decimal, Decimal]:
     # Retorna (precio_final, markup)
     
-    base = Decimal(str(product.base_price or 0))
-    markup = Decimal(str(price_item.markup_percentage or 0))
-    iva = Decimal(str(product.iva_percentage or 0))
+    base_price = Decimal(str(product.base_price or 0))
+    markup_percentage = Decimal(str(price_item.markup_percentage or 0))
+    stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
     
-    # Aplicar markup, luego IVA
-    with_markup = base * (1 + markup / 100)
-    final = with_markup * (1 + iva / 100)
+    final_price = calculate_final_price_with_markup(
+        base_price=base_price,
+        markup_percentage=markup_percentage,
+        stored_final_price=stored_final_price
+    )
     
-    return final, markup
+    return final_price, markup_percentage
 
 """Construye un CatalogProduct desde el ORM Product y precios calculados"""
 def _build_catalog_product(product: Product, final_price: Decimal, markup: Decimal) -> CatalogProduct:

@@ -14,6 +14,8 @@ from uuid import UUID
 from decimal import Decimal
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from utils.price_utils import calculate_final_price_with_markup
+
 
 from db.base import Order, OrderItem, Product, PriceListItem, CustomerInfo, OrderStatus
 from schemas.order_edit import OrderItemEdit
@@ -84,13 +86,17 @@ def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], cu
                 detail=f"El producto '{product.name}' no esta en la lista de precios del cliente"
             )
         
-        # Calcular precio final
+        # Calcular precio final usando utilidad centralizada        
         base_price = Decimal(str(product.base_price or 0))
         markup_percentage = Decimal(str(price_item.markup_percentage or 0))
+        stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
         iva_percentage = Decimal(str(product.iva_percentage or 0))
         
-        price_with_markup = base_price * (1 + markup_percentage / 100)
-        final_price = price_with_markup * (1 + iva_percentage / 100)
+        final_price = calculate_final_price_with_markup(
+            base_price=base_price,
+            markup_percentage=markup_percentage,
+            stored_final_price=stored_final_price
+        )
         
         # Si el item ya existe, actualizarlo
         if item_data.order_item_id and item_data.order_item_id in existing_items:

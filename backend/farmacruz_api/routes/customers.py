@@ -86,16 +86,16 @@ def create_customer(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El nombre de usuario ya esta registrado"
         )
-    
+
     # validar email unico
-    if customer.email:
+    """if customer.email:
         db_customer = crud_customer.get_customer_by_email(db, email=customer.email)
         db_user = get_user_by_email(db, email=customer.email)
         if db_customer or db_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El email ya esta registrado"
-            )
+            )"""
     
     return crud_customer.create_customer(db=db, customer=customer)
 
@@ -108,15 +108,20 @@ def update_customer(
     db: Session = Depends(get_db)
 ):
     # Actualiza un cliente existente
-    db_user_email = get_user_by_email(db, email=customer_update.email) if customer_update.email else None
+    # db_user_email = get_user_by_email(db, email=customer_update.email) if customer_update.email else None
     db_user = get_user_by_username(db, username=customer_update.username) if customer_update.username else None
-    if db_user_email or db_user:
+    if db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El nombre de usuario ya esta registrado"
+        )
+    """
+    if  db_user or db_user_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El nombre de usuario o email ya esta registrado"
         )
-    
-    
+    """
     customer = crud_customer.update_customer(
         db,
         customer_id=customer_id,

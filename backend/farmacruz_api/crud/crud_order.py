@@ -28,9 +28,9 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_, cast, String
 
 from db.base import Order, OrderItem, OrderStatus, Product, CartCache, CustomerInfo, PriceListItem, User, Customer
-from crud.crud_sales_group import get_user_groups, user_can_manage_order
-from crud.crud_user import get_user
 from schemas.order import OrderAssign, OrderCreate, OrderUpdate, OrderItemCreate
+from utils.price_utils import calculate_final_price_with_markup
+
 
 """ Obtener pedidos por ID con relaciones """
 def get_order(db: Session, order_id: UUID) -> Optional[Order]:
@@ -156,14 +156,18 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
         if not price_item:
             raise ValueError(f"El producto {product.name} no esta en tu lista de precios")
         
-        # CALCULAR PRECIO FINAL
-        # Formula: final = (base * (1 + markup/100)) * (1 + iva/100)
+        # CALCULAR PRECIO FINAL usando utilidad centralizada        
         base_price = Decimal(str(product.base_price or 0))
-        markup = Decimal(str(price_item.markup_percentage or 0))
-        iva = Decimal(str(product.iva_percentage or 0))
+        markup_percentage = Decimal(str(price_item.markup_percentage or 0))
+        stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
         
-        price_with_markup = base_price * (1 + markup / 100)
-        final_price = price_with_markup * (1 + iva / 100)
+        final_price = calculate_final_price_with_markup(
+            base_price=base_price,
+            markup_percentage=markup_percentage,
+            stored_final_price=stored_final_price
+        )
+        
+        iva = Decimal(str(product.iva_percentage or 0))
         
         # Crear item del pedido (precios "congelados")
         order_item = OrderItem(
@@ -171,7 +175,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
             product_id=cart_item.product_id,
             quantity=cart_item.quantity,
             base_price=float(base_price),
-            markup_percentage=float(markup),
+            markup_percentage=float(markup_percentage),
             iva_percentage=float(iva),
             final_price=float(final_price)
         )
@@ -372,3 +376,81 @@ def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, cur
     db.commit()
     db.refresh(order)
     return order
+
+""" Generar archivo TXT del pedido en formato de ancho fijo """
+def generate_order_txt(db: Session, order_id: UUID) -> str:
+    """
+    Genera el contenido TXT del pedido en formato de ancho fijo.
+    
+    Formato por línea (basado en EJEMPLOPED.txt):
+    - Product ID (40 chars, left-aligned)
+    - Unit "PZ" (7 chars, centered/aligned)
+    - Campo decimal 1: 0.00000000 (12 chars)
+    - Campo decimal 2: 0.00000000 (12 chars)
+    - Espacios (48 chars)
+    - Cantidad (10 chars, right-aligned)
+    - Precio total (20 chars, 8 decimales)
+    - Precio unitario (20 chars, 8 decimales)
+    - Trailing spaces hasta ~400 chars
+    
+    Total: ~400 caracteres por línea
+    """
+    # Obtener pedido con items y productos
+    order = get_order(db, order_id)
+    if not order:
+        raise ValueError(f"Pedido {order_id} no encontrado")
+    
+    lines = []
+    
+    for item in order.items:
+        if not item.product:
+            continue
+        
+        # Obtener datos del producto y item
+        product_id = item.product.product_id or ""
+        quantity = item.quantity
+        unit_price = Decimal(str(item.final_price))
+        total_price = unit_price * Decimal(str(quantity))
+        
+        # Formatear campos con ancho fijo
+        # Campo 1: SKU (40 chars, left-aligned)
+        product_id_field = product_id[:40].ljust(40)
+        
+        # Campo 2: Unidad (7 chars) - "PZ" centrado/alineado
+        unit_field = "PZ".ljust(7)
+        
+        # Campos 3 y 4: Decimales fijos (12 chars cada uno)
+        decimal1_field = "0.00000000".rjust(12)
+        decimal2_field = "0.00000000".rjust(12)
+        
+        # Campo 5: Espacios (48 chars)
+        spaces_field = " " * 48
+        
+        # Campo 6: Cantidad (10 chars, right-aligned)
+        other_field = str(1).rjust(10)
+        
+        # Campo 7: Precio total (20 chars, 8 decimales, right-aligned)
+        quantity_str = f"{float(quantity):.8f}".rjust(20)
+        
+        # Campo 8: Precio unitario (20 chars, 8 decimales, right-aligned)
+        total_price_str = f"{float(unit_price):.8f}".rjust(20)
+        
+        # Construir línea completa
+        line = (
+            product_id_field +
+            unit_field +
+            decimal1_field + "  " +  # 2 espacios adicionales
+            decimal2_field +
+            spaces_field +
+            other_field +
+            quantity_str +
+            total_price_str
+        )
+        
+        # Agregar trailing spaces hasta ~400 chars
+        line = line.ljust(400)
+        
+        lines.append(line)
+    
+    # Unir todas las líneas con salto de línea Windows (\r\n)
+    return "\r\n".join(lines)

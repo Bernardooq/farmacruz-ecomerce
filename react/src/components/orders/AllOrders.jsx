@@ -25,6 +25,7 @@ export default function AllOrders() {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
   // Assignment modal
@@ -36,9 +37,18 @@ export default function AllOrders() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState(null);
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     loadOrders();
-  }, [page, statusFilter, searchTerm]);
+  }, [page, statusFilter, debouncedSearchTerm]);
 
   const loadOrders = async () => {
     try {
@@ -54,8 +64,8 @@ export default function AllOrders() {
         params.status = statusFilter;
       }
 
-      if (searchTerm) {
-        params.search = searchTerm;
+      if (debouncedSearchTerm) {
+        params.search = debouncedSearchTerm;
       }
 
       const data = await orderService.getAllOrders(params);
@@ -78,8 +88,8 @@ export default function AllOrders() {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setDebouncedSearchTerm(searchTerm);
     setPage(0);
-    // loadOrders se ejecutará automáticamente por el useEffect cuando searchTerm cambie
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -186,8 +196,15 @@ export default function AllOrders() {
   };
 
   const handleDownloadTXT = async (orderId) => {
-    // TODO: Implementar generación de TXT
-    alert(`Descarga TXT para pedido ${orderId} - Próximamente`);
+    try {
+      setActionLoading(orderId);
+      await orderService.downloadOrderTXT(orderId);
+    } catch (err) {
+      setError('Error al descargar el archivo TXT. Intenta de nuevo.');
+      console.error('Failed to download TXT:', err);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleEditOrder = async (order) => {

@@ -6,7 +6,7 @@ Funciones para generar estadisticas y reportes del sistema:
 - Reporte de ventas con desglose de pedidos
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -126,7 +126,7 @@ def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Op
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         else:
             # Default: primer dia del mes actual a las 00:00:00
-            start_dt = datetime.now().replace(
+            start_dt = datetime.now(timezone.utc).replace(
                 day=1, hour=0, minute=0, second=0, microsecond=0
             )
 
@@ -137,7 +137,7 @@ def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Op
             )
         else:
             # Default: hoy a las 23:59:59
-            end_dt = datetime.now().replace(
+            end_dt = datetime.now(timezone.utc).replace(
                 hour=23, minute=59, second=59
             )
     except ValueError:

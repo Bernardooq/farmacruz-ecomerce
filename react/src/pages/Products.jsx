@@ -306,6 +306,7 @@ export default function Products() {
         product={selectedProduct}
         isOpen={showModal}
         onClose={handleCloseModal}
+        onProductSelect={setSelectedProduct}
       />
 
       <Footer />

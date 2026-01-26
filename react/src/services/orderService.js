@@ -1,4 +1,5 @@
 import apiService from './apiService'
+import { API_BASE } from '../config/api'
 
 // Servicio para manejar todo lo del carrito y las órdenes
 export const orderService = {
@@ -78,6 +79,34 @@ export const orderService = {
   // Editar items de una orden (solo marketing y admin)
   async editOrder(id, editData) {
     return apiService.put(`/orders/${id}/edit`, editData)
+  },
+
+  // Descargar pedido en formato TXT
+  async downloadOrderTXT(orderId) {
+    const token = localStorage.getItem('token')
+
+    const response = await fetch(`${API_BASE}/orders/${orderId}/download-txt`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }))
+      throw new Error(errorData.detail || 'Error al descargar el archivo TXT')
+    }
+
+    // Crear blob y descargar
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `pedido_${orderId}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
   }
 }
 

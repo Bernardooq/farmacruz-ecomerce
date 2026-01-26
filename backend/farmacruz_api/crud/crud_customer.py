@@ -13,7 +13,7 @@ Los clientes estan separados de usuarios internos (admin, marketing, seller).
 from fastapi import HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from core.security import get_password_hash, verify_password
 from db.base import Customer, CustomerInfo
@@ -39,14 +39,14 @@ def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional
         joinedload(Customer.customer_info)
     )
     
-    # Buscar en nombre, username y email 
+    # Buscar en nombre, username y email todo tolower
     if search:
         search_term = f"%{search}%"
         query = query.filter(
             or_(
-                Customer.full_name.ilike(search_term),
-                Customer.username.ilike(search_term),
-                Customer.email.ilike(search_term)
+                func.lower(Customer.full_name).like(search_term),
+                func.lower(Customer.username).like(search_term),
+                func.lower(Customer.email).like(search_term)
             )
         )
     
@@ -93,7 +93,7 @@ def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> 
             )
 
     # Validar unicidad del email
-    if "email" in update_data and update_data["email"] != db_customer.email:
+    """if "email" in update_data and update_data["email"] != db_customer.email:
         existing_email = (
             db.query(Customer)
             .filter(Customer.email == update_data["email"], Customer.customer_id != customer_id)
@@ -103,7 +103,7 @@ def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> 
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El correo electrónico ya está en uso por otro cliente."
-            )
+            )"""
 
     # Hashear nueva contraseña
     if "password" in update_data and update_data["password"]:
@@ -172,7 +172,9 @@ def create_or_update_customer_info(db: Session, customer_info: CustomerInfo, cus
         price_list_id=customer_info.price_list_id,
         address_1=customer_info.address_1,
         address_2=customer_info.address_2,
-        address_3=customer_info.address_3
+        address_3=customer_info.address_3,
+        telefono_1=customer_info.telefono_1,
+        telefono_2=customer_info.telefono_2
     )
     db.add(new_info)
     db.commit()

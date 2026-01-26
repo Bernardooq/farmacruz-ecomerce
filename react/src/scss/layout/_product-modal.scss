@@ -12,7 +12,6 @@
     padding: 0.75rem;
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: calc(90vh - 120px);
 
     @include m.telefono {
         gap: 1.5rem;
@@ -23,7 +22,6 @@
         grid-template-columns: 1fr 1fr;
         gap: 2rem;
         padding: 1.5rem;
-        max-height: calc(90vh - 100px);
     }
 
     &__image {

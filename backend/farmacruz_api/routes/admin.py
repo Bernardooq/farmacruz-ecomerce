@@ -65,14 +65,14 @@ def create_new_user(user: UserCreate, current_user: User = Depends(get_current_a
         )
     
     # Validar email unico
-    if user.email:
+    """if user.email:
         db_customer = get_customer_by_email(db, email=user.email)
         db_user = get_user_by_email(db, email=user.email)
         if db_user or db_customer:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El email ya esta registrado"
-            )
+            )"""
     
     return create_user(db=db, user=user)
 
@@ -92,21 +92,26 @@ def read_user_by_id(user_id: int, current_user: User = Depends(get_current_admin
 def update_user_info(user_id: int, user_update: UserUpdate, current_user: User = Depends(get_current_admin_user), db: Session = Depends(get_db)):
     
     db_customer = get_customer_by_username(db, username=user_update.username) if user_update.username else None
-    db_customer_email = get_customer_by_email(db, email=user_update.email) if user_update.email else None
+    # db_customer_email = get_customer_by_email(db, email=user_update.email) if user_update.email else None
+    if  db_customer:
+        raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="El nombre de usuario ya esta registrado"
+        )
+    """
     if  db_customer or db_customer_email:
         raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="El nombre de usuario o email ya esta registrado"
         )
-
+    """
     user = update_user(db, user_id=user_id, user=user_update)
-    if not user:
+    if not user:    
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado"
         )
     return user
-    
     
 """ DELETE /users/{user_id} - Eliminar usuario """
 @router.delete("/users/{user_id}")

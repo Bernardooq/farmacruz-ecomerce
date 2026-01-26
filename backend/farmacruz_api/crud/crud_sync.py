@@ -11,11 +11,13 @@ sincronizados los IDs del DBF con PostgreSQL.
 from typing import List, Dict, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
-from datetime import datetime
+from datetime import datetime, timezone
 
 from db.base import PriceList, Product, PriceListItem, Category, Customer, CustomerInfo, User
 from crud.crud_customer import get_password_hash
 
+from utils.price_utils import calculate_final_price_with_markup
+from decimal import Decimal
 
 # CATEGORiAS
 """ Guarda una nueva categoria si no existe (basado en nombre) """
@@ -29,13 +31,13 @@ def guardar_o_actualizar_categoria(db: Session, name: str, description: str = No
         if categoria_existente:
             # Update existente
             categoria_existente.description = description
-            categoria_existente.updated_at = updated_at or datetime.now()
+            categoria_existente.updated_at = updated_at or datetime.now(timezone.utc)
             db.add(categoria_existente)
             db.flush()
             return (False, None)  # False = fue actualizada, no creada
         else:
             # No existe, crear nueva
-            nueva_categoria = Category(name=name, description=description, updated_at=updated_at or datetime.now())
+            nueva_categoria = Category(name=name, description=description, updated_at=updated_at or datetime.now(timezone.utc))
             db.add(nueva_categoria)
             db.flush()  # Para obtener el ID generado si lo necesitamos
             return (True, None)  # True = fue creada
@@ -61,7 +63,7 @@ def guardar_o_actualizar_lista(db: Session, lista_id: int, nombre: str, descripc
         
         # Preparar los datos
         datos_lista = {"price_list_id": lista_id, "list_name": nombre, "description": descripcion, "is_active": esta_activa,
-            "updated_at": updated_at or datetime.now()}
+            "updated_at": updated_at or datetime.now(timezone.utc)}
         
         # UPSERT: Insertar o actualizar segun exista
         statement = insert(PriceList).values(**datos_lista)
@@ -145,7 +147,7 @@ def guardar_o_actualizar_producto(db: Session, producto_id: str, codebar: str, n
             "is_active": esta_activo,
             "category_id": categoria_id,
             "image_url": url_imagen,
-            "updated_at": updated_at or datetime.now()
+            "updated_at": updated_at or datetime.now(timezone.utc)
         }
                 
         statement = insert(Product).values(**datos_producto)
@@ -228,7 +230,7 @@ def bulk_sync_prods(db: Session, productos: List[dict]) -> Tuple[int, int, List[
                 "is_active": p.get('is_active', True),
                 "category_id": category_id,
                 "image_url": p.get('image_url'),
-                "updated_at": p.get('updated_at') or datetime.now()
+                "updated_at": p.get('updated_at') or datetime.now(timezone.utc)
             })
             
         # 4. Ejecutar el BULK UPSERT con PostgreSQL ON CONFLICT
@@ -286,9 +288,15 @@ def guardar_o_actualizar_markup(db: Session, lista_id: int, producto_id: str, po
         ya_existe = verificar_si_relacion_existe(db, lista_id, producto_id)
 
         if final_price is None:
-            # Calcular el precio final si no se proporciona
-            precio_base = db.query(Product).filter(Product.product_id == producto_id).first().base_price
-            final_price = precio_base * (1 + porcentaje_markup / 100)
+            # Calcular el precio final usando utilidad centralizada
+            
+            product = db.query(Product).filter(Product.product_id == producto_id).first()
+            if product:
+                final_price = float(calculate_final_price_with_markup(
+                    base_price=Decimal(str(product.base_price or 0)),
+                    markup_percentage=Decimal(str(porcentaje_markup)),
+                    stored_final_price=None
+                ))
 
         # Preparar los datos
         datos_relacion = {
@@ -409,7 +417,7 @@ def guardar_o_actualizar_cliente(db: Session, customer_id: int, username: str, e
             "password_hash": password_hash,
             "is_active": True,
             "agent_id": agent_id,
-            "updated_at": updated_at or datetime.now()
+            "updated_at": updated_at or datetime.now(timezone.utc)
         }
         
         # UPSERT Customer
@@ -489,7 +497,15 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
             else:
                 creados += 1
         
-        # Preparar datos de Customer con contraseñas hasheadas
+        # OPTIMIZACIÓN: Hashear contraseñas unicas solamente (en lugar de todas)
+        # Esto reduce 2735 operaciones costosas a solo 1 (si todos usan la misma contraseña)
+        password_hashes = {}
+        for c in customers:
+            password = c['password']
+            if password not in password_hashes:
+                password_hashes[password] = get_password_hash(password)
+        
+        # Preparar datos de Customer reutilizando hashes pre-calculados
         customers_data = []
         for c in customers:
             customers_data.append({
@@ -497,10 +513,10 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
                 "username": c['username'],
                 "email": c['email'],
                 "full_name": c['full_name'],
-                "password_hash": get_password_hash(c['password']),
+                "password_hash": password_hashes[c['password']],  # Reutilizar hash
                 "is_active": True,
                 "agent_id": c.get('agent_id'),
-                "updated_at": c.get('updated_at') or datetime.now()
+                "updated_at": c.get('updated_at') or datetime.now(timezone.utc)
             })
         
         # BULK UPSERT Customer
@@ -526,10 +542,11 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
                 "business_name": c.get('business_name') or c['full_name'],
                 "rfc": c.get('rfc'),
                 "price_list_id": c.get('price_list_id'),
-                "sales_group_id": c.get('sales_group_id'),
                 "address_1": c.get('address_1'),
                 "address_2": c.get('address_2'),
-                "address_3": c.get('address_3')
+                "address_3": c.get('address_3'),
+                "telefono_1": c.get('telefono_1'),
+                "telefono_2": c.get('telefono_2')
             })
         
         # BULK UPSERT CustomerInfo
@@ -540,10 +557,11 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
                 'business_name': stmt_info.excluded.business_name,
                 'rfc': stmt_info.excluded.rfc,
                 'price_list_id': stmt_info.excluded.price_list_id,
-                'sales_group_id': stmt_info.excluded.sales_group_id,
                 'address_1': stmt_info.excluded.address_1,
                 'address_2': stmt_info.excluded.address_2,
-                'address_3': stmt_info.excluded.address_3
+                'address_3': stmt_info.excluded.address_3,
+                'telefono_1': stmt_info.excluded.telefono_1,
+                'telefono_2': stmt_info.excluded.telefono_2
             }
         )
         db.execute(stmt_info)
@@ -582,7 +600,14 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
             else:
                 creados += 1
         
-        # Preparar datos de User con contraseñas hasheadas y rol seller
+        # OPTIMIZACIÓN: Hashear contraseñas únicas solamente
+        password_hashes = {}
+        for s in sellers:
+            password = s['password']
+            if password not in password_hashes:
+                password_hashes[password] = get_password_hash(password)
+        
+        # Preparar datos de User con contraseñas pre-hasheadas y rol seller
         sellers_data = []
         for s in sellers:
             sellers_data.append({
@@ -590,10 +615,10 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
                 "username": s['username'],
                 "email": s['email'],
                 "full_name": s['full_name'],
-                "password_hash": get_password_hash(s['password']),
+                "password_hash": password_hashes[s['password']],  # Reutilizar hash
                 "role": 'seller',
                 "is_active": s.get('is_active', True),
-                "updated_at": s.get('updated_at') or datetime.now()
+                "updated_at": s.get('updated_at') or datetime.now(timezone.utc)
             })
         
         # BULK UPSERT User

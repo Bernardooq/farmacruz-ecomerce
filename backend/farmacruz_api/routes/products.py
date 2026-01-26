@@ -5,6 +5,7 @@ Endpoints CRUD para gestion de productos del catalogo:
 - GET / - Lista de productos con filtros
 - GET /{id} - Detalle de producto
 - GET /codebar/{codebar} - Buscar por codebar
+- GET /{id}/similar - Productos similares basados en componentes
 - POST / - Crear producto
 - PUT /{id} - Actualizar producto
 - DELETE /{id} - Eliminar producto (soft delete)
@@ -22,7 +23,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from dependencies import get_db, get_current_admin_user
+from dependencies import get_db, get_current_admin_user, get_current_user
 from schemas.product import ProductCreate, ProductUpdate, Product
 from crud.crud_product import (
     get_products, 
@@ -32,7 +33,8 @@ from crud.crud_product import (
     update_product,
     delete_product,
     search_products,
-    update_stock
+    update_stock,
+    get_similar_products
 )
 
 router = APIRouter()
@@ -204,3 +206,61 @@ def adjust_product_stock(
     db_product = update_stock(db, product_id=product_id, quantity=stock_update.quantity)
     
     return db_product
+
+
+""" GET /{product_id}/similar - Obtiene productos similares basados en componentes activos """
+@router.get("/{product_id}/similar")
+def read_similar_products(
+    product_id: str,
+    limit: int = Query(5, ge=1, le=10, description="Cantidad maxima de productos similares (max 10)"),
+    min_similarity: float = Query(0.3, ge=0.1, le=1.0, description="Umbral minimo de similitud (0.1-1.0)"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Encuentra productos similares basados en componentes activos en descripcion_2.
+    
+    Algoritmo:
+    - Extrae componentes de descripcion_2 (ej: AMANTADINA, CLORFENAMINA, PARACETAMOL)
+    - Calcula similitud con otros productos usando Jaccard similarity
+    - Retorna top N productos con mayor similitud
+    - Si el usuario está autenticado, usa su lista de precios para calcular precios
+    
+    Returns:
+        {
+            "target_product": {...},
+            "similar_products": [
+                {
+                    "product": {...},
+                    "similarity_score": 0.85,
+                    "price_info": {...}
+                }
+            ]
+        }
+    """
+    # Verificar que el producto existe
+    target_product = get_product(db, product_id=product_id)
+    if not target_product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Producto no encontrado"
+        )
+    
+    # Obtener price_list_id del cliente autenticado
+    price_list_id = None
+    if current_user and hasattr(current_user, 'customer_info') and current_user.customer_info:
+        price_list_id = current_user.customer_info.price_list_id
+    
+    # Obtener productos similares
+    similar_products = get_similar_products(
+        db=db,
+        product_id=product_id,
+        price_list_id=price_list_id,
+        limit=limit,
+        min_similarity=min_similarity
+    )
+    
+    return {
+        "target_product": target_product,
+        "similar_products": similar_products
+    }

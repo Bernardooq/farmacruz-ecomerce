@@ -21,6 +21,7 @@ export default function SalesTeamManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const itemsPerPage = 10;
@@ -34,9 +35,17 @@ export default function SalesTeamManagement() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [userRole, setUserRole] = useState('seller');
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     loadData();
-  }, [activeTab, page]);
+  }, [activeTab, page, debouncedSearchTerm]);
 
   const loadData = async () => {
     switch (activeTab) {
@@ -61,7 +70,7 @@ export default function SalesTeamManagement() {
         role: 'seller',
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1,
-        search: searchTerm || undefined
+        search: debouncedSearchTerm || undefined
       });
 
       const hasMorePages = users.length > itemsPerPage;
@@ -84,7 +93,7 @@ export default function SalesTeamManagement() {
         role: 'marketing',
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1,
-        search: searchTerm || undefined
+        search: debouncedSearchTerm || undefined
       });
 
       const hasMorePages = users.length > itemsPerPage;
@@ -123,8 +132,9 @@ export default function SalesTeamManagement() {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    // Force immediate search on Enter/button
+    setDebouncedSearchTerm(searchTerm);
     setPage(0);
-    loadData();
   };
 
   const openAddUserModal = (role) => {

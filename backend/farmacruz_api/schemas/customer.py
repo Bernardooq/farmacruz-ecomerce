@@ -89,3 +89,5 @@ class CustomerSync(BaseModel):
     address_1: Optional[str] = Field(None, description="Direccion principal")
     address_2: Optional[str] = Field(None, description="Direccion de entrega")
     address_3: Optional[str] = Field(None, description="Direccion de facturacion")
+    telefono_1: Optional[str] = Field(None, description="Telefono principal")
+    telefono_2: Optional[str] = Field(None, description="Telefono secundario")

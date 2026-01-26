@@ -6,13 +6,17 @@ Funciones para manejar productos del catalogo:
 - Busqueda y filtrado por categoria, stock, etc.
 - Actualizacion de inventario
 - Calculo de precios para clientes
+- Productos similares basados en componentes activos
 """
 
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import and_
+from utils.price_utils import get_product_final_price, format_price_info
 
 from db.base import Product
 from schemas.product import ProductCreate, ProductUpdate
+from utils.product_similarity import extract_active_components, calculate_similarity_score
 
 
 """ Obtiene un producto por ID con su categoria """
@@ -128,3 +132,84 @@ def update_stock(db: Session, product_id: str, quantity: int) -> Optional[Produc
         db.commit()
         db.refresh(db_product)
     return db_product
+
+
+""" Encuentra productos similares basados en componentes activos """
+def get_similar_products(
+    db: Session,
+    product_id: str,
+    price_list_id: Optional[int] = None,
+    limit: int = 5,
+    min_similarity: float = 0.3
+) -> List[dict]:
+    """
+    Encuentra productos similares basados en componentes de descripcion_2.
+    
+    Args:
+        db: Sesión de base de datos
+        product_id: ID del producto objetivo
+        price_list_id: ID de lista de precios para calcular precios (opcional)
+        limit: Máximo número de productos similares a retornar (default: 5)
+        min_similarity: Umbral mínimo de similitud (default: 0.3 = 30%)
+    
+    Returns:
+        Lista de diccionarios con:
+        - product: Producto similar
+        - similarity_score: Score de similitud (0.0 - 1.0)
+        - price_info: Información de precios si price_list_id está presente
+    """
+    # Obtener producto objetivo
+    target_product = get_product(db, product_id)
+    if not target_product:
+        return []
+    
+    # Extraer componentes del producto objetivo
+    target_components = extract_active_components(target_product.descripcion_2)
+    if not target_components:
+        return []
+    
+    # Obtener todos los productos activos (excepto el objetivo)
+    all_products = db.query(Product).filter(
+        Product.is_active == True,
+        Product.product_id != product_id,
+        Product.descripcion_2.isnot(None)  # Solo productos con descripcion_2
+    ).all()
+    
+    # Calcular similitud para cada producto
+    similarities = []
+    for product in all_products:
+        product_components = extract_active_components(product.descripcion_2)
+        if not product_components:
+            continue
+        
+        score = calculate_similarity_score(target_components, product_components)
+        if score >= min_similarity:
+            similarities.append((product, score))
+    
+    # Ordenar por score descendente y tomar top N
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    top_similar = similarities[:limit]
+    
+    # Formatear resultados con información de precios
+    results = []
+    for product, score in top_similar:
+        result = {
+            "product": product,
+            "similarity_score": round(score, 3),
+            "price_info": None
+        }
+        
+        # Calcular precios según la lista del cliente
+        if price_list_id:
+            price_data = get_product_final_price(db, product, price_list_id)
+            
+            if price_data:
+                result["price_info"] = format_price_info(
+                    base_price=price_data["base_price"],
+                    markup_percentage=price_data["markup_percentage"],
+                    final_price=price_data["final_price"]
+                )
+        
+        results.append(result)
+    
+    return results
