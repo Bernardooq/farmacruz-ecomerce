@@ -40,11 +40,12 @@ from crud.crud_customer import get_customer_info
 from crud.crud_user import get_user
 from schemas.order import Order, OrderUpdate, OrderWithAddress, OrderAssign
 from schemas.order_edit import OrderEditRequest
+from schemas.order_direct import DirectOrderCreate
 from schemas.cart import CartItem
 from db.base import OrderStatus, User, UserRole, Customer, CustomerInfo, PriceListItem
 
 from crud.crud_order import (assign_order_seller, calculate_order_shipping_address, get_order, get_orders_by_customer, get_orders, 
-    get_orders_for_user_groups, create_order_from_cart, update_order_status, cancel_order, generate_order_txt)
+    get_orders_for_user_groups, create_order_from_cart, create_order_direct, update_order_status, cancel_order, generate_order_txt)
 
 from crud.crud_order_edit import edit_order_items
 
@@ -172,6 +173,65 @@ def checkout_cart(checkout_data: CheckoutRequest,
         return order
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=str(e))
+
+
+""" POST /create-for-customer - Crear pedido para un cliente (Admin/Marketing) """
+@router.post("/create-for-customer", response_model=Order)
+def create_order_for_customer(
+    order_data: DirectOrderCreate,
+    current_user: User = Depends(get_current_seller_user),
+    db: Session = Depends(get_db)):
+    """
+    Permite a admin/marketing crear pedidos en nombre de clientes.
+    Marketing solo puede crear para clientes en sus grupos.
+    """
+    
+    # Verificar que el cliente existe
+    customer = db.query(Customer).filter(Customer.customer_id == order_data.customer_id).first()
+    if not customer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cliente no encontrado"
+        )
+    
+    # VERIFICAR PERMISOS
+    # Admin puede crear para cualquiera, marketing solo para sus grupos
+    if current_user.role == UserRole.marketing:
+        # Verificar que el cliente esté en un grupo que el marketing maneja
+        customer_info = db.query(CustomerInfo).filter(
+            CustomerInfo.customer_id == order_data.customer_id
+        ).first()
+        
+        if not customer_info or not customer_info.sales_group_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Este cliente no está asignado a ningún grupo de ventas"
+            )
+        
+        # Verificar si el usuario puede manejar este grupo
+        from crud.crud_sales_group import get_user_groups
+        user_groups = get_user_groups(db, current_user.user_id)
+        user_group_ids = [g.sales_group_id for g in user_groups]
+        
+        if customer_info.sales_group_id not in user_group_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para crear pedidos para este cliente"
+            )
+    
+    # Convertir items a formato dict para el CRUD
+    items_dict = [{"product_id": item.product_id, "quantity": item.quantity} for item in order_data.items]
+    
+    try:
+        order = create_order_direct(
+            db=db,
+            customer_id=order_data.customer_id,
+            items=items_dict,
+            shipping_address_number=order_data.shipping_address_number
+        )
+        return order
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 """ GET / - Ver mis pedidos """
 @router.get("/", response_model=List[OrderWithAddress])

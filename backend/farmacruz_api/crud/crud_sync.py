@@ -17,6 +17,7 @@ from db.base import PriceList, Product, PriceListItem, Category, Customer, Custo
 from crud.crud_customer import get_password_hash
 
 from utils.price_utils import calculate_final_price_with_markup
+from utils.sales_group_utils import assign_customer_to_agent_group
 from decimal import Decimal
 
 # CATEGORiAS
@@ -462,6 +463,10 @@ def guardar_o_actualizar_cliente(db: Session, customer_id: int, username: str, e
         
         db.execute(statement_info)
         
+        # Auto-asignar al grupo del agente si tiene agent_id
+        if agent_id:
+            assign_customer_to_agent_group(db, customer_id, agent_id)
+        
         # Retornar si fue creado (True) o actualizado (False)
         fue_creado = not ya_existe
         return fue_creado, None
@@ -565,6 +570,15 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
             }
         )
         db.execute(stmt_info)
+        
+        # Auto-asignar clientes con agent_id a grupos de vendedores (OPTIMIZADO)
+        customers_with_agents = [
+            {'customer_id': c['customer_id'], 'agent_id': c['agent_id']}
+            for c in customers if c.get('agent_id')
+        ]
+        if customers_with_agents:
+            from utils.sales_group_utils import bulk_assign_customers_to_agent_groups
+            bulk_assign_customers_to_agent_groups(db, customers_with_agents)
         
         return creados, actualizados, errores
         

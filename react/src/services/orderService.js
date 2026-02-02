@@ -81,6 +81,11 @@ export const orderService = {
     return apiService.put(`/orders/${id}/edit`, editData)
   },
 
+  // Crear pedido para un cliente (solo admin/marketing)
+  async createOrderForCustomer(orderData) {
+    return apiService.post('/orders/create-for-customer', orderData)
+  },
+
   // Descargar pedido en formato TXT
   async downloadOrderTXT(orderId) {
     const token = localStorage.getItem('token')

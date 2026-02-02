@@ -281,7 +281,7 @@ def procesar_productos(df_productos, descripciones_extra, stock_map, fecha_sync)
             "iva_percentage": limpiar_numero(row.get('PORCENIVA'), 16.0),
             "category_name": categoria or None,
             "is_active": True,
-            "unidad_medida": limpiar_texto(row.get('DATO_4')) or None,
+            "unidad_medida": limpiar_texto(row.get('UNI_MED')) or None,
             "image_url": verificar_imagen_existe(producto_id),
             "updated_at": fecha_sync
         }

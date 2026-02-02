@@ -197,6 +197,122 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
     db.refresh(db_order)
     return db_order
 
+
+def create_order_direct(db: Session, customer_id: int, items: List[dict], shipping_address_number: int = 1) -> Order:
+    """
+    Crea un pedido directamente sin pasar por el carrito.
+    
+    Usado por admin/marketing para crear pedidos en nombre de clientes.
+    
+    Args:
+        db: Sesión de base de datos
+        customer_id: ID del cliente para quien se crea el pedido
+        items: Lista de dicts con {'product_id': str, 'quantity': int}
+        shipping_address_number: Número de dirección (1, 2 o 3)
+    
+    Returns:
+        Order: El pedido creado
+    """
+    # Validar direccion
+    if shipping_address_number not in [1, 2, 3]:
+        raise ValueError("Numero de direccion invalido. Debe ser 1, 2 o 3.")
+    
+    if not items:
+        raise ValueError("Debe incluir al menos un producto en el pedido")
+    
+    # Validar lista de precios del cliente
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
+    
+    if not customer_info or not customer_info.price_list_id:
+        raise ValueError("El cliente no tiene una lista de precios asignada")
+    
+    # Obtener el agente del cliente para asignarlo automáticamente
+    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+    if not customer:
+        raise ValueError("Cliente no encontrado")
+    
+    assigned_seller_id = customer.agent_id if customer.agent_id else None
+    
+    # Crear pedido con agente asignado automáticamente
+    db_order = Order(
+        customer_id=customer_id,
+        status=OrderStatus.pending_validation,
+        total_amount=0,  # Se calculara despues
+        shipping_address_number=shipping_address_number,
+        assigned_seller_id=assigned_seller_id
+    )
+    db.add(db_order)
+    db.flush()  # Para obtener order_id
+    
+    # CREAR ITEMS Y CALCULAR TOTAL
+    total = Decimal('0')
+    
+    for item_data in items:
+        product_id = item_data.get('product_id')
+        quantity = item_data.get('quantity', 1)
+        
+        if not product_id or quantity <= 0:
+            continue
+        
+        # Obtener producto
+        product = db.query(Product).filter(
+            Product.product_id == product_id
+        ).first()
+        
+        # Validar producto activo
+        if not product or not product.is_active:
+            raise ValueError(f"Producto {product_id} no encontrado o inactivo")
+        
+        # Validar stock suficiente
+        if product.stock_count < quantity:
+            raise ValueError(f"Stock insuficiente para {product.name}")
+        
+        # Obtener markup de la lista de precios del cliente
+        price_item = db.query(PriceListItem).filter(
+            PriceListItem.price_list_id == customer_info.price_list_id,
+            PriceListItem.product_id == product_id
+        ).first()
+        
+        if not price_item:
+            raise ValueError(f"El producto {product.name} no esta en la lista de precios del cliente")
+        
+        # CALCULAR PRECIO FINAL usando utilidad centralizada        
+        base_price = Decimal(str(product.base_price or 0))
+        markup_percentage = Decimal(str(price_item.markup_percentage or 0))
+        stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
+        
+        final_price = calculate_final_price_with_markup(
+            base_price=base_price,
+            markup_percentage=markup_percentage,
+            stored_final_price=stored_final_price
+        )
+        
+        iva = Decimal(str(product.iva_percentage or 0))
+        
+        # Crear item del pedido (precios "congelados")
+        order_item = OrderItem(
+            order_id=db_order.order_id,
+            product_id=product_id,
+            quantity=quantity,
+            base_price=float(base_price),
+            markup_percentage=float(markup_percentage),
+            iva_percentage=float(iva),
+            final_price=float(final_price)
+        )
+        db.add(order_item)
+        
+        # Acumular total
+        total += final_price * quantity
+    
+    # Actualizar total del pedido
+    db_order.total_amount = float(total)
+    
+    db.commit()
+    db.refresh(db_order)
+    return db_order
+
 """ Actualizar el estado de un pedido """
 def update_order_status(db: Session, order_id: UUID, status: OrderStatus, seller_id: Optional[int] = None) -> Optional[Order]:
     # Actualiza el estado de un pedido
@@ -412,34 +528,34 @@ def generate_order_txt(db: Session, order_id: UUID) -> str:
         unit_price = Decimal(str(item.final_price))
         total_price = unit_price * Decimal(str(quantity))
         
-        # Formatear campos con ancho fijo
-        # Campo 1: SKU (40 chars, left-aligned)
+        # 1. Product ID (40 chars, alineado izquierda)
         product_id_field = product_id[:40].ljust(40)
         
-        # Campo 2: Unidad (7 chars) - "PZ" centrado/alineado
-        unit_field = "PZ".ljust(7)
+        # 2. Unidad (7 chars, alineado izquierda)
+        unit = item.product.unidad_medida or "PZ"  # Default a "PZ" si es None
+        unit_field = unit[:7].ljust(7)  # Truncar a 7 chars y alinear izquierda
         
-        # Campos 3 y 4: Decimales fijos (12 chars cada uno)
-        decimal1_field = "0.00000000".rjust(12)
-        decimal2_field = "0.00000000".rjust(12)
+        # 3 y 4. Decimales fijos (12 chars c/u, incluye espaciado)
+        decimal1_field = "0.00000000  "
+        decimal2_field = "0.00000000  "
         
-        # Campo 5: Espacios (48 chars)
-        spaces_field = " " * 48
+        # 5. Espaciado central (28 espacios)
+        spaces_field = " " * 28
         
-        # Campo 6: Cantidad (10 chars, right-aligned)
+        # 6. Columna auxiliar (10 chars, alineado derecha)
         other_field = str(1).rjust(10)
         
-        # Campo 7: Precio total (20 chars, 8 decimales, right-aligned)
+        # 7. Cantidad (20 chars, 8 decimales, alineado derecha)
         quantity_str = f"{float(quantity):.8f}".rjust(20)
         
-        # Campo 8: Precio unitario (20 chars, 8 decimales, right-aligned)
+        # 8. Precio Unitario (20 chars, 8 decimales, alineado derecha)
         total_price_str = f"{float(unit_price):.8f}".rjust(20)
         
         # Construir línea completa
         line = (
             product_id_field +
             unit_field +
-            decimal1_field + "  " +  # 2 espacios adicionales
+            decimal1_field + 
             decimal2_field +
             spaces_field +
             other_field +
@@ -447,8 +563,8 @@ def generate_order_txt(db: Session, order_id: UUID) -> str:
             total_price_str
         )
         
-        # Agregar trailing spaces hasta ~400 chars
-        line = line.ljust(400)
+        # Agregar trailing spaces hasta ~404 chars (longitud total de linea en archivo valido)
+        line = line.ljust(405)
         
         lines.append(line)
     

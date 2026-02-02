@@ -48,6 +48,13 @@ const customerService = {
      */
     async updateCustomerInfo(customerId, customerInfoData) {
         return apiService.put(`/customers/${customerId}/info`, customerInfoData);
+    },
+
+    /**
+     * Alias for getCustomers (for compatibility)
+     */
+    async getAllCustomers(params = {}) {
+        return this.getCustomers(params);
     }
 };
 

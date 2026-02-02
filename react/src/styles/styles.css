@@ -308,6 +308,54 @@ template {
   display: none;
 }
 
+:root {
+  /* Colores base */
+  --primario: #63c1a5;
+  --secundario: #752F97;
+  --terciario: #095511;
+  --acento: #F53756;
+  --amarillo: #FFDD00;
+  --negro: #1A1A1A;
+  --blanco: #FFFFFF;
+  /* Estados */
+  --success: #63c1a5;
+  --warning: #FFDD00;
+  --danger: #F53756;
+  --info: #752F97;
+  /* Backgrounds */
+  --success-light: rgba(99, 193, 165, 0.1);
+  --warning-light: rgba(255, 221, 0, 0.1);
+  --danger-light: rgba(245, 55, 86, 0.1);
+  --info-light: rgba(117, 47, 151, 0.1);
+  /* Texto */
+  --success-dark: rgb(54.0366972477, 135.9633027523, 111.5596330275);
+  --warning-dark: rgb(51, 44.2, 0);
+  --danger-dark: rgb(212.8571428571, 10.6428571429, 43.6357142857);
+  --info-dark: rgb(71.7954545455, 28.8409090909, 92.6590909091);
+}
+
+[data-theme=dark] {
+  --primario: #5eead4;
+  --secundario: #c084fc;
+  --terciario: #22c55e;
+  --acento: #fb7185;
+  --amarillo: #facc15;
+  --negro: #e5e7eb;
+  --blanco: #020617;
+  --success: #5eead4;
+  --warning: #facc15;
+  --danger: #fb7185;
+  --info: #c084fc;
+  --success-light: rgba(94, 234, 212, 0.15);
+  --warning-light: rgba(250, 204, 21, 0.15);
+  --danger-light: rgba(251, 113, 133, 0.15);
+  --info-light: rgba(192, 132, 252, 0.15);
+  --success-dark: #2dd4bf;
+  --warning-dark: #eab308;
+  --danger-dark: #f43f5e;
+  --info-dark: #a855f7;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -327,6 +375,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 button {

@@ -10,6 +10,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
     descripcion_2: '',
     price: '',
     iva_percentage: '16.00',
+    unidad_medida: '',
     category_id: '',
     stock_count: '',
     image_url: ''
@@ -72,8 +73,9 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
       const productData = {
         ...formData,
         product_id: formData.product_id,
-        base_price: parseFloat(formData.price),  // El backend espera base_price, no price
+        base_price: parseFloat(formData.price),  // El backend espera base_price
         iva_percentage: parseFloat(formData.iva_percentage),
+        unidad_medida: formData.unidad_medida,
         category_id: parseInt(formData.category_id),
         stock_count: stock,
         is_active: true  // Asegurar que el producto esté activo por defecto
@@ -93,6 +95,7 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
         descripcion_2: '',
         price: '',
         iva_percentage: '16.00',
+        unidad_medida: '',
         category_id: '',
         stock_count: '',
         image_url: ''
@@ -218,6 +221,19 @@ export default function ModalAddProduct({ isOpen, onClose, onSubmit }) {
                   placeholder="16.00"
                 />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="unidad_medida">Unidad de medida: </label>
+              <input
+                type="text"
+                id="unidad_medida"
+                name="unidad_medida"
+                value={formData.unidad_medida}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
             </div>
 
             <div className="form-row">

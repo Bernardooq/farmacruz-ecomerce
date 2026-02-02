@@ -18,6 +18,8 @@ from sqlalchemy import or_, func
 from core.security import get_password_hash, verify_password
 from db.base import Customer, CustomerInfo
 from schemas.customer import CustomerCreate, CustomerUpdate
+from utils.sales_group_utils import assign_customer_to_agent_group
+
 
 """Obtiene un cliente por ID con su informacion comercial"""
 def get_customer(db: Session, customer_id: int) -> Optional[Customer]:
@@ -64,11 +66,17 @@ def create_customer(db: Session, customer: CustomerCreate) -> Customer:
         email=customer.email,
         password_hash=hashed_password,
         full_name=customer.full_name,
+        agent_id=customer.agent_id,  # Asignar agente
         is_active=True
     )
     db.add(db_customer)
     db.commit()
     db.refresh(db_customer)
+    
+    # Auto-asignar al grupo del agente si tiene agent_id
+    if customer.agent_id:
+        assign_customer_to_agent_group(db, db_customer.customer_id, customer.agent_id)
+    
     return db_customer
 
 """Actualiza un cliente existente"""
@@ -116,6 +124,11 @@ def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> 
 
     db.commit()
     db.refresh(db_customer)
+    
+    # Auto-asignar al grupo del agente si cambió el agent_id
+    if "agent_id" in update_data and update_data["agent_id"]:
+        assign_customer_to_agent_group(db, customer_id, update_data["agent_id"])
+    
     return db_customer
 
 

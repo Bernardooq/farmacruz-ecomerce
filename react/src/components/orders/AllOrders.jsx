@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faSpinner, faSync, faFileAlt, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSpinner, faSync, faFileAlt, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons';
 import orderService from '../../services/orderService';
 import { userService } from '../../services/userService';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -8,6 +8,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import ModalOrderDetails from '../modals/orders/ModalOrderDetails';
 import ModalAssignSeller from '../modals/clients/ModalAssignSeller';
 import ModalEditOrder from '../modals/orders/ModalEditOrder';
+import ModalCreateOrder from '../modals/orders/ModalCreateOrder';
 import PaginationButtons from '../common/PaginationButtons';
 import { useAuth } from '../../context/AuthContext';
 
@@ -36,6 +37,9 @@ export default function AllOrders() {
   // Edit modal
   const [showEditModal, setShowEditModal] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState(null);
+
+  // Create order modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Debounce search
   useEffect(() => {
@@ -235,6 +239,14 @@ export default function AllOrders() {
     }
   };
 
+  const handleCreateOrder = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleCreateOrderSuccess = async () => {
+    await loadOrders();
+  };
+
   if (loading && orders.length === 0) {
     return (
       <section className="dashboard-section">
@@ -250,8 +262,19 @@ export default function AllOrders() {
 
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-      {/* Filters */}
+      {/* Filters and Create Button */}
       <div className="dashboard-controls">
+        {(user?.role === 'admin' || user?.role === 'marketing') && (
+          <button
+            className="btn-primary"
+            onClick={handleCreateOrder}
+            style={{ marginBottom: '1rem' }}
+            title="Crear Pedido para Cliente"
+          >
+            <FontAwesomeIcon icon={faPlus} style={{ marginRight: '0.5rem' }} />
+            Crear Pedido
+          </button>
+        )}
         <form className="search-bar" onSubmit={handleSearch}>
           <input
             type="search"
@@ -365,6 +388,12 @@ export default function AllOrders() {
         order={orderToEdit}
         onSave={handleSaveEditedOrder}
         onClose={handleCloseEditModal}
+      />
+
+      <ModalCreateOrder
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateOrderSuccess}
       />
     </section>
   );

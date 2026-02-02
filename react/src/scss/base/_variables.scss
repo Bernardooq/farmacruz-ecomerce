@@ -1,6 +1,6 @@
 $fuente_principal: "Open Sans", sans-serif;
 
-// Colores principales
+// Colores principales (SCSS Variables - para código SCSS existente)
 $primario: #63c1a5; // Verde agua (principal)
 $secundario: #752F97; // Morado
 $terciario: #095511; // Verde fuerte (para gradientes con primario)
@@ -26,6 +26,63 @@ $success-dark: darken($primario, 20%);
 $warning-dark: darken($amarillo, 40%);
 $danger-dark: darken($acento, 15%);
 $info-dark: darken($secundario, 15%);
+
+// CSS Variables para temas dinámicos
+:root {
+    /* Colores base */
+    --primario: #{$primario};
+    --secundario: #{$secundario};
+    --terciario: #{$terciario};
+    --acento: #{$acento};
+    --amarillo: #{$amarillo};
+    --negro: #{$negro};
+    --blanco: #{$blanco};
+
+    /* Estados */
+    --success: #{$success};
+    --warning: #{$warning};
+    --danger: #{$danger};
+    --info: #{$info};
+
+    /* Backgrounds */
+    --success-light: #{$success-light};
+    --warning-light: #{$warning-light};
+    --danger-light: #{$danger-light};
+    --info-light: #{$info-light};
+
+    /* Texto */
+    --success-dark: #{$success-dark};
+    --warning-dark: #{$warning-dark};
+    --danger-dark: #{$danger-dark};
+    --info-dark: #{$info-dark};
+}
+
+// Tema oscuro
+[data-theme="dark"] {
+    --primario: #5eead4;
+    --secundario: #c084fc;
+    --terciario: #22c55e;
+    --acento: #fb7185;
+    --amarillo: #facc15;
+
+    --negro: #e5e7eb;
+    --blanco: #020617;
+
+    --success: #5eead4;
+    --warning: #facc15;
+    --danger: #fb7185;
+    --info: #c084fc;
+
+    --success-light: rgba(94, 234, 212, 0.15);
+    --warning-light: rgba(250, 204, 21, 0.15);
+    --danger-light: rgba(251, 113, 133, 0.15);
+    --info-light: rgba(192, 132, 252, 0.15);
+
+    --success-dark: #2dd4bf;
+    --warning-dark: #eab308;
+    --danger-dark: #f43f5e;
+    --info-dark: #a855f7;
+}
 
 // Media queries
 $telefono: 480px;

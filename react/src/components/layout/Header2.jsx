@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faKey } from '@fortawesome/free-solid-svg-icons';
+import { faKey, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
 import ModalChangePassword from '../users/ModalChangePassword';
 
 // Header para Admin/Seller Dashboard - solo muestra Inicio y Dashboard
 export default function Header2() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
@@ -53,6 +55,13 @@ export default function Header2() {
               title="Cambiar contraseña"
             >
               <FontAwesomeIcon icon={faKey} />
+            </button>
+            <button
+              className="nav__password-btn"
+              onClick={toggleTheme}
+              title={theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+            >
+              <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} />
             </button>
             <button className="nav__logout-link" onClick={handleLogout}>Salir</button>
           </div>

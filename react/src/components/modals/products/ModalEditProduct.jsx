@@ -29,6 +29,7 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
         descripcion_2: product.descripcion_2 || '',
         base_price: product.base_price || '',
         iva_percentage: product.iva_percentage || '16.00',
+        unidad_medida: product.unidad_medida || '',
         stock_count: product.stock_count || '',
         category_id: product.category_id || '',
         image_url: product.image_url || '',
@@ -196,6 +197,19 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
                   placeholder="16.00"
                 />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="unidad_medida">Unidad de medida: *</label>
+              <input
+                type="text"
+                id="unidad_medida"
+                name="unidad_medida"
+                value={formData.unidad_medida}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
             </div>
 
             <div className="form-row">
