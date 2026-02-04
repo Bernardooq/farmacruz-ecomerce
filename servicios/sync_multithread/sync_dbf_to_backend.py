@@ -15,6 +15,7 @@ Autor: Farmacruz Team
 
 from datetime import datetime, timezone
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import requests
@@ -26,8 +27,10 @@ from dbfread import DBF
 # ============================================================================
 
 BACKEND_URL = "http://localhost:8000/api/v1"
-DBF_FOLDER = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
-IMAGES_FOLDER = Path("/Users/bernardoorozco/Downloads/CompressedImg")
+# DBF_FOLDER = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
+# IMAGES_FOLDER = Path("/Users/bernardoorozco/Downloads/CompressedImg")
+DBF_FOLDER = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\dbfs")
+IMAGES_FOLDER = Path("C:\\Users\\berna\\Downloads\\CompressedImg")
 
 # Archivos DBF
 PRODUCTOS_DBF = DBF_FOLDER / "producto.dbf"
@@ -40,7 +43,7 @@ BATCH_SIZE = {
     "categorias": 100,
     "productos": 500,
     "listas": 100,
-    "items": 1000
+    "items": 2000
 }
 
 # Productos a ignorar (filtro de seguridad)
@@ -93,15 +96,15 @@ def cargar_descripciones_extra():
     Retorna: {producto_id: descripcion_larga}
     """
     if not DESCRIPCIONES_DBF.exists():
-        print(f"⚠️  Archivo {DESCRIPCIONES_DBF.name} no encontrado, se omitiran descripciones extra")
+        print(f"Warning: {DESCRIPCIONES_DBF.name} not found, skipping extra descriptions")
         return {}
     
-    print(f"📄 Cargando descripciones extra...")
+    print("Loading extra descriptions...")
     try:
         dbf = DBF(DESCRIPCIONES_DBF, encoding='latin1', ignore_missing_memofile=True)
         return {r['CVE_PROD'].strip(): r['DESC1'].strip() for r in dbf}
     except Exception as e:
-        print(f"❌ Error leyendo descripciones: {e}")
+        print(f"Error reading descriptions: {e}")
         return {}
 
 
@@ -111,15 +114,15 @@ def cargar_existencias():
     Retorna: {producto_id: cantidad_en_stock}
     """
     if not EXISTENCIAS_DBF.exists():
-        print(f"⚠️  Archivo {EXISTENCIAS_DBF.name} no encontrado, stock sera 0")
+        print(f"Warning: {EXISTENCIAS_DBF.name} not found, stock will default to 0")
         return {}
     
-    print(f"📦 Cargando existencias...")
+    print("Loading stock data...")
     try:
         dbf = DBF(EXISTENCIAS_DBF, encoding='latin1', ignore_missing_memofile=True)
         return {r['CVE_PROD'].strip(): limpiar_numero(r['EXISTENCIA']) for r in dbf}
     except Exception as e:
-        print(f"❌ Error leyendo existencias: {e}")
+        print(f"Error reading stock: {e}")
         return {}
 
 
@@ -137,7 +140,7 @@ def login():
         response.raise_for_status()
         return response.json()["access_token"]
     except Exception as e:
-        print(f"❌ Error de login: {e}")
+        print(f"Login failed: {e}")
         return None
 
 
@@ -157,32 +160,52 @@ def enviar_batch(datos, endpoint, token, nombre):
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        print(f"❌ Error en {nombre}: {e}")
+        print(f"Error in {nombre}: {e}")
         return {"creados": 0, "actualizados": 0, "errores": len(datos)}
 
 
-def enviar_en_lotes(datos, batch_size, endpoint, token, nombre):
-    """Divide datos en lotes y los envia al backend"""
+def enviar_en_lotes(datos, batch_size, endpoint, token, nombre, max_workers=5):
+    """Divide datos en lotes y los envia al backend en paralelo"""
     if not datos:
-        print(f"⚠️  {nombre}: No hay datos para sincronizar")
+        print(f"{nombre}: No data to sync")
         return
     
     total = len(datos)
+    num_batches = (total + batch_size - 1) // batch_size
+    
+    print(f"{nombre}: Syncing {total} records ({num_batches} batches, {max_workers} workers)")
+    
+    # Preparar todos los batches
+    batches = []
+    for i in range(0, total, batch_size):
+        lote = datos[i:i + batch_size]
+        batches.append((lote, endpoint, token, nombre))
+    
+    # Enviar batches en paralelo usando ThreadPoolExecutor
     creados = 0
     actualizados = 0
     errores = 0
     
-    print(f"📤 {nombre}: Enviando {total} registros...")
-    
-    for i in range(0, total, batch_size):
-        lote = datos[i:i + batch_size]
-        resultado = enviar_batch(lote, endpoint, token, nombre)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Enviar todos los batches y obtener futures
+        futures = {
+            executor.submit(enviar_batch, lote, ep, tk, nm): i 
+            for i, (lote, ep, tk, nm) in enumerate(batches)
+        }
         
-        creados += resultado.get('creados', 0)
-        actualizados += resultado.get('actualizados', 0)
-        errores += resultado.get('errores', 0)
+        # Recolectar resultados conforme completen
+        for future in as_completed(futures):
+            batch_num = futures[future]
+            try:
+                resultado = future.result()
+                creados += resultado.get('creados', 0)
+                actualizados += resultado.get('actualizados', 0)
+                errores += resultado.get('errores', 0)
+            except Exception as e:
+                print(f"  Batch {batch_num + 1}/{num_batches} failed: {e}")
+                errores += len(batches[batch_num][0])
     
-    print(f"   ✅ {creados} creados, {actualizados} actualizados, {errores} errores")
+    print(f"  Done: {creados} created, {actualizados} updated, {errores} errors")
 
 
 def enviar_fecha_limpieza(fecha, token):
@@ -202,9 +225,9 @@ def enviar_fecha_limpieza(fecha, token):
             headers=headers
         )
         response.raise_for_status()
-        print("🧹 Limpieza de registros antiguos completada")
+        print("Cleaned up old records")
     except Exception as e:
-        print(f"⚠️  Error en limpieza: {e}")
+        print(f"Cleanup warning: {e}")
 
 
 # ============================================================================
@@ -235,7 +258,7 @@ def procesar_categorias(df_productos, fecha_sync):
 
 def procesar_productos(df_productos, descripciones_extra, stock_map, fecha_sync):
     """Lee productos del DBF y los prepara para el backend"""
-    print("📦 Procesando productos...")
+    print("Processing products...")
     productos = []
     
     for _, row in df_productos.iterrows():
@@ -257,7 +280,7 @@ def procesar_productos(df_productos, descripciones_extra, stock_map, fecha_sync)
         if row.get('FACT_PESO'):
             desc_tecnica_parts.append(f"Costo Público: {limpiar_texto(row.get('FACT_PESO'))}")
         if row.get('DATO_4'):
-            desc_tecnica_parts.append(f"Unidad: {limpiar_texto(row.get('DATO_4'))}")
+            desc_tecnica_parts.append(f"Caja: {limpiar_texto(row.get('DATO_4'))}")
         desc_tecnica = " | ".join(desc_tecnica_parts) or None
         
         # Descripcion larga (de pro_desc.dbf)
@@ -312,7 +335,7 @@ def procesar_listas_precios(df_precios, fecha_sync):
 
 def procesar_items_listas(df_precios, listas_ids, fecha_sync):
     """Procesa los items (productos) de cada lista de precios con sus markups"""
-    print("💰 Procesando items de listas de precios...")
+    print("Processing price list items...")
     items = []
     
     for lista_id in listas_ids:
@@ -342,14 +365,13 @@ def main():
     fecha_sync = inicio.isoformat()
     
     print(f"\n{'='*60}")
-    print(f"🔄 Sync Productos DBF → PostgreSQL")
-    print(f"⏰ {inicio.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"DBF Sync - {inicio.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{'='*60}\n")
     
     # 1. Login
     token = login()
     if not token:
-        print("❌ No se pudo hacer login. Abortando.\n")
+        print("Authentication failed. Aborting.\n")
         return
     
     # 2. Cargar datos auxiliares (descripciones y stock)
@@ -357,10 +379,10 @@ def main():
     stock_map = cargar_existencias()
     
     # 3. Leer archivos DBF principales
-    print(f"📖 Leyendo {PRODUCTOS_DBF.name}...")
+    print(f"Reading {PRODUCTOS_DBF.name}...")
     df_productos = pd.DataFrame(iter(DBF(PRODUCTOS_DBF, encoding='latin1', ignore_missing_memofile=True)))
     
-    print(f"📖 Leyendo {PRECIOS_DBF.name}...")
+    print(f"Reading {PRECIOS_DBF.name}...")
     df_precios = pd.DataFrame(iter(DBF(PRECIOS_DBF, encoding='latin1', ignore_missing_memofile=True)))
     
     # Limpiar strings en DataFrames
@@ -371,19 +393,19 @@ def main():
     
     # Categorias
     categorias = procesar_categorias(df_productos, fecha_sync)
-    enviar_en_lotes(categorias, BATCH_SIZE["categorias"], "sync/categories", token, "Categorías")
+    enviar_en_lotes(categorias, BATCH_SIZE["categorias"], "sync/categories", token, "Categorías", max_workers=5)
     
     # Productos
     productos = procesar_productos(df_productos, descripciones_extra, stock_map, fecha_sync)
-    enviar_en_lotes(productos, BATCH_SIZE["productos"], "sync/products", token, "Productos")
+    enviar_en_lotes(productos, BATCH_SIZE["productos"], "sync/products", token, "Productos", max_workers=8)
     
     # Listas de precios
     listas, listas_ids = procesar_listas_precios(df_precios, fecha_sync)
-    enviar_en_lotes(listas, BATCH_SIZE["listas"], "sync/price-lists", token, "Listas de Precios")
+    enviar_en_lotes(listas, BATCH_SIZE["listas"], "sync/price-lists", token, "Listas de Precios", max_workers=5)
     
     # Items de listas (markups por producto)
     items = procesar_items_listas(df_precios, listas_ids, fecha_sync)
-    enviar_en_lotes(items, BATCH_SIZE["items"], "sync/price-list-items", token, "Items de Listas")
+    enviar_en_lotes(items, BATCH_SIZE["items"], "sync/price-list-items", token, "Items de Listas", max_workers=10)
     
     # 5. Limpieza de registros antiguos
     print()
@@ -394,7 +416,7 @@ def main():
     duracion = (fin - inicio).total_seconds()
     
     print(f"\n{'='*60}")
-    print(f"✅ Sync completado en {duracion:.1f}s")
+    print(f"Completed in {duracion:.1f}s")
     print(f"{'='*60}\n")
 
 

@@ -93,15 +93,19 @@ def bulk_assign_customers_to_agent_groups(db: Session, customer_agent_pairs: Lis
             })
     
     if groups_to_create:
-        stmt = insert(SalesGroup).values(groups_to_create).returning(SalesGroup)
-        result = db.execute(stmt)
-        new_groups = result.fetchall()
+        stmt = insert(SalesGroup).values(groups_to_create)
+        db.execute(stmt)
+        db.flush()
+        
+        # Re-fetch newly created groups to get proper ORM objects
+        new_group_names = [g['group_name'] for g in groups_to_create]
+        new_groups = db.query(SalesGroup).filter(
+            SalesGroup.group_name.in_(new_group_names)
+        ).all()
         for group in new_groups:
             group_name_map[group.group_name] = group
     
-    db.flush()
-    
-    # 6. Re-fetch groups to get proper IDs
+    # 6. Ensure all expected groups are in the map (for both new and existing)
     existing_groups = db.query(SalesGroup).filter(
         SalesGroup.group_name.in_(expected_group_names)
     ).all()

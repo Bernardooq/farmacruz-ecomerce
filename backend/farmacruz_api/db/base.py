@@ -246,6 +246,7 @@ class Product(Base):
     order_items = relationship("OrderItem", back_populates="product")  # Items en pedidos
     cart_entries = relationship("CartCache", back_populates="product")  # Items en carritos
     price_list_items = relationship("PriceListItem", back_populates="product")  # Markup por lista
+    suggested_products = relationship("ProductRecommendation", foreign_keys="[ProductRecommendation.product_id]", back_populates="product", cascade="all, delete-orphan")
 
 
 class PriceList(Base):
@@ -423,3 +424,23 @@ class CartCache(Base):
     # Relaciones
     customer = relationship("Customer", back_populates="cart_cache")  # Cliente dueño del carrito
     product = relationship("Product", back_populates="cart_entries")  # Producto en el carrito
+
+
+class ProductRecommendation(Base):
+    __tablename__ = "product_recommendations"
+
+    recommendation_id = Column(Integer, primary_key=True, autoincrement=True)
+    product_id = Column(String(50), ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False)
+    recommended_product_id = Column(String(50), ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False)
+    recommendation_type = Column(String(50), default='intersection/union')
+    score = Column(Numeric(3, 2), default=1.0)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint('product_id', 'recommended_product_id', name='unique_recommendation'),
+        CheckConstraint('product_id <> recommended_product_id', name='check_not_self_recommended'),
+    )
+
+    # Relaciones para navegar fácilmente
+    product = relationship("Product", foreign_keys=[product_id], back_populates="suggested_products")
+    recommended_product = relationship("Product", foreign_keys=[recommended_product_id], backref="recommendations_in")

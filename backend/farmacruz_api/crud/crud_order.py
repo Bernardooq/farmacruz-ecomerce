@@ -266,8 +266,8 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
             raise ValueError(f"Producto {product_id} no encontrado o inactivo")
         
         # Validar stock suficiente
-        if product.stock_count < quantity:
-            raise ValueError(f"Stock insuficiente para {product.name}")
+        # if product.stock_count < quantity:
+        #     raise ValueError(f"Stock insuficiente para {product.name}")
         
         # Obtener markup de la lista de precios del cliente
         price_item = db.query(PriceListItem).filter(
@@ -569,4 +569,4 @@ def generate_order_txt(db: Session, order_id: UUID) -> str:
         lines.append(line)
     
     # Unir todas las líneas con salto de línea Windows (\r\n)
-    return "\r\n".join(lines)
+    return "\r\n".join(lines) + "\r\n"

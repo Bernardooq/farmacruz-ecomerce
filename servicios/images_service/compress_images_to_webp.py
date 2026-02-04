@@ -22,10 +22,11 @@ import os
 # ============================================================================
 
 # Carpeta con imágenes originales
-SOURCE_FOLDER = Path("/Users/bernardoorozco/Downloads/Imagenes")
-
+# SOURCE_FOLDER = Path("/Users/bernardoorozco/Downloads/Imagenes")
+SOURCE_FOLDER= Path("C:\\Users\\berna\\Downloads\\Imagenes")
 # Carpeta destino para WebP comprimidos
-OUTPUT_FOLDER = Path("/Users/bernardoorozco/Downloads/CompressedImg")
+# OUTPUT_FOLDER = Path("/Users/bernardoorozco/Downloads/CompressedImg")
+OUTPUT_FOLDER = Path("C:\\Users\\berna\\Downloads\\CompressedImg")
 
 # Calidad de compresión WebP inicial (0-100)
 WEBP_QUALITY = 70

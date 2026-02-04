@@ -246,3 +246,20 @@ CREATE TABLE cartcache (
 
 CREATE INDEX idx_cartcache_customer ON cartcache(customer_id);
 CREATE INDEX idx_cartcache_product ON cartcache(product_id);
+
+-- =====================================================
+-- TABLA: product_recommendations (Recomendacion de )
+-- =====================================================
+CREATE TABLE product_recommendations (
+    recommendation_id SERIAL PRIMARY KEY,
+    product_id VARCHAR(50) NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
+    recommended_product_id VARCHAR(50) NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
+    recommendation_type VARCHAR(50) DEFAULT 'intersection/union',
+    score NUMERIC(3, 2) DEFAULT 1.0, 
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_recommendation UNIQUE (product_id, recommended_product_id),
+    CONSTRAINT check_not_self_recommended CHECK (product_id <> recommended_product_id)
+);
+
+CREATE INDEX idx_prod_rec_source ON product_recommendations(product_id);
+CREATE INDEX idx_prod_rec_recommended ON product_recommendations(recommended_product_id);

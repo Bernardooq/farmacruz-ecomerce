@@ -53,7 +53,7 @@ def get_customer_catalog_products(
     customer_id: int,
     skip: int = Query(0, ge=0, description="Registros a saltar (paginacion)"),
     limit: int = Query(50, ge=1, le=100, description="Maximo de registros (1-100)"),
-    search: Optional[str] = Query(None, description="Buscar por nombre, descripcion o codebar"),
+    search: Optional[str] = Query(None, description="Buscar por ID, nombre, descripcion o codebar"),
     category_id: Optional[int] = Query(None, description="Filtrar por categoria"),
     sort_by: Optional[str] = Query(None, description="Ordenar por: name"),
     sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),

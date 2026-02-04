@@ -39,7 +39,8 @@ from . import (
     price_lists,
     customers,
     catalog,
-    sync_dbf
+    sync_dbf,
+    sync_dbf_upload
 )
 
 # Router principal que agrupa todos los modulos
@@ -125,9 +126,16 @@ api_router.include_router(
     tags=["Listas de Precios"]
 )
 
-# === SINCRONIZACIoN DBF ===
+# === SINCRONIZACIÓN DBF ===
 api_router.include_router(
     sync_dbf.router,
     prefix="/sync",
     tags=["Sincronizacion DBF"]
+)
+
+# === SINCRONIZACIÓN DBF UPLOAD (COMPRIMIDO) ===
+api_router.include_router(
+    sync_dbf_upload.router,
+    prefix="/sync-upload",
+    tags=["Sincronizacion DBF Upload"]
 )

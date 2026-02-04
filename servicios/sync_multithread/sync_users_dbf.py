@@ -12,6 +12,7 @@ import re
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import requests
@@ -23,7 +24,8 @@ from dbfread import DBF
 # ============================================================================
 
 BACKEND_URL = "http://localhost:8000/api/v1"
-DBF_FOLDER = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
+# DBF_FOLDER = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
+DBF_FOLDER = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\dbfs")
 
 # Archivos DBF
 CLIENTES_DBF = DBF_FOLDER / "clientes.dbf"
@@ -151,7 +153,7 @@ def login():
         response.raise_for_status()
         return response.json()["access_token"]
     except Exception as e:
-        print(f"❌ Error de login: {e}")
+        print(f"Login failed: {e}")
         return None
 
 
@@ -171,7 +173,7 @@ def sync_vendedores(token, vendedores):
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        print(f"❌ Error syncing sellers: {e}")
+        print(f"Error syncing sellers: {e}")
         return {"creados": 0, "actualizados": 0}
 
 
@@ -192,10 +194,10 @@ def sync_clientes(token, clientes):
         return response.json()
     except requests.exceptions.HTTPError as e:
         error_detail = e.response.json().get('detail', str(e)) if e.response else str(e)
-        print(f"\n      ❌ HTTP Error: {error_detail}")
+        print(f"\n  HTTP Error: {error_detail}")
         return {"creados": 0, "actualizados": 0, "errores": len(clientes)}
     except Exception as e:
-        print(f"\n      ❌ Error: {e}")
+        print(f"\n  Error: {e}")
         return {"creados": 0, "actualizados": 0, "errores": len(clientes)}
 
 
@@ -206,7 +208,7 @@ def sync_clientes(token, clientes):
 def procesar_vendedores():
     """Lee AGENTES.DBF y retorna lista de vendedores"""
     if not AGENTES_DBF.exists():
-        print(f"⚠️  Archivo no encontrado: {AGENTES_DBF}")
+        print(f"Warning: {AGENTES_DBF.name} not found")
         return []
     
     try:
@@ -214,7 +216,7 @@ def procesar_vendedores():
         df = pd.DataFrame(iter(DBF(AGENTES_DBF, encoding='latin-1', ignore_missing_memofile=True)))
         df = df[df['CVE_AGE'].notna()].copy()
         
-        print(f"📊 {len(df)} vendedores en DBF")
+        print(f"Found {len(df)} sellers in DBF")
         
         # Convertir a formato API
         vendedores = []
@@ -236,14 +238,14 @@ def procesar_vendedores():
         return vendedores
         
     except Exception as e:
-        print(f"❌ Error leyendo vendedores: {e}")
+        print(f"Error reading sellers: {e}")
         return []
 
 
 def procesar_clientes():
     """Lee CLIENTES.DBF y retorna lista de clientes"""
     if not CLIENTES_DBF.exists():
-        print(f"⚠️  Archivo no encontrado: {CLIENTES_DBF}")
+        print(f"Warning: {CLIENTES_DBF.name} not found")
         return []
     
     try:
@@ -251,7 +253,7 @@ def procesar_clientes():
         df = pd.DataFrame(iter(DBF(CLIENTES_DBF, encoding='latin-1', ignore_missing_memofile=True)))
         df = df[df['CVE_CTE'].notna()].copy()
         
-        print(f"📊 {len(df)} clientes en DBF")
+        print(f"Found {len(df)} customers in DBF")
         
         # Convertir a formato API
         clientes = []
@@ -297,7 +299,7 @@ def procesar_clientes():
         return clientes
         
     except Exception as e:
-        print(f"❌ Error leyendo clientes: {e}")
+        print(f"Error reading customers: {e}")
         return []
 
 
@@ -309,29 +311,28 @@ def main():
     """Funcion principal de sincronizacion"""
     inicio = datetime.now(timezone.utc)
     print(f"\n{'='*60}")
-    print(f"🔄 Sync DBF → PostgreSQL")
-    print(f"⏰ {inicio.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"User Sync - {inicio.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{'='*60}\n")
     
     # 1. Login
     token = login()
     if not token:
-        print("❌ No se pudo hacer login. Abortando.\n")
+        print("Authentication failed. Aborting.\n")
         return
     
     # 2. Procesar vendedores
-    print("👤 Sincronizando vendedores...")
+    print("Syncing sellers...")
     vendedores = procesar_vendedores()
     if vendedores:
         resultado = sync_vendedores(token, vendedores)
-        print(f"   ✅ {resultado.get('creados', 0)} creados, {resultado.get('actualizados', 0)} actualizados\n")
+        print(f"  Done: {resultado.get('creados', 0)} created, {resultado.get('actualizados', 0)} updated\n")
     
     # 3. Procesar clientes
-    print("👥 Sincronizando clientes...")
+    print("Syncing customers...")
     clientes = procesar_clientes()
     
     if not clientes:
-        print("   ⚠️  No hay clientes para sincronizar\n")
+        print("  No customers to sync\n")
     else:
         total_creados = 0
         total_actualizados = 0
@@ -339,34 +340,48 @@ def main():
         
         # Calcular número de batches
         num_batches = (len(clientes) + BATCH_SIZE - 1) // BATCH_SIZE
-        print(f"   📦 Enviando en {num_batches} batches de {BATCH_SIZE}...")
+        print(f"  Syncing {len(clientes)} records ({num_batches} batches)")
         
-        # Enviar en batches
+        # Preparar batches
+        batches_to_send = []
         for i in range(0, len(clientes), BATCH_SIZE):
-            batch_num = (i // BATCH_SIZE) + 1
             batch = clientes[i:i + BATCH_SIZE]
-            print(f"   📤 Batch {batch_num}/{num_batches}: {len(batch)} clientes...", end=" ")
-            
-            resultado = sync_clientes(token, batch)
-            
-            total_creados += resultado.get('creados', 0)
-            total_actualizados += resultado.get('actualizados', 0)
-            total_errores += resultado.get('errores', 0)
-            
-            # Mostrar detalles de errores si existen
-            errores_detalle = resultado.get('detalle_errores', [])
-            if errores_detalle:
-                print(f"✗")
-                for error in errores_detalle[:3]:  # Solo mostrar primeros 3 errores
-                    print(f"      → {error}")
-                if len(errores_detalle) > 3:
-                    print(f"      ... y {len(errores_detalle) - 3} errores más")
-            else:
-                print(f"✓ ({resultado.get('creados', 0)} creados, {resultado.get('actualizados', 0)} actualizados, {resultado.get('errores', 0)} errores)")
+            batches_to_send.append(batch)
         
-        print(f"\n   ✅ TOTAL: {total_creados} creados, {total_actualizados} actualizados")
+        # Enviar en paralelo con ThreadPoolExecutor
+        max_workers = 5
+        print(f"  Using {max_workers} worker threads")
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Enviar todos los batches
+            futures = {
+                executor.submit(sync_clientes, token, batch): idx 
+                for idx, batch in enumerate(batches_to_send)
+            }
+            
+            # Recolectar resultados conforme completen
+            for future in as_completed(futures):
+                batch_idx = futures[future]
+                batch_num = batch_idx + 1
+                try:
+                    resultado = future.result()
+                    total_creados += resultado.get('creados', 0)
+                    total_actualizados += resultado.get('actualizados', 0)
+                    total_errores += resultado.get('errores', 0)
+                    
+                    # Mostrar detalles de errores si existen
+                    errores_detalle = resultado.get('detalle_errores', [])
+                    if errores_detalle:
+                        print(f"  Batch {batch_num}/{num_batches}: Error ({len(errores_detalle)} records)")
+                    else:
+                        pass # Keep it quiet on success
+                except Exception as e:
+                    print(f"  Batch {batch_num}/{num_batches} failed: {e}")
+                    total_errores += len(batches_to_send[batch_idx])
+        
+        print(f"\n  Final: {total_creados} created, {total_actualizados} updated")
         if total_errores > 0:
-            print(f"   ⚠️  {total_errores} errores")
+            print(f"  Errors: {total_errores} records")
         print()
     
     # 4. Resumen final
@@ -374,7 +389,7 @@ def main():
     duracion = (fin - inicio).total_seconds()
     
     print(f"{'='*60}")
-    print(f"✅ Sync completado en {duracion:.1f}s")
+    print(f"Completed in {duracion:.1f}s")
     print(f"{'='*60}\n")
 
 

@@ -173,6 +173,7 @@ def get_products_not_in_price_list(db: Session, price_list_id: int, skip: int = 
         search_term = f"%{search}%"
         query = query.filter(
             or_(
+                Product.product_id == search,
                 Product.name.ilike(search_term),
                 Product.codebar.ilike(search_term)
             )
@@ -194,6 +195,7 @@ def get_products_in_price_list_with_details(db: Session, price_list_id: int, ski
         search_term = f"%{search}%"
         query = query.filter(
             or_(
+                Product.product_id == search,
                 Product.name.ilike(search_term),
                 Product.codebar.ilike(search_term)
             )

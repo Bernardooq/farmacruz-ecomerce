@@ -196,6 +196,7 @@ def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, 
     if search:
         term = f"%{search}%"
         query = query.filter(
+            (Product.product_id == search) |
             (Product.name.ilike(term)) |
             (Product.description.ilike(term)) |
             (Product.codebar.ilike(term))
