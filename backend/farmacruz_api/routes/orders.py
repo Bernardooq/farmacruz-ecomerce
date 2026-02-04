@@ -210,8 +210,7 @@ def create_order_for_customer(
         
         # Verificar si el usuario puede manejar este grupo
         from crud.crud_sales_group import get_user_groups
-        user_groups = get_user_groups(db, current_user.user_id)
-        user_group_ids = [g.sales_group_id for g in user_groups]
+        user_group_ids = get_user_groups(db, current_user.user_id)
         
         if customer_info.sales_group_id not in user_group_ids:
             raise HTTPException(

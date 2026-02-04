@@ -36,10 +36,31 @@ def get_customer_by_email(db: Session, email: str) -> Optional[Customer]:
     return db.query(Customer).filter(Customer.email == email).first()
 
 """Obtiene lista de clientes con busqueda opcional"""
-def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> List[Customer]:    
+def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None, 
+                  user_id: Optional[int] = None, user_role = None) -> List[Customer]:    
+    from db.base import UserRole
+    
     query = db.query(Customer).options(
         joinedload(Customer.customer_info)
     )
+    
+    # Si es Marketing, filtrar por grupos
+    if user_role and user_role == UserRole.marketing and user_id:
+        from crud.crud_sales_group import get_user_groups
+        
+        user_group_ids = get_user_groups(db, user_id)
+        
+        if not user_group_ids:
+            # Si no tiene grupos asignados, no puede ver clientes
+            return []
+        
+        # Filtrar clientes que pertenecen a los grupos del usuario
+        query = query.join(
+            CustomerInfo,
+            Customer.customer_id == CustomerInfo.customer_id
+        ).filter(
+            CustomerInfo.sales_group_id.in_(user_group_ids)
+        )
     
     # Buscar en nombre, username y email todo tolower
     if search:

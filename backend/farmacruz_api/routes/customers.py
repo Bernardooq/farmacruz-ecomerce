@@ -24,7 +24,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
-from dependencies import get_db, get_current_admin_user
+from dependencies import get_db, get_current_admin_user, get_current_seller_user
 from db.base import User, Customer, CustomerInfo
 from crud.crud_order import get_order_count_by_customer
 from crud.crud_user import get_user_by_email, get_user_by_username
@@ -48,11 +48,12 @@ def get_customers(
     skip: int = Query(0, ge=0, description="Registros a saltar"),
     limit: int = Query(100, ge=1, le=200, description="Maximo de registros"),
     search: Optional[str] = Query(None, description="Buscar por nombre, username o email"),
-    current_user: User = Depends(get_current_admin_user),
+    current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
 ):
     # Lista de clientes con su informacion comercial
-    return crud_customer.get_customers(db, skip=skip, limit=limit, search=search)
+    # Marketing solo ve clientes de sus grupos, Admin ve todos
+    return crud_customer.get_customers(db, skip=skip, limit=limit, search=search, user_id=current_user.user_id, user_role=current_user.role)
 
 """ GET /{id} - Detalle de cliente """
 @router.get("/{customer_id}", response_model=CustomerWithInfo)
