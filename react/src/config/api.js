@@ -2,8 +2,8 @@
 const API_CONFIG = {
   // Usar CloudFront para HTTPS (evita Mixed Content errors)
   // CloudFront hace proxy de /api/* hacia EC2 backend
-  BASE_URL: 'http://localhost:8000',
-  // BASE_URL: 'https://digheqbxnmxr3.cloudfront.net',
+  // BASE_URL: 'http://localhost:8000',
+  BASE_URL: 'https://digheqbxnmxr3.cloudfront.net',
   API_VERSION: '/api/v1',
   TIMEOUT: 10000,
 };
