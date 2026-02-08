@@ -480,7 +480,7 @@ def calculate_order_shipping_address(db: Session, order: Order) -> str:
     return order
 
 """ Asignar un pedido a un vendedor """
-def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, current_user: User) -> Order | None:
+def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, current_user: User) -> Optional[Order]:
     # Asignación final
     order.assigned_seller_id = assign_data.assigned_seller_id
     order.assigned_by_user_id = current_user.user_id
