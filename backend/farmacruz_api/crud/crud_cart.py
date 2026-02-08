@@ -65,8 +65,8 @@ def get_cart(db: Session, customer_id: int) -> List[CartCache]:
                 "product_id": item.product.product_id,
                 "name": item.product.name,
                 "codebar": item.product.codebar,
-                "base_price": float(item.product.base_price) if item.product.base_price else 0.0,
-                "iva_percentage": float(item.product.iva_percentage) if item.product.iva_percentage else 16.0,
+                # base_price: EXCLUIDO por seguridad - cliente no debe ver costos
+                # iva_percentage: EXCLUIDO - ya incluido en final_price
                 "final_price": final_price,
                 "markup_percentage": markup_percentage,
                 "image_url": item.product.image_url,

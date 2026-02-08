@@ -15,7 +15,7 @@ from utils.price_utils import get_product_final_price, calculate_final_price_wit
 
 
 from db.base import Customer, CustomerInfo, Product, PriceListItem
-from schemas.product import CatalogProduct
+# from schemas.product import CatalogProduct  # Ya no se usa, retornamos dict
 
 
 """Obtiene el ID de la lista de precios del cliente actual o lanza excepcion si no es cliente o no tiene lista asignada"""
@@ -55,32 +55,35 @@ def _calculate_price(product: Product, price_item: PriceListItem) -> Tuple[Decim
     
     return final_price, markup_percentage
 
-"""Construye un CatalogProduct desde el ORM Product y precios calculados"""
-def _build_catalog_product(product: Product, final_price: Decimal, markup: Decimal) -> CatalogProduct:
-    # Construye un CatalogProduct desde el ORM Product
+"""Construye un CatalogProduct desde el ORM Product y precios calculados (sin exponer base_price)"""
+def _build_catalog_product(product: Product, final_price: Decimal, markup: Decimal) -> dict:
+    # Construye un dict con información de producto SIN base_price para clientes
+    # Los clientes SOLO necesitan final_price, no deben ver costos (base_price)
     
-    return CatalogProduct.model_validate({
+    catalog_product_data = {
         'product_id': product.product_id,
         'codebar': product.codebar,
         'name': product.name,
         'description': product.description,
         'descripcion_2': product.descripcion_2,  
         'unidad_medida': product.unidad_medida,  
-        'base_price': product.base_price,
-        'iva_percentage': product.iva_percentage,
+        # base_price: EXCLUIDO - información sensible
+        # iva_percentage: EXCLUIDO - ya está incluido en final_price
         'image_url': product.image_url,
         'stock_count': product.stock_count,
         'is_active': product.is_active,
         'category_id': product.category_id,
         'category': product.category,
-        'final_price': final_price,
-        'markup_percentage': markup
-    })
+        'final_price': final_price,  # ← Precio que el cliente paga
+        'markup_percentage': markup  # ← % de ganancia (puede ser útil para el cliente)
+    }
+    
+    return catalog_product_data
 
 
 # API FUNCTIONS
 """Lista productos del catalogo con precios personalizados del cliente"""
-def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 50, search: Optional[str] = None, category_id: Optional[int] = None, sort_by: Optional[str] = None, sort_order: Optional[str] = "asc" ) -> List[CatalogProduct]:    
+def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 50, search: Optional[str] = None, category_id: Optional[int] = None, sort_by: Optional[str] = None, sort_order: Optional[str] = "asc" ) -> List[dict]:    
     # Obtener lista de precios del cliente
     price_list_id = _get_customer_price_list(current_user, db)
     
@@ -131,7 +134,7 @@ def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 
     return catalog_products
 
 """Obtiene un producto especifico del catalogo con precio personalizado del cliente"""
-def get_catalog_product(db: Session, current_user, product_id: str  ) -> CatalogProduct:    
+def get_catalog_product(db: Session, current_user, product_id: str  ) -> dict:    
     # Obtener lista de precios del cliente
     price_list_id = _get_customer_price_list(current_user, db)
     
@@ -161,7 +164,7 @@ def get_catalog_product(db: Session, current_user, product_id: str  ) -> Catalog
 
 
 """Obtiene productos del catalogo con precios personalizados de un cliente especifico (para admin/marketing)"""
-def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None, category_id: Optional[int] = None, sort_by: Optional[str] = None, sort_order: Optional[str] = "asc") -> List[CatalogProduct]:
+def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None, category_id: Optional[int] = None, sort_by: Optional[str] = None, sort_order: Optional[str] = "asc") -> List[dict]:
     """
     Similar a get_catalog_products pero para un customer_id especifico.
     Usado por admin/marketing al editar pedidos para ver productos con precios del cliente.

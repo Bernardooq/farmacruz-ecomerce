@@ -22,36 +22,24 @@ import time
 import requests
 import pandas as pd
 from dbfread import DBF
+import sys
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
+# Importar configuración centralizada
+sys.path.insert(0, str(Path(__file__).parent.parent))  # Agregar servicios/ al path
+from config import (
+    BACKEND_URL, ADMIN_USERNAME, ADMIN_PASSWORD,
+    DBF_DIR, IMAGES_FOLDER, CDN_URL,
+    CLIENTES_DBF, AGENTES_DBF,
+    PRODUCTOS_BLOQUEADOS, CATEGORIA_BLOQUEADA,
+    PRODUCTO_DBF, PRECIPROD_DBF, EXISTE_DBF, PRO_DESC_DBF, BATCH_SIZE
+)
 
-BACKEND_URL = "http://localhost:8000/api/v1"
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "farmasaenz123"
-
-# Paths
-DBF_FOLDER = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\dbfs")
-IMAGES_FOLDER = Path("C:\\Users\\berna\\Downloads\\CompressedImg") 
-CDN_URL = "https://digheqbxnmxr3.cloudfront.net/images"
-
-# DBF Files
-CLIENTES_DBF = DBF_FOLDER / "clientes.dbf"
-AGENTES_DBF = DBF_FOLDER / "agentes.dbf"
-PRODUCTOS_DBF = DBF_FOLDER / "producto.dbf"
-PRECIOS_DBF = DBF_FOLDER / "PRECIPROD.DBF"
-EXISTENCIAS_DBF = DBF_FOLDER / "existe.dbf"
-DESCRIPCIONES_DBF = DBF_FOLDER / "pro_desc.dbf"
-
-# Batch Sizes
-BATCH_SIZE = {
-    "users": 200,          # For Customers/Sellers
-    "categorias": 100,
-    "productos": 500,
-    "listas": 100,
-    "items": 2000
-}
+# Local aliases for consistency with this script
+DBF_FOLDER = DBF_DIR
+PRODUCTOS_DBF = PRODUCTO_DBF  
+PRECIOS_DBF = PRECIPROD_DBF
+EXISTENCIAS_DBF = EXISTE_DBF
+DESCRIPCIONES_DBF = PRO_DESC_DBF
 
 # Filters
 PRODUCTOS_BLOQUEADOS = {'99999', '99998', '100', '99'}

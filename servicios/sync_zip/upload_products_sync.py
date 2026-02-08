@@ -5,30 +5,20 @@ Production-optimized DBF sync client - PRODUCTS & PRICE LISTS
 import gzip
 import json
 from datetime import datetime
-from pathlib import Path
 import sys
 
 import pandas as pd
 import requests
 from dbfread import DBF
 
-
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
-
-BACKEND_URL = "http://localhost:8000/api/v1"
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "farmasaenz123"
-
-# Adjust paths as needed
-DBF_DIR = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\dbfs")
-IMAGES_FOLDER = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\images")
-CDN_URL = "https://digheqbxnmxr3.cloudfront.net/images"
-
-# Filters
-PRODUCTOS_BLOQUEADOS = {'99999', '99998', '100', '99'}
-CATEGORIA_BLOQUEADA = 'GASTOS'
+# Importar configuración centralizada
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))  # Agregar servicios/ al path
+from config import (
+    BACKEND_URL, ADMIN_USERNAME, ADMIN_PASSWORD,
+    DBF_DIR, IMAGES_FOLDER, CDN_URL,
+    PRODUCTOS_BLOQUEADOS, CATEGORIA_BLOQUEADA
+)
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -118,7 +108,19 @@ def upload_compressed_json(endpoint, data, token):
     
     response = requests.post(f"{BACKEND_URL}{endpoint}", data=compressed, headers=headers, timeout=300)
     response.raise_for_status()
-    return response.json()
+    
+    # Backend con ThreadPoolExecutor retorna HTTP 202 con formato diferente
+    result = response.json()
+    
+    # Verificar si es respuesta asincrona (202) o sincrona (200)
+    if response.status_code == 202 or 'status' in result:
+        # Respuesta asincrona - thread pool
+        print(f"  ✓ Encolado: {result.get('message', 'Procesando en background')}")
+    elif 'actualizados' in result:
+        # Respuesta sincrona legacy
+        print(f"  ✓ Completado: {result['actualizados']} actualizados")
+    
+    return result
 
 
 # ============================================================================
@@ -180,8 +182,7 @@ def process_and_upload_products(token):
         })
     
     payload = {"categorias": list(categorias), "productos": productos_list}
-    result = upload_compressed_json("/sync-upload/productos-json", payload, token)
-    print(f"  Success: {result['actualizados']} updated")
+    upload_compressed_json("/sync-upload/productos-json", payload, token)
 
 
 def process_and_upload_pricelists(token):
@@ -203,8 +204,7 @@ def process_and_upload_pricelists(token):
             continue
     
     payload = {"listas": listas_payload}
-    result = upload_compressed_json("/sync-upload/listas-precios-json", payload, token)
-    print(f"  Success: {result['actualizados']} updated")
+    upload_compressed_json("/sync-upload/listas-precios-json", payload, token)
 
 
 def process_and_upload_items(token):
@@ -226,8 +226,7 @@ def process_and_upload_items(token):
         })
 
     payload = {"items": items_payload}
-    result = upload_compressed_json("/sync-upload/items-precios-json", payload, token)
-    print(f"  Success: {result['actualizados']} updated")
+    upload_compressed_json("/sync-upload/items-precios-json", payload, token)
 
 
 # ============================================================================

@@ -73,7 +73,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
 
             <div className="similar-products__grid">
                 {similarProducts.map((item) => {
-                    const { product, similarity_score, price_info } = item;
+                    const { product, similarity_score } = item;  // price_info ya no se usa
                     const similarityPercent = Math.round(similarity_score * 100);
 
                     return (
@@ -106,13 +106,8 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                                     </span>
                                 </div>
 
-                                {/* Precio */}
-                                {price_info ? (
-                                    <div className="similar-product-card__price">
-                                        <span className="price-label">Precio:</span>
-                                        <span className="price-value">${price_info.final_price.toFixed(2)}</span>
-                                    </div>
-                                ) : product.final_price ? (
+                                {/* Precio - Siempre disponible en product.final_price */}
+                                {product.final_price != null ? (
                                     <div className="similar-product-card__price">
                                         <span className="price-label">Precio:</span>
                                         <span className="price-value">${product.final_price.toFixed(2)}</span>
@@ -120,7 +115,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                                 ) : (
                                     <div className="similar-product-card__price">
                                         <span className="price-label">Precio:</span>
-                                        <span className="price-value">${product.base_price.toFixed(2)}</span>
+                                        <span className="price-value">No disponible</span>
                                     </div>
                                 )}
 
@@ -141,12 +136,8 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                                 <button
                                     onClick={() => {
                                         if (onProductSelect) {
-                                            // Crear copia del producto con el precio correcto injectado
-                                            const enrichedProduct = {
-                                                ...product,
-                                                final_price: price_info ? price_info.final_price : product.final_price
-                                            };
-                                            onProductSelect(enrichedProduct);
+                                            // Producto ya tiene final_price incluido
+                                            onProductSelect(product);
                                         }
                                     }}
                                     className="similar-product-card__link"

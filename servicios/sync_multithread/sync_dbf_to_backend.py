@@ -16,46 +16,31 @@ Autor: Farmacruz Team
 from datetime import datetime, timezone
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
 
 import pandas as pd
 import requests
 from dbfread import DBF
 
+# Importar configuración centralizada
+sys.path.insert(0, str(Path(__file__).parent.parent))  # Agregar servicios/ al path
+from config import (
+    BACKEND_URL, ADMIN_USERNAME, ADMIN_PASSWORD,
+    DBF_DIR, IMAGES_FOLDER, CDN_URL,
+    PRODUCTOS_BLOQUEADOS, CATEGORIA_BLOQUEADA,
+    PRODUCTO_DBF, PRECIPROD_DBF, EXISTE_DBF, PRO_DESC_DBF, BATCH_SIZE
+)
 
-# ============================================================================
-# CONFIGURACION
-# ============================================================================
+# Local aliases for consistency with this script
+DBF_FOLDER = DBF_DIR
+PRODUCTOS_DBF = PRODUCTO_DBF
+PRECIOS_DBF = PRECIPROD_DBF
+EXISTENCIAS_DBF = EXISTE_DBF
+DESCRIPCIONES_DBF = PRO_DESC_DBF
 
-BACKEND_URL = "http://localhost:8000/api/v1"
-# DBF_FOLDER = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
-# IMAGES_FOLDER = Path("/Users/bernardoorozco/Downloads/CompressedImg")
-DBF_FOLDER = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\dbfs")
-IMAGES_FOLDER = Path("C:\\Users\\berna\\Downloads\\CompressedImg")
-
-# Archivos DBF
-PRODUCTOS_DBF = DBF_FOLDER / "producto.dbf"
-PRECIOS_DBF = DBF_FOLDER / "PRECIPROD.DBF"
-EXISTENCIAS_DBF = DBF_FOLDER / "existe.dbf"
-DESCRIPCIONES_DBF = DBF_FOLDER / "pro_desc.dbf"
-
-# Cuantos registros enviar por llamada
-BATCH_SIZE = {
-    "categorias": 100,
-    "productos": 500,
-    "listas": 100,
-    "items": 2000
-}
-
-# Productos a ignorar (filtro de seguridad)
-PRODUCTOS_BLOQUEADOS = {'99999', '99998', '100', '99'}
-CATEGORIA_BLOQUEADA = 'GASTOS'
-
-# CDN para imagenes (CloudFront)
-CDN_URL = "https://digheqbxnmxr3.cloudfront.net/images"
-
-# Credenciales de admin
-USERNAME = "admin"
-PASSWORD = "farmasaenz123"
+# Keep local username/password aliases
+USERNAME = ADMIN_USERNAME
+PASSWORD = ADMIN_PASSWORD
 
 
 # ============================================================================

@@ -13,30 +13,26 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
 
 import pandas as pd
 import requests
 from dbfread import DBF
 
+# Importar configuración centralizada
+sys.path.insert(0, str(Path(__file__).parent.parent))  # Agregar servicios/ al path
+from config import (
+    BACKEND_URL, ADMIN_USERNAME, ADMIN_PASSWORD,
+    DBF_DIR, CLIENTES_DBF, AGENTES_DBF
+)
 
-# ============================================================================
-# CONFIGURACION
-# ============================================================================
-
-BACKEND_URL = "http://localhost:8000/api/v1"
-# DBF_FOLDER = Path("/Users/bernardoorozco/Documents/GitHub/farmacruz-ecomerce/backend/dbfs")
-DBF_FOLDER = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\dbfs")
-
-# Archivos DBF
-CLIENTES_DBF = DBF_FOLDER / "clientes.dbf"
-AGENTES_DBF = DBF_FOLDER / "agentes.dbf"
+# Local aliases for consistency with this script
+DBF_FOLDER = DBF_DIR
+USERNAME = ADMIN_USERNAME
+PASSWORD = ADMIN_PASSWORD
 
 # Cuantos registros enviar por llamada (no cambiar)
 BATCH_SIZE = 200
-
-# Credenciales de admin
-USERNAME = "admin"
-PASSWORD = "farmasaenz123"
 
 
 # ============================================================================

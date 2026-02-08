@@ -20,13 +20,13 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from dependencies import get_db, get_current_user, get_current_seller_user
-from schemas.product import CatalogProduct
+# from schemas.product import CatalogProduct  # Ya no se usa, retornamos dict
 from crud import crud_catalog
 
 router = APIRouter()
 
 """ GET /products - Lista de productos con precios calculados """
-@router.get("/products", response_model=List[CatalogProduct])
+@router.get("/products")  # response_model removido - retorna dict sin base_price
 def get_catalog_products(
     skip: int = Query(0, ge=0, description="Registros a saltar (paginacion)"),
     limit: int = Query(50, ge=1, le=100, description="Maximo de registros (1-100)"),
@@ -42,13 +42,13 @@ def get_catalog_products(
         search=search, category_id=category_id, sort_by=sort_by, sort_order=sort_order)
 
 """ GET /products/{id} - Detalle de producto con precio calculado """
-@router.get("/products/{product_id}", response_model=CatalogProduct)
+@router.get("/products/{product_id}")  # response_model removido - retorna dict sin base_price
 def get_catalog_product(product_id: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     # Obtiene un producto especifico del catalogo
     return crud_catalog.get_catalog_product(db=db, current_user=current_user, product_id=product_id)
 
 """ GET /customer/{customer_id}/products - Lista de productos con precios del cliente (Admin/Marketing) """
-@router.get("/customer/{customer_id}/products", response_model=List[CatalogProduct])
+@router.get("/customer/{customer_id}/products")  # response_model removido - retorna dict sin base_price
 def get_customer_catalog_products(
     customer_id: int,
     skip: int = Query(0, ge=0, description="Registros a saltar (paginacion)"),

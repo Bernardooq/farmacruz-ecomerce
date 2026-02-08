@@ -145,6 +145,7 @@ def get_similar_products(
     """
     Versión Optimizada v2.1: 
     Usa la tabla pre-calculada 'product_recommendations' para encontrar similitudes.
+    Retorna productos en formato seguro (sin base_price) igual que el catálogo.
     """
     
     recommendations = (
@@ -153,7 +154,7 @@ def get_similar_products(
             ProductRecommendation.product_id == product_id,
             ProductRecommendation.score >= min_similarity
         )
-        .options(joinedload(ProductRecommendation.target_product))
+        .options(joinedload(ProductRecommendation.recommended_product))
         .order_by(ProductRecommendation.score.desc())
         .limit(limit)
         .all()
@@ -165,25 +166,44 @@ def get_similar_products(
     results = []
     
     for rec in recommendations:
-        product = rec.target_product 
+        product = rec.recommended_product  # Usar recommended_product, no target_product 
         
         if not product.is_active:
             continue
 
-        result = {
-            "product": product,
-            "similarity_score": round(float(rec.score), 3),
-            "price_info": None
-        }
+        # Obtener precio si el cliente tiene price_list
+        final_price = None
+        markup_percentage = 0.0
+        
         if price_list_id:
             price_data = get_product_final_price(db, product, price_list_id)
-            
             if price_data:
-                result["price_info"] = {
-                    "base_price": float(price_data["base_price"]),
-                    "markup_percentage": float(price_data["markup_percentage"]),
-                    "final_price": float(price_data["final_price"])
-                }
+                final_price = price_data["final_price"]
+                markup_percentage = price_data["markup_percentage"]
+        
+        # Construir dict del producto SIN base_price (igual que catálogo)
+        product_dict = {
+            'product_id': product.product_id,
+            'codebar': product.codebar,
+            'name': product.name,
+            'description': product.description,
+            'descripcion_2': product.descripcion_2,
+            'unidad_medida': product.unidad_medida,
+            # base_price: EXCLUIDO - información sensible
+            # iva_percentage: EXCLUIDO - ya incluido en final_price
+            'image_url': product.image_url,
+            'stock_count': product.stock_count,
+            'is_active': product.is_active,
+            'category_id': product.category_id,
+            'category': product.category,
+            'final_price': float(final_price) if final_price else None,
+            'markup_percentage': float(markup_percentage)
+        }
+        
+        result = {
+            "product": product_dict,  # ← Ahora es dict seguro, no ORM object
+            "similarity_score": round(float(rec.score), 3)
+        }
         
         results.append(result)
 
