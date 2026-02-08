@@ -11,7 +11,7 @@ click==8.1.7
 colorama==0.4.6
 cryptography==46.0.3
 dbfread==2.0.7
-dnspython==2.8.0
+dnspython==2.7.0
 ecdsa==0.19.1
 email-validator==2.3.0
 fastapi==0.128.0

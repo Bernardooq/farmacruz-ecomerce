@@ -19,8 +19,8 @@
 
 ### Generar SSH Key en EC2
 ```bash
-# Conectarse a EC2
-ssh -i tu-llave.pem ubuntu@tu-ec2-ip
+# Conectarse a EC2 (Amazon Linux)
+ssh -i tu-llave.pem ec2-user@tu-ec2-ip
 
 # Generar llave SSH para GitHub
 ssh-keygen -t ed25519
@@ -53,24 +53,23 @@ git status
 
 ### Actualizar Sistema
 ```bash
-sudo dnf update && sudo dnf upgrade -y
+sudo dnf update -y
+sudo dnf upgrade -y
 ```
 
 ### Instalar Dependencias
 ```bash
 # Python y herramientas
-sudo dnf install python3-pip python3-venv python3-dev -y
+sudo dnf install python3 python3-pip python3-devel -y
 
 # Build tools (para psycopg2, pandas, etc.)
-sudo dnf install build-essential libpq-dev -y
+sudo dnf install gcc gcc-c++ make postgresql-devel -y
 
 # Nginx
 sudo dnf install nginx -y
 
 # PostgreSQL client (para conectarse a RDS)
-sudo dnf install postgresql-client -y
 sudo dnf install postgresql15 -y
-
 
 # Git
 sudo dnf install git -y
@@ -200,13 +199,13 @@ After=network.target
 
 [Service]
 Type=notify
-User=ubuntu
-Group=www-data
-WorkingDirectory=/home/ubuntu/farmacruz-ecomerce/backend
-Environment="PATH=/home/ubuntu/farmacruz-ecomerce/backend/venv/bin"
-Environment="PYTHONPATH=/home/ubuntu/farmacruz-ecomerce/backend"
+User=ec2-user
+Group=nginx
+WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend
+Environment="PATH=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin"
+Environment="PYTHONPATH=/home/ec2-user/farmacruz-ecomerce/backend"
 
-ExecStart=/home/ubuntu/farmacruz-ecomerce/backend/venv/bin/uvicorn \
+ExecStart=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin/uvicorn \
     main:app \
     --host 127.0.0.1 \
     --port 8000 \
@@ -231,7 +230,7 @@ sudo systemctl status farmacruz-api
 
 ### B. Nginx (Reverse Proxy)
 ```bash
-sudo nano /etc/nginx/sites-available/farmacruz
+sudo nano /etc/nginx/conf.d/farmacruz.conf
 ```
 
 **Contenido:**
@@ -259,9 +258,9 @@ server {
 
 **Activar:**
 ```bash
-sudo ln -s /etc/nginx/sites-available/farmacruz /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default
+# Amazon Linux usa conf.d/, no sites-available/enabled
 sudo nginx -t
+sudo systemctl enable nginx
 sudo systemctl restart nginx
 ```
 

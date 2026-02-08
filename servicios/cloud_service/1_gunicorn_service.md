@@ -1,4 +1,4 @@
-# Instalación de Servicio Uvicorn en EC2 (Ubuntu/Amazon Linux)
+# Instalación de Servicio Uvicorn en EC2 (Amazon Linux)
 
 ## Arquitectura
 - **t3.micro**: 1 vCPU, 1GB RAM
@@ -14,18 +14,18 @@ sudo nano /etc/systemd/system/farmacruz-api.service
 ```ini
 [Unit]
 Description=FarmaCruz FastAPI Backend (Uvicorn)
-After=network.target postgresql.service
+After=network.target
 
 [Service]
 Type=notify
-User=ubuntu
-Group=www-data
-WorkingDirectory=/home/ubuntu/farmacruz-ecomerce/backend
-Environment="PATH=/home/ubuntu/farmacruz-ecomerce/backend/venv/bin"
-Environment="PYTHONPATH=/home/ubuntu/farmacruz-ecomerce/backend"
+User=ec2-user
+Group=nginx
+WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend
+Environment="PATH=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin"
+Environment="PYTHONPATH=/home/ec2-user/farmacruz-ecomerce/backend"
 
 # Uvicorn con 1 worker (óptimo para t3.micro)
-ExecStart=/home/ubuntu/farmacruz-ecomerce/backend/venv/bin/uvicorn \
+ExecStart=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin/uvicorn \
     main:app \
     --host 127.0.0.1 \
     --port 8000 \
@@ -48,7 +48,7 @@ WantedBy=multi-user.target
 ## 3. Crear directorio de logs
 ```bash
 sudo mkdir -p /var/log/farmacruz
-sudo chown ubuntu:www-data /var/log/farmacruz
+sudo chown ec2-user:nginx /var/log/farmacruz
 ```
 
 ## 4. Activar el servicio

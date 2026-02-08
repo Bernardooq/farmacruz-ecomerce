@@ -9,14 +9,14 @@ Usuario → HTTPS → CloudFront → HTTP → EC2 nginx:8000 → Uvicorn:8000
 
 ## 1. Instalar Nginx
 ```bash
-sudo apt install nginx -y  # Ubuntu
-# O para Amazon Linux:
-# sudo dnf install nginx -y
+# Amazon Linux
+sudo dnf install nginx -y
 ```
 
 ## 2. Configuración Nginx
 ```bash
-sudo nano /etc/nginx/sites-available/farmacruz
+# Amazon Linux usa conf.d/ directamente
+sudo nano /etc/nginx/conf.d/farmacruz.conf
 ```
 
 ## 3. Contenido de configuración
@@ -59,12 +59,8 @@ server {
 
 ## 4. Activar configuración
 ```bash
-# Ubuntu
-sudo ln -s /etc/nginx/sites-available/farmacruz /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default  # Opcional
-
-# Amazon Linux
-# La config va directo en /etc/nginx/conf.d/farmacruz.conf
+# Amazon Linux: archivo ya está en conf.d/, no necesita symlink
+# Solo validar y reiniciar
 ```
 
 ## 5. Validar y reiniciar
