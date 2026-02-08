@@ -201,7 +201,7 @@ After=network.target
 Type=notify
 User=ec2-user
 Group=nginx
-WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend
+WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend/farmacruz_api
 Environment="PATH=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin"
 Environment="PYTHONPATH=/home/ec2-user/farmacruz-ecomerce/backend"
 
@@ -239,7 +239,7 @@ client_max_body_size 50M;
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
 
 server {
-    listen 8000;
+    listen 80;
     server_name _;
 
     location / {

@@ -20,17 +20,16 @@ After=network.target
 Type=notify
 User=ec2-user
 Group=nginx
-WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend
+WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend/farmacruz_api
 Environment="PATH=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin"
 Environment="PYTHONPATH=/home/ec2-user/farmacruz-ecomerce/backend"
 
-# Uvicorn con 1 worker (óptimo para t3.micro)
 ExecStart=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin/uvicorn \
     main:app \
     --host 127.0.0.1 \
     --port 8000 \
     --workers 1 \
-    --log-level info \
+    --log-level info
     --access-log \
     --use-colors
 

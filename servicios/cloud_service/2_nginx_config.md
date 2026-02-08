@@ -28,7 +28,7 @@ client_max_body_size 50M;
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
 
 server {
-    listen 8000;
+    listen 80;
     server_name _;  # Acepta cualquier host (CloudFront lo maneja)
 
     location / {
