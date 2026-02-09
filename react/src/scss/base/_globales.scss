@@ -9,6 +9,16 @@
 
 html {
   scroll-behavior: smooth;
+  // Base font size responsive - crucial for mobile
+  font-size: 87.5%; // 14px en móvil
+  
+  @include m.telefono {
+    font-size: 93.75%; // 15px en teléfonos grandes
+  }
+  
+  @include m.tablet {
+    font-size: 100%; // 16px en tablets y desktop
+  }
 }
 
 // Body - MINIMALISTA

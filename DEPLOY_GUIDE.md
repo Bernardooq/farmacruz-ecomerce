@@ -12,6 +12,7 @@
 6. [Monitoreo y Control de Servicios](#6-monitoreo-y-control-de-servicios)
 7. [Deploy y Actualizaciones](#7-deploy-y-actualizaciones)
 8. [Troubleshooting](#8-troubleshooting)
+9. [Configurar HTTPS con Let's Encrypt](#9-configurar-https-con-lets-encrypt-opcional-pero-recomendado)
 
 ---
 
@@ -534,6 +535,164 @@ sudo journalctl -p err -n 50 --no-pager
 sudo journalctl --vacuum-time=7d
 ```
 
+## 9. Configurar HTTPS con Let's Encrypt (Opcional pero Recomendado)
+
+### Pre-requisitos
+
+1. **Dominio apuntando a EC2**
+   - Configura DNS tipo A: `api.tudominio.com` → IP de tu EC2
+   - O usa DuckDNS (gratis): `farmacruz.duckdns.org`
+
+2. **Puertos abiertos en Security Group**
+   ```
+   Inbound Rules:
+   - SSH (22)    → Tu IP
+   - HTTP (80)   → 0.0.0.0/0
+   - HTTPS (443) → 0.0.0.0/0
+   ```
+
+### Instalar Certbot
+
+#### Amazon Linux 2023:
+```bash
+sudo dnf install -y certbot python3-certbot-nginx
+```
+
+#### Amazon Linux 2:
+```bash
+sudo yum install -y epel-release
+sudo yum install -y certbot python3-certbot-nginx
+```
+
+### Obtener Certificado SSL
+
+**Reemplaza con tu dominio:**
+
+```bash
+sudo certbot --nginx -d api.tudominio.com
+```
+
+**Responder:**
+1. Email: `tu@email.com` (notificaciones de renovación)
+2. Terms of Service: `Y`
+3. Share email: `N`
+4. Redirect HTTP to HTTPS: `2` (Sí)
+
+**Resultado esperado:**
+```
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/api.tudominio.com/fullchain.pem
+```
+
+### Actualizar Configuración Nginx
+
+Certbot configura automáticamente, pero verifica:
+
+```bash
+sudo nano /etc/nginx/conf.d/farmacruz.conf
+```
+
+**Debe quedar así:**
+
+```nginx
+client_max_body_size 50M;
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+
+# HTTP → HTTPS redirect
+server {
+    listen 80;
+    server_name api.tudominio.com;
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name api.tudominio.com;
+
+    ssl_certificate /etc/letsencrypt/live/api.tudominio.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.tudominio.com/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    location / {
+        limit_req zone=api_limit burst=50 nodelay;
+        
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        proxy_connect_timeout 60s;
+        proxy_read_timeout 300s;
+    }
+}
+```
+
+**Recargar:**
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### Verificar Auto-Renovación
+
+```bash
+# Ver timer (renueva automáticamente)
+sudo systemctl status certbot.timer
+
+# Probar renovación (dry-run)
+sudo certbot renew --dry-run
+```
+
+### Actualizar Frontend
+
+Cambiar BASE_URL en `react/src/config/api.js`:
+
+```javascript
+// Antes (HTTP)
+BASE_URL: 'http://ec2-54-225-140-250.compute-1.amazonaws.com',
+
+// Después (HTTPS con dominio)
+BASE_URL: 'https://api.tudominio.com',
+```
+
+Rebuild y deploy:
+```bash
+npm run build
+# Subir dist/ a S3 y invalidar CloudFront
+```
+
+### Actualizar CORS en Backend
+
+Editar `.env`:
+
+```ini
+# Permitir frontend CloudFront
+FRONTEND_URL=https://ddyn91nmr858h.cloudfront.net
+```
+
+Reiniciar backend:
+```bash
+sudo systemctl restart farmacruz-api
+```
+
+### Testing
+
+```bash
+# Verificar HTTPS funciona
+curl https://api.tudominio.com/api/v1/
+
+# Ver certificado
+openssl s_client -connect api.tudominio.com:443
+
+# Logs
+sudo tail -f /var/log/nginx/access.log
+```
+
 ---
 
 ## Checklist de Deploy
@@ -550,8 +709,10 @@ sudo journalctl --vacuum-time=7d
 - [ ] Archivo `.env` configurado con RDS endpoint
 - [ ] Servicio `farmacruz-api` activo
 - [ ] Nginx configurado y activo
-- [ ] CloudFront apuntando a EC2
-- [ ] Security Group EC2: CloudFront prefix list
+- [ ] **[Opcional] Dominio DNS configurado**
+- [ ] **[Opcional] Certificado SSL instalado**
+- [ ] **[Opcional] Nginx HTTPS configurado**
+- [ ] CloudFront frontend apuntando correctamente
 - [ ] Primer deploy exitoso
 
 **¡Listo para producción!** 🎯

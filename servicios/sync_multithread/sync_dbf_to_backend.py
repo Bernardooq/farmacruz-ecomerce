@@ -142,10 +142,19 @@ def enviar_batch(datos, endpoint, token, nombre):
             json=datos,
             headers=headers
         )
+        
+        # DEBUG: Ver respuesta antes de parsear
+        if response.status_code != 200:
+            print(f"  DEBUG {nombre}: Status {response.status_code}, Content: {response.text[:300]}")
+        
         response.raise_for_status()
         return response.json()
     except Exception as e:
         print(f"Error in {nombre}: {e}")
+        if 'response' in locals():
+            print(f"  Response status: {response.status_code}")
+            print(f"  Response headers: {dict(response.headers)}")
+            print(f"  Response content (first 500 chars): {response.text[:500]}")
         return {"creados": 0, "actualizados": 0, "errores": len(datos)}
 
 

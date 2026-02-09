@@ -1,9 +1,17 @@
 // Configuración centralizada de la API
 const API_CONFIG = {
-  // Usar CloudFront para HTTPS (evita Mixed Content errors)
-  // CloudFront hace proxy de /api/* hacia EC2 backend
+  // ========================================
+  // IMPORTANTE: CloudFront REQUIERE HTTPS
+  // ========================================
+  // Para evitar Mixed Content errors, SIEMPRE usa HTTPS en producción.
+  // Solo usa HTTP para desarrollo local (localhost).
+
+  // Desarrollo local (usa HTTP)
   // BASE_URL: 'http://localhost:8000',
-  BASE_URL: 'https://digheqbxnmxr3.cloudfront.net',
+
+  // Producción con CloudFront (DEBE usar HTTPS, NO HTTP)
+  BASE_URL: 'http://ec2-54-225-140-250.compute-1.amazonaws.com',
+
   API_VERSION: '/api/v1',
   TIMEOUT: 10000,
 };

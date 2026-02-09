@@ -114,6 +114,12 @@ def upload_compressed_json(endpoint, data, token):
     }
     
     response = requests.post(f"{BACKEND_URL}{endpoint}", data=compressed, headers=headers, timeout=300)
+    
+    # DEBUG: Ver qué está devolviendo el servidor
+    print(f"  Response status: {response.status_code}")
+    print(f"  Response headers: {dict(response.headers)}")
+    print(f"  Response content (first 500 chars): {response.text[:500]}")
+    
     response.raise_for_status()
     
     # Backend con ThreadPoolExecutor retorna HTTP 202 con formato diferente
