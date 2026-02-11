@@ -38,9 +38,35 @@ def clean_name(n):
     n = re.sub(r"[^\w\s]", " ", n)
     return re.sub(r"\s+", " ", n).strip()
 
-def create_username(nombre, pid):
-    base = clean_name(nombre).lower().replace(" ", "_")
-    return f"{base[:40].strip('_')}_{pid}"
+def create_username(nombre, id_cliente):
+    """Crea un username unico y valido (adaptado de sync_users_dbf.py)"""
+    PALABRAS_LEGALES = [
+        "S DE RL DE CV","S DE RL", "S DE R L", "S DE R.L",
+        "SA DE CV", "S A DE C V", "S.A. DE C.V.",
+        "SA", "S.A.", "DE CV", "SOCIEDAD"
+    ]
+    
+    base = clean_name(nombre).lower()
+    
+    # Si es empresa, quitar sufijos legales SOLO al final del nombre
+    # Esto previene que nombres como "SALVADOR" se corten incorrectamente
+    for palabra in PALABRAS_LEGALES:
+        # Buscar con espacio antes: " SA" no coincide con "SALVADOR"
+        palabra_con_espacio = " " + palabra.lower()
+        if base.endswith(palabra_con_espacio):
+            base = base[:-len(palabra_con_espacio)].strip()
+            break
+        # Si el nombre ES exactamente la palabra legal, mantenerlo
+        elif base == palabra:
+            pass
+    
+    base = base.replace(" ", "_")
+    base = base[:50].rstrip("_")
+    
+    if not base:
+        base = "CLIENTE"
+    
+    return f"{base}_{id_cliente}"
 
 def clean_digits(v): return re.sub(r"\D", "", str(v)) if v else ""
 def clean_lada(v):
@@ -132,9 +158,12 @@ def process_and_upload_sellers(token):
         
         for _, r in df_agents.iterrows():
             try:
+                # Extraer primer nombre del vendedor (igual que sync_users_dbf.py)
+                primer_nombre = r['NOM_AGE'].split()[0].lower()
+                
                 sellers_list.append({
                     "user_id": int(r['CVE_AGE']),
-                    "username": f"seller_{r['CVE_AGE']}",
+                    "username": f"{primer_nombre}_S{r['CVE_AGE']}",
                     "email": r.get('EMAIL_AGE') or f"seller{r['CVE_AGE']}@farmacruz.com",
                     "full_name": str(r.get('NOM_AGE','')).strip(),
                     "password": "vendedor2026",

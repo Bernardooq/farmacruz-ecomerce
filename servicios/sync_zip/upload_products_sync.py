@@ -127,7 +127,7 @@ def upload_compressed_json(endpoint, data, token):
 # PROCESSORS
 # ============================================================================
 
-def process_and_upload_products(token):
+def process_and_upload_products(token, sync_time):
     print("\n--- STEP 1: PRODUCTS ---")
     
     # Load DataFrames
@@ -167,25 +167,34 @@ def process_and_upload_products(token):
         cat = limpiar_texto(row.get('CSE_PROD'))
         if cat: categorias.add(cat)
         
+        # Descripcion tecnica formateada (igual que sync_dbf_to_backend.py)
+        desc_tecnica_parts = []
+        if row.get('FACT_PESO'):
+            desc_tecnica_parts.append(f"Costo Público: {limpiar_texto(row.get('FACT_PESO'))}")
+        if row.get('DATO_4'):
+            desc_tecnica_parts.append(f"Caja: {limpiar_texto(row.get('DATO_4'))}")
+        desc_tecnica = " | ".join(desc_tecnica_parts) or None
+        
         productos_list.append({
             "product_id": pid,
             "codebar": limpiar_texto(row.get('CODBAR')),
             "name": limpiar_texto(row.get('DESC_PROD'))[:255] or "Sin Nombre",
-            "description": limpiar_texto(row.get('FACT_PESO')), # Technical desc mapped per user Pref
+            "description": desc_tecnica,
             "descripcion_2": descripciones.get(pid),
             "stock_count": stock_map.get(pid, 0),
             "base_price": limpiar_numero(row.get('CTO_ENT')),
             "iva_percentage": limpiar_numero(row.get('PORCENIVA'), 16.0),
             "category_name": cat,
             "unidad_medida": limpiar_texto(row.get('UNI_MED')),
-            "image_url": verificar_imagen_existe(pid)
+            "image_url": verificar_imagen_existe(pid),
+            "updated_at": sync_time
         })
     
     payload = {"categorias": list(categorias), "productos": productos_list}
     upload_compressed_json("/sync-upload/productos-json", payload, token)
 
 
-def process_and_upload_pricelists(token):
+def process_and_upload_pricelists(token, sync_time):
     print("\n--- STEP 2: PRICE LISTS (HEADERS) ---")
     df = dbf_to_dataframe(DBF_DIR / "PRECIPROD.DBF")
     
@@ -198,7 +207,8 @@ def process_and_upload_pricelists(token):
         try:
             listas_payload.append({
                 "price_list_id": int(lis_id),
-                "name": f"Lista {int(lis_id)}"
+                "name": f"Lista {int(lis_id)}",
+                "updated_at": sync_time
             })
         except ValueError:
             continue
@@ -207,7 +217,7 @@ def process_and_upload_pricelists(token):
     upload_compressed_json("/sync-upload/listas-precios-json", payload, token)
 
 
-def process_and_upload_items(token):
+def process_and_upload_items(token, sync_time):
     print("\n--- STEP 3: PRICE LIST ITEMS ---")
     df = dbf_to_dataframe(DBF_DIR / "PRECIPROD.DBF")
     
@@ -222,7 +232,8 @@ def process_and_upload_items(token):
             "price_list_id": int(lis_id),
             "product_id": pid,
             "markup_percentage": limpiar_numero(row.get('LMARGEN')),
-            "final_price": limpiar_numero(row.get('LPRECPROD'))
+            "final_price": limpiar_numero(row.get('LPRECPROD')),
+            "updated_at": sync_time
         })
 
     payload = {"items": items_payload}
@@ -236,14 +247,15 @@ def process_and_upload_items(token):
 def main():
     start = datetime.now()
     print(f"STARTING PRODUCTS SYNC {start}")
+    sync_time = datetime.now().isoformat()
     
     token = login()
     if not token: return
     
     try:
-        process_and_upload_products(token)
-        process_and_upload_pricelists(token)
-        process_and_upload_items(token)
+        process_and_upload_products(token, sync_time)
+        process_and_upload_pricelists(token, sync_time)
+        process_and_upload_items(token, sync_time)
     except Exception as e:
         print(f"\nCRITICAL FAILURE: {e}")
         import traceback

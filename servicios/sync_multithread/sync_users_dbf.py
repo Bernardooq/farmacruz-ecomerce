@@ -222,7 +222,7 @@ def procesar_vendedores():
             
             vendedor = {
                 "user_id": int(row['CVE_AGE']),
-                "username": f"{primer_nombre}_{row['CVE_AGE']}",
+                "username": f"{primer_nombre}_S{row['CVE_AGE']}",
                 "email": row.get("EMAIL_AGE") or f"vendedor{row['CVE_AGE']}@farmacruz.com",
                 "full_name": row['NOM_AGE'],
                 "password": "vendedor2026",
