@@ -1,6 +1,7 @@
 """
 Sincronizador de Productos DBF → PostgreSQL
 ============================================
+Refactored to use centralized sync_functions module.
 
 Lee los archivos DBF del sistema viejo y sincroniza:
 - Categorías
@@ -23,7 +24,7 @@ import requests
 from dbfread import DBF
 
 # Importar configuración centralizada
-sys.path.insert(0, str(Path(__file__).parent.parent))  # Agregar servicios/ al path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
     BACKEND_URL, ADMIN_USERNAME, ADMIN_PASSWORD,
     DBF_DIR, IMAGES_FOLDER, CDN_URL,
@@ -31,103 +32,28 @@ from config import (
     PRODUCTO_DBF, PRECIPROD_DBF, EXISTE_DBF, PRO_DESC_DBF, BATCH_SIZE
 )
 
-# Local aliases for consistency with this script
+# Importar funciones compartidas
+from sync_functions import (
+    limpiar_texto, limpiar_numero,
+    build_producto_dict, build_categoria_dict,
+    build_lista_precios_dict, build_item_lista_dict,
+    cargar_descripciones_extra, cargar_existencias,
+    login, verificar_imagen_existe
+)
+
+# Local aliases
 DBF_FOLDER = DBF_DIR
 PRODUCTOS_DBF = PRODUCTO_DBF
 PRECIOS_DBF = PRECIPROD_DBF
 EXISTENCIAS_DBF = EXISTE_DBF
 DESCRIPCIONES_DBF = PRO_DESC_DBF
-
-# Keep local username/password aliases
 USERNAME = ADMIN_USERNAME
 PASSWORD = ADMIN_PASSWORD
 
 
 # ============================================================================
-# HELPERS - Funciones auxiliares
-# ============================================================================
-
-def limpiar_texto(valor):
-    """Limpia strings eliminando espacios"""
-    if valor is None:
-        return ""
-    return str(valor).strip()
-
-
-def verificar_imagen_existe(producto_id):
-    """
-    Verifica si existe la imagen del producto en la carpeta local
-    Retorna la URL del CDN si existe, None si no existe
-    """
-    imagen_path = IMAGES_FOLDER / f"{producto_id}.webp"
-    if imagen_path.exists():
-        return f"{CDN_URL}/{producto_id}.webp"
-    return None
-
-
-def limpiar_numero(valor, default=0.0):
-    """Convierte a numero float de forma segura"""
-    try:
-        if pd.isna(valor):
-            return default
-        return float(str(valor).replace(",", ""))
-    except:
-        return default
-
-
-def cargar_descripciones_extra():
-    """
-    Lee pro_desc.dbf y retorna mapa de descripciones largas
-    Retorna: {producto_id: descripcion_larga}
-    """
-    if not DESCRIPCIONES_DBF.exists():
-        print(f"Warning: {DESCRIPCIONES_DBF.name} not found, skipping extra descriptions")
-        return {}
-    
-    print("Loading extra descriptions...")
-    try:
-        dbf = DBF(DESCRIPCIONES_DBF, encoding='latin1', ignore_missing_memofile=True)
-        return {r['CVE_PROD'].strip(): r['DESC1'].strip() for r in dbf}
-    except Exception as e:
-        print(f"Error reading descriptions: {e}")
-        return {}
-
-
-def cargar_existencias():
-    """
-    Lee existe.dbf y retorna mapa de stock
-    Retorna: {producto_id: cantidad_en_stock}
-    """
-    if not EXISTENCIAS_DBF.exists():
-        print(f"Warning: {EXISTENCIAS_DBF.name} not found, stock will default to 0")
-        return {}
-    
-    print("Loading stock data...")
-    try:
-        dbf = DBF(EXISTENCIAS_DBF, encoding='latin1', ignore_missing_memofile=True)
-        return {r['CVE_PROD'].strip(): limpiar_numero(r['EXISTENCIA']) for r in dbf}
-    except Exception as e:
-        print(f"Error reading stock: {e}")
-        return {}
-
-
-# ============================================================================
 # API - Comunicacion con el backend
 # ============================================================================
-
-def login():
-    """Hace login y retorna el token"""
-    try:
-        response = requests.post(
-            f"{BACKEND_URL}/auth/login",
-            data={"username": USERNAME, "password": PASSWORD}
-        )
-        response.raise_for_status()
-        return response.json()["access_token"]
-    except Exception as e:
-        print(f"Login failed: {e}")
-        return None
-
 
 def enviar_batch(datos, endpoint, token, nombre):
     """Envia un lote de datos al backend"""
@@ -143,7 +69,6 @@ def enviar_batch(datos, endpoint, token, nombre):
             headers=headers
         )
         
-        # DEBUG: Ver respuesta antes de parsear
         if response.status_code != 200:
             print(f"  DEBUG {nombre}: Status {response.status_code}, Content: {response.text[:300]}")
         
@@ -153,7 +78,6 @@ def enviar_batch(datos, endpoint, token, nombre):
         print(f"Error in {nombre}: {e}")
         if 'response' in locals():
             print(f"  Response status: {response.status_code}")
-            print(f"  Response headers: {dict(response.headers)}")
             print(f"  Response content (first 500 chars): {response.text[:500]}")
         return {"creados": 0, "actualizados": 0, "errores": len(datos)}
 
@@ -169,25 +93,21 @@ def enviar_en_lotes(datos, batch_size, endpoint, token, nombre, max_workers=5):
     
     print(f"{nombre}: Syncing {total} records ({num_batches} batches, {max_workers} workers)")
     
-    # Preparar todos los batches
     batches = []
     for i in range(0, total, batch_size):
         lote = datos[i:i + batch_size]
         batches.append((lote, endpoint, token, nombre))
     
-    # Enviar batches en paralelo usando ThreadPoolExecutor
     creados = 0
     actualizados = 0
     errores = 0
     
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Enviar todos los batches y obtener futures
         futures = {
             executor.submit(enviar_batch, lote, ep, tk, nm): i 
             for i, (lote, ep, tk, nm) in enumerate(batches)
         }
         
-        # Recolectar resultados conforme completen
         for future in as_completed(futures):
             batch_num = futures[future]
             try:
@@ -203,10 +123,7 @@ def enviar_en_lotes(datos, batch_size, endpoint, token, nombre, max_workers=5):
 
 
 def enviar_fecha_limpieza(fecha, token):
-    """
-    Envia la fecha de sync al backend.
-    Los registros no actualizados desde esa fecha seran desactivados/eliminados.
-    """
+    """Envia la fecha de sync al backend"""
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
@@ -230,24 +147,14 @@ def enviar_fecha_limpieza(fecha, token):
 
 def procesar_categorias(df_productos, fecha_sync):
     """Extrae categorias unicas de los productos"""
-    # Obtener categorias unicas
     categorias = df_productos['CSE_PROD'].dropna().apply(limpiar_texto).unique()
     
-    # Filtrar categorias invalidas
     categorias = [
         c for c in categorias 
         if c and c.upper() != CATEGORIA_BLOQUEADA and c not in PRODUCTOS_BLOQUEADOS
     ]
     
-    # Convertir a formato API
-    return [
-        {
-            "name": cat,
-            "description": None,
-            "updated_at": fecha_sync
-        }
-        for cat in categorias
-    ]
+    return [build_categoria_dict(cat, fecha_sync) for cat in categorias]
 
 
 def procesar_productos(df_productos, descripciones_extra, stock_map, fecha_sync):
@@ -255,76 +162,28 @@ def procesar_productos(df_productos, descripciones_extra, stock_map, fecha_sync)
     print("Processing products...")
     productos = []
     
+    def check_img(pid):
+        return verificar_imagen_existe(pid, IMAGES_FOLDER, CDN_URL)
+    
     for _, row in df_productos.iterrows():
-        # Filtro 1: Categoria bloqueada
         categoria = limpiar_texto(row.get('CSE_PROD'))
         if categoria.upper() == CATEGORIA_BLOQUEADA or categoria in PRODUCTOS_BLOQUEADOS:
             continue
         
-        # Filtro 2: Producto bloqueado por CVE_TIAL
         cve_tial = limpiar_texto(row.get('CVE_TIAL'))
         if cve_tial in PRODUCTOS_BLOQUEADOS:
             continue
         
-        # ID del producto
-        producto_id = limpiar_texto(row.get('CVE_PROD'))
-        
-        # Descripcion tecnica (info adicional)
-        desc_tecnica_parts = []
-        if row.get('FACT_PESO'):
-            desc_tecnica_parts.append(f"Costo Público: {limpiar_texto(row.get('FACT_PESO'))}")
-        if row.get('DATO_4'):
-            desc_tecnica_parts.append(f"Caja: {limpiar_texto(row.get('DATO_4'))}")
-        desc_tecnica = " | ".join(desc_tecnica_parts) or None
-        
-        # Descripcion larga (de pro_desc.dbf)
-        desc_larga = descripciones_extra.get(producto_id)
-        
-        # Stock (de existe.dbf)
-        stock = int(stock_map.get(producto_id, 0))
-        
-        # Codigo de barras
-        codebar = limpiar_texto(row.get('CODBAR')) or None
-        
-        # Construir producto
-        producto = {
-            "product_id": producto_id,
-            "codebar": codebar,
-            "name": limpiar_texto(row.get('DESC_PROD'))[:255] or "Sin Nombre",
-            "description": desc_tecnica,
-            "descripcion_2": desc_larga,
-            "stock_count": stock,
-            "base_price": limpiar_numero(row.get('CTO_ENT')),
-            "iva_percentage": limpiar_numero(row.get('PORCENIVA'), 16.0),
-            "category_name": categoria or None,
-            "is_active": True,
-            "unidad_medida": limpiar_texto(row.get('UNI_MED')) or None,
-            "image_url": verificar_imagen_existe(producto_id),
-            "updated_at": fecha_sync
-        }
-        productos.append(producto)
+        productos.append(build_producto_dict(row, descripciones_extra, stock_map, check_img, fecha_sync))
     
     return productos
 
 
 def procesar_listas_precios(df_precios, fecha_sync):
     """Extrae listas de precios unicas"""
-    # Obtener IDs de listas unicas
     listas_ids = df_precios['NLISPRE'].dropna().apply(limpiar_texto).unique()
     
-    # Convertir a formato API
-    listas = [
-        {
-            "price_list_id": int(lista_id),
-            "list_name": f"Lista {lista_id}",
-            "description": None,
-            "is_active": True,
-            "updated_at": fecha_sync
-        }
-        for lista_id in listas_ids
-    ]
-    
-    return listas, listas_ids
+    return [build_lista_precios_dict(lista_id, fecha_sync) for lista_id in listas_ids]
 
 
 def procesar_items_listas(df_precios, listas_ids, fecha_sync):
@@ -333,18 +192,10 @@ def procesar_items_listas(df_precios, listas_ids, fecha_sync):
     items = []
     
     for lista_id in listas_ids:
-        # Filtrar items de esta lista
         df_lista = df_precios[df_precios['NLISPRE'].apply(limpiar_texto) == lista_id]
         
         for _, row in df_lista.iterrows():
-            item = {
-                "price_list_id": int(lista_id),
-                "product_id": limpiar_texto(row.get('CVE_PROD')),
-                "markup_percentage": limpiar_numero(row.get('LMARGEN')),
-                "final_price": limpiar_numero(row.get('LPRECPROD')),
-                "updated_at": fecha_sync
-            }
-            items.append(item)
+            items.append(build_item_lista_dict(row, fecha_sync))
     
     return items
 
@@ -363,14 +214,14 @@ def main():
     print(f"{'='*60}\n")
     
     # 1. Login
-    token = login()
+    token = login(BACKEND_URL, USERNAME, PASSWORD)
     if not token:
         print("Authentication failed. Aborting.\n")
         return
     
-    # 2. Cargar datos auxiliares (descripciones y stock)
-    descripciones_extra = cargar_descripciones_extra()
-    stock_map = cargar_existencias()
+    # 2. Cargar datos auxiliares
+    descripciones_extra = cargar_descripciones_extra(DESCRIPCIONES_DBF)
+    stock_map = cargar_existencias(EXISTENCIAS_DBF)
     
     # 3. Leer archivos DBF principales
     print(f"Reading {PRODUCTOS_DBF.name}...")
@@ -379,31 +230,37 @@ def main():
     print(f"Reading {PRECIOS_DBF.name}...")
     df_precios = pd.DataFrame(iter(DBF(PRECIOS_DBF, encoding='latin1', ignore_missing_memofile=True)))
     
-    # Limpiar strings en DataFrames
     df_productos = df_productos.map(lambda x: limpiar_texto(x) if isinstance(x, str) else x)
     
     # 4. Procesar y enviar datos
     print()
     
-    # Categorias
     categorias = procesar_categorias(df_productos, fecha_sync)
     enviar_en_lotes(categorias, BATCH_SIZE["categorias"], "sync/categories", token, "Categorías", max_workers=5)
     
-    # Productos
     productos = procesar_productos(df_productos, descripciones_extra, stock_map, fecha_sync)
     enviar_en_lotes(productos, BATCH_SIZE["productos"], "sync/products", token, "Productos", max_workers=8)
     
-    # Listas de precios
-    listas, listas_ids = procesar_listas_precios(df_precios, fecha_sync)
+    listas, listas_ids = procesar_listas_precios(df_precios, fecha_sync), df_precios['NLISPRE'].dropna().apply(limpiar_texto).unique()
     enviar_en_lotes(listas, BATCH_SIZE["listas"], "sync/price-lists", token, "Listas de Precios", max_workers=5)
     
-    # Items de listas (markups por producto)
     items = procesar_items_listas(df_precios, listas_ids, fecha_sync)
     enviar_en_lotes(items, BATCH_SIZE["items"], "sync/price-list-items", token, "Items de Listas", max_workers=10)
     
-    # 5. Limpieza de registros antiguos
+    # 5. Limpieza
     print()
-    enviar_fecha_limpieza(fecha_sync, token)
+    print("--- CLEANUP: PRODUCTS ---")
+    try:
+        response = requests.post(
+            f"{BACKEND_URL}/sync/cleanup",
+            json={"last_sync": fecha_sync},
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=30
+        )
+        response.raise_for_status()
+        print("  ✓ Productos/categorias/listas limpiados\n")
+    except Exception as e:
+        print(f"  ⚠ Cleanup warning: {e}\n")
     
     # 6. Resumen final
     fin = datetime.now(timezone.utc)

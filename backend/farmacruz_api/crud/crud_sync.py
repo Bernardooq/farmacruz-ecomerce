@@ -657,23 +657,37 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
 
 def limpiar_items_no_sincronizados(db: Session, last_sync: datetime):
     """
-    Desactiva o elimina items que no fueron actualizados desde la fecha de ultima sincronizacion.
+    Desactiva o elimina productos, categorias, listas y items que no fueron 
+    actualizados desde la fecha de ultima sincronizacion.
+    
+    NO toca usuarios (customers ni sellers) - para eso usar limpiar_users_no_sincronizados.
     
     - Productos no actualizados: Se desactivan (is_active = False)
+    - Categorias no actualizadas: Se desactivan (is_active = False)
     - Listas de precios no actualizadas: Se eliminan
     - Relaciones producto-lista no actualizadas: Se eliminan
-    - Clientes no actualizados: Se desactivan (is_active = False)
-    - Vendedores no actualizados: Se desactivan (is_active = False)
     """
     # Desactivar productos no actualizados
     db.query(Product).filter(Product.updated_at < last_sync).update({Product.is_active: False})
     
-    # Desactivar listas de precios no actualizadas
+    # Desactivar categorias no actualizadas
+    db.query(Category).filter(Category.updated_at < last_sync).update({Category.is_active: False})
+    
+    # Eliminar listas de precios no actualizadas
     db.query(PriceList).filter(PriceList.updated_at < last_sync).delete(synchronize_session=False)
     
     # Eliminar relaciones producto-lista no actualizadas
     db.query(PriceListItem).filter(PriceListItem.updated_at < last_sync).delete(synchronize_session=False)
+
+
+def limpiar_users_no_sincronizados(db: Session, last_sync: datetime):
+    """
+    Desactiva usuarios (customers y sellers) que no fueron actualizados 
+    desde la fecha de ultima sincronizacion.
     
+    - Clientes no actualizados: Se desactivan (is_active = False)
+    - Vendedores no actualizados: Se desactivan (is_active = False)
+    """
     # Desactivar clientes no actualizados
     db.query(Customer).filter(Customer.updated_at < last_sync).update({Customer.is_active: False})
 
