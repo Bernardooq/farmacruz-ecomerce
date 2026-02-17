@@ -234,6 +234,23 @@
                 width: 6px;
             }
         }
+
+        // Search bar override: keep horizontal layout inside modals
+        &.search-bar {
+            flex-direction: row;
+            overflow: visible;
+            padding-right: 0;
+            gap: 0;
+
+            button {
+                margin-top: 0;
+                padding: 0 1rem;
+                font-size: inherit;
+                width: auto;
+                position: static;
+                box-shadow: none;
+            }
+        }
     }
 
     .form-group {
@@ -809,6 +826,213 @@
         strong {
             font-weight: 700;
             color: v.$primario;
+        }
+    }
+}
+
+// ============================================
+// CREATE ORDER MODAL - PRODUCT SELECTOR
+// ============================================
+
+// Tabs para Recomendaciones vs Búsqueda
+.product-selector-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid rgba(v.$negro, 0.1);
+
+    button {
+        background: none;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: rgba(v.$negro, 0.6);
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s ease;
+        position: relative;
+        bottom: -2px;
+
+        @include m.maxtelefono {
+            padding: 0.65rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        &:hover {
+            color: v.$primario;
+        }
+
+        &.active {
+            color: v.$primario;
+            border-bottom-color: v.$primario;
+            font-weight: 700;
+        }
+    }
+}
+
+// Grid de productos en modal (reusa estilos de products.scss)
+.modal-product-grid {
+    @include m.grid(2, 1rem);
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: lighten(v.$negro, 96%);
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(v.$negro, 0.3);
+        border-radius: 4px;
+
+        &:hover {
+            background: rgba(v.$negro, 0.5);
+        }
+    }
+
+    @include m.tablet {
+        @include m.grid(3, 1rem);
+    }
+
+    @include m.desktop {
+        @include m.grid(4, 1rem);
+    }
+
+    @include m.maxtelefono {
+        @include m.grid(1, 0.75rem);
+        max-height: 350px;
+        padding: 0.25rem;
+    }
+}
+
+// Variante de product-card para admin modal (más compacto)
+.product-card--admin {
+    background-color: v.$blanco;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(v.$negro, 0.08);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(v.$negro, 0.06);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(v.$negro, 0.12);
+        border-color: v.$primario;
+    }
+
+    .product-card__image {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        background: lighten(v.$negro, 96%);
+
+        @include m.maxtelefono {
+            height: 180px;
+        }
+    }
+
+    .product-card__info {
+        padding: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        gap: 0.5rem;
+    }
+
+    .product-card__name {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: v.$negro;
+        line-height: 1.3;
+        height: 2.6em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .product-card__price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .product-card__price {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: v.$primario;
+    }
+
+    .product-card__stock {
+        margin: 0;
+        font-size: 0.75rem;
+        color: v.$success;
+        font-weight: 600;
+
+        &--out {
+            color: v.$acento;
+        }
+    }
+
+    .product-card__buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .product-card__button--add {
+        flex: 1;
+        padding: 0.6rem;
+        font-size: 0.85rem;
+        border-radius: 6px;
+        background: v.$primario;
+        color: v.$blanco;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: darken(v.$primario, 8%);
+            transform: translateY(-1px);
+        }
+
+        &:disabled {
+            background: rgba(v.$negro, 0.3);
+            cursor: not-allowed;
+            transform: none;
+        }
+    }
+
+    .product-card__button--similar {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        background: rgba(v.$primario, 0.1);
+        color: v.$primario;
+        border: 1px solid rgba(v.$primario, 0.3);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: rgba(v.$primario, 0.2);
+            border-color: v.$primario;
+            transform: translateY(-1px);
         }
     }
 }

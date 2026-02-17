@@ -468,10 +468,20 @@
     background: v.$primario;
     border: none;
     color: v.$blanco;
-    padding: 0 1.25rem;
+    padding: 0 1rem;
     border-radius: 0 8px 8px 0;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    flex-shrink: 0;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
 
     &:hover {
       background: darken(v.$primario, 8%);

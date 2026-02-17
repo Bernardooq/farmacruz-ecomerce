@@ -14,7 +14,8 @@ Solo clientes autenticados pueden acceder (no admin/seller/marketing).
 """
 
 from crud.crud_sales_group import user_can_manage_order
-from db.base import UserRole
+from db.base import UserRole, CustomerInfo
+from crud.crud_product import get_similar_products
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -72,3 +73,46 @@ def get_customer_catalog_products(
     return crud_catalog.get_customer_catalog_products(
         db=db, customer_id=customer_id, skip=skip, limit=limit, search=search, category_id=category_id,
         sort_by=sort_by, sort_order=sort_order)
+
+
+""" GET /customer/{customer_id}/products/{product_id}/similar - Productos similares con precios del cliente """
+@router.get("/customer/{customer_id}/products/{product_id}/similar")
+def get_product_similar_for_customer(
+    customer_id: int,
+    product_id: str,
+    limit: int = Query(8, ge=1, le=20, description="Numero de productos similares"),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtiene productos similares usando get_similar_products con price_list del cliente"""
+
+    # Verificar permisos
+    if current_user.role != UserRole.admin:
+        if not user_can_manage_order(db, current_user.user_id, customer_id, current_user.role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para ver productos de este cliente"
+            )
+    
+    # Obtener price_list_id del cliente
+    customer_info = db.query(CustomerInfo).filter(
+        CustomerInfo.customer_id == customer_id
+    ).first()
+    
+    if not customer_info or not customer_info.price_list_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El cliente no tiene lista de precios asignada"
+        )
+    
+    # Llamar a get_similar_products con price_list_id del cliente
+    results = get_similar_products(
+        db=db,
+        product_id=product_id,
+        price_list_id=customer_info.price_list_id,
+        limit=limit
+    )
+    
+    # Retornar solo los productos (sin similarity_score)
+    return [item["product"] for item in results]
+

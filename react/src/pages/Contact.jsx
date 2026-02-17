@@ -22,6 +22,7 @@ import Header from '../components/layout/Header';
 import Header2 from '../components/layout/Header2';
 import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
+import apiService from '../services/apiService';
 
 // ============================================
 // CONSTANTES
@@ -72,17 +73,7 @@ export default function Contact() {
     setSending(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/contact/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al enviar el mensaje');
-      }
+      await apiService.sendContactForm(formData);
 
       // Mostrar mensaje de éxito
       setSent(true);
@@ -94,7 +85,7 @@ export default function Contact() {
       setTimeout(() => setSent(false), SUCCESS_MESSAGE_DURATION);
     } catch (error) {
       console.error('Error:', error);
-      alert('Hubo un error al enviar el mensaje. Por favor intenta de nuevo.');
+      alert(error.message || 'Hubo un error al enviar el mensaje. Por favor intenta de nuevo.');
     } finally {
       setSending(false);
     }

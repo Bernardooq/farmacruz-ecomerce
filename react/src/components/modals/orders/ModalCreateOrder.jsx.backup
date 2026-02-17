@@ -1,0 +1,547 @@
+import { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import catalogService from '../../../services/catalogService';
+import customerService from '../../../services/customerService';
+import orderService from '../../../services/orderService';
+import ErrorMessage from '../../common/ErrorMessage';
+import ProductCardAdmin from '../../products/ProductCardAdmin';
+
+export default function ModalCreateOrder({ visible, onClose, onSuccess }) {
+    // Customer selection state
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [customers, setCustomers] = useState([]);
+    const [customerSearch, setCustomerSearch] = useState('');
+    const [customersLoading, setCustomersLoading] = useState(false);
+    const [customersPage, setCustomersPage] = useState(0);
+    const [hasMoreCustomers, setHasMoreCustomers] = useState(true);
+    const CUSTOMERS_PER_PAGE = 10;
+
+    // Order items state
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Product search state
+    const [availableProducts, setAvailableProducts] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [productsPage, setProductsPage] = useState(0);
+    const [hasMoreProducts, setHasMoreProducts] = useState(true);
+    const [productsLoading, setProductsLoading] = useState(false);
+    const PRODUCTS_PER_PAGE = 12;
+
+    // Similar products modal state
+    const [showSimilarModal, setShowSimilarModal] = useState(false);
+    const [selectedProductForSimilar, setSelectedProductForSimilar] = useState(null);
+    const [similarProducts, setSimilarProducts] = useState([]);
+    const [similarLoading, setSimilarLoading] = useState(false);
+
+    // Load customers when modal opens
+    useEffect(() => {
+        if (visible) {
+            loadCustomers();
+        } else {
+            // Reset state when closing
+            setSelectedCustomer(null);
+            setItems([]);
+            setError(null);
+            setSearchTerm('');
+            setCustomerSearch('');
+            setCustomersPage(0);
+            setProductsPage(0);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visible]);
+
+    // Load customers when page changes
+    useEffect(() => {
+        if (visible && !selectedCustomer) {
+            loadCustomers();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visible, customersPage]);
+
+    // Load products when customer is selected or page changes
+    useEffect(() => {
+        if (visible && selectedCustomer) {
+            loadAvailableProducts();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visible, selectedCustomer, productsPage]);
+
+    const loadCustomers = async () => {
+        try {
+            setCustomersLoading(true);
+            const params = {
+                skip: customersPage * CUSTOMERS_PER_PAGE,
+                limit: CUSTOMERS_PER_PAGE + 1
+            };
+
+            if (customerSearch) {
+                params.search = customerSearch;
+            }
+
+            const data = await customerService.getAllCustomers(params);
+
+            const hasMorePages = data.length > CUSTOMERS_PER_PAGE;
+            setHasMoreCustomers(hasMorePages);
+            const pageCustomers = hasMorePages ? data.slice(0, CUSTOMERS_PER_PAGE) : data;
+            setCustomers(pageCustomers);
+        } catch (err) {
+            console.error('Failed to load customers:', err);
+            setCustomers([]);
+        } finally {
+            setCustomersLoading(false);
+        }
+    };
+
+    const loadAvailableProducts = async () => {
+        if (!selectedCustomer) return;
+
+        try {
+            setProductsLoading(true);
+            const params = {
+                skip: productsPage * PRODUCTS_PER_PAGE,
+                limit: PRODUCTS_PER_PAGE + 1
+            };
+
+            if (searchTerm) {
+                params.search = searchTerm;
+            }
+
+            const data = await catalogService.getCustomerCatalogProducts(selectedCustomer.customer_id, params);
+
+            const hasMorePages = data.length > PRODUCTS_PER_PAGE;
+            setHasMoreProducts(hasMorePages);
+            const pageProducts = hasMorePages ? data.slice(0, PRODUCTS_PER_PAGE) : data;
+            setAvailableProducts(pageProducts);
+        } catch (err) {
+            console.error('Failed to load products:', err);
+            setAvailableProducts([]);
+        } finally {
+            setProductsLoading(false);
+        }
+    };
+
+    const handleQuantityChange = (index, newQuantity) => {
+        const updated = [...items];
+        updated[index].quantity = Math.max(1, parseInt(newQuantity) || 1);
+        setItems(updated);
+    };
+
+    const handleRemoveItem = (index) => {
+        const updated = items.filter((_, i) => i !== index);
+        setItems(updated);
+    };
+
+    const handleShowSimilar = async (product) => {
+        setSelectedProductForSimilar(product);
+        setShowSimilarModal(true);
+        setSimilarLoading(true);
+
+        try {
+            const data = await catalogService.getProductSimilar(selectedCustomer.customer_id, product.product_id, 8);
+            setSimilarProducts(data);
+        } catch (err) {
+            console.error('Failed to load similar products:', err);
+            setSimilarProducts([]);
+        } finally {
+            setSimilarLoading(false);
+        }
+    };
+
+    const handleCreateOrder = async () => {
+        if (!selectedCustomer) {
+            setError('Debe seleccionar un cliente');
+            return;
+        }
+
+        if (items.length === 0) {
+            setError('El pedido debe tener al menos un producto');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const orderData = {
+                customer_id: selectedCustomer.customer_id,
+                items: items.map(item => ({
+                    product_id: item.product_id,
+                    quantity: item.quantity
+                })),
+                shipping_address_number: 1 // Default to first address
+            };
+
+            await orderService.createOrderForCustomer(orderData);
+            onSuccess?.();
+            onClose();
+        } catch (err) {
+            setError(err.response?.data?.detail || err.message || 'Error al crear pedido');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleProductSearch = (e) => {
+        e.preventDefault();
+        setProductsPage(0);
+        loadAvailableProducts();
+    };
+
+    const handleCustomerSearch = (e) => {
+        e.preventDefault();
+        setCustomersPage(0);
+        loadCustomers();
+    };
+
+    const handleAddProductToOrder = (product) => {
+        if (product.stock_count === 0 || !product.stock_count) {
+            const confirmed = window.confirm(
+                `⚠️ ADVERTENCIA: El producto "${product.name}" no tiene stock disponible.\\n\\n¿Desea continuar y agregarlo al pedido de todas formas?`
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        const existingIndex = items.findIndex(item => item.product_id === product.product_id);
+
+        if (existingIndex >= 0) {
+            const updated = [...items];
+            updated[existingIndex].quantity += 1;
+            setItems(updated);
+        } else {
+            const newItem = {
+                product_id: product.product_id,
+                product_name: product.name,
+                quantity: 1,
+                final_price: product.final_price
+            };
+            setItems([...items, newItem]);
+        }
+    };
+
+    const calculateTotal = () => {
+        return items.reduce((sum, item) => sum + (item.final_price * item.quantity), 0);
+    };
+
+    if (!visible) return null;
+
+    return (
+        <>
+            <div className="modal-overlay enable" onClick={onClose}>
+                <div className="modal-content" style={{ maxWidth: '900px' }} onClick={(e) => e.stopPropagation()}>
+                    <button className="modal-close" onClick={onClose} aria-label="Cerrar modal">
+                        &times;
+                    </button>
+
+                    <div className="modal-body">
+                        <h2>Crear Pedido para Cliente</h2>
+
+                        {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
+
+                        {/* Customer Selection */}
+                        {!selectedCustomer ? (
+                            <div>
+                                <h3 style={{ marginBottom: '1rem' }}>Seleccionar Cliente</h3>
+
+                                <form className="search-bar" onSubmit={handleCustomerSearch} style={{ marginBottom: '1rem' }}>
+                                    <input
+                                        type="search"
+                                        placeholder="Buscar cliente por nombre, email o ID..."
+                                        value={customerSearch}
+                                        onChange={(e) => setCustomerSearch(e.target.value)}
+                                        disabled={customersLoading}
+                                    />
+                                    <button type="submit" aria-label="Buscar" disabled={customersLoading}>
+                                        <FontAwesomeIcon icon={faSearch} />
+                                    </button>
+                                </form>
+
+                                {customersLoading ? (
+                                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                        Cargando clientes...
+                                    </div>
+                                ) : (
+                                    <div className="table-container" style={{ maxHeight: '400px', overflow: 'auto' }}>
+                                        <table className="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Nombre</th>
+                                                    <th>Email</th>
+                                                    <th>Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {customers.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="4" style={{ textAlign: 'center' }}>
+                                                            No se encontraron clientes
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    customers.map((customer) => (
+                                                        <tr key={customer.customer_id}>
+                                                            <td>{customer.customer_id}</td>
+                                                            <td>{customer.full_name}</td>
+                                                            <td>{customer.email}</td>
+                                                            <td>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn-primary"
+                                                                    onClick={() => setSelectedCustomer(customer)}
+                                                                    style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}
+                                                                >
+                                                                    Seleccionar
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+
+                                {/* Customer Pagination */}
+                                {!customersLoading && customers.length > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '1rem' }}>
+                                        <button
+                                            type="button"
+                                            className="btn-secondary"
+                                            onClick={() => setCustomersPage(p => Math.max(0, p - 1))}
+                                            disabled={customersPage === 0}
+                                        >
+                                            Anterior
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn-secondary"
+                                            onClick={() => setCustomersPage(p => p + 1)}
+                                            disabled={!hasMoreCustomers}
+                                        >
+                                            Siguiente
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                {/* Selected Customer Info */}
+                                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+                                    <p><strong>Cliente:</strong> {selectedCustomer.full_name}</p>
+                                    <p><strong>Email:</strong> {selectedCustomer.email}</p>
+                                    <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        onClick={() => {
+                                            setSelectedCustomer(null);
+                                            setItems([]);
+                                            setAvailableProducts([]);
+                                        }}
+                                        style={{ marginTop: '0.5rem', padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}
+                                        disabled={loading}
+                                    >
+                                        Cambiar Cliente
+                                    </button>
+                                </div>
+
+                                {/* Order Items */}
+                                <h3 style={{ marginBottom: '1rem' }}>Productos del Pedido</h3>
+
+                                <div className="table-container">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th>Precio Unit.</th>
+                                                <th>Cantidad</th>
+                                                <th>Subtotal</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {items.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" style={{ textAlign: 'center' }}>
+                                                        No hay productos en el pedido
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                items.map((item, index) => (
+                                                    <tr key={index}>
+                                                        <td>{item.product_name}</td>
+                                                        <td>${parseFloat(item.final_price).toFixed(2)}</td>
+                                                        <td>
+                                                            <input
+                                                                type="number"
+                                                                value={item.quantity}
+                                                                onChange={(e) => handleQuantityChange(index, e.target.value)}
+                                                                min="1"
+                                                                style={{ width: '80px' }}
+                                                                disabled={loading}
+                                                            />
+                                                        </td>
+                                                        <td>${(item.final_price * item.quantity).toFixed(2)}</td>
+                                                        <td>
+                                                            <button
+                                                                className="btn-icon btn--delete"
+                                                                onClick={() => handleRemoveItem(index)}
+                                                                title="Eliminar producto"
+                                                                disabled={loading}
+                                                            >
+                                                                <FontAwesomeIcon icon={faTrash} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div style={{ marginTop: '1.5rem', textAlign: 'right', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                    Total: ${calculateTotal().toFixed(2)}
+                                </div>
+
+                                {/* Product Search Section */}
+                                <hr style={{ margin: '2rem 0', border: 'none', borderTop: '2px solid #e0e0e0' }} />
+
+                                <h3 style={{ marginBottom: '1rem' }}>Agregar Productos</h3>
+
+                                <form className="search-bar" onSubmit={handleProductSearch} style={{ marginBottom: '1rem' }}>
+                                    <input
+                                        type="search"
+                                        placeholder="Buscar productos por nombre, ID o descripción..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        disabled={productsLoading}
+                                    />
+                                    <button type="submit" aria-label="Buscar" disabled={productsLoading}>
+                                        <FontAwesomeIcon icon={faSearch} />
+                                    </button>
+                                </form>
+
+                                {productsLoading ? (
+                                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                        Cargando productos...
+                                    </div>
+                                ) : availableProducts.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                                        {searchTerm ? 'No se encontraron productos' : 'Usa el buscador para encontrar productos'}
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="modal-product-grid">
+                                            {availableProducts.map(product => (
+                                                <ProductCardAdmin
+                                                    key={product.product_id}
+                                                    product={product}
+                                                    onAddToOrder={handleAddProductToOrder}
+                                                    onShowSimilar={handleShowSimilar}
+                                                />
+                                            ))}
+                                        </div>
+
+                                        {/* Product Pagination */}
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '1rem' }}>
+                                            <button
+                                                type="button"
+                                                className="btn-secondary"
+                                                onClick={() => setProductsPage(p => Math.max(0, p - 1))}
+                                                disabled={productsPage === 0 || productsLoading}
+                                            >
+                                                Anterior
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn-secondary"
+                                                onClick={() => setProductsPage(p => p + 1)}
+                                                disabled={!hasMoreProducts || productsLoading}
+                                            >
+                                                Siguiente
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
+
+                        <div className="form-actions" style={{ marginTop: '1.5rem' }}>
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={onClose}
+                                disabled={loading}
+                            >
+                                Cancelar
+                            </button>
+                            {selectedCustomer && (
+                                <button
+                                    type="button"
+                                    className="btn-primary"
+                                    onClick={handleCreateOrder}
+                                    disabled={loading || items.length === 0}
+                                >
+                                    {loading ? 'Creando...' : 'Crear Pedido'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Similar Products Modal */}
+            {showSimilarModal && (
+                <div className="modal-overlay enable" onClick={() => setShowSimilarModal(false)} style={{ zIndex: 99999, position: 'fixed' }}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+                        <button className="modal-close" onClick={() => setShowSimilarModal(false)}>
+                            ×
+                        </button>
+                        <div className="modal-header">
+                            <h2>Productos Similares</h2>
+                            {selectedProductForSimilar && (
+                                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>
+                                    Basados en: {selectedProductForSimilar.name}
+                                </p>
+                            )}
+                        </div>
+                        <div className="modal-body">
+                            {similarLoading ? (
+                                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                    Cargando productos similares...
+                                </div>
+                            ) : similarProducts.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                                    No se encontraron productos similares.
+                                </div>
+                            ) : (
+                                <div className="modal-product-grid">
+                                    {similarProducts.map(product => (
+                                        <ProductCardAdmin
+                                            key={product.product_id}
+                                            product={product}
+                                            onAddToOrder={(p) => {
+                                                handleAddProductToOrder(p);
+                                                setShowSimilarModal(false);
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn-secondary" onClick={() => setShowSimilarModal(false)}>
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}

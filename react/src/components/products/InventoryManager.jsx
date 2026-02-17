@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import { productService } from '../../services/productService';
 import { categoryService } from '../../services/categoryService';
@@ -304,7 +306,7 @@ export default function InventoryManager() {
             onChange={(e) => setSearchName(e.target.value)}
           />
           <button type="submit" aria-label="Buscar">
-            <i className="fas fa-search"></i>
+            <FontAwesomeIcon icon={faSearch} />
           </button>
         </form>
 
@@ -317,7 +319,7 @@ export default function InventoryManager() {
             onChange={(e) => setSearchcodebar(e.target.value)}
           />
           <button type="submit" aria-label="Buscar">
-            <i className="fas fa-search"></i>
+            <FontAwesomeIcon icon={faSearch} />
           </button>
         </form>
 

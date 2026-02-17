@@ -54,7 +54,7 @@ class ApiService {
         try {
           const errorData = await response.json()
           console.log('Error data from server:', errorData)
-          
+
           // FastAPI validation errors come in a specific format
           if (errorData.detail && Array.isArray(errorData.detail)) {
             // Format validation errors in a user-friendly way
@@ -70,7 +70,7 @@ class ApiService {
                 'rfc': 'RFC'
               }
               const friendlyField = fieldNames[field] || field
-              
+
               // Translate common error messages
               let message = err.msg
               if (message.includes('at least')) {
@@ -83,7 +83,7 @@ class ApiService {
               } else if (message.includes('required')) {
                 message = 'es requerido'
               }
-              
+
               return `${friendlyField} ${message}`
             }).join('. ')
           } else {
@@ -154,6 +154,55 @@ class ApiService {
 
   async delete(endpoint) {
     return this.request(endpoint, { method: 'DELETE' })
+  }
+
+  // ==================== FUNCIONES ESPECÍFICAS ====================
+
+  /**
+   * Enviar formulario de contacto (público, sin autenticación)
+   * @param {Object} contactData - Datos del formulario {name, email, phone, subject, message}
+   * @returns {Promise<Object>} Respuesta del servidor
+   */
+  async sendContactForm(contactData) {
+    // Este endpoint NO requiere autenticación, así que usamos fetch directo
+    // sin headers de autorización
+    const url = `${this.baseURL}/contact/send`
+
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(contactData),
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        let errorMessage = 'Error al enviar el mensaje'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.detail || errorData.message || errorMessage
+        } catch {
+          errorMessage = response.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      return await response.json()
+
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('El servidor tardó demasiado en responder.')
+      }
+      console.error('Contact Form Error:', error)
+      throw error
+    }
   }
 }
 
