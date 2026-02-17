@@ -35,48 +35,32 @@ export default function SalesTeamManagement() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [userRole, setUserRole] = useState('seller');
 
-  // Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
+    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab, page, debouncedSearchTerm]);
+  useEffect(() => { loadData(); }, [activeTab, page, debouncedSearchTerm]);
 
   const loadData = async () => {
     switch (activeTab) {
-      case 'sellers':
-        await loadSellers();
-        break;
-      case 'marketing':
-        await loadMarketing();
-        break;
-      case 'groups':
-        await loadGroups();
-        break;
+      case 'sellers': await loadSellers(); break;
+      case 'marketing': await loadMarketing(); break;
+      case 'groups': await loadGroups(); break;
     }
   };
-
 
   const loadSellers = async () => {
     try {
       setLoading(true);
       setError(null);
       const users = await adminService.getUsers({
-        role: 'seller',
-        skip: page * itemsPerPage,
-        limit: itemsPerPage + 1,
+        role: 'seller', skip: page * itemsPerPage, limit: itemsPerPage + 1,
         search: debouncedSearchTerm || undefined
       });
-
       const hasMorePages = users.length > itemsPerPage;
       setHasMore(hasMorePages);
-      const pageUsers = hasMorePages ? users.slice(0, itemsPerPage) : users;
-      setSellers(pageUsers);
+      setSellers(hasMorePages ? users.slice(0, itemsPerPage) : users);
     } catch (err) {
       setError('No se pudieron cargar los vendedores.');
       console.error('Failed to load sellers:', err);
@@ -90,16 +74,12 @@ export default function SalesTeamManagement() {
       setLoading(true);
       setError(null);
       const users = await adminService.getUsers({
-        role: 'marketing',
-        skip: page * itemsPerPage,
-        limit: itemsPerPage + 1,
+        role: 'marketing', skip: page * itemsPerPage, limit: itemsPerPage + 1,
         search: debouncedSearchTerm || undefined
       });
-
       const hasMorePages = users.length > itemsPerPage;
       setHasMore(hasMorePages);
-      const pageUsers = hasMorePages ? users.slice(0, itemsPerPage) : users;
-      setMarketingUsers(pageUsers);
+      setMarketingUsers(hasMorePages ? users.slice(0, itemsPerPage) : users);
     } catch (err) {
       setError('No se pudieron cargar los usuarios de marketing.');
       console.error('Failed to load marketing users:', err);
@@ -113,14 +93,11 @@ export default function SalesTeamManagement() {
       setLoading(true);
       setError(null);
       const groupsData = await salesGroupService.getSalesGroups({
-        skip: page * itemsPerPage,
-        limit: itemsPerPage + 1
+        skip: page * itemsPerPage, limit: itemsPerPage + 1
       });
-
       const hasMorePages = groupsData.length > itemsPerPage;
       setHasMore(hasMorePages);
-      const pageGroups = hasMorePages ? groupsData.slice(0, itemsPerPage) : groupsData;
-      setGroups(pageGroups);
+      setGroups(hasMorePages ? groupsData.slice(0, itemsPerPage) : groupsData);
     } catch (err) {
       setError('No se pudieron cargar los grupos de ventas.');
       console.error('Failed to load groups:', err);
@@ -129,31 +106,15 @@ export default function SalesTeamManagement() {
     }
   };
 
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Force immediate search on Enter/button
-    setDebouncedSearchTerm(searchTerm);
-    setPage(0);
-  };
-
-  const openAddUserModal = (role) => {
-    setUserRole(role);
-    setEditingUser(null);
-    setShowUserModal(true);
-  };
-
-  const openEditUserModal = (user, role) => {
-    setUserRole(role);
-    setEditingUser(user);
-    setShowUserModal(true);
-  };
+  const handleSearch = (e) => { e.preventDefault(); setDebouncedSearchTerm(searchTerm); setPage(0); };
+  const openAddUserModal = (role) => { setUserRole(role); setEditingUser(null); setShowUserModal(true); };
+  const openEditUserModal = (user, role) => { setUserRole(role); setEditingUser(user); setShowUserModal(true); };
+  const openAddGroupModal = () => { setEditingGroup(null); setShowGroupModal(true); };
+  const openEditGroupModal = (group) => { setEditingGroup(group); setShowGroupModal(true); };
+  const openGroupDetailsModal = (group) => { setSelectedGroup(group); setShowGroupDetailsModal(true); };
 
   const handleDeleteUser = async (user) => {
-    if (!window.confirm(`¿Estás seguro de eliminar a ${user.full_name}?`)) {
-      return;
-    }
-
+    if (!window.confirm(`¿Estás seguro de eliminar a ${user.full_name}?`)) return;
     try {
       await adminService.deleteUser(user.user_id);
       loadData();
@@ -163,26 +124,8 @@ export default function SalesTeamManagement() {
     }
   };
 
-  const openAddGroupModal = () => {
-    setEditingGroup(null);
-    setShowGroupModal(true);
-  };
-
-  const openEditGroupModal = (group) => {
-    setEditingGroup(group);
-    setShowGroupModal(true);
-  };
-
-  const openGroupDetailsModal = (group) => {
-    setSelectedGroup(group);
-    setShowGroupDetailsModal(true);
-  };
-
   const handleDeleteGroup = async (group) => {
-    if (!window.confirm(`¿Estás seguro de eliminar el grupo "${group.group_name}"? Esto eliminará todas las asignaciones de miembros.`)) {
-      return;
-    }
-
+    if (!window.confirm(`¿Estás seguro de eliminar el grupo "${group.group_name}"? Esto eliminará todas las asignaciones de miembros.`)) return;
     try {
       await salesGroupService.deleteSalesGroup(group.sales_group_id);
       loadGroups();
@@ -192,23 +135,18 @@ export default function SalesTeamManagement() {
     }
   };
 
-  const handleUserSaved = () => {
-    setShowUserModal(false);
-    loadData();
-  };
+  const handleUserSaved = () => { setShowUserModal(false); loadData(); };
+  const handleGroupSaved = () => { setShowGroupModal(false); loadGroups(); };
 
-  const handleGroupSaved = () => {
-    setShowGroupModal(false);
-    loadGroups();
-  };
+  // ─── Render helpers ──────────────────────────
 
-
-  const renderSellersTab = () => (
+  const renderUserTable = (users, role) => (
     <>
       <div className="section-header">
-        <h2 className="section-title">Vendedores</h2>
-        <button className="btn-action" onClick={() => openAddUserModal('seller')}>
-          <FontAwesomeIcon icon={faUserTie} /> Añadir Vendedor
+        <h2 className="section-title">{role === 'seller' ? 'Vendedores' : 'Marketing Managers'}</h2>
+        <button className="btn btn--primary btn--sm" onClick={() => openAddUserModal(role)}>
+          <FontAwesomeIcon icon={role === 'seller' ? faUserTie : faUsers} />
+          {' '}Añadir {role === 'seller' ? 'Vendedor' : 'Marketing'}
         </button>
       </div>
 
@@ -216,11 +154,12 @@ export default function SalesTeamManagement() {
         <form className="search-bar" onSubmit={handleSearch}>
           <input
             type="search"
-            placeholder="Buscar vendedor..."
+            className="input"
+            placeholder={`Buscar ${role === 'seller' ? 'vendedor' : 'marketing'}...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button type="submit" aria-label="Buscar">
+          <button type="submit" className="btn btn--primary" aria-label="Buscar">
             <FontAwesomeIcon icon={faSearch} />
           </button>
         </form>
@@ -231,119 +170,24 @@ export default function SalesTeamManagement() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Vendedor</th>
+              <th>{role === 'seller' ? 'Vendedor' : 'Marketing Manager'}</th>
               <th>Usuario</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {sellers.length === 0 ? (
+            {users.length === 0 ? (
               <tr>
-                <td colSpan="4" style={{ textAlign: 'center' }}>
-                  No se encontraron vendedores
+                <td colSpan="5" className="text-center">
+                  No se encontraron {role === 'seller' ? 'vendedores' : 'usuarios de marketing'}
                 </td>
               </tr>
             ) : (
-              sellers.map((seller) => (
-                <tr key={seller.user_id}>
-                  <td data-label="ID">{seller.user_id}</td>
-                  <td data-label="Vendedor">
-                    <div className="user-cell">
-                      <FontAwesomeIcon icon={faUserCircle} className="user-cell__avatar" />
-                      <div className="user-cell__info">
-                        <span className="user-cell__name"><b>{seller.full_name}</b></span>
-                        <span className="user-cell__email">{seller.email}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{seller.username}</td>
-                  <td>
-                    <span className={`status-badge ${seller.is_active ? 'status--active' : 'status--inactive'}`}>
-                      {seller.is_active ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className="actions-cell">
-                    <button
-                      className="btn-icon btn--edit"
-                      onClick={() => openEditUserModal(seller, 'seller')}
-                      aria-label="Editar vendedor"
-                    >
-                      <FontAwesomeIcon icon={faPencilAlt} />
-                    </button>
-                    <button
-                      className="btn-icon btn--delete"
-                      onClick={() => handleDeleteUser(seller)}
-                      aria-label="Eliminar vendedor"
-                    >
-                      <FontAwesomeIcon icon={faTrashAlt} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {sellers.length > 0 && (
-        <PaginationButtons
-          onPrev={() => setPage(p => Math.max(0, p - 1))}
-          onNext={() => setPage(p => p + 1)}
-          canGoPrev={page > 0}
-          canGoNext={hasMore}
-        />
-      )}
-    </>
-  );
-
-
-  const renderMarketingTab = () => (
-    <>
-      <div className="section-header">
-        <h2 className="section-title">Marketing Managers</h2>
-        <button className="btn-action" onClick={() => openAddUserModal('marketing')}>
-          <FontAwesomeIcon icon={faUsers} /> Añadir Marketing
-        </button>
-      </div>
-
-      <div className="dashboard-controls">
-        <form className="search-bar" onSubmit={handleSearch}>
-          <input
-            type="search"
-            placeholder="Buscar marketing..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button type="submit" aria-label="Buscar">
-            <FontAwesomeIcon icon={faSearch} />
-          </button>
-        </form>
-      </div>
-
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Marketing Manager</th>
-              <th>Usuario</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {marketingUsers.length === 0 ? (
-              <tr>
-                <td colSpan="4" style={{ textAlign: 'center' }}>
-                  No se encontraron usuarios de marketing
-                </td>
-              </tr>
-            ) : (
-              marketingUsers.map((user) => (
+              users.map((user) => (
                 <tr key={user.user_id}>
                   <td data-label="ID">{user.user_id}</td>
-                  <td data-label="Marketing Manager">
+                  <td data-label={role === 'seller' ? 'Vendedor' : 'Marketing Manager'}>
                     <div className="user-cell">
                       <FontAwesomeIcon icon={faUserCircle} className="user-cell__avatar" />
                       <div className="user-cell__info">
@@ -359,18 +203,10 @@ export default function SalesTeamManagement() {
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <button
-                      className="btn-icon btn--edit"
-                      onClick={() => openEditUserModal(user, 'marketing')}
-                      aria-label="Editar marketing"
-                    >
+                    <button className="btn btn--icon btn--ghost" onClick={() => openEditUserModal(user, role)} aria-label={`Editar ${role}`}>
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>
-                    <button
-                      className="btn-icon btn--delete"
-                      onClick={() => handleDeleteUser(user)}
-                      aria-label="Eliminar marketing"
-                    >
+                    <button className="btn btn--icon btn--danger" onClick={() => handleDeleteUser(user)} aria-label={`Eliminar ${role}`}>
                       <FontAwesomeIcon icon={faTrashAlt} />
                     </button>
                   </td>
@@ -381,7 +217,7 @@ export default function SalesTeamManagement() {
         </table>
       </div>
 
-      {marketingUsers.length > 0 && (
+      {users.length > 0 && (
         <PaginationButtons
           onPrev={() => setPage(p => Math.max(0, p - 1))}
           onNext={() => setPage(p => p + 1)}
@@ -392,12 +228,11 @@ export default function SalesTeamManagement() {
     </>
   );
 
-
   const renderGroupsTab = () => (
     <>
       <div className="section-header">
         <h2 className="section-title">Grupos de Ventas</h2>
-        <button className="btn-action" onClick={openAddGroupModal}>
+        <button className="btn btn--primary btn--sm" onClick={openAddGroupModal}>
           <FontAwesomeIcon icon={faUsersGear} /> Crear Grupo
         </button>
       </div>
@@ -417,9 +252,7 @@ export default function SalesTeamManagement() {
           <tbody>
             {groups.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center' }}>
-                  No se encontraron grupos de ventas
-                </td>
+                <td colSpan="6" className="text-center">No se encontraron grupos de ventas</td>
               </tr>
             ) : (
               groups.map((group) => (
@@ -427,46 +260,25 @@ export default function SalesTeamManagement() {
                   <td>
                     <div>
                       <div><b>{group.group_name}</b></div>
-                      {group.description && (
-                        <div className="text-muted small">{group.description}</div>
-                      )}
+                      {group.description && <div className="text-muted text-sm">{group.description}</div>}
                     </div>
                   </td>
-                  <td>
-                    <span className="badge badge--info">{group.marketing_count || 0}</span>
-                  </td>
-                  <td>
-                    <span className="badge badge--success">{group.seller_count || 0}</span>
-                  </td>
-                  <td>
-                    <span className="badge badge--primary">{group.customer_count || 0}</span>
-                  </td>
+                  <td><span className="badge badge--info">{group.marketing_count || 0}</span></td>
+                  <td><span className="badge badge--success">{group.seller_count || 0}</span></td>
+                  <td><span className="badge badge--primary">{group.customer_count || 0}</span></td>
                   <td>
                     <span className={`status-badge ${group.is_active ? 'status--active' : 'status--inactive'}`}>
                       {group.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <button
-                      className="btn-icon btn--view"
-                      onClick={() => openGroupDetailsModal(group)}
-                      aria-label="Ver detalles"
-                      title="Ver miembros"
-                    >
+                    <button className="btn btn--icon btn--ghost" onClick={() => openGroupDetailsModal(group)} aria-label="Ver detalles" title="Ver miembros">
                       <FontAwesomeIcon icon={faEye} />
                     </button>
-                    <button
-                      className="btn-icon btn--edit"
-                      onClick={() => openEditGroupModal(group)}
-                      aria-label="Editar grupo"
-                    >
+                    <button className="btn btn--icon btn--ghost" onClick={() => openEditGroupModal(group)} aria-label="Editar grupo">
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>
-                    <button
-                      className="btn-icon btn--delete"
-                      onClick={() => handleDeleteGroup(group)}
-                      aria-label="Eliminar grupo"
-                    >
+                    <button className="btn btn--icon btn--danger" onClick={() => handleDeleteGroup(group)} aria-label="Eliminar grupo">
                       <FontAwesomeIcon icon={faTrashAlt} />
                     </button>
                   </td>
@@ -497,30 +309,31 @@ export default function SalesTeamManagement() {
       <section className="dashboard-section">
         {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-        <div className="sales-team-tabs">
+        {/* Pill-style sub-tabs */}
+        <nav className="dashboard-layout__tabs-nav">
           <button
-            className={`sales-team-tab ${activeTab === 'sellers' ? 'sales-team-tab--active' : ''}`}
+            className={`dashboard-layout__tab ${activeTab === 'sellers' ? 'dashboard-layout__tab--active' : ''}`}
             onClick={() => { setActiveTab('sellers'); setPage(0); setSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUserTie} /> Vendedores
           </button>
           <button
-            className={`sales-team-tab ${activeTab === 'marketing' ? 'sales-team-tab--active' : ''}`}
+            className={`dashboard-layout__tab ${activeTab === 'marketing' ? 'dashboard-layout__tab--active' : ''}`}
             onClick={() => { setActiveTab('marketing'); setPage(0); setSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUsers} /> Marketing
           </button>
           <button
-            className={`sales-team-tab ${activeTab === 'groups' ? 'sales-team-tab--active' : ''}`}
+            className={`dashboard-layout__tab ${activeTab === 'groups' ? 'dashboard-layout__tab--active' : ''}`}
             onClick={() => { setActiveTab('groups'); setPage(0); setSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUsersGear} /> Grupos
           </button>
-        </div>
+        </nav>
 
-        <div className="sales-team-content">
-          {activeTab === 'sellers' && renderSellersTab()}
-          {activeTab === 'marketing' && renderMarketingTab()}
+        <div className="dashboard-layout__tabs-content">
+          {activeTab === 'sellers' && renderUserTable(sellers, 'seller')}
+          {activeTab === 'marketing' && renderUserTable(marketingUsers, 'marketing')}
           {activeTab === 'groups' && renderGroupsTab()}
         </div>
       </section>
@@ -547,7 +360,6 @@ export default function SalesTeamManagement() {
           group={selectedGroup}
           onClose={() => setShowGroupDetailsModal(false)}
           onUpdate={async () => {
-            // Reload the specific group with updated counts
             try {
               const updatedGroup = await salesGroupService.getSalesGroup(selectedGroup.sales_group_id);
               setGroups(prevGroups =>
@@ -558,7 +370,7 @@ export default function SalesTeamManagement() {
               setSelectedGroup(updatedGroup);
             } catch (err) {
               console.error('Failed to reload group:', err);
-              loadGroups(); // Fallback to reloading all groups
+              loadGroups();
             }
           }}
         />

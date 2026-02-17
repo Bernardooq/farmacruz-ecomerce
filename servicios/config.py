@@ -11,8 +11,8 @@ from pathlib import Path
 # BACKEND API CONFIGURATION
 # ============================================================================
 
-BACKEND_URL = "http://ec2-54-225-140-250.compute-1.amazonaws.com/api/v1"
-# BACKEND_URL = "http://localhost:8000/api/v1"
+# BACKEND_URL = "http://ec2-54-225-140-250.compute-1.amazonaws.com/api/v1"
+BACKEND_URL = "http://localhost:8000/api/v1"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "farmasaenz123"
 

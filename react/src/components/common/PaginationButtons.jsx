@@ -8,26 +8,24 @@ export default function PaginationButtons({
   canGoNext = true
 }) {
   return (
-    <div className="navigation-buttons">
-      {/* Botón Anterior */}
+    <nav className="pagination" aria-label="Paginación">
       <button
-        className="next-previous-page__button"
+        className="pagination__btn"
         onClick={onPrev}
         disabled={!canGoPrev}
         aria-label="Página anterior"
       >
-        <FontAwesomeIcon icon={faBackward} />
+        <FontAwesomeIcon icon={faBackward} /> Anterior
       </button>
 
-      {/* Botón Siguiente */}
       <button
-        className="next-previous-page__button"
+        className="pagination__btn"
         onClick={onNext}
         disabled={!canGoNext}
         aria-label="Página siguiente"
       >
-        <FontAwesomeIcon icon={faForward} />
+        Siguiente <FontAwesomeIcon icon={faForward} />
       </button>
-    </div>
+    </nav>
   );
 }

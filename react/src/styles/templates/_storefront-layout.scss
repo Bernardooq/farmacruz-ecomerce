@@ -1,0 +1,73 @@
+@use '../tokens/breakpoints' as *;
+
+// ============================================
+// TEMPLATE — STOREFRONT (products page)
+// ============================================
+
+.storefront {
+    @include container;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6) 0;
+
+    @include tablet {
+        flex-direction: row;
+    }
+
+    &__sidebar {
+        width: 100%;
+
+        @include tablet {
+            width: 260px;
+            flex-shrink: 0;
+        }
+    }
+
+    &__main {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+// Filters sidebar
+.filters-sidebar {
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    border: var(--border-width) solid var(--color-border);
+    padding: var(--space-5);
+
+    &__title {
+        font-size: var(--text-sm);
+        font-weight: var(--font-bold);
+        color: var(--color-text);
+        margin-bottom: var(--space-4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    &__group {
+        margin-bottom: var(--space-4);
+
+        label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-2);
+            display: block;
+        }
+    }
+}
+
+// Contact form page
+.contact-section {
+    @include container;
+    max-width: 700px;
+    padding: var(--space-8) 0;
+
+    h1 {
+        font-size: var(--text-3xl);
+        text-align: center;
+        margin-bottom: var(--space-8);
+    }
+}

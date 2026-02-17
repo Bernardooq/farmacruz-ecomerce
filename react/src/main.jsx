@@ -4,7 +4,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import App from './App.jsx';
-import './styles/styles.css';
+import './styles/main.scss';
+
+// Apply saved theme before render to prevent flash
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>

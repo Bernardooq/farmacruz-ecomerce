@@ -7,24 +7,20 @@ const modules = import.meta.glob('../../images/labs/*.jpg', { eager: true });
  */
 const labImages = Object.keys(modules).map((path, index) => {
   const src = modules[path].default || modules[path].src;
-  return {
-    id: index + 1,
-    src: src
-  };
+  return { id: index + 1, src };
 });
 
 export default function Labs() {
   return (
     <section className="labs-section">
-      <div className="contenedor">
-        <h2 className="white-header">
+      <div className="container">
+        <h2 className="section-title text-white text-center">
           PRINCIPALES LABORATORIOS EN NUESTRA GAMA DE DISTRIBUCIÓN
         </h2>
 
         <div className="labs-grid">
           {labImages.map((lab) => (
             <div key={lab.id} className="lab-item">
-              {/* Logo del laboratorio con lazy loading */}
               <img
                 src={lab.src}
                 alt={`Laboratorio ${lab.id}`}

@@ -3,21 +3,13 @@
  * ============
  * Página de catálogo de productos de FarmaCruz
  * 
- * Esta página muestra el catálogo completo de productos disponibles
- * con funcionalidades de filtrado, búsqueda y ordenamiento.
- * 
  * Funcionalidades:
- * - Búsqueda de productos (por query param)
- * - Filtrado por categoría
- * - Ordenamiento (precio, nombre, relevancia)
+ * - Búsqueda, filtrado por categoría, ordenamiento
  * - Paginación de resultados
  * - Modal de detalles del producto
- * - Diferentes servicios según rol: catalog (clientes) vs product (staff)
+ * - Servicios diferentes según rol: catalog (clientes) vs product (staff)
  * 
- * Permisos:
- * - Requiere autenticación
- * - Clientes: ven precios personalizados de su lista
- * - Staff: ven productos sin precio (solo vista de catálogo)
+ * Permisos: Requiere autenticación
  */
 
 import { useEffect, useState } from 'react';
@@ -48,49 +40,32 @@ export default function Products() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Obtener query de búsqueda de la URL
   const searchQuery = searchParams.get('search') || '';
 
-  // Estado de datos
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Estado de UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  // Estado de filtros y paginación
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortOrder, setSortOrder] = useState('relevance');
   const [page, setPage] = useState(0);
 
-  // Determinar tipo de usuario
   const isCustomer = user?.role === 'customer';
   const isInternalUser = user && ['admin', 'seller', 'marketing'].includes(user.role);
 
   // ============================================
   // EFFECTS
   // ============================================
-
-  // Cargar categorías al montar el componente
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  // Recargar productos cuando cambian los filtros o la búsqueda
-  useEffect(() => {
-    loadProducts();
-  }, [selectedCategory, sortOrder, page, searchQuery, isCustomer, isInternalUser]);
+  useEffect(() => { loadCategories(); }, []);
+  useEffect(() => { loadProducts(); }, [selectedCategory, sortOrder, page, searchQuery, isCustomer, isInternalUser]);
 
   // ============================================
   // DATA FETCHING
   // ============================================
-
-  /**
-   * Carga las categorías disponibles
-   */
   const loadCategories = async () => {
     try {
       const data = await categoryService.getCategories();
@@ -100,11 +75,7 @@ export default function Products() {
     }
   };
 
-  /**
-   * Carga los productos según el rol del usuario y los filtros aplicados
-   */
   const loadProducts = async () => {
-    // Validar que el usuario esté autenticado
     if (!user) {
       setProducts([]);
       setLoading(false);
@@ -116,7 +87,6 @@ export default function Products() {
       setLoading(true);
       setError(null);
 
-      // Construir parámetros base de la consulta
       const params = {
         skip: page * PRODUCTS_PER_PAGE,
         limit: PRODUCTS_PER_PAGE,
@@ -127,39 +97,24 @@ export default function Products() {
       let data;
 
       if (isCustomer) {
-        // CLIENTES: Usar catalog service (valida lista de precios y muestra precios personalizados)
-
-        // Agregar parámetros de ordenamiento para catalog
         const sortConfig = {
           'name_asc': { sort_by: 'name', sort_order: 'asc' },
           'name_desc': { sort_by: 'name', sort_order: 'desc' },
-          'relevance': {}  // Sin sort_by = orden por defecto (más recientes)
+          'relevance': {}
         };
-
-        if (sortConfig[sortOrder]) {
-          Object.assign(params, sortConfig[sortOrder]);
-        }
-
+        if (sortConfig[sortOrder]) Object.assign(params, sortConfig[sortOrder]);
         data = await catalogService.getProducts(params);
       } else if (isInternalUser) {
-        // STAFF: Usar product service (solo productos activos, sin precios)
         params.is_active = true;
-
-        // Agregar parámetros de ordenamiento
         const sortConfig = {
           'price_asc': { sort_by: 'price', sort_order: 'asc' },
           'price_desc': { sort_by: 'price', sort_order: 'desc' },
           'name_asc': { sort_by: 'name', sort_order: 'asc' },
           'name_desc': { sort_by: 'name', sort_order: 'desc' }
         };
-
-        if (sortConfig[sortOrder]) {
-          Object.assign(params, sortConfig[sortOrder]);
-        }
-
+        if (sortConfig[sortOrder]) Object.assign(params, sortConfig[sortOrder]);
         data = await productService.getProducts(params);
       } else {
-        // Rol no reconocido
         setError('Tu tipo de cuenta no tiene acceso al catálogo.');
         setLoading(false);
         return;
@@ -168,14 +123,7 @@ export default function Products() {
       setProducts(data);
     } catch (err) {
       console.error('Error loading products:', err);
-
-      // Extraer mensaje de error específico
-      const errorMsg =
-        err.response?.data?.detail ||
-        err.detail ||
-        err.message ||
-        'No se pudieron cargar los productos. Intenta de nuevo.';
-
+      const errorMsg = err.response?.data?.detail || err.detail || err.message || 'No se pudieron cargar los productos. Intenta de nuevo.';
       setError(errorMsg);
       setProducts([]);
     } finally {
@@ -186,56 +134,22 @@ export default function Products() {
   // ============================================
   // EVENT HANDLERS
   // ============================================
-
-  /**
-   * Maneja el cambio de categoría seleccionada
-   */
-  const handleCategoryChange = (categoryId) => {
-    setSelectedCategory(categoryId);
-    setPage(0); // Reiniciar a la primera página
-  };
-
-  /**
-   * Maneja el cambio de orden de productos
-   */
-  const handleSortChange = (newSortOrder) => {
-    setSortOrder(newSortOrder);
-    setPage(0); // Reiniciar a la primera página
-  };
-
-  /**
-   * Maneja el click en un producto para ver detalles
-   */
-  const handleProductClick = (product) => {
-    setSelectedProduct(product);
-    setShowModal(true);
-  };
-
-  /**
-   * Cierra el modal de detalles
-   */
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedProduct(null);
-  };
-
-  /**
-   * Limpia la búsqueda y vuelve al catálogo completo
-   */
-  const handleClearSearch = () => {
-    navigate('/products');
-  };
+  const handleCategoryChange = (categoryId) => { setSelectedCategory(categoryId); setPage(0); };
+  const handleSortChange = (newSortOrder) => { setSortOrder(newSortOrder); setPage(0); };
+  const handleProductClick = (product) => { setSelectedProduct(product); setShowModal(true); };
+  const handleCloseModal = () => { setShowModal(false); setSelectedProduct(null); };
+  const handleClearSearch = () => { navigate('/products'); };
 
   // ============================================
   // RENDER - LOADING STATE
   // ============================================
   if (loading) {
     return (
-      <>
+      <div className="page">
         <SearchBar />
         <LoadingSpinner message="Cargando productos..." />
         <Footer />
-      </>
+      </div>
     );
   }
 
@@ -243,34 +157,26 @@ export default function Products() {
   // RENDER - MAIN CONTENT
   // ============================================
   return (
-    <>
+    <div className="page">
       <SearchBar />
 
-      <main className="products-page">
-        <div className="container">
+      <main className="page__content">
+        <div className="page-container">
           {/* Título de la página */}
-          <h1 className="products-page__title">
+          <h1 className="section-title mb-6">
             {searchQuery ? `Resultados para: "${searchQuery}"` : 'Nuestro Catálogo'}
           </h1>
 
-          {/* Mensaje de error si lo hay */}
+          {/* Mensaje de error */}
           {error && (
-            <ErrorMessage
-              error={error}
-              onDismiss={() => setError(null)}
-            />
+            <ErrorMessage error={error} onDismiss={() => setError(null)} />
           )}
 
           {/* Banner de resultados de búsqueda */}
           {searchQuery && (
-            <div className="search-results-banner">
-              <span className="search-results-banner__text">
-                Mostrando {products.length} resultado(s) para "{searchQuery}"
-              </span>
-              <button
-                onClick={handleClearSearch}
-                className="search-results-banner__clear-btn"
-              >
+            <div className="alert alert--info mb-4 d-flex items-center justify-between">
+              <span>Mostrando {products.length} resultado(s) para "{searchQuery}"</span>
+              <button onClick={handleClearSearch} className="btn btn--ghost btn--sm">
                 Limpiar búsqueda
               </button>
             </div>
@@ -286,10 +192,7 @@ export default function Products() {
           />
 
           {/* Grid de productos */}
-          <ProductGrid
-            products={products}
-            onProductClick={handleProductClick}
-          />
+          <ProductGrid products={products} onProductClick={handleProductClick} />
         </div>
 
         {/* Botones de paginación */}
@@ -310,6 +213,6 @@ export default function Products() {
       />
 
       <Footer />
-    </>
+    </div>
   );
 }

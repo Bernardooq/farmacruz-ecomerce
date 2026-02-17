@@ -13,19 +13,16 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('marketing');
 
-  // Available users
   const [availableUsers, setAvailableUsers] = useState([]);
   const [loadingAvailable, setLoadingAvailable] = useState(false);
   const [availablePage, setAvailablePage] = useState(0);
   const [availableHasMore, setAvailableHasMore] = useState(true);
 
-  // In-group users
   const [inGroupUsers, setInGroupUsers] = useState([]);
   const [loadingInGroup, setLoadingInGroup] = useState(false);
   const [inGroupPage, setInGroupPage] = useState(0);
   const [inGroupHasMore, setInGroupHasMore] = useState(true);
 
-  // Search
   const [searchInGroup, setSearchInGroup] = useState('');
   const [searchAvailable, setSearchAvailable] = useState('');
   const [searchInGroupTimeout, setSearchInGroupTimeout] = useState(null);
@@ -33,44 +30,22 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
 
   const ITEMS_PER_PAGE = 20;
 
-  useEffect(() => {
-    if (group) {
-      setLoading(false);
-      setAvailablePage(0);
-      setInGroupPage(0);
-    }
-  }, [group, activeTab]);
-
-  useEffect(() => {
-    if (group) loadAvailableUsers(availablePage, searchAvailable);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, availablePage]);
-
-  useEffect(() => {
-    if (group) loadInGroupUsers(inGroupPage, searchInGroup);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, inGroupPage]);
+  useEffect(() => { if (group) { setLoading(false); setAvailablePage(0); setInGroupPage(0); } }, [group, activeTab]);
+  useEffect(() => { if (group) loadAvailableUsers(availablePage, searchAvailable); }, [activeTab, availablePage]);
+  useEffect(() => { if (group) loadInGroupUsers(inGroupPage, searchInGroup); }, [activeTab, inGroupPage]);
 
   useEffect(() => {
     if (searchAvailableTimeout) clearTimeout(searchAvailableTimeout);
-    const timeout = setTimeout(() => {
-      setAvailablePage(0);
-      if (group) loadAvailableUsers(0, searchAvailable);
-    }, 500);
+    const timeout = setTimeout(() => { setAvailablePage(0); if (group) loadAvailableUsers(0, searchAvailable); }, 500);
     setSearchAvailableTimeout(timeout);
     return () => { if (timeout) clearTimeout(timeout); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchAvailable]);
 
   useEffect(() => {
     if (searchInGroupTimeout) clearTimeout(searchInGroupTimeout);
-    const timeout = setTimeout(() => {
-      setInGroupPage(0);
-      if (group) loadInGroupUsers(0, searchInGroup);
-    }, 500);
+    const timeout = setTimeout(() => { setInGroupPage(0); if (group) loadInGroupUsers(0, searchInGroup); }, 500);
     setSearchInGroupTimeout(timeout);
     return () => { if (timeout) clearTimeout(timeout); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInGroup]);
 
   const loadAvailableUsers = async (page, search = '') => {
@@ -78,24 +53,14 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
       setLoadingAvailable(true);
       const params = { skip: page * ITEMS_PER_PAGE, limit: ITEMS_PER_PAGE };
       if (search?.trim()) params.search = search.trim();
-
       let available = [];
-      if (activeTab === 'customers') {
-        available = await salesGroupService.getAvailableCustomers(group.sales_group_id, params);
-      } else if (activeTab === 'marketing') {
-        available = await salesGroupService.getAvailableMarketingManagers(group.sales_group_id, params);
-      } else if (activeTab === 'sellers') {
-        available = await salesGroupService.getAvailableSellers(group.sales_group_id, params);
-      }
-
+      if (activeTab === 'customers') available = await salesGroupService.getAvailableCustomers(group.sales_group_id, params);
+      else if (activeTab === 'marketing') available = await salesGroupService.getAvailableMarketingManagers(group.sales_group_id, params);
+      else if (activeTab === 'sellers') available = await salesGroupService.getAvailableSellers(group.sales_group_id, params);
       setAvailableUsers(available);
       setAvailableHasMore(available.length === ITEMS_PER_PAGE);
-    } catch (err) {
-      console.error('Failed to load available users:', err);
-      setError('Error al cargar usuarios disponibles');
-    } finally {
-      setLoadingAvailable(false);
-    }
+    } catch (err) { console.error(err); setError('Error al cargar usuarios disponibles'); }
+    finally { setLoadingAvailable(false); }
   };
 
   const loadInGroupUsers = async (page, search = '') => {
@@ -103,181 +68,134 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
       setLoadingInGroup(true);
       const params = { skip: page * ITEMS_PER_PAGE, limit: ITEMS_PER_PAGE };
       if (search?.trim()) params.search = search.trim();
-
       let inGroup = [];
-      if (activeTab === 'customers') {
-        inGroup = await salesGroupService.getGroupCustomers(group.sales_group_id, params);
-      } else if (activeTab === 'marketing') {
-        inGroup = await salesGroupService.getGroupMarketingManagers(group.sales_group_id, params);
-      } else if (activeTab === 'sellers') {
-        inGroup = await salesGroupService.getGroupSellers(group.sales_group_id, params);
-      }
-
+      if (activeTab === 'customers') inGroup = await salesGroupService.getGroupCustomers(group.sales_group_id, params);
+      else if (activeTab === 'marketing') inGroup = await salesGroupService.getGroupMarketingManagers(group.sales_group_id, params);
+      else if (activeTab === 'sellers') inGroup = await salesGroupService.getGroupSellers(group.sales_group_id, params);
       setInGroupUsers(inGroup);
       setInGroupHasMore(inGroup.length === ITEMS_PER_PAGE);
-    } catch (err) {
-      console.error('Failed to load in-group users:', err);
-      setError('Error al cargar miembros del grupo');
-    } finally {
-      setLoadingInGroup(false);
-    }
+    } catch (err) { console.error(err); setError('Error al cargar miembros del grupo'); }
+    finally { setLoadingInGroup(false); }
   };
 
   const handleAddMember = async (userId) => {
     try {
       setError(null);
-      if (activeTab === 'marketing') {
-        await salesGroupService.assignMarketingToGroup(group.sales_group_id, userId);
-      } else if (activeTab === 'sellers') {
-        await salesGroupService.assignSellerToGroup(group.sales_group_id, userId);
-      } else if (activeTab === 'customers') {
-        await salesGroupService.assignCustomerToGroup(group.sales_group_id, userId);
-      }
+      if (activeTab === 'marketing') await salesGroupService.assignMarketingToGroup(group.sales_group_id, userId);
+      else if (activeTab === 'sellers') await salesGroupService.assignSellerToGroup(group.sales_group_id, userId);
+      else if (activeTab === 'customers') await salesGroupService.assignCustomerToGroup(group.sales_group_id, userId);
       loadAvailableUsers(availablePage, searchAvailable);
       loadInGroupUsers(inGroupPage, searchInGroup);
-      // onUpdate() causa una petición extra innecesaria para recargar el grupo
-      // if (onUpdate) onUpdate();
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Error al añadir miembro al grupo.');
-    }
+    } catch (err) { setError(err.response?.data?.detail || 'Error al añadir miembro al grupo.'); }
   };
 
   const handleRemoveMember = async (userId, role) => {
     if (!window.confirm('¿Estás seguro de remover este miembro del grupo?')) return;
     try {
       setError(null);
-      if (role === 'marketing') {
-        await salesGroupService.removeMarketingFromGroup(group.sales_group_id, userId);
-      } else if (role === 'sellers') {
-        await salesGroupService.removeSellerFromGroup(group.sales_group_id, userId);
-      } else if (role === 'customers') {
-        await salesGroupService.removeCustomerFromGroup(group.sales_group_id, userId);
-      }
+      if (role === 'marketing') await salesGroupService.removeMarketingFromGroup(group.sales_group_id, userId);
+      else if (role === 'sellers') await salesGroupService.removeSellerFromGroup(group.sales_group_id, userId);
+      else if (role === 'customers') await salesGroupService.removeCustomerFromGroup(group.sales_group_id, userId);
       loadAvailableUsers(availablePage, searchAvailable);
       loadInGroupUsers(inGroupPage, searchInGroup);
-      // onUpdate() causa una petición extra innecesaria para recargar el grupo
-      // if (onUpdate) onUpdate();
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Error al remover miembro del grupo.');
-    }
+    } catch (err) { setError(err.response?.data?.detail || 'Error al remover miembro del grupo.'); }
   };
 
   if (!group) return null;
 
   return (
-    <div className="modal-overlay enable" onClick={onClose}>
-      <div className="modal-content modal-content--large" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
-          <FontAwesomeIcon icon={faTimes} />
-        </button>
-        <div className="modal-body">
-          <div className="group-modal-header">
-            <div className="group-modal-title">
-              <FontAwesomeIcon icon={faUsers} className="group-modal-icon" />
-              <div>
-                <h2>{group.group_name}</h2>
-                {group.description && <p className="group-description">{group.description}</p>}
-              </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal--lg" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__header">
+          <div className="d-flex align-center gap-2">
+            <FontAwesomeIcon icon={faUsers} className="text-primary" />
+            <div>
+              <h2>{group.group_name}</h2>
+              {group.description && <p className="text-muted">{group.description}</p>}
             </div>
           </div>
+          <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+        </div>
+        <div className="modal__body">
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
           {loading ? <LoadingSpinner message="Cargando..." /> : (
             <>
-              <div className="group-tabs">
+              <div className="tabs">
                 {['marketing', 'sellers', 'customers'].map(tab => (
-                  <button
-                    key={tab}
-                    className={`group-tab ${activeTab === tab ? 'group-tab--active' : ''}`}
-                    onClick={() => {
-                      setActiveTab(tab);
-                      setSearchInGroup('');
-                      setSearchAvailable('');
-                      setAvailablePage(0);
-                      setInGroupPage(0);
-                    }}
+                  <button key={tab}
+                    className={`tabs__btn ${activeTab === tab ? 'tabs__btn--active' : ''}`}
+                    onClick={() => { setActiveTab(tab); setSearchInGroup(''); setSearchAvailable(''); setAvailablePage(0); setInGroupPage(0); }}
                   >
                     <FontAwesomeIcon icon={tab === 'marketing' ? faUsers : tab === 'sellers' ? faUserTie : faUserCircle} />
                     <span>{tab === 'marketing' ? 'Marketing' : tab === 'sellers' ? 'Vendedores' : 'Clientes'}</span>
                   </button>
                 ))}
               </div>
-              <div className="group-members-container">
-                <div className="members-column">
-                  <div className="column-header">
-                    <h3>Disponibles</h3>
-                    <div className="search-bar search-bar--small">
-                      <input type="search" placeholder="Buscar..." value={searchAvailable} onChange={(e) => setSearchAvailable(e.target.value)} />
-                      <button type="button"><FontAwesomeIcon icon={faSearch} /></button>
-                    </div>
+              <div className="split-view">
+                <div className="split-view__column">
+                  <h3>Disponibles</h3>
+                  <div className="search-bar search-bar--sm">
+                    <input className="input" type="search" placeholder="Buscar..." value={searchAvailable} onChange={(e) => setSearchAvailable(e.target.value)} />
+                    <button className="btn btn--primary" type="button"><FontAwesomeIcon icon={faSearch} /></button>
                   </div>
-                  <div className="members-list-container">
+                  <div className="split-view__list-container">
                     {loadingAvailable ? <LoadingSpinner message="Cargando..." /> : availableUsers.length === 0 ? (
-                      <p className="empty-message">{searchAvailable ? 'No se encontraron resultados' : 'No hay usuarios disponibles'}</p>
+                      <p className="empty-state">{searchAvailable ? 'No se encontraron resultados' : 'No hay usuarios disponibles'}</p>
                     ) : (
                       <>
-                        <ul className="members-list">
+                        <ul className="split-view__list">
                           {availableUsers.map(user => (
-                            <li key={user.customer_id || user.user_id} className="member-item">
-                              <div className="member-info">
-                                <FontAwesomeIcon icon={faUserCircle} className="member-avatar" />
-                                <div>
-                                  <div className="member-name">{user.full_name}</div>
-                                  <div className="member-email">{user.email}</div>
-                                  <div className="member-username">@{user.username}</div>
+                            <li key={user.customer_id || user.user_id} className="list-item-card">
+                              <div className="member-info d-flex align-center gap-3 flex-1 overflow-hidden">
+                                <FontAwesomeIcon icon={faUserCircle} className="text-2xl text-muted" />
+                                <div className="overflow-hidden">
+                                  <div className="font-bold text-sm truncate">{user.full_name}</div>
+                                  <div className="text-xs text-muted truncate">{user.email}</div>
+                                  <div className="text-xs text-primary truncate">@{user.username}</div>
                                 </div>
                               </div>
-                              <button className="btn-icon btn--add" onClick={() => handleAddMember(user.customer_id || user.user_id)}>
+                              <button className="btn btn--icon btn--success" onClick={() => handleAddMember(user.customer_id || user.user_id)}>
                                 <FontAwesomeIcon icon={faPlus} />
                               </button>
                             </li>
                           ))}
                         </ul>
-                        <PaginationButtons
-                          onPrev={() => setAvailablePage(p => Math.max(0, p - 1))}
-                          onNext={() => setAvailablePage(p => p + 1)}
-                          canGoPrev={availablePage > 0}
-                          canGoNext={availableHasMore}
-                        />
+                        <PaginationButtons onPrev={() => setAvailablePage(p => Math.max(0, p - 1))} onNext={() => setAvailablePage(p => p + 1)} canGoPrev={availablePage > 0} canGoNext={availableHasMore} />
                       </>
                     )}
                   </div>
                 </div>
-                <div className="members-column">
-                  <div className="column-header">
-                    <h3>En el Grupo</h3>
-                    <div className="search-bar search-bar--small">
-                      <input type="search" placeholder="Buscar..." value={searchInGroup} onChange={(e) => setSearchInGroup(e.target.value)} />
-                      <button type="button"><FontAwesomeIcon icon={faSearch} /></button>
-                    </div>
+                <div className="split-view__column">
+                  <h3>En el Grupo</h3>
+                  <div className="search-bar search-bar--sm">
+                    <input className="input" type="search" placeholder="Buscar..." value={searchInGroup} onChange={(e) => setSearchInGroup(e.target.value)} />
+                    <button className="btn btn--primary" type="button"><FontAwesomeIcon icon={faSearch} /></button>
                   </div>
-                  <div className="members-list-container">
+                  <div className="split-view__list-container">
                     {loadingInGroup ? <LoadingSpinner message="Cargando..." /> : inGroupUsers.length === 0 ? (
-                      <p className="empty-message">{searchInGroup ? 'No se encontraron resultados' : `No hay ${activeTab} en este grupo`}</p>
+                      <p className="empty-state">{searchInGroup ? 'No se encontraron resultados' : `No hay ${activeTab} en este grupo`}</p>
                     ) : (
                       <>
-                        <ul className="members-list">
+                        <ul className="split-view__list">
                           {inGroupUsers.map(user => (
-                            <li key={user.customer_id || user.user_id} className="member-item">
-                              <div className="member-info">
-                                <FontAwesomeIcon icon={faUserCircle} className="member-avatar" />
-                                <div>
-                                  <div className="member-name">{user.full_name}</div>
-                                  <div className="member-email">{user.email}</div>
-                                  <div className="member-username">@{user.username}</div>
+                            <li key={user.customer_id || user.user_id} className="list-item-card">
+                              <div className="member-info d-flex align-center gap-3 flex-1 overflow-hidden">
+                                <FontAwesomeIcon icon={faUserCircle} className="text-2xl text-muted" />
+                                <div className="overflow-hidden">
+                                  <div className="font-bold text-sm truncate">{user.full_name}</div>
+                                  <div className="text-xs text-muted truncate">{user.email}</div>
+                                  <div className="text-xs text-primary truncate">@{user.username}</div>
                                 </div>
                               </div>
-                              <button className="btn-icon btn--delete" onClick={() => handleRemoveMember(user.customer_id || user.user_id, activeTab)}>
+                              <button className="btn btn--icon btn--danger" onClick={() => handleRemoveMember(user.customer_id || user.user_id, activeTab)}>
                                 <FontAwesomeIcon icon={faTrashAlt} />
                               </button>
                             </li>
                           ))}
                         </ul>
-                        <PaginationButtons
-                          onPrev={() => setInGroupPage(p => Math.max(0, p - 1))}
-                          onNext={() => setInGroupPage(p => p + 1)}
-                          canGoPrev={inGroupPage > 0}
-                          canGoNext={inGroupHasMore}
-                        />
+                        <PaginationButtons onPrev={() => setInGroupPage(p => Math.max(0, p - 1))} onNext={() => setInGroupPage(p => p + 1)} canGoPrev={inGroupPage > 0} canGoNext={inGroupHasMore} />
                       </>
                     )}
                   </div>

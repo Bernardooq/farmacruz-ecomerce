@@ -11,6 +11,7 @@ sincronizados los IDs del DBF con PostgreSQL.
 from typing import List, Dict, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select, column
 from datetime import datetime, timezone
 
 from db.base import PriceList, Product, PriceListItem, Category, Customer, CustomerInfo, User
@@ -24,26 +25,34 @@ from decimal import Decimal
 """ Guarda una nueva categoria si no existe (basado en nombre) """
 def guardar_o_actualizar_categoria(db: Session, name: str, description: str = None, updated_at: datetime = None) -> Tuple[bool, str]:
     try:
-        # Verificar si ya existe una categoria con ese nombre
-        categoria_existente = db.query(Category).filter(
-            Category.name == name
-        ).first()
+        # Usar UPSERT atomico con ON CONFLICT
+        stmt = insert(Category).values(
+            name=name,
+            description=description,
+            updated_at=updated_at or datetime.now(timezone.utc)
+        )
         
-        if categoria_existente:
-            # Update existente
-            categoria_existente.description = description
-            categoria_existente.updated_at = updated_at or datetime.now(timezone.utc)
-            db.add(categoria_existente)
-            db.flush()
-            return (False, None)  # False = fue actualizada, no creada
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['name'],
+            set_={
+                'description': stmt.excluded.description,
+                'updated_at': stmt.excluded.updated_at
+            }
+        ).returning(Category.category_id, (column('xmax') == 0).label('is_insert'))
+        
+        # Ejecutar y obtener resultado
+        result = db.execute(stmt).first()
+        
+        if result:
+            fue_creado = result.is_insert
+            return (fue_creado, None)
         else:
-            # No existe, crear nueva
-            nueva_categoria = Category(name=name, description=description, updated_at=updated_at or datetime.now(timezone.utc))
-            db.add(nueva_categoria)
-            db.flush()  # Para obtener el ID generado si lo necesitamos
-            return (True, None)  # True = fue creada
+            # Should not happen
+            return (False, "No result from upsert")
         
     except Exception as e:
+        # Fallback si xmax no soportado o error de dialecto
+        db.rollback()
         return (False, str(e))
 
 
@@ -670,14 +679,21 @@ def limpiar_items_no_sincronizados(db: Session, last_sync: datetime):
     # Desactivar productos no actualizados
     db.query(Product).filter(Product.updated_at < last_sync).update({Product.is_active: False})
     
-    # Desactivar categorias no actualizadas
-    db.query(Category).filter(Category.updated_at < last_sync).update({Category.is_active: False})
+    # Eliminar categorias no actualizadas SOLO si no tienen productos asociados
+    # Proteger integridad referencial
+    subq = select(Product.category_id).distinct()
+    db.query(Category).filter(
+        Category.updated_at < last_sync,
+        ~Category.category_id.in_(subq)
+    ).delete(synchronize_session=False)
     
-    # Eliminar listas de precios no actualizadas
-    db.query(PriceList).filter(PriceList.updated_at < last_sync).delete(synchronize_session=False)
-    
-    # Eliminar relaciones producto-lista no actualizadas
+    # Eliminar relaciones producto-lista no actualizadas (Hijos primero)
     db.query(PriceListItem).filter(PriceListItem.updated_at < last_sync).delete(synchronize_session=False)
+
+    # Desactivar listas de precios no actualizadas (Padres después - Soft Delete para evitar error FK con Customers)
+    db.query(PriceList).filter(PriceList.updated_at < last_sync).update({PriceList.is_active: False})
+    
+    
 
 
 def limpiar_users_no_sincronizados(db: Session, last_sync: datetime):

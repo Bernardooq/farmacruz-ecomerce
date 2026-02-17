@@ -1,0 +1,84 @@
+// ============================================
+// DESIGN TOKENS — COLORS
+// Light theme (default) + Dark theme
+// ============================================
+
+:root {
+    // --- Brand ---
+    --color-primary: #63c1a5;
+    --color-primary-hover: #4fae92;
+    --color-primary-light: rgba(99, 193, 165, 0.10);
+    --color-secondary: #752F97;
+    --color-secondary-hover: #612580;
+    --color-secondary-light: rgba(117, 47, 151, 0.10);
+    --color-accent: #F53756;
+    --color-accent-hover: #d92e4a;
+
+    // --- Neutrals ---
+    --color-bg: #FFFFFF;
+    --color-bg-subtle: #F8F9FA;
+    --color-bg-muted: #F0F1F3;
+    --color-surface: #FFFFFF;
+    --color-border: rgba(26, 26, 26, 0.10);
+    --color-border-strong: rgba(26, 26, 26, 0.20);
+
+    // --- Text ---
+    --color-text: #1A1A1A;
+    --color-text-muted: rgba(26, 26, 26, 0.60);
+    --color-text-inverse: #FFFFFF;
+    --color-text-white: #FFFFFF;
+
+    // --- Semantic ---
+    --color-success: #22c55e;
+    --color-success-bg: rgba(34, 197, 94, 0.10);
+    --color-success-text: #166534;
+    --color-warning: #eab308;
+    --color-warning-bg: rgba(234, 179, 8, 0.10);
+    --color-warning-text: #854d0e;
+    --color-danger: #ef4444;
+    --color-danger-bg: rgba(239, 68, 68, 0.10);
+    --color-danger-text: #991b1b;
+    --color-info: #3b82f6;
+    --color-info-bg: rgba(59, 130, 246, 0.10);
+    --color-info-text: #1e40af;
+}
+
+[data-theme="dark"] {
+    // --- Brand ---
+    --color-primary: #5eead4;
+    --color-primary-hover: #2dd4bf;
+    --color-primary-light: rgba(94, 234, 212, 0.15);
+    --color-secondary: #c084fc;
+    --color-secondary-hover: #a855f7;
+    --color-secondary-light: rgba(192, 132, 252, 0.15);
+    --color-accent: #fb7185;
+    --color-accent-hover: #f43f5e;
+
+    // --- Neutrals ---
+    --color-bg: #0f172a;
+    --color-bg-subtle: #1e293b;
+    --color-bg-muted: #334155;
+    --color-surface: #1e293b;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-border-strong: rgba(255, 255, 255, 0.15);
+
+    // --- Text ---
+    --color-text: #e2e8f0;
+    --color-text-muted: #94a3b8;
+    --color-text-inverse: #0f172a;
+    --color-text-white: #FFFFFF;
+
+    // --- Semantic ---
+    --color-success: #4ade80;
+    --color-success-bg: rgba(74, 222, 128, 0.15);
+    --color-success-text: #86efac;
+    --color-warning: #facc15;
+    --color-warning-bg: rgba(250, 204, 21, 0.15);
+    --color-warning-text: #fde047;
+    --color-danger: #fb7185;
+    --color-danger-bg: rgba(251, 113, 133, 0.15);
+    --color-danger-text: #fda4af;
+    --color-info: #60a5fa;
+    --color-info-bg: rgba(96, 165, 250, 0.15);
+    --color-info-text: #93bbfd;
+}

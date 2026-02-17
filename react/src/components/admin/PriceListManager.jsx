@@ -8,24 +8,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrashAlt, faList } from '@fortawesome/free-solid-svg-icons';
 
 export default function PriceListManager() {
-
   const [priceLists, setPriceLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modales
   const [showFormModal, setShowFormModal] = useState(false);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [selectedPriceList, setSelectedPriceList] = useState(null);
-  
-  // Cargar listas al montar el componente
-  useEffect(() => {
-    loadPriceLists();
-  }, []);
 
-
-
-   // Carga todas las listas de precios del sistema
+  useEffect(() => { loadPriceLists(); }, []);
 
   const loadPriceLists = async () => {
     try {
@@ -41,33 +32,12 @@ export default function PriceListManager() {
     }
   };
 
+  const handleCreate = () => { setSelectedPriceList(null); setShowFormModal(true); };
+  const handleEdit = (priceList) => { setSelectedPriceList(priceList); setShowFormModal(true); };
+  const handleManageItems = (priceList) => { setSelectedPriceList(priceList); setShowItemsModal(true); };
 
-   // Abre modal para crear nueva lista
-
-  const handleCreate = () => {
-    setSelectedPriceList(null);
-    setShowFormModal(true);
-  };
-
- 
-  // Abre modal para editar lista existente
-  const handleEdit = (priceList) => {
-    setSelectedPriceList(priceList);
-    setShowFormModal(true);
-  };
-
-  // Abre modal para gestionar productos de la lista
-  const handleManageItems = (priceList) => {
-    setSelectedPriceList(priceList);
-    setShowItemsModal(true);
-  };
-
-  // Elimina una lista de precios
   const handleDelete = async (priceList) => {
-    if (!window.confirm(`¿Estás seguro de eliminar la lista "${priceList.list_name}"?`)) {
-      return;
-    }
-
+    if (!window.confirm(`¿Estás seguro de eliminar la lista "${priceList.list_name}"?`)) return;
     try {
       await priceListService.deletePriceList(priceList.price_list_id);
       await loadPriceLists();
@@ -77,28 +47,23 @@ export default function PriceListManager() {
     }
   };
 
-  // Maneja el éxito del formulario (crear/editar)
   const handleFormSuccess = async () => {
     setShowFormModal(false);
     setSelectedPriceList(null);
     await loadPriceLists();
   };
 
- 
   return (
     <section className="dashboard-section">
-      {/* Header con botón crear */}
       <div className="section-header">
         <h2 className="section-title">Listas de Precios</h2>
-        <button className="btn-action" onClick={handleCreate}>
-          <i className="fas fa-plus"></i> Nueva Lista
+        <button className="btn btn--primary btn--sm" onClick={handleCreate}>
+          + Nueva Lista
         </button>
       </div>
 
-      {/* Mensaje de error */}
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-      {/* Tabla de listas */}
       {loading ? (
         <LoadingSpinner message="Cargando listas de precios..." />
       ) : (
@@ -116,9 +81,7 @@ export default function PriceListManager() {
             <tbody>
               {priceLists.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
-                    No hay listas de precios creadas
-                  </td>
+                  <td colSpan="5" className="text-center py-8">No hay listas de precios creadas</td>
                 </tr>
               ) : (
                 priceLists.map((priceList) => (
@@ -132,31 +95,13 @@ export default function PriceListManager() {
                       </span>
                     </td>
                     <td data-label="Acciones" className="actions-cell">
-                      {/* Gestionar productos */}
-                      <button
-                        className="btn-icon btn--view"
-                        aria-label="Gestionar Productos"
-                        onClick={() => handleManageItems(priceList)}
-                        title="Gestionar Productos"
-                      >
+                      <button className="btn btn--icon btn--ghost" onClick={() => handleManageItems(priceList)} aria-label="Gestionar Productos" title="Gestionar Productos">
                         <FontAwesomeIcon icon={faList} />
                       </button>
-                      {/* Editar */}
-                      <button
-                        className="btn-icon btn--edit"
-                        aria-label="Editar Lista"
-                        onClick={() => handleEdit(priceList)}
-                        title="Editar"
-                      >
+                      <button className="btn btn--icon btn--ghost" onClick={() => handleEdit(priceList)} aria-label="Editar Lista" title="Editar">
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>
-                      {/* Eliminar */}
-                      <button
-                        className="btn-icon btn--delete"
-                        aria-label="Eliminar Lista"
-                        onClick={() => handleDelete(priceList)}
-                        title="Eliminar"
-                      >
+                      <button className="btn btn--icon btn--danger" onClick={() => handleDelete(priceList)} aria-label="Eliminar Lista" title="Eliminar">
                         <FontAwesomeIcon icon={faTrashAlt} />
                       </button>
                     </td>
@@ -168,27 +113,19 @@ export default function PriceListManager() {
         </div>
       )}
 
-      {/* Modal de formulario (crear/editar) */}
       {showFormModal && (
         <ModalPriceListForm
           isOpen={showFormModal}
-          onClose={() => {
-            setShowFormModal(false);
-            setSelectedPriceList(null);
-          }}
+          onClose={() => { setShowFormModal(false); setSelectedPriceList(null); }}
           onSuccess={handleFormSuccess}
           priceList={selectedPriceList}
         />
       )}
 
-      {/* Modal de gestión de productos */}
       {showItemsModal && (
         <ModalPriceListItems
           isOpen={showItemsModal}
-          onClose={() => {
-            setShowItemsModal(false);
-            setSelectedPriceList(null);
-          }}
+          onClose={() => { setShowItemsModal(false); setSelectedPriceList(null); }}
           priceList={selectedPriceList}
         />
       )}

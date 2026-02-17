@@ -1,0 +1,24 @@
+// ====================================================
+// FARMACRUZ — Main Stylesheet (Atomic Design System)
+// ====================================================
+
+// 1. Vendor
+@use 'vendor/normalize';
+
+// 2. Design Tokens (CSS custom properties)
+@use 'tokens';
+
+// 3. Atoms (smallest UI units)
+@use 'atoms';
+
+// 4. Molecules (composed atoms)
+@use 'molecules';
+
+// 5. Organisms (complex sections)
+@use 'organisms';
+
+// 6. Templates (page-level layouts)
+@use 'templates';
+
+// 7. Utilities (helper classes — last for override power)
+@use 'utilities';

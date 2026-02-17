@@ -1,0 +1,41 @@
+@use '../tokens/breakpoints' as *;
+
+// ============================================
+// MOLECULE — SEARCH BAR
+// ============================================
+
+.search-bar {
+    display: flex;
+    flex-grow: 1;
+    min-width: 200px;
+    max-width: 500px;
+
+    .input {
+        border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+        border-right: none;
+        flex: 1;
+    }
+
+    .btn,
+    button {
+        background: var(--color-primary);
+        color: var(--color-text-inverse);
+        border: none;
+        padding: 0 var(--space-4);
+        border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        @include transition;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        &:hover {
+            background: var(--color-primary-hover);
+        }
+    }
+}

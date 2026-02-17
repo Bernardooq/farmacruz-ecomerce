@@ -3,17 +3,13 @@
  * ===========
  * Página de contacto de FarmaCruz
  * 
- * Esta página permite a los usuarios ponerse en contacto con el equipo
- * de FarmaCruz mediante un formulario web.
- * 
  * Funcionalidades:
  * - Formulario de contacto con validación
  * - Información de contacto (dirección, teléfonos, email, horario)
  * - Envío de mensaje al backend
  * - Mensaje de confirmación de envío
  * 
- * Acceso:
- * - Página pública (no requiere autenticación)
+ * Acceso: Página pública (no requiere autenticación)
  */
 
 import { useState } from 'react';
@@ -27,7 +23,7 @@ import apiService from '../services/apiService';
 // ============================================
 // CONSTANTES
 // ============================================
-const SUCCESS_MESSAGE_DURATION = 5000; // 5 segundos
+const SUCCESS_MESSAGE_DURATION = 5000;
 
 const INITIAL_FORM_STATE = {
   name: '',
@@ -42,46 +38,26 @@ export default function Contact() {
   // HOOKS & STATE
   // ============================================
   const { isAuthenticated, user } = useAuth();
-
-  // Estado del formulario
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
-
-  // Estado de UI
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   // ============================================
   // EVENT HANDLERS
   // ============================================
-
-  /**
-   * Maneja cambios en los campos del formulario
-   */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Maneja el envío del formulario
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSending(true);
 
     try {
       await apiService.sendContactForm(formData);
-
-      // Mostrar mensaje de éxito
       setSent(true);
-
-      // Limpiar formulario
       setFormData(INITIAL_FORM_STATE);
-
-      // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => setSent(false), SUCCESS_MESSAGE_DURATION);
     } catch (error) {
       console.error('Error:', error);
@@ -94,23 +70,9 @@ export default function Contact() {
   // ============================================
   // RENDER HELPERS
   // ============================================
-
-  /**
-   * Renderiza el header apropiado según el tipo de usuario
-   * @returns {JSX.Element} Componente de header correspondiente
-   */
   const renderHeader = () => {
-    // Usuario no autenticado → Header público
-    if (!isAuthenticated) {
-      return <Header />;
-    }
-
-    // Usuario staff (admin/seller/marketing) → Header con dashboard
-    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
-      return <Header2 />;
-    }
-
-    // Cliente autenticado → SearchBar con carrito
+    if (!isAuthenticated) return <Header />;
+    if (['admin', 'seller', 'marketing'].includes(user?.role)) return <Header2 />;
     return <SearchBar />;
   };
 
@@ -118,29 +80,27 @@ export default function Contact() {
   // RENDER
   // ============================================
   return (
-    <>
+    <div className="page">
       {renderHeader()}
 
-      <main className="contact-page">
-        <div className="container">
+      <main className="page__content">
+        <div className="contact-section">
           {/* Header de la página */}
-          <div className="contact-header">
-            <h1>Contáctanos</h1>
-            <p>
-              Estamos aquí para ayudarte. Envíanos un mensaje y te responderemos lo antes posible.
-            </p>
-          </div>
+          <h1>Contáctanos</h1>
+          <p className="text-muted text-center mb-8">
+            Estamos aquí para ayudarte. Envíanos un mensaje y te responderemos lo antes posible.
+          </p>
 
-          <div className="contact-content">
+          <div className="grid grid--2 gap-8">
             {/* ============================================ */}
             {/* INFORMACIÓN DE CONTACTO                      */}
             {/* ============================================ */}
-            <div className="contact-info">
+            <div className="d-flex flex-col gap-4">
               {/* Dirección */}
-              <div className="info-card">
-                <div className="info-icon">📍</div>
+              <div className="dashboard-section">
+                <div className="stat-card__icon">📍</div>
                 <h3>Dirección</h3>
-                <p>
+                <p className="text-muted text-sm">
                   Calle Belén No 967<br />
                   Col. Barranquitas C.P. 44270<br />
                   Guadalajara, Jalisco<br />
@@ -150,10 +110,10 @@ export default function Contact() {
               </div>
 
               {/* Teléfonos */}
-              <div className="info-card">
-                <div className="info-icon">📞</div>
+              <div className="dashboard-section">
+                <div className="stat-card__icon">📞</div>
                 <h3>Teléfonos</h3>
-                <p>
+                <p className="text-muted text-sm">
                   33-36-14-67-70<br />
                   33-36-14-67-60<br />
                   33-36-14-67-71<br />
@@ -168,20 +128,20 @@ export default function Contact() {
               </div>
 
               {/* Email */}
-              <div className="info-card">
-                <div className="info-icon">✉️</div>
+              <div className="dashboard-section">
+                <div className="stat-card__icon">✉️</div>
                 <h3>Email</h3>
-                <p>
+                <p className="text-muted text-sm">
                   contacto@farmacruz.com<br />
                   ventas@farmacruz.com
                 </p>
               </div>
 
               {/* Horario */}
-              <div className="info-card">
-                <div className="info-icon">🕐</div>
+              <div className="dashboard-section">
+                <div className="stat-card__icon">🕐</div>
                 <h3>Horario</h3>
-                <p>
+                <p className="text-muted text-sm">
                   Lunes a Viernes: 9:00 AM - 6:00 PM<br />
                   Sábados: 9:00 AM - 2:00 PM
                 </p>
@@ -191,22 +151,23 @@ export default function Contact() {
             {/* ============================================ */}
             {/* FORMULARIO DE CONTACTO                       */}
             {/* ============================================ */}
-            <div className="contact-form-container">
-              <h2>Envíanos un Mensaje</h2>
+            <div className="dashboard-section">
+              <h2 className="section-title mb-6 text-center">Envíanos un Mensaje</h2>
 
               {/* Mensaje de éxito */}
               {sent && (
-                <div className="success-message">
+                <div className="alert alert--success mb-4">
                   ✓ ¡Mensaje enviado con éxito! Te responderemos pronto.
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="contact-form">
+              <form onSubmit={handleSubmit} className="modal__form">
                 {/* Primera fila: Nombre y Email */}
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="name">Nombre Completo *</label>
+                    <label className="form-group__label" htmlFor="name">Nombre Completo *</label>
                     <input
+                      className="input"
                       type="text"
                       id="name"
                       name="name"
@@ -218,8 +179,9 @@ export default function Contact() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="email">Email *</label>
+                    <label className="form-group__label" htmlFor="email">Email *</label>
                     <input
+                      className="input"
                       type="email"
                       id="email"
                       name="email"
@@ -234,8 +196,9 @@ export default function Contact() {
                 {/* Segunda fila: Teléfono y Asunto */}
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="phone">Teléfono</label>
+                    <label className="form-group__label" htmlFor="phone">Teléfono</label>
                     <input
+                      className="input"
                       type="tel"
                       id="phone"
                       name="phone"
@@ -246,8 +209,9 @@ export default function Contact() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="subject">Asunto *</label>
+                    <label className="form-group__label" htmlFor="subject">Asunto *</label>
                     <input
+                      className="input"
                       type="text"
                       id="subject"
                       name="subject"
@@ -261,8 +225,9 @@ export default function Contact() {
 
                 {/* Campo de mensaje */}
                 <div className="form-group">
-                  <label htmlFor="message">Mensaje *</label>
+                  <label className="form-group__label" htmlFor="message">Mensaje *</label>
                   <textarea
+                    className="textarea"
                     id="message"
                     name="message"
                     value={formData.message}
@@ -276,7 +241,7 @@ export default function Contact() {
                 {/* Botón de envío */}
                 <button
                   type="submit"
-                  className="btn-submit"
+                  className="btn btn--primary btn--block"
                   disabled={sending}
                 >
                   {sending ? 'Enviando...' : 'Enviar Mensaje'}
@@ -288,6 +253,6 @@ export default function Contact() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

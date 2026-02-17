@@ -1,0 +1,85 @@
+// ============================================
+// ORGANISM — DASHBOARD SECTION
+// ============================================
+
+.dashboard-section {
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    border: var(--border-width) solid var(--color-border);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+}
+
+.section-title {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    color: var(--color-text);
+    margin: 0 0 var(--space-8) 0;
+}
+
+// Controls row below section header
+.dashboard-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+// Empty state for sections
+.empty-state {
+    text-align: center;
+    padding: var(--space-12) var(--space-4);
+    color: var(--color-text-muted);
+
+    &__icon {
+        font-size: var(--text-4xl);
+        margin-bottom: var(--space-4);
+        opacity: 0.5;
+    }
+
+    &__text {
+        font-size: var(--text-sm);
+    }
+}
+
+// Alert/message boxes
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
+
+    &--success {
+        background: var(--color-success-bg);
+        color: var(--color-success-text);
+    }
+
+    &--warning {
+        background: var(--color-warning-bg);
+        color: var(--color-warning-text);
+    }
+
+    &--danger {
+        background: var(--color-danger-bg);
+        color: var(--color-danger-text);
+    }
+
+    &--info {
+        background: var(--color-info-bg);
+        color: var(--color-info-text);
+    }
+}

@@ -3,139 +3,56 @@ import salesGroupService from '../../../services/salesGroupService';
 import ErrorMessage from '../../common/ErrorMessage';
 
 export default function GroupFormModal({ group, onClose, onSaved }) {
-
-  const [formData, setFormData] = useState({
-    group_name: '',
-    description: '',
-    is_active: true
-  });
+  const [formData, setFormData] = useState({ group_name: '', description: '', is_active: true });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Cargar datos del grupo al editar
   useEffect(() => {
-    if (group) {
-      setFormData({
-        group_name: group.group_name,
-        description: group.description || '',
-        is_active: group.is_active
-      });
-    }
+    if (group) setFormData({ group_name: group.group_name, description: group.description || '', is_active: group.is_active });
   }, [group]);
 
-  // Manejador de cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  /**
-   * Maneja el envío del formulario
-   * Crea o actualiza el grupo según el modo
-   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+    e.preventDefault(); setLoading(true); setError(null);
     try {
-      if (group) {
-        // Modo: Editar grupo existente
-        await salesGroupService.updateSalesGroup(group.sales_group_id, formData);
-      } else {
-        // Modo: Crear nuevo grupo
-        await salesGroupService.createSalesGroup(formData);
-      }
-
+      if (group) await salesGroupService.updateSalesGroup(group.sales_group_id, formData);
+      else await salesGroupService.createSalesGroup(formData);
       if (onSaved) onSaved();
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Error al guardar el grupo.';
-      setError(errorMessage);
-      console.error('Failed to save group:', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.response?.data?.detail || err.message || 'Error al guardar el grupo.'); console.error(err); }
+    finally { setLoading(false); }
   };
 
-  // Renderizar el modal
   return (
-    <div className="modal-overlay enable" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* Botón cerrar */}
-        <button className="modal-close" onClick={onClose} aria-label="Cerrar modal">
-          &times;
-        </button>
-
-        <div className="modal-body">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__header">
           <h2>{group ? 'Editar Grupo de Ventas' : 'Crear Grupo de Ventas'}</h2>
-
-          {/* Mensaje de error */}
+          <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">&times;</button>
+        </div>
+        <div className="modal__body">
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
-
-          <form onSubmit={handleSubmit}>
-            {/* Nombre del grupo */}
+          <form onSubmit={handleSubmit} className="modal__form">
             <div className="form-group">
-              <label htmlFor="group_name">Nombre del Grupo *</label>
-              <input
-                type="text"
-                id="group_name"
-                name="group_name"
-                value={formData.group_name}
-                onChange={handleChange}
-                required
-                disabled={loading}
-                placeholder="Ej: Zona Norte, Zona Sur, etc."
-              />
+              <label className="form-group__label" htmlFor="group_name">Nombre del Grupo *</label>
+              <input className="input" type="text" id="group_name" name="group_name" value={formData.group_name} onChange={handleChange} required disabled={loading} placeholder="Ej: Zona Norte, Zona Sur, etc." />
             </div>
-
-            {/* Descripción */}
             <div className="form-group">
-              <label htmlFor="description">Descripción</label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                disabled={loading}
-                rows="3"
-                placeholder="Descripción opcional del grupo..."
-              />
+              <label className="form-group__label" htmlFor="description">Descripción</label>
+              <textarea className="textarea" id="description" name="description" value={formData.description} onChange={handleChange} disabled={loading} rows="3" placeholder="Descripción opcional del grupo..." />
             </div>
-
-            {/* Estado activo */}
-            <div className="form-group">
+            <div className="form-group form-group--checkbox">
               <label>
-                <input
-                  type="checkbox"
-                  name="is_active"
-                  checked={formData.is_active}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
+                <input className="checkbox" type="checkbox" name="is_active" checked={formData.is_active} onChange={handleChange} disabled={loading} />
                 {' '}Grupo Activo
               </label>
             </div>
-
-            {/* Botones de acción */}
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={onClose}
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={loading}
-              >
-                {loading ? 'Guardando...' : 'Guardar'}
-              </button>
+            <div className="modal__footer">
+              <button type="button" className="btn btn--secondary" onClick={onClose} disabled={loading}>Cancelar</button>
+              <button type="submit" className="btn btn--primary" disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
             </div>
           </form>
         </div>

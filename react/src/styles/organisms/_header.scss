@@ -1,0 +1,115 @@
+@use '../tokens/breakpoints' as *;
+
+// ============================================
+// ORGANISM — HEADER / NAVBAR
+// ============================================
+
+.header {
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: var(--border-width) solid var(--color-border);
+
+    &__inner {
+        @include container;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-3) 0;
+        gap: var(--space-3);
+        flex-wrap: wrap;
+    }
+
+    &__logo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-weight: var(--font-bold);
+        font-size: var(--text-xl);
+        color: var(--color-primary);
+        text-decoration: none;
+        flex-shrink: 0;
+
+        img {
+            height: 36px;
+            width: auto;
+        }
+    }
+
+    &__nav {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        flex-wrap: wrap;
+
+        a {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--color-text-muted);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-md);
+            @include transition;
+            white-space: nowrap;
+
+            &:hover,
+            &.active {
+                color: var(--color-primary);
+                background: var(--color-primary-light);
+            }
+        }
+
+        // On very small screens, reduce font size
+        @include max-phone {
+            gap: var(--space-1);
+
+            a {
+                font-size: var(--text-xs);
+                padding: var(--space-1);
+            }
+        }
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        flex-wrap: wrap;
+
+        // Hide non-essential items on mobile
+        @include max-phone {
+            .text-sm {
+                display: none;
+            }
+        }
+    }
+
+    &__cart-link {
+        position: relative;
+        color: var(--color-text);
+        font-size: var(--text-lg);
+        padding: var(--space-1);
+        @include transition;
+
+        &:hover {
+            color: var(--color-primary);
+        }
+    }
+
+    &__cart-badge {
+        position: absolute;
+        top: -4px;
+        right: -8px;
+        background: var(--color-danger);
+        color: #fff;
+        font-size: 10px;
+        font-weight: var(--font-bold);
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}

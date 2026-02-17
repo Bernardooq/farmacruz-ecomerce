@@ -1,11 +1,8 @@
 export default function LoadingSpinner({ message = 'Cargando...' }) {
   return (
-    <div className="loading-container">
-      {/* Spinner animado */}
+    <div className="spinner-overlay">
       <div className="spinner"></div>
-
-      {/* Mensaje de carga */}
-      <p>{message}</p>
+      {message && <p className="text-muted">{message}</p>}
     </div>
   );
 }

@@ -1,0 +1,145 @@
+@use '../tokens/breakpoints' as *;
+
+.hidden {
+    display: none !important;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+// Responsive visibility
+.hidden-phone {
+    @include max-phone {
+        display: none !important;
+    }
+}
+
+.hidden-tablet {
+    @include max-tablet {
+        display: none !important;
+    }
+}
+
+.show-phone {
+    display: none;
+
+    @include max-phone {
+        display: block !important;
+    }
+}
+
+.show-tablet {
+    display: none;
+
+    @include max-tablet {
+        display: block !important;
+    }
+}
+
+// Backgrounds
+.bg-surface {
+    background-color: var(--color-surface);
+}
+
+.bg-subtle {
+    background-color: var(--color-bg-subtle);
+}
+
+.bg-muted {
+    background-color: var(--color-bg-muted);
+}
+
+.bg-primary {
+    background-color: var(--color-primary);
+}
+
+// Borders
+.border {
+    border: var(--border-width) solid var(--color-border);
+}
+
+.border-strong {
+    border: var(--border-width) solid var(--color-border-strong);
+}
+
+.border-t {
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+.border-b {
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+// Radius
+.rounded {
+    border-radius: var(--radius-md);
+}
+
+.rounded-sm {
+    border-radius: var(--radius-sm);
+}
+
+.rounded-lg {
+    border-radius: var(--radius-lg);
+}
+
+.rounded-xl {
+    border-radius: var(--radius-xl);
+}
+
+.rounded-full {
+    border-radius: var(--radius-full);
+}
+
+// Shadows
+.shadow-xs {
+    box-shadow: var(--shadow-xs);
+}
+
+.shadow-sm {
+    box-shadow: var(--shadow-sm);
+}
+
+.shadow-md {
+    box-shadow: var(--shadow-md);
+}
+
+.shadow-lg {
+    box-shadow: var(--shadow-lg);
+}
+
+// Width
+.w-full {
+    width: 100%;
+}
+
+// Overflow
+.overflow-auto {
+    overflow: auto;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.overflow-y-auto {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+// Cursor
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
+}

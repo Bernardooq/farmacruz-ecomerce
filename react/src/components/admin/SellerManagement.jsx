@@ -18,55 +18,38 @@ export default function SellerManagement() {
   const [hasMore, setHasMore] = useState(true);
   const itemsPerPage = 10;
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    full_name: '',
-    role: 'seller',
-    is_active: true
+    username: '', email: '', password: '',
+    full_name: '', role: 'seller', is_active: true
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
 
-  // Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
+    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Trigger search when debounced term changes
   useEffect(() => {
     if (debouncedSearchTerm.trim()) {
       performSearch();
     } else {
-      loadSellers(); // Reset to normal view when search is cleared
+      loadSellers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm]);
 
-  useEffect(() => {
-    loadSellers();
-  }, [page]);
+  useEffect(() => { loadSellers(); }, [page]);
 
   const loadSellers = async () => {
     try {
       setLoading(true);
       setError(null);
       const users = await adminService.getUsers({
-        role: 'seller',
-        skip: page * itemsPerPage,
-        limit: itemsPerPage + 1
+        role: 'seller', skip: page * itemsPerPage, limit: itemsPerPage + 1
       });
-
-      // Verificar si hay más páginas
       const hasMorePages = users.length > itemsPerPage;
       setHasMore(hasMorePages);
-
-      // Tomar solo los items de la página actual
-      const pageUsers = hasMorePages ? users.slice(0, itemsPerPage) : users;
-      setSellers(pageUsers);
+      setSellers(hasMorePages ? users.slice(0, itemsPerPage) : users);
     } catch (err) {
       setError('No se pudieron cargar los vendedores. Intenta de nuevo.');
       console.error('Failed to load sellers:', err);
@@ -80,10 +63,7 @@ export default function SellerManagement() {
     try {
       setLoading(true);
       setError(null);
-      const users = await adminService.getUsers({
-        role: 'seller',
-        search: debouncedSearchTerm
-      });
+      const users = await adminService.getUsers({ role: 'seller', search: debouncedSearchTerm });
       setSellers(users);
       setHasMore(false);
     } catch (err) {
@@ -94,22 +74,11 @@ export default function SellerManagement() {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    // Force immediate search on Enter/button
-    setDebouncedSearchTerm(searchTerm);
-  };
+  const handleSearch = (e) => { e.preventDefault(); setDebouncedSearchTerm(searchTerm); };
 
   const openAddModal = () => {
     setEditingSeller(null);
-    setFormData({
-      username: '',
-      email: '',
-      password: '',
-      full_name: '',
-      role: 'seller',
-      is_active: true
-    });
+    setFormData({ username: '', email: '', password: '', full_name: '', role: 'seller', is_active: true });
     setFormError(null);
     setShowModal(true);
   };
@@ -117,56 +86,36 @@ export default function SellerManagement() {
   const openEditModal = (seller) => {
     setEditingSeller(seller);
     setFormData({
-      username: seller.username,
-      email: seller.email,
-      password: '', // Don't populate password for security
-      full_name: seller.full_name,
-      role: seller.role,
-      is_active: seller.is_active
+      username: seller.username, email: seller.email, password: '',
+      full_name: seller.full_name, role: seller.role, is_active: seller.is_active
     });
     setFormError(null);
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingSeller(null);
-    setFormError(null);
-  };
+  const closeModal = () => { setShowModal(false); setEditingSeller(null); setFormError(null); };
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
-    setFormData(prev => ({
-      ...prev,
-      [name]: newValue
-    }));
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     setFormError(null);
-
     try {
       if (editingSeller) {
-        // Update existing seller
         const updateData = { ...formData };
-        // Only include password if it was changed
-        if (!updateData.password || updateData.password.trim() === '') {
-          delete updateData.password;
-        }
+        if (!updateData.password || updateData.password.trim() === '') delete updateData.password;
         await adminService.updateUser(editingSeller.user_id, updateData);
       } else {
-        // Create new seller
         await adminService.createUser(formData);
       }
-
       closeModal();
-      loadSellers(); // Reload the list
+      loadSellers();
     } catch (err) {
-      const errorMessage = err.detail || err.message || 'Error al guardar el vendedor. Verifica los datos.';
-      setFormError(errorMessage);
+      setFormError(err.detail || err.message || 'Error al guardar el vendedor. Verifica los datos.');
       console.error('Failed to save seller:', err);
     } finally {
       setFormLoading(false);
@@ -174,13 +123,10 @@ export default function SellerManagement() {
   };
 
   const handleDelete = async (seller) => {
-    if (!window.confirm(`¿Estás seguro de eliminar a ${seller.full_name}?`)) {
-      return;
-    }
-
+    if (!window.confirm(`¿Estás seguro de eliminar a ${seller.full_name}?`)) return;
     try {
       await adminService.deleteUser(seller.user_id);
-      loadSellers(); // Reload the list
+      loadSellers();
     } catch (err) {
       setError('Error al eliminar el vendedor.');
       console.error('Failed to delete seller:', err);
@@ -196,7 +142,7 @@ export default function SellerManagement() {
       <section className="dashboard-section">
         <div className="section-header">
           <h2 className="section-title">Gestión de Vendedores</h2>
-          <button className="btn-action" onClick={openAddModal}>
+          <button className="btn btn--primary btn--sm" onClick={openAddModal}>
             <FontAwesomeIcon icon={faUserTie} /> Añadir Vendedor
           </button>
         </div>
@@ -207,11 +153,12 @@ export default function SellerManagement() {
           <form className="search-bar" onSubmit={handleSearch}>
             <input
               type="search"
+              className="input"
               placeholder="Buscar por nombre de Vendedor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button type="submit" aria-label="Buscar">
+            <button type="submit" className="btn btn--primary" aria-label="Buscar">
               <FontAwesomeIcon icon={faSearch} />
             </button>
           </form>
@@ -231,9 +178,7 @@ export default function SellerManagement() {
             <tbody>
               {sellers.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center' }}>
-                    No se encontraron vendedores
-                  </td>
+                  <td colSpan="5" className="text-center">No se encontraron vendedores</td>
                 </tr>
               ) : (
                 sellers.map((seller) => (
@@ -255,18 +200,10 @@ export default function SellerManagement() {
                       </span>
                     </td>
                     <td className="actions-cell">
-                      <button
-                        className="btn-icon btn--edit"
-                        onClick={() => openEditModal(seller)}
-                        aria-label="Editar vendedor"
-                      >
+                      <button className="btn btn--icon btn--ghost" onClick={() => openEditModal(seller)} aria-label="Editar vendedor">
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>
-                      <button
-                        className="btn-icon btn--delete"
-                        onClick={() => handleDelete(seller)}
-                        aria-label="Eliminar vendedor"
-                      >
+                      <button className="btn btn--icon btn--danger" onClick={() => handleDelete(seller)} aria-label="Eliminar vendedor">
                         <FontAwesomeIcon icon={faTrashAlt} />
                       </button>
                     </td>
@@ -277,7 +214,6 @@ export default function SellerManagement() {
           </table>
         </div>
 
-        {/* Paginación */}
         {sellers.length > 0 && (
           <PaginationButtons
             onPrev={() => setPage(p => Math.max(0, p - 1))}
@@ -289,99 +225,45 @@ export default function SellerManagement() {
       </section>
 
       {showModal && (
-        <div className="modal-overlay enable" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeModal} aria-label="Cerrar modal">
-              &times;
-            </button>
-            <div className="modal-body">
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal__header">
               <h2>{editingSeller ? 'Editar Vendedor' : 'Añadir Vendedor'}</h2>
+              <button className="modal__close" onClick={closeModal} aria-label="Cerrar modal">&times;</button>
+            </div>
 
+            <div className="modal__body">
               {formError && <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />}
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="modal__form">
                 <div className="form-group">
-                  <label htmlFor="full_name">Nombre Completo *</label>
-                  <input
-                    type="text"
-                    id="full_name"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleFormChange}
-                    required
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="full_name">Nombre Completo *</label>
+                  <input className="input" type="text" id="full_name" name="full_name" value={formData.full_name} onChange={handleFormChange} required disabled={formLoading} />
                 </div>
-
                 <div className="form-group">
-                  <label htmlFor="username">Usuario *</label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleFormChange}
-                    required
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="username">Usuario *</label>
+                  <input className="input" type="text" id="username" name="username" value={formData.username} onChange={handleFormChange} required disabled={formLoading} />
                 </div>
-
                 <div className="form-group">
-                  <label htmlFor="email">Email *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleFormChange}
-                    required
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="email">Email *</label>
+                  <input className="input" type="email" id="email" name="email" value={formData.email} onChange={handleFormChange} required disabled={formLoading} />
                 </div>
-
                 <div className="form-group">
-                  <label htmlFor="password">
+                  <label className="form-group__label" htmlFor="password">
                     Contraseña {editingSeller ? '(dejar vacío para no cambiar)' : '*'}
                   </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleFormChange}
-                    required={!editingSeller}
-                    disabled={formLoading}
-                    placeholder={editingSeller ? 'Dejar vacío para mantener la actual' : 'Ingresa una contraseña'}
-                  />
+                  <input className="input" type="password" id="password" name="password" value={formData.password} onChange={handleFormChange} required={!editingSeller} disabled={formLoading} placeholder={editingSeller ? 'Dejar vacío para mantener la actual' : 'Ingresa una contraseña'} />
                 </div>
-
                 <div className="form-group">
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="is_active"
-                      checked={formData.is_active}
-                      onChange={handleFormChange}
-                      disabled={formLoading}
-                    />
+                  <label className="form-group__label">
+                    <input className="checkbox" type="checkbox" name="is_active" checked={formData.is_active} onChange={handleFormChange} disabled={formLoading} />
                     {' '}Vendedor Activo
                   </label>
                 </div>
 
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={closeModal}
-                    disabled={formLoading}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={formLoading}
-                  >
+                <div className="modal__footer">
+                  <button type="button" className="btn btn--secondary" onClick={closeModal} disabled={formLoading}>Cancelar</button>
+                  <button type="submit" className="btn btn--primary" disabled={formLoading}>
                     {formLoading ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>

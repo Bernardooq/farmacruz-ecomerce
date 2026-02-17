@@ -426,12 +426,13 @@ def get_available_sellers(db: Session, group_id: int, skip: int = 0, limit: int 
     return query.order_by(User.full_name).offset(skip).limit(limit).all()
 
 def get_available_customers(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[Customer]:
-    # Subquery: IDs de customers YA en el grupo
+    # Obtener IDs de customers que ya tienen un grupo asignado (CUALQUIER GRUPO)
+    # Ya que un cliente es N:1 con grupos, si tiene un sales_group_id, no esta disponible.
     assigned_ids = db.query(CustomerInfo.customer_id).filter(
-        CustomerInfo.sales_group_id == group_id
+        CustomerInfo.sales_group_id.isnot(None)
     ).scalar_subquery()
     
-    # Query: customers NO en esa subquery
+    # Query: customers NO en esa subquery (es decir, sin grupo asignado)
     query = db.query(Customer).filter(
         ~Customer.customer_id.in_(assigned_ids)
     )

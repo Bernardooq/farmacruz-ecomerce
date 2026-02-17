@@ -2,44 +2,30 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-/**
- * Rutas de redirección según rol de usuario
- */
 const ROLE_ROUTES = {
   admin: '/admindash',
   seller: '/sellerdash',
   marketing: '/marketingdash',
-  customer: '/products' // Default para clientes
+  customer: '/products'
 };
 
 export default function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Estado del formulario
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  // Estado de UI
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  /**
-   * Maneja el envío del formulario de login
-   * Autentica al usuario y redirecciona según su rol
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const user = await login(username, password);
-
-      // Redireccionar según rol del usuario
-      const redirectPath = ROLE_ROUTES[user.role] || ROLE_ROUTES.customer;
-      navigate(redirectPath);
+      navigate(ROLE_ROUTES[user.role] || ROLE_ROUTES.customer);
     } catch (err) {
       setError('Usuario o contraseña incorrectos');
     } finally {
@@ -47,63 +33,26 @@ export default function LoginForm() {
     }
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
   return (
     <form className="login-form" onSubmit={handleSubmit}>
-      {/* Mensaje de error */}
-      {error && <div className="error-message">{error}</div>}
+      {error && <div className="alert alert--danger">{error}</div>}
 
-      {/* Campo de Usuario */}
       <div className="form-group">
-        <label htmlFor="username">Usuario:</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          placeholder="ejemplo.usuario"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          disabled={loading}
-          autoComplete="username"
-        />
+        <label className="form-group__label" htmlFor="username">Usuario:</label>
+        <input className="input" type="text" id="username" name="username" placeholder="ejemplo.usuario" value={username} onChange={(e) => setUsername(e.target.value)} required disabled={loading} autoComplete="username" />
       </div>
 
-      {/* Campo de Contraseña */}
       <div className="form-group">
-        <label htmlFor="password">Contraseña:</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          id="password"
-          name="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          disabled={loading}
-          autoComplete="current-password"
-        />
+        <label className="form-group__label" htmlFor="password">Contraseña:</label>
+        <input className="input" type={showPassword ? 'text' : 'password'} id="password" name="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} autoComplete="current-password" />
       </div>
-
-      {/* Opciones: Mostrar contraseña */}
-      <div className="form-options">
-        <input
-          type="checkbox"
-          id="showPass"
-          checked={showPassword}
-          onChange={(e) => setShowPassword(e.target.checked)}
-        />
+      <br />
+      <div className="form-group form-group--checkbox">
+        <input className="checkbox" type="checkbox" id="showPass" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} />
         <label htmlFor="showPass">Mostrar contraseña</label>
       </div>
 
-      {/* Botón de envío */}
-      <button
-        type="submit"
-        className="btn-primary"
-        disabled={loading}
-      >
+      <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
         {loading ? 'Ingresando...' : 'Ingresar'}
       </button>
     </form>

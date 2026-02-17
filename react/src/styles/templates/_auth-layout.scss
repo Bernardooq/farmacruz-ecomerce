@@ -1,0 +1,58 @@
+// ============================================
+// TEMPLATE — AUTH LAYOUT (login/register)
+// ============================================
+
+.auth-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--space-6);
+    background: linear-gradient(135deg, var(--color-bg-subtle), var(--color-bg-muted));
+}
+
+.auth-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-10);
+    width: 100%;
+    max-width: 420px;
+
+    &__logo {
+        text-align: center;
+        margin-bottom: var(--space-8);
+
+        img {
+            height: 48px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: var(--text-2xl);
+            margin-top: var(--space-3);
+        }
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-5);
+    }
+
+    &__footer {
+        text-align: center;
+        padding-top: var(--space-6);
+        font-size: var(--text-sm);
+        color: var(--color-text-muted);
+
+        a {
+            color: var(--color-primary);
+            font-weight: var(--font-semibold);
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}

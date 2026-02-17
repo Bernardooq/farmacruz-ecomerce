@@ -1,0 +1,61 @@
+@use '../tokens/breakpoints' as *;
+
+// ============================================
+// ORGANISM — FOOTER
+// ============================================
+
+.footer {
+    background: var(--color-bg-subtle);
+    border-top: var(--border-width) solid var(--color-border);
+    padding: var(--space-8) 0 var(--space-6);
+
+    &__inner {
+        @include container;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-6);
+        justify-content: center;
+
+        @include tablet {
+            justify-content: space-between;
+        }
+    }
+
+    &__section {
+        text-align: center;
+
+        @include tablet {
+            text-align: left;
+        }
+
+        h4 {
+            font-size: var(--text-sm);
+            font-weight: var(--font-bold);
+            color: var(--color-text);
+            margin-bottom: var(--space-3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        a {
+            display: block;
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            padding: var(--space-1) 0;
+            @include transition;
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+    }
+
+    &__bottom {
+        @include container;
+        padding-top: var(--space-6);
+        border-top: var(--border-width) solid var(--color-border);
+        text-align: center;
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+    }
+}

@@ -1,0 +1,77 @@
+// ============================================
+// DESIGN TOKENS — BREAKPOINTS + RESPONSIVE MIXINS
+// ============================================
+
+$bp-phone: 500px;
+$bp-tablet: 768px;
+$bp-desktop: 1200px;
+$bp-desktop-xl: 1440px;
+
+// Min-width (mobile-first)
+@mixin phone {
+    @media (min-width: $bp-phone) {
+        @content;
+    }
+}
+
+@mixin tablet {
+    @media (min-width: $bp-tablet) {
+        @content;
+    }
+}
+
+@mixin desktop {
+    @media (min-width: $bp-desktop) {
+        @content;
+    }
+}
+
+@mixin desktop-xl {
+    @media (min-width: $bp-desktop-xl) {
+        @content;
+    }
+}
+
+// Max-width (desktop-first overrides)
+@mixin max-phone {
+    @media (max-width: $bp-phone) {
+        @content;
+    }
+}
+
+@mixin max-tablet {
+    @media (max-width: $bp-tablet) {
+        @content;
+    }
+}
+
+@mixin max-desktop {
+    @media (max-width: $bp-desktop) {
+        @content;
+    }
+}
+
+@mixin max-desktop-xl {
+    @media (max-width: $bp-desktop-xl) {
+        @content;
+    }
+}
+
+// Container mixin
+@mixin container {
+    width: 95%;
+    max-width: 120rem;
+    margin: 0 auto;
+}
+
+// Grid mixin
+@mixin grid($cols: 1, $gap: 1.5rem) {
+    display: grid;
+    grid-template-columns: repeat($cols, 1fr);
+    gap: $gap;
+}
+
+// Transition shorthand
+@mixin transition($props: all, $duration: 0.2s) {
+    transition: $props $duration ease;
+}

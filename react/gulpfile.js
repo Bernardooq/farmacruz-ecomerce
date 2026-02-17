@@ -7,15 +7,15 @@ const sass = gulpSass(dartSass);
 // Rutas
 const paths = {
   scss: {
-    src: "src/scss/**/*.scss",
-    dest: "src/styles/",
+    src: "src/styles/**/*.scss",
+    dest: "src/styles/dist/",
   },
 };
 
 // Compilar SCSS a CSS
 export function styles() {
   return gulp
-    .src("src/scss/styles.scss") // Archivo principal
+    .src("src/styles/main.scss") // Archivo principal (Atomic Design)
     .pipe(sass().on("error", sass.logError))
     .pipe(gulp.dest(paths.scss.dest));
 }

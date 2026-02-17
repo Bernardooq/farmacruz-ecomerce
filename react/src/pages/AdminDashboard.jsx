@@ -3,20 +3,16 @@
  * ==================
  * Dashboard principal del administrador de FarmaCruz
  * 
- * Esta página proporciona acceso completo a todas las funcionalidades
- * administrativas del sistema mediante pestañas de navegación.
- * 
  * Funcionalidades:
  * - Dashboard con estadísticas generales
  * - Reportes de ventas
- * - Gestión de clientes y customer info
- * - Gestión de equipo de ventas (marketing managers, sellers, grupos)
- * - Gestión de pedidos (todos los estados)
- * - Gestión de inventario (productos y categorías)
+ * - Gestión de clientes
+ * - Gestión de equipo de ventas
+ * - Gestión de pedidos
+ * - Gestión de inventario
  * - Gestión de listas de precios
  * 
- * Permisos:
- * - Solo para usuarios con role: 'admin'
+ * Permisos: Solo para usuarios con role: 'admin'
  */
 
 import { useEffect, useState } from 'react';
@@ -37,11 +33,6 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 // ============================================
 // CONSTANTES
 // ============================================
-
-/**
- * Definición de pestañas del dashboard
- * Cada pestaña representa una sección diferente del panel de administración
- */
 const ADMIN_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'reportes', label: 'Reportes', icon: '📈' },
@@ -57,33 +48,18 @@ export default function AdminDashboard() {
   // HOOKS & STATE
   // ============================================
   const { user } = useAuth();
-
-  // Estado de datos
   const [summary, setSummary] = useState(null);
-
-  // Estado de UI
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // ============================================
   // EFFECTS
   // ============================================
-
-  /**
-   * Cargar datos del dashboard al montar el componente
-   */
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  useEffect(() => { loadDashboardData(); }, []);
 
   // ============================================
   // DATA FETCHING
   // ============================================
-
-  /**
-   * Carga las estadísticas generales del dashboard
-   * Incluye: total de clientes, pedidos, productos, usuarios de marketing
-   */
   const loadDashboardData = async () => {
     try {
       setLoading(true);
@@ -99,48 +75,28 @@ export default function AdminDashboard() {
   // ============================================
   // RENDER HELPERS
   // ============================================
-
-  /**
-   * Renderiza el contenido correspondiente a la pestaña activa
-   * @returns {JSX.Element} Componente de la sección activa
-   */
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        // Panel principal con estadísticas
         return summary && <SummaryCards summary={summary} />;
-
       case 'reportes':
-        // Reportes de ventas con gráficos y filtros
         return <SalesReport />;
-
       case 'clientes':
-        // Gestión de clientes (crear, editar, ver customer info)
         return <ClientManagement />;
-
       case 'vendedores':
-        // Gestión de equipo de ventas (marketing managers, sellers, grupos)
         return <SalesTeamManagement />;
-
       case 'pedidos':
-        // Gestión de todos los pedidos del sistema
         return <AllOrders />;
-
       case 'inventario':
-        // Gestión de inventario y categorías
         return (
           <>
             <InventoryManager />
             <CategoryManagement />
           </>
         );
-
       case 'precios':
-        // Gestión de listas de precios
         return <PriceListManager />;
-
       default:
-        // Fallback al dashboard principal
         return summary && <SummaryCards summary={summary} />;
     }
   };
@@ -156,34 +112,33 @@ export default function AdminDashboard() {
   // RENDER - MAIN CONTENT
   // ============================================
   return (
-    <>
+    <div className="page">
       <Header user={user} />
 
-      <main className="dashboard-page">
-        <div className="container">
-          <h1 className="dashboard-page__title">Panel de Administración</h1>
+      <main className="dashboard-layout">
+        <div className="dashboard-layout__container">
+          <h1 className="dashboard-layout__greeting">Panel de Administración</h1>
 
           {/* Sistema de pestañas */}
-          <div className="admin-tabs">
+          <div className="dashboard-layout__tabs">
             {/* Navegación de pestañas */}
-            <div className="admin-tabs__nav">
+            <nav className="dashboard-layout__tabs-nav">
               {ADMIN_TABS.map((tab) => (
                 <button
                   key={tab.id}
-                  className={`admin-tabs__button ${activeTab === tab.id ? 'admin-tabs__button--active' : ''
-                    }`}
+                  className={`dashboard-layout__tab ${activeTab === tab.id ? 'dashboard-layout__tab--active' : ''}`}
                   onClick={() => setActiveTab(tab.id)}
                   aria-label={tab.label}
                   aria-selected={activeTab === tab.id}
                 >
-                  <span className="admin-tabs__icon">{tab.icon}</span>
-                  <span className="admin-tabs__label">{tab.label}</span>
+                  <span className="dashboard-layout__tab-icon">{tab.icon}</span>
+                  <span className="dashboard-layout__tab-label">{tab.label}</span>
                 </button>
               ))}
-            </div>
+            </nav>
 
             {/* Contenido de la pestaña activa */}
-            <div className="admin-tabs__content">
+            <div className="dashboard-layout__tabs-content">
               {renderContent()}
             </div>
           </div>
@@ -191,6 +146,6 @@ export default function AdminDashboard() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

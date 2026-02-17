@@ -6,11 +6,12 @@ export default function FiltersBar({
   onSortChange
 }) {
   return (
-    <section className="filters-bar">
+    <section className="filter-group">
       {/* Filtro de Categoría */}
-      <div className="form-group">
-        <label htmlFor="category">Categoría:</label>
+      <div className="filter-group__item">
+        <label className="filter-group__label" htmlFor="category">Categoría:</label>
         <select
+          className="select"
           id="category"
           value={selectedCategory}
           onChange={e => onCategoryChange(e.target.value)}
@@ -28,9 +29,10 @@ export default function FiltersBar({
       </div>
 
       {/* Selector de Ordenamiento */}
-      <div className="form-group">
-        <label htmlFor="sort">Ordenar por:</label>
+      <div className="filter-group__item">
+        <label className="filter-group__label" htmlFor="sort">Ordenar por:</label>
         <select
+          className="select"
           id="sort"
           value={sortOrder}
           onChange={e => onSortChange(e.target.value)}

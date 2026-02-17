@@ -5,115 +5,46 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 const MAX_VISIBLE_OPTIONS = 8;
 const MIN_SELECT_SIZE = 3;
 
-export default function ModalAssignSeller({
-    visible,
-    order,
-    availableSellers,
-    onAssign,
-    onClose
-}) {
-
+export default function ModalAssignSeller({ visible, order, availableSellers, onAssign, onClose }) {
     const [selectedSellerId, setSelectedSellerId] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Resetear estado al abrir el modal
-    useEffect(() => {
-        if (visible) {
-            setSelectedSellerId('');
-            setError(null);
-        }
-    }, [visible]);
+    useEffect(() => { if (visible) { setSelectedSellerId(''); setError(null); } }, [visible]);
 
-    // Manejador de envío del formulario
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!selectedSellerId) {
-            setError('Debe seleccionar un vendedor');
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            await onAssign(parseInt(selectedSellerId), '');  // Empty notes
-            onClose();
-        } catch (err) {
-            setError(err.message || 'Error al asignar vendedor');
-        } finally {
-            setLoading(false);
-        }
+        if (!selectedSellerId) { setError('Debe seleccionar un vendedor'); return; }
+        setLoading(true); setError(null);
+        try { await onAssign(parseInt(selectedSellerId), ''); onClose(); }
+        catch (err) { setError(err.message || 'Error al asignar vendedor'); }
+        finally { setLoading(false); }
     };
 
-    // Determinar el tamaño del select
     const selectSize = availableSellers.length > MAX_VISIBLE_OPTIONS
-        ? MAX_VISIBLE_OPTIONS
-        : Math.max(availableSellers.length + 1, MIN_SELECT_SIZE);
+        ? MAX_VISIBLE_OPTIONS : Math.max(availableSellers.length + 1, MIN_SELECT_SIZE);
 
-    // Renderizar el modal
     if (!visible) return null;
 
     return (
-        <div className="modal-overlay enable" onClick={onClose}>
-            <div
-                className="modal-content"
-                onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: '450px' }}>
-                <button className="modal-close" onClick={onClose}>
-                    &times;
-                </button>
-
-                <div className="modal-body">
-                    <h2 style={{ marginBottom: '20px' }}>Asignar Vendedor</h2>
-
-                    {/* Información del pedido */}
-                    <p style={{ marginBottom: '20px', color: '#666' }}>
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal modal--sm" onClick={(e) => e.stopPropagation()}>
+                <div className="modal__header">
+                    <h2>Asignar Vendedor</h2>
+                    <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">&times;</button>
+                </div>
+                <div className="modal__body">
+                    <p className="text-muted mb-4">
                         <strong>Pedido:</strong> #{order?.order_id}<br />
                         <strong>Cliente:</strong> {order?.customer?.full_name || order?.customer?.username}
                     </p>
 
-                    {/* Mensaje de error */}
-                    {error && (
-                        <div style={{
-                            padding: '10px',
-                            backgroundColor: '#fee',
-                            border: '1px solid #fcc',
-                            borderRadius: '4px',
-                            marginBottom: '15px',
-                            color: '#c33'
-                        }}>
-                            {error}
-                        </div>
-                    )}
+                    {error && <div className="alert alert--danger">{error}</div>}
 
-                    <form onSubmit={handleSubmit}>
-                        {/* Selector de vendedor */}
-                        <div style={{ marginBottom: '25px' }}>
-                            <label
-                                htmlFor="seller-select"
-                                style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
-                            >
-                                Seleccionar Vendedor *
-                            </label>
-                            <select
-                                id="seller-select"
-                                value={selectedSellerId}
-                                onChange={(e) => setSelectedSellerId(e.target.value)}
-                                required
-                                size={selectSize}
-                                style={{
-                                    width: '100%',
-                                    padding: '8px',
-                                    borderRadius: '4px',
-                                    border: '1px solid #ddd',
-                                    fontSize: '14px',
-                                    maxHeight: '300px',
-                                    overflowY: 'auto',
-                                    cursor: 'pointer'
-                                }}
-                            >
+                    <form onSubmit={handleSubmit} className="modal__form">
+                        <div className="form-group">
+                            <label className="form-group__label" htmlFor="seller-select">Seleccionar Vendedor *</label>
+                            <select className="select" id="seller-select" value={selectedSellerId} onChange={(e) => setSelectedSellerId(e.target.value)} required size={selectSize}>
                                 <option value="">-- Seleccione un vendedor --</option>
                                 {availableSellers.map(seller => (
                                     <option key={seller.user_id} value={seller.user_id}>
@@ -121,40 +52,14 @@ export default function ModalAssignSeller({
                                     </option>
                                 ))}
                             </select>
-                            {/* Tip para listas largas */}
                             {availableSellers.length > MAX_VISIBLE_OPTIONS && (
-                                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px', fontStyle: 'italic' }}>
-                                    💡 Tip: Use las flechas del teclado o scroll para navegar
-                                </p>
+                                <p className="form-group__hint">💡 Tip: Use las flechas del teclado o scroll para navegar</p>
                             )}
                         </div>
-
-                        {/* Botones de acción */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '10px',
-                            justifyContent: 'flex-end'
-                        }}>
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="btn-secondary"
-                                disabled={loading}
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="submit"
-                                className="btn-primary"
-                                disabled={loading || !selectedSellerId}
-                            >
-                                {loading ? (
-                                    <>
-                                        <FontAwesomeIcon icon={faSpinner} spin /> Asignando...
-                                    </>
-                                ) : (
-                                    'Asignar'
-                                )}
+                        <div className="modal__footer">
+                            <button type="button" className="btn btn--secondary" onClick={onClose} disabled={loading}>Cancelar</button>
+                            <button type="submit" className="btn btn--primary" disabled={loading || !selectedSellerId}>
+                                {loading ? (<><FontAwesomeIcon icon={faSpinner} spin /> Asignando...</>) : 'Asignar'}
                             </button>
                         </div>
                     </form>

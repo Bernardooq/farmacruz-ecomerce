@@ -67,6 +67,7 @@ CREATE TABLE customers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
 -- NUEVO: Agente/vendedor asignado desde DBF
+
 agent_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
     
     CONSTRAINT customers_username_unique UNIQUE (username)
@@ -131,7 +132,7 @@ CREATE INDEX idx_groupsellers_seller ON groupsellers (seller_id);
 -- =====================================================
 CREATE TABLE categories (
     category_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     updated_at TIMESTAMP
     WITH

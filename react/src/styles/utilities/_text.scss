@@ -1,0 +1,120 @@
+// Alignment
+.text-left {
+    text-align: left;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+// Sizes
+.text-xs {
+    font-size: var(--text-xs);
+}
+
+.text-sm {
+    font-size: var(--text-sm);
+}
+
+.text-base {
+    font-size: var(--text-base);
+}
+
+.text-lg {
+    font-size: var(--text-lg);
+}
+
+.text-xl {
+    font-size: var(--text-xl);
+}
+
+.text-2xl {
+    font-size: var(--text-2xl);
+}
+
+.text-3xl {
+    font-size: var(--text-3xl);
+}
+
+// Weights
+.font-normal {
+    font-weight: var(--font-normal);
+}
+
+.font-medium {
+    font-weight: var(--font-medium);
+}
+
+.font-semibold {
+    font-weight: var(--font-semibold);
+}
+
+.font-bold {
+    font-weight: var(--font-bold);
+}
+
+.font-black {
+    font-weight: var(--font-black);
+}
+
+// Colors
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-warning {
+    color: var(--color-warning);
+}
+
+.text-info {
+    color: var(--color-info);
+}
+
+.text-inverse {
+    color: var(--color-text-inverse);
+}
+
+.text-white {
+    color: #fff;
+}
+
+// Overflow
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.break-words {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.whitespace-nowrap {
+    white-space: nowrap;
+}
+
+// Line heights
+.leading-tight {
+    line-height: var(--leading-tight);
+}
+
+.leading-normal {
+    line-height: var(--leading-normal);
+}

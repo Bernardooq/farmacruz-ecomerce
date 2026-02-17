@@ -3,27 +3,8 @@
  * ======================
  * Página de Términos y Condiciones de FarmaCruz
  * 
- * Esta página presenta los términos y condiciones de uso de la plataforma,
- * estableciendo las reglas, responsabilidades y obligaciones tanto de
- * FarmaCruz como de sus usuarios.
- * 
- * Contenido:
- * - Aceptación de términos
- * - Descripción del servicio B2B
- * - Requisitos de registro y cuenta
- * - Uso aceptable de la plataforma
- * - Políticas de pedidos, pagos y envíos
- * - Políticas de devoluciones
- * - Propiedad intelectual
- * - Limitación de responsabilidad
- * - Ley aplicable y jurisdicción (México)
- * 
- * Acceso:
- * - Página pública (no requiere autenticación)
- * 
- * Jurisdicción:
- * - Leyes de México
- * - Tribunales de Guadalajara, Jalisco
+ * Acceso: Página pública (no requiere autenticación)
+ * Jurisdicción: Leyes de México, Tribunales de Guadalajara, Jalisco
  */
 
 import { useAuth } from '../context/AuthContext';
@@ -33,48 +14,24 @@ import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
 
 export default function TermsAndConditions() {
-  // ============================================
-  // HOOKS & STATE
-  // ============================================
   const { isAuthenticated, user } = useAuth();
 
-  // ============================================
-  // RENDER HELPERS
-  // ============================================
-
-  /**
-   * Renderiza el header apropiado según el tipo de usuario
-   * @returns {JSX.Element} Componente de header correspondiente
-   */
   const renderHeader = () => {
-    // Usuario no autenticado → Header público
-    if (!isAuthenticated) {
-      return <Header />;
-    }
-
-    // Usuario staff (admin/seller/marketing) → Header con dashboard
-    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
-      return <Header2 />;
-    }
-
-    // Cliente autenticado → SearchBar con carrito
+    if (!isAuthenticated) return <Header />;
+    if (['admin', 'seller', 'marketing'].includes(user?.role)) return <Header2 />;
     return <SearchBar />;
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
   return (
-    <>
+    <div className="page">
       {renderHeader()}
 
-      <main className="legal-page">
-        <div className="container">
+      <main className="page__content">
+        <div className="content-page">
           <h1>Términos y Condiciones</h1>
-          <p className="last-updated">Última actualización: Noviembre 2024</p>
+          <p className="text-muted text-sm mb-8">Última actualización: Noviembre 2024</p>
 
-          {/* Sección 1: Aceptación de los Términos */}
-          <section className="legal-section">
+          <section>
             <h2>1. Aceptación de los Términos</h2>
             <p>
               Al acceder y utilizar la plataforma de Farmacruz, usted acepta estar sujeto a estos términos y condiciones de uso.
@@ -82,8 +39,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
-          {/* Sección 2: Descripción del Servicio */}
-          <section className="legal-section">
+          <section>
             <h2>2. Descripción del Servicio</h2>
             <p>
               Farmacruz es una plataforma B2B (Business to Business) que facilita la compra y venta de productos farmacéuticos
@@ -98,12 +54,9 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
-          {/* Sección 3: Registro y Cuenta de Usuario */}
-          <section className="legal-section">
+          <section>
             <h2>3. Registro y Cuenta de Usuario</h2>
-            <p>
-              Para utilizar nuestros servicios, debe:
-            </p>
+            <p>Para utilizar nuestros servicios, debe:</p>
             <ul>
               <li>Ser una empresa legalmente constituida</li>
               <li>Contar con las licencias necesarias para comercializar productos farmacéuticos</li>
@@ -113,12 +66,9 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
-          {/* Sección 4: Uso Aceptable */}
-          <section className="legal-section">
+          <section>
             <h2>4. Uso Aceptable</h2>
-            <p>
-              Al utilizar nuestra plataforma, usted se compromete a:
-            </p>
+            <p>Al utilizar nuestra plataforma, usted se compromete a:</p>
             <ul>
               <li>No utilizar el servicio para fines ilegales o no autorizados</li>
               <li>No intentar acceder a áreas restringidas del sistema</li>
@@ -128,12 +78,9 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
-          {/* Sección 5: Pedidos y Pagos */}
-          <section className="legal-section">
+          <section>
             <h2>5. Pedidos y Pagos</h2>
-            <p>
-              Todos los pedidos están sujetos a:
-            </p>
+            <p>Todos los pedidos están sujetos a:</p>
             <ul>
               <li>Disponibilidad de productos</li>
               <li>Verificación de la información del pedido</li>
@@ -146,25 +93,19 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
-          {/* Sección 6: Envíos y Entregas */}
-          <section className="legal-section">
+          <section>
             <h2>6. Envíos y Entregas</h2>
-            <p>
-              Los tiempos de entrega son estimados y pueden variar según:
-            </p>
+            <p>Los tiempos de entrega son estimados y pueden variar según:</p>
             <ul>
               <li>Ubicación geográfica</li>
               <li>Disponibilidad de productos</li>
               <li>Condiciones de transporte</li>
               <li>Factores externos fuera de nuestro control</li>
             </ul>
-            <p>
-              Farmacruz no se hace responsable por retrasos causados por circunstancias fuera de nuestro control razonable.
-            </p>
+            <p>Farmacruz no se hace responsable por retrasos causados por circunstancias fuera de nuestro control razonable.</p>
           </section>
 
-          {/* Sección 7: Devoluciones y Reembolsos */}
-          <section className="legal-section">
+          <section>
             <h2>7. Devoluciones y Reembolsos</h2>
             <p>
               Las devoluciones de productos farmacéuticos están sujetas a regulaciones estrictas.
@@ -175,13 +116,10 @@ export default function TermsAndConditions() {
               <li>Error en el envío</li>
               <li>Productos próximos a vencer (según política específica)</li>
             </ul>
-            <p>
-              Las solicitudes de devolución deben realizarse dentro de las 48 horas posteriores a la recepción del pedido.
-            </p>
+            <p>Las solicitudes de devolución deben realizarse dentro de las 48 horas posteriores a la recepción del pedido.</p>
           </section>
 
-          {/* Sección 8: Propiedad Intelectual */}
-          <section className="legal-section">
+          <section>
             <h2>8. Propiedad Intelectual</h2>
             <p>
               Todo el contenido de la plataforma, incluyendo pero no limitado a textos, gráficos, logos, imágenes,
@@ -189,12 +127,9 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
-          {/* Sección 9: Limitación de Responsabilidad */}
-          <section className="legal-section">
+          <section>
             <h2>9. Limitación de Responsabilidad</h2>
-            <p>
-              Farmacruz no será responsable por:
-            </p>
+            <p>Farmacruz no será responsable por:</p>
             <ul>
               <li>Daños indirectos, incidentales o consecuentes</li>
               <li>Pérdida de beneficios o datos</li>
@@ -203,8 +138,7 @@ export default function TermsAndConditions() {
             </ul>
           </section>
 
-          {/* Sección 10: Privacidad y Protección de Datos */}
-          <section className="legal-section">
+          <section>
             <h2>10. Privacidad y Protección de Datos</h2>
             <p>
               El uso de sus datos personales está regido por nuestra Política de Privacidad.
@@ -212,8 +146,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
-          {/* Sección 11: Modificaciones */}
-          <section className="legal-section">
+          <section>
             <h2>11. Modificaciones</h2>
             <p>
               Farmacruz se reserva el derecho de modificar estos términos y condiciones en cualquier momento.
@@ -221,8 +154,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
-          {/* Sección 12: Terminación */}
-          <section className="legal-section">
+          <section>
             <h2>12. Terminación</h2>
             <p>
               Farmacruz se reserva el derecho de suspender o terminar su acceso a la plataforma en cualquier momento,
@@ -230,8 +162,7 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
-          {/* Sección 13: Ley Aplicable y Jurisdicción */}
-          <section className="legal-section">
+          <section>
             <h2>13. Ley Aplicable y Jurisdicción</h2>
             <p>
               Estos términos se regirán e interpretarán de acuerdo con las leyes de México.
@@ -239,12 +170,9 @@ export default function TermsAndConditions() {
             </p>
           </section>
 
-          {/* Sección 14: Contacto */}
-          <section className="legal-section">
+          <section>
             <h2>14. Contacto</h2>
-            <p>
-              Si tiene preguntas sobre estos términos y condiciones, puede contactarnos en:
-            </p>
+            <p>Si tiene preguntas sobre estos términos y condiciones, puede contactarnos en:</p>
             <ul>
               <li>Email: legal@farmacruz.com</li>
               <li>Teléfono: +52 33 1234 5678</li>
@@ -255,6 +183,6 @@ export default function TermsAndConditions() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

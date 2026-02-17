@@ -38,14 +38,8 @@ def process_productos_from_json(
     categorias_data = []
     
     for cat_name in categorias:
-        if not cat_name:
-            continue
-        # Use hash of name as category_id for consistency across syncs
-        # Ensure positive integer fitting in standard SQL integer
-        cat_id = abs(hash(cat_name)) % 2147483647
-        cat_map[cat_name] = cat_id
+        cat_map[cat_name] = cat_name
         categorias_data.append({
-            "category_id": cat_id,
             "name": cat_name,
             "updated_at": fecha_sync
         })
@@ -53,13 +47,22 @@ def process_productos_from_json(
     if categorias_data:
         stmt = insert(Category).values(categorias_data)
         stmt = stmt.on_conflict_do_update(
-            index_elements=['category_id'],
+            index_elements=['name'],
             set_={
-                'name': stmt.excluded.name,
                 'updated_at': stmt.excluded.updated_at
             }
         )
         db.execute(stmt)
+        
+    # RELOAD Category Map with DB IDs (Critical: Product.category_id is Integer)
+    # Since we don't know the IDs of existing categories without querying
+    db_categories = db.query(Category.category_id, Category.name).filter(
+        Category.name.in_(list(cat_map.keys()))
+    ).all()
+    
+    # Update map: Name -> ID
+    cat_map = {c.name: c.category_id for c in db_categories}
+    print(f"Mapped {len(cat_map)} categories to IDs")
     
     # 2. UPSERT PRODUCTOS
     print(f"Upserting {len(productos)} products...")
@@ -120,11 +123,11 @@ def process_listas_precios_from_json(
     """
     fecha_sync = datetime.now(timezone.utc).isoformat()
     print(f"Upserting {len(listas)} price lists headers...")
-    
+
     listas_data = [
         {
             "price_list_id": int(lista["price_list_id"]),
-            "list_name": lista["name"],  # Map input 'name' to column 'list_name'
+            "list_name": lista.get("list_name") or lista.get("name") or f"Lista {lista['price_list_id']}",  # Map input 'list_name' or 'name' to column 'list_name'
             "is_active": True,
             "updated_at": fecha_sync
         }
@@ -157,6 +160,7 @@ def process_items_precios_from_json(
     """
     fecha_sync = datetime.now(timezone.utc).isoformat()
     print(f"Processing {len(items)} price list items...")
+    
     
     items_data = []
     

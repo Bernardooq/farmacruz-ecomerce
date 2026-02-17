@@ -16,24 +16,23 @@
 import React from 'react';
 import Footer from '../components/layout/Footer';
 import LoginForm from '../components/users/LoginForm';
-import '../styles/styles.css';
 
 export default function Login() {
   // ============================================
   // RENDER
   // ============================================
   return (
-    <div className="page-container">
-      <main className="login-page">
-        <div className="login-card">
+    <div className="page">
+      <main className="auth-layout">
+        <div className="auth-card">
           {/* Logo de la empresa */}
-          {/* <img
-            src="../images/...png"
-            alt="Logo FarmaCruz"
-          /> */}
+          <div className="auth-card__logo">
+            {/* <img src="../images/...png" alt="Logo FarmaCruz" /> */}
+            <h1>FarmaCruz</h1>
+          </div>
 
           {/* Título de la página */}
-          <h2>Accede a tu cuenta</h2>
+          <h2 className="text-center text-muted">Accede a tu cuenta</h2>
 
           {/* Formulario de autenticación */}
           <LoginForm />

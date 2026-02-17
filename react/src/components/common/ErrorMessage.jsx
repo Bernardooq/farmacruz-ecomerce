@@ -1,17 +1,14 @@
 export default function ErrorMessage({ error, onDismiss }) {
-  // No renderizar si no hay error
   if (!error) return null;
 
   return (
-    <div className="error-banner">
-      {/* Mensaje de error */}
+    <div className="alert alert--danger" role="alert">
       <span>{error}</span>
 
-      {/* Botón de cierre (opcional) */}
       {onDismiss && (
         <button
           onClick={onDismiss}
-          className="error-banner__close"
+          className="alert__close"
           aria-label="Cerrar mensaje de error"
         >
           ×

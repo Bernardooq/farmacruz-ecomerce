@@ -3,9 +3,6 @@
  * ===========
  * Página "Acerca de Nosotros" de FarmaCruz
  * 
- * Esta página presenta información institucional de la empresa:
- * historia, misión, visión, valores, estadísticas y ventajas competitivas.
- * 
  * Contenido:
  * - Hero section con introducción
  * - Historia de la empresa
@@ -14,8 +11,7 @@
  * - Razones para elegir FarmaCruz
  * - Call-to-action para contacto
  * 
- * Acceso:
- * - Página pública (no requiere autenticación)
+ * Acceso: Página pública (no requiere autenticación)
  */
 
 import { useAuth } from '../context/AuthContext';
@@ -31,26 +27,9 @@ export default function AboutUs() {
   // ============================================
   const { isAuthenticated, user } = useAuth();
 
-  // ============================================
-  // RENDER HELPERS
-  // ============================================
-
-  /**
-   * Renderiza el header apropiado según el tipo de usuario
-   * @returns {JSX.Element} Componente de header correspondiente
-   */
   const renderHeader = () => {
-    // Usuario no autenticado → Header público
-    if (!isAuthenticated) {
-      return <Header />;
-    }
-
-    // Usuario staff (admin/seller/marketing) → Header con dashboard
-    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
-      return <Header2 />;
-    }
-
-    // Cliente autenticado → SearchBar con carrito
+    if (!isAuthenticated) return <Header />;
+    if (['admin', 'seller', 'marketing'].includes(user?.role)) return <Header2 />;
     return <SearchBar />;
   };
 
@@ -58,197 +37,141 @@ export default function AboutUs() {
   // RENDER
   // ============================================
   return (
-    <>
+    <div className="page">
       {renderHeader()}
 
-      <main className="about-page">
-        <div className="container">
-          {/* ============================================ */}
-          {/* HERO SECTION                                 */}
-          {/* ============================================ */}
-          <div className="about-hero">
-            <h1>Sobre Nosotros</h1>
-            <p className="about-hero__subtitle">
+      <main className="page__content">
+        {/* ============================================ */}
+        {/* HERO SECTION                                 */}
+        {/* ============================================ */}
+        <section className="hero">
+          <div className="hero__bg-image"></div>
+          <div className="hero__content">
+            <h1 className="hero__title">Sobre Nosotros</h1>
+            <p className="hero__subtitle">
               Más de 20 años conectando farmacias con los mejores productos farmacéuticos
             </p>
           </div>
+        </section>
 
+        <div className="page-container">
           {/* ============================================ */}
           {/* NUESTRA HISTORIA                             */}
           {/* ============================================ */}
-          <section className="about-section">
-            <div className="about-content">
-              <div className="about-text">
-                <h2>Nuestra Historia</h2>
-                <p>
-                  Proveedora farmacéutica Cruz, es una empresa mexicana constituida en el año 2000,
-                  siendo en la actualidad, uno de los principales distribuidores de medicamentos,
-                  con una confiabilidad y solidez reconocida por nuestros clientes, proveedores y colaboradores.
-                </p>
-                <p>
-                  A lo largo de estos años, hemos construido relaciones sólidas con fabricantes líderes y
-                  hemos desarrollado una red de distribución eficiente que garantiza entregas puntuales y
-                  productos de la más alta calidad.
-                </p>
-              </div>
-              <div className="about-image">
-                <div className="about-image__placeholder">
-                  <span>🏢</span>
-                </div>
-              </div>
-            </div>
+          <section className="dashboard-section">
+            <h2 className="section-title text-center">Nuestra Historia</h2>
+            <p className="text-muted mb-4">
+              Proveedora farmacéutica Cruz, es una empresa mexicana constituida en el año 2000,
+              siendo en la actualidad, uno de los principales distribuidores de medicamentos,
+              con una confiabilidad y solidez reconocida por nuestros clientes, proveedores y colaboradores.
+            </p>
+            <p className="text-muted">
+              A lo largo de estos años, hemos construido relaciones sólidas con fabricantes líderes y
+              hemos desarrollado una red de distribución eficiente que garantiza entregas puntuales y
+              productos de la más alta calidad.
+            </p>
           </section>
 
           {/* ============================================ */}
           {/* MISIÓN, VISIÓN Y VALORES                     */}
           {/* ============================================ */}
-          <section className="about-mission">
-            <div className="mission-grid">
-              {/* Misión */}
-              <div className="mission-card">
-                <div className="mission-card__icon">🎯</div>
-                <h3>Misión</h3>
-                <p>
-                  Ponernos a la cabeza como líderes en la distribución de medicamentos y equipo
-                  médico de alta calidad a nivel nacional.
-                </p>
-              </div>
-
-              {/* Visión */}
-              <div className="mission-card">
-                <div className="mission-card__icon">👁️</div>
-                <h3>Visión</h3>
-                <p>
-                  Ser la plataforma B2B líder en México para la distribución farmacéutica, reconocida
-                  por nuestra innovación tecnológica y compromiso con la excelencia.
-                </p>
-              </div>
-
-              {/* Valores */}
-              <div className="mission-card">
-                <div className="mission-card__icon">⭐</div>
-                <h3>Valores</h3>
-                <p>
-                  Integridad, calidad, confianza, innovación y compromiso con nuestros clientes y
-                  la salud de la comunidad.
-                </p>
-              </div>
+          <div className="stat-grid mb-6">
+            <div className="dashboard-section text-center">
+              <div className="text-3xl mb-4">🎯</div>
+              <h3 className="font-bold text-lg mb-3">Misión</h3>
+              <p className="text-muted text-sm">
+                Ponernos a la cabeza como líderes en la distribución de medicamentos y equipo
+                médico de alta calidad a nivel nacional.
+              </p>
             </div>
-          </section>
+
+            <div className="dashboard-section text-center">
+              <div className="text-3xl mb-4">👁️</div>
+              <h3 className="font-bold text-lg mb-3">Visión</h3>
+              <p className="text-muted text-sm">
+                Ser la plataforma B2B líder en México para la distribución farmacéutica, reconocida
+                por nuestra innovación tecnológica y compromiso con la excelencia.
+              </p>
+            </div>
+
+            <div className="dashboard-section text-center">
+              <div className="text-3xl mb-4">⭐</div>
+              <h3 className="font-bold text-lg mb-3">Valores</h3>
+              <p className="text-muted text-sm">
+                Integridad, calidad, confianza, innovación y compromiso con nuestros clientes y
+                la salud de la comunidad.
+              </p>
+            </div>
+          </div>
 
           {/* ============================================ */}
           {/* FARMACRUZ EN NÚMEROS                         */}
           {/* ============================================ */}
-          <section className="about-stats">
-            <h2>Farmacruz en Números</h2>
-            <div className="stats-grid">
-              {/* Años de experiencia */}
-              <div className="stat-card">
-                <div className="stat-card__number">20+</div>
+          <h2 className="section-title text-center">Farmacruz en Números</h2>
+          <div className="stat-grid mb-6">
+            <div className="stat-card">
+              <div className="stat-card__content">
+                <div className="stat-card__value">20+</div>
                 <div className="stat-card__label">Años de Experiencia</div>
               </div>
-
-              {/* Clientes activos */}
-              <div className="stat-card">
-                <div className="stat-card__number">50+</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__content">
+                <div className="stat-card__value">2,000+</div>
                 <div className="stat-card__label">Clientes Activos</div>
               </div>
-
-              {/* Productos en catálogo */}
-              <div className="stat-card">
-                <div className="stat-card__number">5,000+</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__content">
+                <div className="stat-card__value">2,000+</div>
                 <div className="stat-card__label">Productos en Catálogo</div>
               </div>
-
-              {/* Satisfacción del cliente */}
-              <div className="stat-card">
-                <div className="stat-card__number">98%</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__content">
+                <div className="stat-card__value">99%</div>
                 <div className="stat-card__label">Satisfacción del Cliente</div>
               </div>
             </div>
-          </section>
+          </div>
 
           {/* ============================================ */}
           {/* ¿POR QUÉ ELEGIRNOS?                          */}
           {/* ============================================ */}
-          <section className="about-why">
-            <h2>¿Por Qué Elegirnos?</h2>
-            <div className="why-grid">
-              {/* Calidad Garantizada */}
-              <div className="why-item">
-                <div className="why-item__icon">✓</div>
-                <h3>Calidad Garantizada</h3>
-                <p>
-                  Todos nuestros productos cumplen con las más estrictas normas de calidad
-                  y regulaciones sanitarias.
-                </p>
+          <h2 className="section-title text-center">¿Por Qué Elegirnos?</h2>
+          <div className="advantages-grid mb-6">
+            {[
+              { icon: '✓', title: 'Calidad Garantizada', text: 'Todos nuestros productos cumplen con las más estrictas normas de calidad y regulaciones sanitarias.' },
+              { icon: '✓', title: 'Entregas Rápidas', text: 'Red de distribución eficiente que garantiza entregas puntuales en todo el país.' },
+              { icon: '✓', title: 'Precios Competitivos', text: 'Relaciones directas con fabricantes nos permiten ofrecer los mejores precios del mercado.' },
+              { icon: '✓', title: 'Soporte Dedicado', text: 'Equipo de atención al cliente disponible para resolver cualquier duda o necesidad.' },
+              { icon: '✓', title: 'Plataforma Digital', text: 'Sistema de pedidos en línea fácil de usar, disponible 24/7.' },
+              { icon: '✓', title: 'Amplio Catálogo', text: 'Miles de productos de las marcas más reconocidas del sector farmacéutico.' },
+            ].map((item, i) => (
+              <div className="advantage-item" key={i}>
+                <div className="advantage-item__icon">{item.icon}</div>
+                <h3 className="advantage-item__title">{item.title}</h3>
+                <p>{item.text}</p>
               </div>
-
-              {/* Entregas Rápidas */}
-              <div className="why-item">
-                <div className="why-item__icon">✓</div>
-                <h3>Entregas Rápidas</h3>
-                <p>
-                  Red de distribución eficiente que garantiza entregas puntuales en todo el país.
-                </p>
-              </div>
-
-              {/* Precios Competitivos */}
-              <div className="why-item">
-                <div className="why-item__icon">✓</div>
-                <h3>Precios Competitivos</h3>
-                <p>
-                  Relaciones directas con fabricantes nos permiten ofrecer los mejores precios del mercado.
-                </p>
-              </div>
-
-              {/* Soporte Dedicado */}
-              <div className="why-item">
-                <div className="why-item__icon">✓</div>
-                <h3>Soporte Dedicado</h3>
-                <p>
-                  Equipo de atención al cliente disponible para resolver cualquier duda o necesidad.
-                </p>
-              </div>
-
-              {/* Plataforma Digital */}
-              <div className="why-item">
-                <div className="why-item__icon">✓</div>
-                <h3>Plataforma Digital</h3>
-                <p>
-                  Sistema de pedidos en línea fácil de usar, disponible 24/7.
-                </p>
-              </div>
-
-              {/* Amplio Catálogo */}
-              <div className="why-item">
-                <div className="why-item__icon">✓</div>
-                <h3>Amplio Catálogo</h3>
-                <p>
-                  Miles de productos de las marcas más reconocidas del sector farmacéutico.
-                </p>
-              </div>
-            </div>
-          </section>
+            ))}
+          </div>
 
           {/* ============================================ */}
           {/* CALL TO ACTION                               */}
           {/* ============================================ */}
-          <section className="about-cta">
-            <h2>¿Listo para Trabajar con Nosotros?</h2>
-            <p>
+          <section className="dashboard-section text-center" style={{ background: 'var(--color-primary-light)' }}>
+            <h2 className="section-title text-center">¿Listo para Trabajar con Nosotros?</h2>
+            <p className="text-muted mb-6">
               Únete a decenas de clientes que confían en Farmacruz para sus necesidades de abastecimiento.
             </p>
-            <div className="cta-buttons">
-              <Link to="/contact" className="btn btn-primary">
-                Contáctanos
-              </Link>
-            </div>
+            <Link to="/contact" className="btn btn--primary btn--lg">
+              Contáctanos
+            </Link>
           </section>
         </div>
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

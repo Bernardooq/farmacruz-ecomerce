@@ -38,17 +38,8 @@ export default function Home() {
    * @returns {JSX.Element} Componente de header correspondiente
    */
   const renderHeader = () => {
-    // Usuario no autenticado → Header público con opciones de login
-    if (!isAuthenticated) {
-      return <Header />;
-    }
-
-    // Usuario staff (admin/seller/marketing) → Header con acceso al dashboard
-    if (user?.role === 'admin' || user?.role === 'seller' || user?.role === 'marketing') {
-      return <Header2 />;
-    }
-
-    // Cliente autenticado → SearchBar con carrito de compras
+    if (!isAuthenticated) return <Header />;
+    if (['admin', 'seller', 'marketing'].includes(user?.role)) return <Header2 />;
     return <SearchBar />;
   };
 
@@ -56,10 +47,10 @@ export default function Home() {
   // RENDER
   // ============================================
   return (
-    <>
+    <div className="page">
       {renderHeader()}
 
-      <main>
+      <main className="page__content">
         {/* Sección Hero - Banner principal */}
         <Hero />
 
@@ -77,6 +68,6 @@ export default function Home() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

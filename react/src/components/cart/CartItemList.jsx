@@ -2,16 +2,16 @@ import CartItem from './CartItem';
 
 export default function CartItemList({ items, onQuantityChange, onRemove }) {
   return (
-    <section className="cart-items-container">
+    <section className="cart__items">
       {/* Headers de la tabla de items */}
-      <div className="cart-items-header">
-        <span className="header-product">Producto</span>
-        <span className="header-quantity">Cantidad</span>
-        <span className="header-total">Total</span>
+      <div className="cart-items__header">
+        <span>Producto</span>
+        <span>Cantidad</span>
+        <span>Total</span>
       </div>
 
       {/* Lista de items del carrito */}
-      <div className="cart-items-list">
+      <div className="cart-items__body">
         {items.map((item, index) => (
           <CartItem
             key={index}

@@ -2,12 +2,11 @@ import OrderRow from './OrderRow';
 
 export default function OrderHistory({ orders, onSelectOrder, onCancelOrder }) {
   return (
-    <section className="order-history">
+    <section className="dashboard-section">
       <h2 className="section-title">Historial de Pedidos Recientes</h2>
 
-      <div className="order-table-container">
-        <table className="order-table">
-          {/* Encabezados de la tabla */}
+      <div className="table-container">
+        <table className="data-table">
           <thead>
             <tr>
               <th>N° de Pedido</th>
@@ -17,8 +16,6 @@ export default function OrderHistory({ orders, onSelectOrder, onCancelOrder }) {
               <th>Acciones</th>
             </tr>
           </thead>
-
-          {/* Filas de pedidos */}
           <tbody>
             {orders.map(order => (
               <OrderRow

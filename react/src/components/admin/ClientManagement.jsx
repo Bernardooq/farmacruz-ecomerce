@@ -13,7 +13,7 @@ export default function ClientManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(''); // Search term con debounce
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [page, setPage] = useState(0);
@@ -28,7 +28,7 @@ export default function ClientManagement() {
     password: '',
     full_name: '',
     is_active: true,
-    agent_id: null  // Agente asignado
+    agent_id: null
   });
   const [customerInfoData, setCustomerInfoData] = useState({
     customer_info_id: '',
@@ -45,44 +45,33 @@ export default function ClientManagement() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
 
-  // Debounce: Solo buscar 500ms después de que el usuario deje de escribir
+  // Debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      setPage(0); // Resetear a página 0 cuando cambia búsqueda
-    }, 500); // 500ms de debounce
-
-    return () => clearTimeout(timer); // Limpiar timeout si el usuario sigue escribiendo
+      setPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
   }, [searchTerm]);
 
   useEffect(() => {
     loadClients();
-    // Solo cargar clientes al inicio, no price lists ni sellers
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, debouncedSearchTerm]); // Usar debouncedSearchTerm en lugar de searchTerm
+  }, [page, debouncedSearchTerm]);
 
   const loadClients = async () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = {
         skip: page * itemsPerPage,
         limit: itemsPerPage + 1
       };
-
-      // Enviar búsqueda al backend
-      if (debouncedSearchTerm) {
-        params.search = debouncedSearchTerm;
-      }
-
+      if (debouncedSearchTerm) params.search = debouncedSearchTerm;
       const customers = await customerService.getCustomers(params);
-
       const hasMorePages = customers.length > itemsPerPage;
       setHasMore(hasMorePages);
-
-      const pageCustomers = hasMorePages ? customers.slice(0, itemsPerPage) : customers;
-      setClients(pageCustomers);
+      setClients(hasMorePages ? customers.slice(0, itemsPerPage) : customers);
     } catch (err) {
       setError('No se pudieron cargar los clientes. Intenta de nuevo.');
       console.error('Failed to load clients:', err);
@@ -111,47 +100,30 @@ export default function ClientManagement() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    // Forzar búsqueda inmediata al presionar Enter o botón
     setDebouncedSearchTerm(searchTerm);
     setPage(0);
   };
 
   const openAddModal = () => {
-    // Cargar listas y vendedores solo cuando se abre el modal
     loadPriceLists();
     loadSellers();
-
     setEditingClient(null);
     setFormData({
-      customer_id: '',
-      username: '',
-      email: '',
-      password: '',
-      full_name: '',
-      is_active: true,
-      agent_id: null
+      customer_id: '', username: '', email: '', password: '',
+      full_name: '', is_active: true, agent_id: null
     });
     setCustomerInfoData({
-      customer_info_id: '',
-      business_name: '',
-      address_1: '',
-      address_2: '',
-      address_3: '',
-      telefono_1: '',
-      telefono_2: '',
-      rfc: '',
-      sales_group_id: null,
-      price_list_id: null
+      customer_info_id: '', business_name: '', address_1: '', address_2: '',
+      address_3: '', telefono_1: '', telefono_2: '', rfc: '',
+      sales_group_id: null, price_list_id: null
     });
     setFormError(null);
     setShowModal(true);
   };
 
   const openEditModal = async (client) => {
-    // Cargar listas y vendedores solo cuando se abre el modal
     loadPriceLists();
     loadSellers();
-
     setEditingClient(client);
     setFormData({
       customer_id: client.customer_id,
@@ -179,16 +151,9 @@ export default function ClientManagement() {
       });
     } catch (err) {
       setCustomerInfoData({
-        customer_info_id: '',
-        business_name: '',
-        address_1: '',
-        address_2: '',
-        address_3: '',
-        telefono_1: '',
-        telefono_2: '',
-        rfc: '',
-        sales_group_id: null,
-        price_list_id: null
+        customer_info_id: '', business_name: '', address_1: '', address_2: '',
+        address_3: '', telefono_1: '', telefono_2: '', rfc: '',
+        sales_group_id: null, price_list_id: null
       });
     }
 
@@ -204,19 +169,12 @@ export default function ClientManagement() {
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
-    setFormData(prev => ({
-      ...prev,
-      [name]: newValue
-    }));
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleCustomerInfoChange = (e) => {
     const { name, value } = e.target;
-    setCustomerInfoData(prev => ({
-      ...prev,
-      [name]: value === '' ? null : value
-    }));
+    setCustomerInfoData(prev => ({ ...prev, [name]: value === '' ? null : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -227,13 +185,9 @@ export default function ClientManagement() {
     try {
       if (editingClient) {
         const updateData = { ...formData };
-        if (!updateData.password || updateData.password.trim() === '') {
-          delete updateData.password;
-        }
+        if (!updateData.password || updateData.password.trim() === '') delete updateData.password;
         delete updateData.customer_id;
-
         await customerService.updateCustomer(editingClient.customer_id, updateData);
-
         try {
           await customerService.updateCustomerInfo(editingClient.customer_id, customerInfoData);
         } catch (err) {
@@ -241,22 +195,11 @@ export default function ClientManagement() {
         }
       } else {
         const createData = { ...formData };
-        if (createData.customer_id) {
-          createData.customer_id = parseInt(createData.customer_id);
-        }
-        // Convertir agent_id a int o null
-        if (createData.agent_id) {
-          createData.agent_id = parseInt(createData.agent_id);
-        } else {
-          createData.agent_id = null;
-        }
-
+        if (createData.customer_id) createData.customer_id = parseInt(createData.customer_id);
+        createData.agent_id = createData.agent_id ? parseInt(createData.agent_id) : null;
         const newCustomer = await customerService.createCustomer(createData);
-
-        // Create customer info if any field is provided
         if (customerInfoData.business_name || customerInfoData.address_1 || customerInfoData.address_2 || customerInfoData.address_3 || customerInfoData.rfc) {
           try {
-            // Don't send customer_info_id - it's auto-generated
             const { customer_info_id, ...customerData } = customerInfoData;
             await customerService.updateCustomerInfo(newCustomer.customer_id, customerData);
           } catch (err) {
@@ -264,7 +207,6 @@ export default function ClientManagement() {
           }
         }
       }
-
       closeModal();
       loadClients();
     } catch (err) {
@@ -277,15 +219,11 @@ export default function ClientManagement() {
   };
 
   const handleDelete = async (client) => {
-    if (!window.confirm(`¿Estás seguro de eliminar a ${client.full_name}?`)) {
-      return;
-    }
-
+    if (!window.confirm(`¿Estás seguro de eliminar a ${client.full_name}?`)) return;
     try {
       await customerService.deleteCustomer(client.customer_id);
       loadClients();
     } catch (err) {
-      // Mostrar el mensaje de error del backend si está disponible
       const errorMessage = err.response?.data?.detail || err.message || 'Error al eliminar el cliente.';
       setError(errorMessage);
       console.error('Failed to delete client:', err);
@@ -301,7 +239,7 @@ export default function ClientManagement() {
       <section className="dashboard-section">
         <div className="section-header">
           <h2 className="section-title">Gestión de Clientes</h2>
-          <button className="btn-action" onClick={openAddModal}>
+          <button className="btn btn--primary btn--sm" onClick={openAddModal}>
             <FontAwesomeIcon icon={faUserPlus} /> Añadir Cliente
           </button>
         </div>
@@ -312,11 +250,12 @@ export default function ClientManagement() {
           <form className="search-bar" onSubmit={handleSearch}>
             <input
               type="search"
+              className="input"
               placeholder="Buscar cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button type="submit" aria-label="Buscar">
+            <button type="submit" className="btn btn--primary" aria-label="Buscar">
               <FontAwesomeIcon icon={faSearch} />
             </button>
           </form>
@@ -336,9 +275,7 @@ export default function ClientManagement() {
             <tbody>
               {clients.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center' }}>
-                    No se encontraron clientes
-                  </td>
+                  <td colSpan="5" className="text-center">No se encontraron clientes</td>
                 </tr>
               ) : (
                 clients.map((client) => (
@@ -360,18 +297,10 @@ export default function ClientManagement() {
                       </span>
                     </td>
                     <td className="actions-cell">
-                      <button
-                        className="btn-icon btn--edit"
-                        onClick={() => openEditModal(client)}
-                        aria-label="Editar cliente"
-                      >
+                      <button className="btn btn--icon btn--ghost" onClick={() => openEditModal(client)} aria-label="Editar cliente">
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>
-                      <button
-                        className="btn-icon btn--delete"
-                        onClick={() => handleDelete(client)}
-                        aria-label="Eliminar cliente"
-                      >
+                      <button className="btn btn--icon btn--danger" onClick={() => handleDelete(client)} aria-label="Eliminar cliente">
                         <FontAwesomeIcon icon={faTrashAlt} />
                       </button>
                     </td>
@@ -382,7 +311,6 @@ export default function ClientManagement() {
           </table>
         </div>
 
-        {/* Paginación */}
         {clients.length > 0 && (
           <PaginationButtons
             onPrev={() => setPage(p => Math.max(0, p - 1))}
@@ -394,96 +322,49 @@ export default function ClientManagement() {
       </section>
 
       {showModal && (
-        <div className="modal-overlay enable" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeModal} aria-label="Cerrar modal">
-              &times;
-            </button>
-            <div className="modal-body">
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal__header">
               <h2>{editingClient ? 'Editar Cliente' : 'Añadir Cliente'}</h2>
+              <button className="modal__close" onClick={closeModal} aria-label="Cerrar modal">&times;</button>
+            </div>
 
+            <div className="modal__body">
               {formError && <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />}
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="modal__form">
                 {!editingClient && (
                   <div className="form-group">
-                    <label htmlFor="customer_id">ID del Cliente *</label>
-                    <input
-                      type="number"
-                      id="customer_id"
-                      name="customer_id"
-                      value={formData.customer_id}
-                      onChange={handleFormChange}
-                      required
-                      disabled={formLoading}
-                    />
+                    <label className="form-group__label" htmlFor="customer_id">ID del Cliente *</label>
+                    <input className="input" type="number" id="customer_id" name="customer_id" value={formData.customer_id} onChange={handleFormChange} required disabled={formLoading} />
                   </div>
                 )}
 
                 <div className="form-group">
-                  <label htmlFor="full_name">Nombre Completo *</label>
-                  <input
-                    type="text"
-                    id="full_name"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleFormChange}
-                    required
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="full_name">Nombre Completo *</label>
+                  <input className="input" type="text" id="full_name" name="full_name" value={formData.full_name} onChange={handleFormChange} required disabled={formLoading} />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="username">Usuario *</label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleFormChange}
-                    required
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="username">Usuario *</label>
+                  <input className="input" type="text" id="username" name="username" value={formData.username} onChange={handleFormChange} required disabled={formLoading} />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="email">Email *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleFormChange}
-                    required
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="email">Email *</label>
+                  <input className="input" type="email" id="email" name="email" value={formData.email} onChange={handleFormChange} required disabled={formLoading} />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="password">
+                  <label className="form-group__label" htmlFor="password">
                     Contraseña {editingClient ? '(dejar vacío para no cambiar)' : '*'}
                   </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleFormChange}
-                    required={!editingClient}
-                    disabled={formLoading}
-                    placeholder={editingClient ? 'Dejar vacío para mantener la actual' : 'Ingresa una contraseña'}
-                  />
+                  <input className="input" type="password" id="password" name="password" value={formData.password} onChange={handleFormChange} required={!editingClient} disabled={formLoading} placeholder={editingClient ? 'Dejar vacío para mantener la actual' : 'Ingresa una contraseña'} />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="agent_id">Agente Asignado</label>
-                  <select
-                    id="agent_id"
-                    name="agent_id"
-                    value={formData.agent_id || ''}
-                    onChange={handleFormChange}
-                    disabled={formLoading}
-                  >
+                  <label className="form-group__label" htmlFor="agent_id">Agente Asignado</label>
+                  <select className="select" id="agent_id" name="agent_id" value={formData.agent_id || ''} onChange={handleFormChange} disabled={formLoading}>
                     <option value="">Sin agente asignado</option>
                     {sellers.map(seller => (
                       <option key={seller.user_id} value={seller.user_id}>
@@ -491,126 +372,59 @@ export default function ClientManagement() {
                       </option>
                     ))}
                   </select>
-                  <small style={{ display: 'block', marginTop: '0.25rem', color: '#666' }}>
-                    Los pedidos del cliente se asignarán automáticamente a este agente
-                  </small>
+                  <span className="form-group__hint">Los pedidos del cliente se asignarán automáticamente a este agente</span>
                 </div>
 
                 <div className="form-group">
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="is_active"
-                      checked={formData.is_active}
-                      onChange={handleFormChange}
-                      disabled={formLoading}
-                    />
+                  <label className="form-group__label">
+                    <input className="checkbox" type="checkbox" name="is_active" checked={formData.is_active} onChange={handleFormChange} disabled={formLoading} />
                     {' '}Cliente Activo
                   </label>
                 </div>
 
-                <hr style={{ margin: '1.5rem 0', border: 'none', borderTop: '1px solid #ddd' }} />
-                <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Información del Negocio</h3>
+                <div className="divider" />
+                <h3 className="section-title mb-4">Información del Negocio</h3>
 
                 <div className="form-group">
-                  <label htmlFor="business_name">Nombre del Negocio</label>
-                  <input
-                    type="text"
-                    id="business_name"
-                    name="business_name"
-                    value={customerInfoData.business_name}
-                    onChange={handleCustomerInfoChange}
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="business_name">Nombre del Negocio</label>
+                  <input className="input" type="text" id="business_name" name="business_name" value={customerInfoData.business_name} onChange={handleCustomerInfoChange} disabled={formLoading} />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="address_1">Dirección 1 (Principal)</label>
-                  <input
-                    type="text"
-                    id="address_1"
-                    name="address_1"
-                    value={customerInfoData.address_1}
-                    onChange={handleCustomerInfoChange}
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="address_1">Dirección 1 (Principal)</label>
+                  <input className="input" type="text" id="address_1" name="address_1" value={customerInfoData.address_1} onChange={handleCustomerInfoChange} disabled={formLoading} />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-group__label" htmlFor="address_2">Dirección 2 (Opcional)</label>
+                    <input className="input" type="text" id="address_2" name="address_2" value={customerInfoData.address_2} onChange={handleCustomerInfoChange} placeholder="Dirección alternativa" disabled={formLoading} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-group__label" htmlFor="address_3">Dirección 3 (Opcional)</label>
+                    <input className="input" type="text" id="address_3" name="address_3" value={customerInfoData.address_3} onChange={handleCustomerInfoChange} placeholder="Dirección alternativa" disabled={formLoading} />
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="address_2">Dirección 2 (Opcional)</label>
-                  <input
-                    type="text"
-                    id="address_2"
-                    name="address_2"
-                    value={customerInfoData.address_2}
-                    onChange={handleCustomerInfoChange}
-                    placeholder="Dirección alternativa"
-                    disabled={formLoading}
-                  />
+                  <label className="form-group__label" htmlFor="rfc">RFC</label>
+                  <input className="input" type="text" id="rfc" name="rfc" value={customerInfoData.rfc} onChange={handleCustomerInfoChange} disabled={formLoading} />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-group__label" htmlFor="telefono_1">Teléfono Principal</label>
+                    <input className="input" type="tel" id="telefono_1" name="telefono_1" value={customerInfoData.telefono_1} onChange={handleCustomerInfoChange} disabled={formLoading} maxLength="15" placeholder="15 dígitos máximo" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-group__label" htmlFor="telefono_2">Teléfono Secundario</label>
+                    <input className="input" type="tel" id="telefono_2" name="telefono_2" value={customerInfoData.telefono_2} onChange={handleCustomerInfoChange} disabled={formLoading} maxLength="15" placeholder="Opcional, 15 dígitos máximo" />
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="address_3">Dirección 3 (Opcional)</label>
-                  <input
-                    type="text"
-                    id="address_3"
-                    name="address_3"
-                    value={customerInfoData.address_3}
-                    onChange={handleCustomerInfoChange}
-                    placeholder="Dirección alternativa"
-                    disabled={formLoading}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="rfc">RFC</label>
-                  <input
-                    type="text"
-                    id="rfc"
-                    name="rfc"
-                    value={customerInfoData.rfc}
-                    onChange={handleCustomerInfoChange}
-                    disabled={formLoading}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="telefono_1">Teléfono Principal</label>
-                  <input
-                    type="tel"
-                    id="telefono_1"
-                    name="telefono_1"
-                    value={customerInfoData.telefono_1}
-                    onChange={handleCustomerInfoChange}
-                    disabled={formLoading}
-                    maxLength="15"
-                    placeholder="15 dígitos máximo"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="telefono_2">Teléfono Secundario</label>
-                  <input
-                    type="tel"
-                    id="telefono_2"
-                    name="telefono_2"
-                    value={customerInfoData.telefono_2}
-                    onChange={handleCustomerInfoChange}
-                    disabled={formLoading}
-                    maxLength="15"
-                    placeholder="Opcional, 15 dígitos máximo"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="price_list_id">Lista de Precios</label>
-                  <select
-                    id="price_list_id"
-                    name="price_list_id"
-                    value={customerInfoData.price_list_id || ''}
-                    onChange={handleCustomerInfoChange}
-                    disabled={formLoading}
-                  >
+                  <label className="form-group__label" htmlFor="price_list_id">Lista de Precios</label>
+                  <select className="select" id="price_list_id" name="price_list_id" value={customerInfoData.price_list_id || ''} onChange={handleCustomerInfoChange} disabled={formLoading}>
                     <option value="">Sin lista asignada</option>
                     {priceLists.map(list => (
                       <option key={list.price_list_id} value={list.price_list_id}>
@@ -618,25 +432,14 @@ export default function ClientManagement() {
                       </option>
                     ))}
                   </select>
-                  <small style={{ display: 'block', marginTop: '0.25rem', color: '#666' }}>
-                    Los clientes solo verán productos de la lista seleccionada
-                  </small>
+                  <span className="form-group__hint">Los clientes solo verán productos de la lista seleccionada</span>
                 </div>
 
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={closeModal}
-                    disabled={formLoading}
-                  >
+                <div className="modal__footer">
+                  <button type="button" className="btn btn--secondary" onClick={closeModal} disabled={formLoading}>
                     Cancelar
                   </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={formLoading}
-                  >
+                  <button type="submit" className="btn btn--primary" disabled={formLoading}>
                     {formLoading ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>

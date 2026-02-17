@@ -1,20 +1,18 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import useTheme from '../../hooks/useTheme';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faKey} from '@fortawesome/free-solid-svg-icons';
+import { faKey, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 import ModalChangePassword from '../users/ModalChangePassword';
 
-// Header para Admin/Seller Dashboard - solo muestra Inicio y Dashboard
 export default function Header2() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   const getDashboardLink = () => {
     if (user?.role === 'admin') return '/admindash';
@@ -23,46 +21,30 @@ export default function Header2() {
     return '/products';
   };
 
-  const handleLogoClick = (e) => {
-    e.preventDefault();
-    navigate('/');
-  };
-
-  const handleInicioClick = (e) => {
-    e.preventDefault();
-    navigate(getDashboardLink());
-  };
-
   return (
     <>
       <header className="header">
-        <nav className="nav">
-          <Link to="/" className="nav__logo" onClick={handleLogoClick}>Farmacruz</Link>
-          <ul className="nav__menu">
-            <li className="nav__item">
-              <Link to={getDashboardLink()} className="nav__link" onClick={handleInicioClick}>
-                Inicio
-              </Link>
-            </li>
-          </ul>
-          <div className="nav__user-section">
-            <span className="nav__user-name">Hola, {user?.full_name || user?.username}</span>
-            <button
-              className="nav__password-btn"
-              onClick={() => setShowPasswordModal(true)}
-              title="Cambiar contraseña"
-            >
+        <div className="header__inner">
+          <Link to="/" className="header__logo" onClick={(e) => { e.preventDefault(); navigate('/'); }}>Farmacruz</Link>
+          <nav className="header__nav">
+            <Link to={getDashboardLink()} onClick={(e) => { e.preventDefault(); navigate(getDashboardLink()); }}>
+              Inicio
+            </Link>
+          </nav>
+          <div className="header__actions">
+            <button className="btn btn--icon btn--ghost" onClick={toggleTheme} title={`Cambiar a modo ${theme === 'light' ? 'oscuro' : 'claro'}`}>
+              <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} />
+            </button>
+            <span className="text-sm">Hola, {user?.full_name || user?.username}</span>
+            <button className="btn btn--icon btn--ghost" onClick={() => setShowPasswordModal(true)} title="Cambiar contraseña">
               <FontAwesomeIcon icon={faKey} />
             </button>
-            <button className="nav__logout-link" onClick={handleLogout}>Salir</button>
+            <button className="btn btn--secondary btn--sm" onClick={handleLogout}>Salir</button>
           </div>
-        </nav>
+        </div>
       </header>
 
-      <ModalChangePassword
-        isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-      />
+      <ModalChangePassword isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </>
   );
 }

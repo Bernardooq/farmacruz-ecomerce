@@ -329,6 +329,7 @@ def limpieza_post_sincronizacion(
 ):
     """Desactiva o elimina productos, categorias, listas y items que no fueron sincronizados.
     NO toca usuarios (customers ni sellers)."""
+    print(f"DEBUG ROUTE CLEANUP: Received last_sync={last_sync}")
     try:
         crud_sync.limpiar_items_no_sincronizados(db=db, last_sync=last_sync.last_sync)
         db.commit()

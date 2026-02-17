@@ -209,7 +209,7 @@ class Category(Base):
     __tablename__ = "categories"
 
     category_id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)  # Nombre de la categoria
+    name = Column(String(100), nullable=False, unique=True)  # Nombre de la categoria
     description = Column(Text)  # Descripcion opcional
     updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

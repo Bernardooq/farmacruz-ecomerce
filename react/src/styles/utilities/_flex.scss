@@ -1,0 +1,61 @@
+// Flex utilities
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.items-start {
+    align-items: flex-start;
+}
+
+.items-end {
+    align-items: flex-end;
+}
+
+.items-stretch {
+    align-items: stretch;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.justify-end {
+    justify-content: flex-end;
+}
+
+.justify-start {
+    justify-content: flex-start;
+}
+
+.self-center {
+    align-self: center;
+}
+
+.self-end {
+    align-self: flex-end;
+}

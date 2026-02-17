@@ -1,0 +1,178 @@
+// ============================================
+// ORGANISM — MODAL SPLIT VIEW
+// Generic 2-column layout for modals (Groups, PriceLists)
+// ============================================
+
+// TABS COMPONENT (Used in split view modals)
+.tabs {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+    padding-bottom: var(--space-2);
+    overflow-x: auto; // Handle many tabs on small screens
+
+    &__btn {
+        padding: var(--space-2) var(--space-4);
+        border-radius: var(--radius-md);
+        background: transparent;
+        border: none;
+        color: var(--color-text-muted);
+        font-weight: var(--font-medium);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+
+        &:hover {
+            background: var(--color-bg-subtle);
+            color: var(--color-text);
+        }
+
+        &--active {
+            background: var(--color-primary-subtle); // Assuming this variable exists or similar
+            color: var(--color-primary);
+            font-weight: var(--font-bold);
+            background-color: color-mix(in srgb, var(--color-primary) 10%, transparent); // Fallback mixed color
+        }
+    }
+}
+
+// SPLIT VIEW LAYOUT
+.split-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    height: 100%; // Ensure it fills modal body
+    min-height: 500px; // Minimum height for desktop
+
+    @media (min-width: 900px) {
+        flex-direction: row;
+        gap: var(--space-6);
+    }
+
+    &__column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        min-width: 0;
+        height: 100%;
+
+        // Header within column
+        h3 {
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--color-primary);
+            margin: 0;
+            padding-bottom: var(--space-2);
+            border-bottom: var(--border-width) solid var(--color-border);
+        }
+    }
+
+    &__list-container {
+        flex: 1;
+        position: relative;
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background: var(--color-bg-subtle);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 300px; // Min height for list area
+    }
+
+    &__list {
+        list-style: none;
+        padding: var(--space-2);
+        margin: 0;
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+
+        // Scrollbar
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: var(--color-border-strong);
+            border-radius: var(--radius-full);
+        }
+    }
+}
+
+// GENERIC LIST ITEM (Fallback or base for specific items)
+.list-item-card {
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: var(--color-primary-light);
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-1px);
+    }
+}
+
+// UTILITIES (Scoped to split view if needed, or general)
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.text-sm {
+    font-size: var(--text-sm);
+}
+
+.text-xs {
+    font-size: var(--text-xs);
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.font-bold {
+    font-weight: var(--font-bold);
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.gap-3 {
+    gap: var(--space-3);
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}

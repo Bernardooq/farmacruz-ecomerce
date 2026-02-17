@@ -1,116 +1,54 @@
 import { useState } from 'react';
 
 export default function ModalUpdateStock({ isOpen, onClose, onSubmit, product }) {
-
   const [quantity, setQuantity] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  /**
-   * Maneja el envío del formulario
-   * Valida que el stock resultante no sea negativo
-   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    const quantityNum = parseInt(quantity);
-    const newStock = product.stock_count + quantityNum;
-
-    // Validar que el stock resultante no sea negativo
-    if (newStock < 0) {
-      setError(
-        `No puedes restar ${Math.abs(quantityNum)} unidades. Stock actual: ${product.stock_count}`
-      );
-      return;
-    }
-
+    e.preventDefault(); setError('');
+    const quantityNum = parseInt(quantity); const newStock = product.stock_count + quantityNum;
+    if (newStock < 0) { setError(`No puedes restar ${Math.abs(quantityNum)} unidades. Stock actual: ${product.stock_count}`); return; }
     setLoading(true);
-
-    try {
-      await onSubmit(product.product_id, quantityNum);
-      setQuantity('');
-      onClose();
-    } catch (err) {
-      setError(err.message || err.detail || 'Error al actualizar el stock');
-    } finally {
-      setLoading(false);
-    }
+    try { await onSubmit(product.product_id, quantityNum); setQuantity(''); onClose(); }
+    catch (err) { setError(err.message || err.detail || 'Error al actualizar el stock'); }
+    finally { setLoading(false); }
   };
 
-  // Render del modal
-
-  // No renderizar si está cerrado o no hay producto
   if (!isOpen || !product) return null;
 
   return (
-    <div className="modal-overlay enable" onClick={onClose}>
-      <div
-        className="modal-content modal-content--small"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Botón cerrar */}
-        <button className="modal-close" onClick={onClose}>×</button>
-
-        <div className="modal-body">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal--sm" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__header">
           <h2>Actualizar Stock</h2>
+          <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">×</button>
+        </div>
+        <div className="modal__body">
+          <form onSubmit={handleSubmit} className="modal__form">
+            {error && <div className="alert alert--danger">{error}</div>}
 
-          <form onSubmit={handleSubmit}>
-            {/* Mensaje de error */}
-            {error && <div className="error-message">{error}</div>}
-
-            {/* Información del producto */}
-            <div className="product-info">
+            <div className="card mb-4 p-3">
               <p><strong>Producto:</strong> {product.name}</p>
               <p><strong>Codigo de barras:</strong> {product.codebar}</p>
               <p><strong>Stock Actual:</strong> {product.stock_count}</p>
             </div>
 
-            {/* Input de cantidad */}
             <div className="form-group">
-              <label htmlFor="quantity">Cantidad a Agregar/Restar *</label>
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="Ej: 10 para agregar, -5 para restar"
-              />
-              <small className="form-hint">
-                Usa números positivos para agregar stock, negativos para restar
-              </small>
+              <label className="form-group__label" htmlFor="quantity">Cantidad a Agregar/Restar *</label>
+              <input className="input" type="number" id="quantity" name="quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required disabled={loading} placeholder="Ej: 10 para agregar, -5 para restar" />
+              <small className="form-group__hint">Usa números positivos para agregar stock, negativos para restar</small>
             </div>
 
-            {/* Preview del nuevo stock */}
             {quantity && (
-              <div className="stock-preview">
-                <p>
-                  <strong>Nuevo Stock:</strong>{' '}
-                  {product.stock_count + parseInt(quantity || 0)}
-                </p>
+              <div className="card mb-4 p-3">
+                <p><strong>Nuevo Stock:</strong> {product.stock_count + parseInt(quantity || 0)}</p>
               </div>
             )}
 
-            {/* Botones de acción */}
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={onClose}
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={loading}
-              >
-                {loading ? 'Actualizando...' : 'Actualizar Stock'}
-              </button>
+            <div className="modal__footer">
+              <button type="button" className="btn btn--secondary" onClick={onClose} disabled={loading}>Cancelar</button>
+              <button type="submit" className="btn btn--primary" disabled={loading}>{loading ? 'Actualizando...' : 'Actualizar Stock'}</button>
             </div>
           </form>
         </div>

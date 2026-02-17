@@ -8,31 +8,17 @@ export default function OrderRowAdmin({
   onViewDetails,
   isLoading
 }) {
-  // FORMATTERS
-  /**
-   * Formatea una fecha en formato local
-   */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
+    return date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
   };
 
-  /**
-   * Formatea un monto como moneda
-   */
-  const formatCurrency = (amount) => {
-    return `$${parseFloat(amount).toFixed(2)}`;
-  };
+  const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
   const clientName = order.customer?.full_name || order.customer?.username || 'N/A';
   const clientContact = order.customer?.email || 'N/A';
   const itemCount = order.items?.length || 0;
 
-  // Render
   return (
     <tr>
       <td data-label="Cliente">{clientName}</td>
@@ -46,36 +32,13 @@ export default function OrderRowAdmin({
           <FontAwesomeIcon icon={faSpinner} spin />
         ) : (
           <>
-            {/* Aprobar Pedido */}
-            <button
-              className="btn-icon btn--approve"
-              aria-label="Aprobar pedido"
-              onClick={() => onApprove(order.order_id)}
-              disabled={isLoading}
-              title="Aprobar"
-            >
+            <button className="btn btn--icon btn--success" aria-label="Aprobar pedido" onClick={() => onApprove(order.order_id)} disabled={isLoading} title="Aprobar">
               <FontAwesomeIcon icon={faCheck} />
             </button>
-
-            {/* Rechazar/Cancelar Pedido */}
-            <button
-              className="btn-icon btn--reject"
-              aria-label="Rechazar pedido"
-              onClick={() => onCancel(order.order_id)}
-              disabled={isLoading}
-              title="Rechazar"
-            >
+            <button className="btn btn--icon btn--danger" aria-label="Rechazar pedido" onClick={() => onCancel(order.order_id)} disabled={isLoading} title="Rechazar">
               <FontAwesomeIcon icon={faTimes} />
             </button>
-
-            {/* Ver Detalles */}
-            <button
-              className="btn-icon btn--view"
-              aria-label="Ver detalles del pedido"
-              onClick={() => onViewDetails(order.order_id)}
-              disabled={isLoading}
-              title="Ver Detalles"
-            >
+            <button className="btn btn--icon btn--ghost" aria-label="Ver detalles del pedido" onClick={() => onViewDetails(order.order_id)} disabled={isLoading} title="Ver Detalles">
               <FontAwesomeIcon icon={faEye} />
             </button>
           </>

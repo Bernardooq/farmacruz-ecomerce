@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPills, faCapsules, faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { productService } from '../../services/productService';
 import { useAuth } from '../../context/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -16,28 +18,15 @@ export default function SimilarProducts({ productId, onProductSelect }) {
 
     const loadSimilarProducts = async () => {
         if (!productId) return;
-
         try {
-            setLoading(true);
-            setError(null);
-
-            // Obtener price_list_id del usuario si está logueado
+            setLoading(true); setError(null);
             const priceListId = user?.customer_info?.price_list_id || null;
-
-            const data = await productService.getSimilarProducts(
-                productId,
-                priceListId,
-                5,  // límite de 5 productos
-                0.3 // mínimo 30% de similitud
-            );
-
+            const data = await productService.getSimilarProducts(productId, priceListId, 5, 0.3);
             setSimilarProducts(data.similar_products || []);
         } catch (err) {
             console.error('Error loading similar products:', err);
             setError('No se pudieron cargar productos similares');
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
     if (loading) {
@@ -58,89 +47,65 @@ export default function SimilarProducts({ productId, onProductSelect }) {
         );
     }
 
-    if (!similarProducts || similarProducts.length === 0) {
-        return null; // No mostrar nada si no hay similares
-    }
+    if (!similarProducts || similarProducts.length === 0) return null;
 
     return (
         <div className="similar-products">
             <h3 className="similar-products__title">
-                <i className="fas fa-pills"></i> Productos Similares
+                <FontAwesomeIcon icon={faPills} /> Productos Similares
             </h3>
-            <p className="similar-products__subtitle">
-                Basado en componentes activos
-            </p>
+            <p className="similar-products__subtitle">Basado en componentes activos</p>
 
             <div className="similar-products__grid">
                 {similarProducts.map((item) => {
-                    const { product, similarity_score } = item;  // price_info ya no se usa
+                    const { product, similarity_score } = item;
                     const similarityPercent = Math.round(similarity_score * 100);
 
                     return (
                         <div key={product.product_id} className="similar-product-card">
-                            {/* Imagen */}
                             <div className="similar-product-card__image">
                                 {product.image_url ? (
                                     <img src={product.image_url} alt={product.name} />
                                 ) : (
                                     <div className="similar-product-card__no-image">
-                                        <i className="fas fa-capsules"></i>
+                                        <FontAwesomeIcon icon={faCapsules} />
                                     </div>
                                 )}
                             </div>
 
-                            {/* Contenido */}
                             <div className="similar-product-card__content">
                                 <h4 className="similar-product-card__name">{product.name}</h4>
 
                                 {product.descripcion_2 && (
-                                    <p className="similar-product-card__components">
-                                        {product.descripcion_2}
-                                    </p>
+                                    <p className="similar-product-card__components">{product.descripcion_2}</p>
                                 )}
 
-                                {/* Similitud badge */}
                                 <div className="similar-product-card__similarity">
-                                    <span className="similarity-badge">
-                                        {similarityPercent}% similar
+                                    <span className="similarity-badge">{similarityPercent}% similar</span>
+                                </div>
+
+                                <div className="similar-product-card__price">
+                                    <span className="price-label">Precio:</span>
+                                    <span className="price-value">
+                                        {product.final_price != null ? `$${product.final_price.toFixed(2)}` : 'No disponible'}
                                     </span>
                                 </div>
 
-                                {/* Precio - Siempre disponible en product.final_price */}
-                                {product.final_price != null ? (
-                                    <div className="similar-product-card__price">
-                                        <span className="price-label">Precio:</span>
-                                        <span className="price-value">${product.final_price.toFixed(2)}</span>
-                                    </div>
-                                ) : (
-                                    <div className="similar-product-card__price">
-                                        <span className="price-label">Precio:</span>
-                                        <span className="price-value">No disponible</span>
-                                    </div>
-                                )}
-
-                                {/* Stock */}
                                 <div className="similar-product-card__stock">
                                     {product.stock_count > 0 ? (
-                                        <span className="stock-badge stock-badge--available">
-                                            <i className="fas fa-check-circle"></i> Disponible
+                                        <span className="stock-badge stock-badge--in-stock">
+                                            <FontAwesomeIcon icon={faCheckCircle} /> Disponible
                                         </span>
                                     ) : (
-                                        <span className="stock-badge stock-badge--out">
-                                            <i className="fas fa-times-circle"></i> Agotado
+                                        <span className="stock-badge stock-badge--out-of-stock">
+                                            <FontAwesomeIcon icon={faTimesCircle} /> Agotado
                                         </span>
                                     )}
                                 </div>
 
-                                {/* Botón ver detalles */}
                                 <button
-                                    onClick={() => {
-                                        if (onProductSelect) {
-                                            // Producto ya tiene final_price incluido
-                                            onProductSelect(product);
-                                        }
-                                    }}
-                                    className="similar-product-card__link"
+                                    onClick={() => { if (onProductSelect) onProductSelect(product); }}
+                                    className="btn btn--secondary btn--sm"
                                 >
                                     Ver detalles →
                                 </button>

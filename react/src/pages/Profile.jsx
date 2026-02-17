@@ -3,19 +3,14 @@
  * ===========
  * Página de perfil del cliente en FarmaCruz
  * 
- * Esta página permite a los clientes ver y editar su información personal,
- * así como consultar su historial de pedidos con paginación.
- * 
  * Funcionalidades:
- * - Ver y editar información del usuario (nombre, email, contraseña)
- * - Ver y editar información del cliente (negocio, direcciones, RFC)
+ * - Ver información del usuario (nombre, email)
+ * - Ver información del cliente (negocio, direcciones, RFC)
  * - Ver historial de pedidos paginado
  * - Ver detalles de pedidos individuales
  * - Cancelar pedidos (solo si está en estado 'pending_validation')
  * 
- * Permisos:
- * - Solo para clientes (role: 'customer')
- * - Usuarios staff son redirigidos a sus dashboards respectivos
+ * Permisos: Solo para clientes (role: 'customer')
  */
 
 import { useEffect, useState } from 'react';
@@ -34,7 +29,6 @@ import orderService from '../services/orderService';
 // ============================================
 const ORDERS_PER_PAGE = 10;
 
-// Mapeo de estados de pedido a etiquetas legibles
 const STATUS_LABELS = {
   'pending_validation': 'Validando',
   'approved': 'Aprobado',
@@ -43,10 +37,9 @@ const STATUS_LABELS = {
   'cancelled': 'Cancelado'
 };
 
-// Mapeo de estados a clases CSS
 const STATUS_CLASSES = {
   'pending_validation': 'pending',
-  'approved': 'approved',
+  'approved': 'confirmed',
   'shipped': 'shipped',
   'delivered': 'delivered',
   'cancelled': 'cancelled'
@@ -59,82 +52,47 @@ export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Estado de datos del usuario
   const [profile, setProfile] = useState(null);
   const [customerInfo, setCustomerInfo] = useState(null);
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // Estado de UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Estado de edición
   const [editData, setEditData] = useState({});
-
-  // Estado de paginación de pedidos
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
   // ============================================
   // EFFECTS
   // ============================================
-
-  /**
-   * Bloquear acceso a usuarios internos (admin/seller/marketing)
-   * y redirigirlos a sus dashboards respectivos
-   */
   useEffect(() => {
     if (user && user.role !== 'customer') {
-      const dashboardRoutes = {
-        'admin': '/admindash',
-        'seller': '/sellerdash',
-        'marketing': '/marketingdash'
-      };
-
-      navigate(dashboardRoutes[user.role] || '/');
+      const routes = { 'admin': '/admindash', 'seller': '/sellerdash', 'marketing': '/marketingdash' };
+      navigate(routes[user.role] || '/');
     }
   }, [user, navigate]);
 
-  /**
-   * Cargar datos del perfil al montar el componente
-   */
-  useEffect(() => {
-    loadProfileData();
-  }, []);
-
-  /**
-   * Recargar pedidos cuando cambia la página
-   */
-  useEffect(() => {
-    loadOrders();
-  }, [page]);
+  useEffect(() => { loadProfileData(); }, []);
+  useEffect(() => { loadOrders(); }, [page]);
 
   // ============================================
   // DATA FETCHING
   // ============================================
-
-  /**
-   * Carga los datos del perfil del usuario y su información de cliente
-   */
   const loadProfileData = async () => {
     try {
       setLoading(true);
-
       const [userData, customerData] = await Promise.all([
         userService.getCurrentUser(),
-        userService.getCurrentUserCustomerInfo().catch(() => null) // Si no tiene customer info, devolver null
+        userService.getCurrentUserCustomerInfo().catch(() => null)
       ]);
-
       setProfile(userData);
       setCustomerInfo(customerData);
-
-      // Inicializar datos de edición
       setEditData({
         full_name: userData.full_name || '',
         email: userData.email || '',
-        password: '',
-        confirmPassword: '',
+        password: '', confirmPassword: '',
         business_name: customerData?.business_name || '',
         address_1: customerData?.address_1 || '',
         address_2: customerData?.address_2 || '',
@@ -151,40 +109,21 @@ export default function Profile() {
     }
   };
 
-  /**
-   * Carga el historial de pedidos del usuario con paginación
-   */
   const loadOrders = async () => {
     try {
       setLoading(true);
-
-      const ordersData = await orderService.getOrders({
-        skip: page * ORDERS_PER_PAGE,
-        limit: ORDERS_PER_PAGE + 1 // Pedir uno más para saber si hay más páginas
-      });
-
-      // Verificar si hay más páginas
+      const ordersData = await orderService.getOrders({ skip: page * ORDERS_PER_PAGE, limit: ORDERS_PER_PAGE + 1 });
       const hasMorePages = ordersData.length > ORDERS_PER_PAGE;
       setHasMore(hasMorePages);
-
-      // Tomar solo los items de la página actual
-      const pageOrders = hasMorePages
-        ? ordersData.slice(0, ORDERS_PER_PAGE)
-        : ordersData;
-
-      // Mapear órdenes a formato esperado por los componentes
+      const pageOrders = hasMorePages ? ordersData.slice(0, ORDERS_PER_PAGE) : ordersData;
       const completedOrders = pageOrders.map(order => ({
         id: `FC-${order.order_id}`,
         orderId: order.order_id,
-        date: new Date(order.created_at).toLocaleDateString('es-MX', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
+        date: new Date(order.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }),
         total: `$${parseFloat(order.total_amount).toFixed(2)} MXN`,
         totalAmount: parseFloat(order.total_amount),
-        status: getStatusLabel(order.status),
-        statusClass: getStatusClass(order.status),
+        status: STATUS_LABELS[order.status] || order.status,
+        statusClass: STATUS_CLASSES[order.status] || 'pending',
         rawStatus: order.status,
         shippingAddress: order.shipping_address || 'No especificada',
         items: (order.items || []).map(item => ({
@@ -194,7 +133,6 @@ export default function Profile() {
           subtotal: parseFloat(item.final_price) * item.quantity
         }))
       }));
-
       setOrders(completedOrders);
     } catch (err) {
       console.error('Error loading orders:', err);
@@ -204,47 +142,20 @@ export default function Profile() {
   };
 
   // ============================================
-  // HELPERS
+  // HANDLERS
   // ============================================
-
-  /**
-   * Obtiene la etiqueta legible de un estado de pedido
-   */
-  const getStatusLabel = (status) => {
-    return STATUS_LABELS[status] || status;
-  };
-
-  /**
-   * Obtiene la clase CSS correspondiente a un estado de pedido
-   */
-  const getStatusClass = (status) => {
-    return STATUS_CLASSES[status] || 'pending';
-  };
-
-  /**
-   * Maneja los cambios en los campos del formulario
-   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setEditData(prev => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Maneja la cancelación de un pedido
-   */
   const handleCancelOrder = async (order) => {
-    if (!window.confirm(`¿Estás seguro de cancelar el pedido ${order.id}?`)) {
-      return;
-    }
-
+    if (!window.confirm(`¿Estás seguro de cancelar el pedido ${order.id}?`)) return;
     try {
       setLoading(true);
       await orderService.cancelOrder(order.orderId);
       alert('Pedido cancelado exitosamente');
-      await loadOrders(); // Recargar pedidos
+      await loadOrders();
     } catch (err) {
       console.error('Error canceling order:', err);
       alert('Error al cancelar el pedido');
@@ -254,184 +165,106 @@ export default function Profile() {
   };
 
   // ============================================
-  // RENDER - LOADING STATE
+  // RENDER
   // ============================================
   if (loading && !profile) {
     return (
-      <>
+      <div className="page">
         <SearchBar />
-        <main className="profile-page">
-          <div className="container">
-            <p>Cargando perfil...</p>
-          </div>
-        </main>
+        <main className="page__content"><div className="spinner-overlay"><div className="spinner" /></div></main>
         <Footer />
-      </>
+      </div>
     );
   }
 
-  // ============================================
-  // RENDER - ERROR STATE
-  // ============================================
   if (error) {
     return (
-      <>
+      <div className="page">
         <SearchBar />
-        <main className="profile-page">
-          <div className="container">
-            <p className="error-message">{error}</p>
+        <main className="page__content">
+          <div className="page-container">
+            <div className="alert alert--danger">{error}</div>
           </div>
         </main>
         <Footer />
-      </>
+      </div>
     );
   }
 
-  // ============================================
-  // RENDER - MAIN CONTENT
-  // ============================================
   return (
-    <>
+    <div className="page">
       <SearchBar />
 
-      <main className="profile-page">
-        <div className="container">
-          <h1 className="profile-page__title">Panel de Cliente</h1>
+      <main className="page__content">
+        <div className="page-container">
+          <h1 className="section-title mb-6">Panel de Cliente</h1>
 
           {/* ============================================ */}
           {/* SECCIÓN DE INFORMACIÓN DEL PERFIL           */}
           {/* ============================================ */}
-          <div className="profile-section">
-            {/* Header con botones de acción */}
-            <div className="profile-header">
-              <h2>Información del Perfil</h2>
+          <div className="dashboard-section mb-6">
+            <div className="section-header">
+              <h2 className="section-title">Información del Perfil</h2>
             </div>
 
-            {/* Formulario de perfil */}
-            <div className="profile-form">
+            <div className="modal__form">
               {/* Usuario (no editable) */}
               <div className="form-group">
-                <label>Usuario:</label>
-                <input
-                  type="text"
-                  value={profile?.username || ''}
-                  disabled
-                  className="input-disabled"
-                />
+                <label className="form-group__label">Usuario:</label>
+                <input className="input" type="text" value={profile?.username || ''} disabled />
               </div>
 
               {/* Nombre completo */}
               <div className="form-group">
-                <label>Nombre Completo:</label>
-                <input
-                  type="text"
-                  name="full_name"
-                  value={editData.full_name}
-                  onChange={handleInputChange}
-                  disabled={true}
-                />
+                <label className="form-group__label">Nombre Completo:</label>
+                <input className="input" type="text" name="full_name" value={editData.full_name} onChange={handleInputChange} disabled />
               </div>
 
               {/* Email */}
               <div className="form-group">
-                <label>Email:</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={editData.email}
-                  onChange={handleInputChange}
-                  disabled={true}
-                />
+                <label className="form-group__label">Email:</label>
+                <input className="input" type="email" name="email" value={editData.email} onChange={handleInputChange} disabled />
               </div>
 
-
-
-              {/* Información de negocio (solo si tiene customerInfo) */}
+              {/* Información de negocio */}
               {customerInfo && (
                 <>
-                  <div className="form-group">
-                    <label>Nombre del Negocio:</label>
-                    <input
-                      type="text"
-                      name="business_name"
-                      value={editData.business_name}
-                      onChange={handleInputChange}
-                      disabled={true}
-                    />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-group__label">Nombre del Negocio:</label>
+                      <input className="input" type="text" name="business_name" value={editData.business_name} onChange={handleInputChange} disabled />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-group__label">RFC:</label>
+                      <input className="input" type="text" name="rfc" value={editData.rfc} onChange={handleInputChange} disabled maxLength="13" />
+                    </div>
                   </div>
 
                   <div className="form-group">
-                    <label>Dirección 1 (Principal):</label>
-                    <input
-                      type="text"
-                      name="address_1"
-                      value={editData.address_1}
-                      onChange={handleInputChange}
-                      disabled={true}
-                      placeholder="Calle, número, colonia"
-                    />
+                    <label className="form-group__label">Dirección 1 (Principal):</label>
+                    <input className="input" type="text" name="address_1" value={editData.address_1} onChange={handleInputChange} disabled placeholder="Calle, número, colonia" />
                   </div>
 
-                  <div className="form-group">
-                    <label>Dirección 2 (Opcional):</label>
-                    <input
-                      type="text"
-                      name="address_2"
-                      value={editData.address_2}
-                      onChange={handleInputChange}
-                      disabled={true}
-                      placeholder="Dirección alternativa"
-                    />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-group__label">Dirección 2 (Opcional):</label>
+                      <input className="input" type="text" name="address_2" value={editData.address_2} onChange={handleInputChange} disabled placeholder="Dirección alternativa" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-group__label">Dirección 3 (Opcional):</label>
+                      <input className="input" type="text" name="address_3" value={editData.address_3} onChange={handleInputChange} disabled placeholder="Dirección alternativa" />
+                    </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>Dirección 3 (Opcional):</label>
-                    <input
-                      type="text"
-                      name="address_3"
-                      value={editData.address_3}
-                      onChange={handleInputChange}
-                      disabled={true}
-                      placeholder="Dirección alternativa"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>RFC:</label>
-                    <input
-                      type="text"
-                      name="rfc"
-                      value={editData.rfc}
-                      onChange={handleInputChange}
-                      disabled={true}
-                      maxLength="13"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Teléfono Principal:</label>
-                    <input
-                      type="tel"
-                      name="telefono_1"
-                      value={editData.telefono_1}
-                      onChange={handleInputChange}
-                      disabled={true}
-                      maxLength="15"
-                      placeholder="10 dígitos"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Teléfono Secundario:</label>
-                    <input
-                      type="tel"
-                      name="telefono_2"
-                      value={editData.telefono_2}
-                      onChange={handleInputChange}
-                      disabled={true}
-                      maxLength="15"
-                      placeholder="Opcional"
-                    />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-group__label">Teléfono Principal:</label>
+                      <input className="input" type="tel" name="telefono_1" value={editData.telefono_1} onChange={handleInputChange} disabled maxLength="15" placeholder="10 dígitos" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-group__label">Teléfono Secundario:</label>
+                      <input className="input" type="tel" name="telefono_2" value={editData.telefono_2} onChange={handleInputChange} disabled maxLength="15" placeholder="Opcional" />
+                    </div>
                   </div>
                 </>
               )}
@@ -447,7 +280,7 @@ export default function Profile() {
             onCancelOrder={handleCancelOrder}
           />
 
-          {/* Paginación (solo si hay pedidos) */}
+          {/* Paginación */}
           {orders.length > 0 && (
             <PaginationButtons
               onPrev={() => setPage(p => Math.max(0, p - 1))}
@@ -468,6 +301,6 @@ export default function Profile() {
           onClose={() => setSelectedOrder(null)}
         />
       )}
-    </>
+    </div>
   );
 }

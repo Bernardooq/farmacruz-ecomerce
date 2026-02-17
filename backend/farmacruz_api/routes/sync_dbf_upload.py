@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Este pool ejecuta syncs en threads separados
 # max_workers=2: Máximo 2 syncs simultáneos, el resto espera en cola
 executor = ThreadPoolExecutor(
-    max_workers=2,
+    max_workers=1,
     thread_name_prefix="sync_thread_"
 )
 

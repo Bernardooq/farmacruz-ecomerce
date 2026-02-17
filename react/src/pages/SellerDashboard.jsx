@@ -3,20 +3,13 @@
  * ===================
  * Dashboard del vendedor de FarmaCruz
  * 
- * Esta página proporciona a los vendedores acceso a las funcionalidades
- * necesarias para gestionar pedidos e inventario.
- * 
  * Funcionalidades:
  * - Ver estadísticas resumidas (pedidos pendientes, productos en catálogo, stock bajo)
  * - Gestión de pedidos asignados
  * - Gestión de inventario (productos y stock)
  * - Gestión de categorías
  * 
- * Permisos:
- * - Solo para usuarios con role: 'seller'
- * 
- * Nota: Los vendedores tienen permisos limitados comparado con admin.
- * No pueden gestionar clientes ni listas de precios.
+ * Permisos: Solo para usuarios con role: 'seller'
  */
 
 import { useEffect, useState } from 'react';
@@ -34,42 +27,23 @@ export default function SellerDashboard() {
   // ============================================
   // HOOKS & STATE
   // ============================================
-
-  // Estado de datos
   const [summary, setSummary] = useState({});
-
-  // Estado de UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // ============================================
   // EFFECTS
   // ============================================
-
-  /**
-   * Cargar datos del dashboard al montar el componente
-   */
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  useEffect(() => { loadDashboardData(); }, []);
 
   // ============================================
   // DATA FETCHING
   // ============================================
-
-  /**
-   * Carga las estadísticas del dashboard del vendedor
-   * Ahora usa el endpoint del backend en lugar de calcular en el frontend
-   */
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Obtener estadísticas del dashboard desde el backend
       const stats = await dashboardService.getSellerMarketingStats();
-
-      // Actualizar estado con las métricas del backend
       setSummary({
         pendingOrders: stats.pending_orders,
         catalogCount: stats.total_products,
@@ -88,15 +62,15 @@ export default function SellerDashboard() {
   // ============================================
   if (loading) {
     return (
-      <>
+      <div className="page">
         <Header />
-        <main className="dashboard-page">
-          <div className="container">
+        <main className="dashboard-layout">
+          <div className="dashboard-layout__container">
             <LoadingSpinner message="Cargando dashboard..." />
           </div>
         </main>
         <Footer />
-      </>
+      </div>
     );
   }
 
@@ -104,22 +78,17 @@ export default function SellerDashboard() {
   // RENDER - MAIN CONTENT
   // ============================================
   return (
-    <>
+    <div className="page">
       <Header />
 
-      <main className="dashboard-page">
-        <div className="container">
-          <h1 className="dashboard-page__title">Panel de Vendedor</h1>
+      <main className="dashboard-layout">
+        <div className="dashboard-layout__container">
+          <h1 className="dashboard-layout__greeting">Panel de Vendedor</h1>
 
-          {/* Mensaje de error si lo hay */}
-          {error && (
-            <ErrorMessage
-              error={error}
-              onDismiss={() => setError(null)}
-            />
-          )}
+          {/* Mensaje de error */}
+          {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-          {/* Tarjetas de resumen con estadísticas */}
+          {/* Tarjetas de resumen */}
           <SummaryCards summary={summary} />
 
           {/* Gestión de pedidos */}
@@ -134,6 +103,6 @@ export default function SellerDashboard() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
