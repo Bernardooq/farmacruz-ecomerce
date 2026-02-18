@@ -1,43 +1,39 @@
-annotated-doc==0.0.4
-annotated-types==0.7.0
-anyio==4.12.1
-argon2-cffi==25.1.0
-argon2-cffi-bindings==25.1.0
-bcrypt==5.0.0
-certifi==2026.1.4
-cffi==2.0.0
-charset-normalizer==3.4.4
-click==8.1.7
-colorama==0.4.6
-cryptography==46.0.3
-dbfread==2.0.7
-dnspython==2.7.0
-ecdsa==0.19.1
-email-validator==2.3.0
+# === CORE FRAMEWORK ===
 fastapi==0.128.0
-greenlet==3.2.4
-h11==0.16.0
-httptools==0.7.1
-idna==3.11
-passlib==1.7.4
+uvicorn==0.39.0
+starlette==0.49.3
+click==8.1.7
+
+# === BASE DE DATOS ===
+SQLAlchemy==2.0.46
 psycopg2-binary==2.9.11
-pyasn1==0.6.2
-pycparser==2.22
+
+# === DATOS & SINCRONIZACIÓN (NUEVO) ===
+requests==2.32.5
+pandas==2.2.3
+dbfread==2.0.7
+numpy==1.26.4
+# (Agregué numpy explícitamente pq Pandas lo necesita y esta versión es súper estable)
+
+# === VALIDACIÓN ===
 pydantic==2.12.5
 pydantic-settings==2.11.0
-pydantic_core==2.41.5
-python-dotenv==1.2.1
+pydantic-core==2.41.5
+email-validator==2.3.0
+annotated-types==0.7.0
+
+# === SEGURIDAD & AUTH ===
 python-jose==3.5.0
+passlib==1.7.4
+bcrypt==5.0.0
+argon2-cffi==25.1.0
+cryptography==46.0.3
 python-multipart==0.0.20
+
+# === UTILIDADES ===
+python-dotenv==1.2.1
 PyYAML==6.0.3
-requests==2.32.5
-rsa==4.9.1
-six==1.17.0
-SQLAlchemy==2.0.46
-starlette==0.49.3
-typing-inspection==0.4.2
-typing_extensions==4.15.0
-urllib3==2.6.3
-uvicorn==0.39.0
 watchfiles==1.1.1
 websockets==15.0.1
+colorama==0.4.6
+typing_extensions==4.15.0
