@@ -101,7 +101,7 @@ export default function ModalEditProduct({ isOpen, onClose, onSubmit, product })
               <input className="input" type="url" id="image_url" name="image_url" value={formData.image_url} onChange={handleChange} disabled={loading} placeholder="https://ejemplo.com/imagen.jpg" />
               {formData.image_url && (
                 <div className="image-preview mt-2">
-                  <img src={formData.image_url} alt="Preview del producto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                  <img src={formData.image_url} loading='lazy' alt="Preview del producto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
                   <div className="image-error" style={{ display: 'none' }}>❌ No se pudo cargar la imagen</div>
                 </div>
               )}

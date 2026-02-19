@@ -65,7 +65,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                         <div key={product.product_id} className="similar-product-card">
                             <div className="similar-product-card__image">
                                 {product.image_url ? (
-                                    <img src={product.image_url} alt={product.name} />
+                                    <img src={product.image_url} loading='lazy' alt={product.name} />
                                 ) : (
                                     <div className="similar-product-card__no-image">
                                         <FontAwesomeIcon icon={faCapsules} />

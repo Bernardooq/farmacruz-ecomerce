@@ -139,6 +139,9 @@ def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> 
         update_data["password_hash"] = get_password_hash(update_data["password"])
         del update_data["password"]
 
+    # Guardar agent_id anterior para verificar cambios
+    old_agent_id = db_customer.agent_id
+
     # Actualizar campos
     for field, value in update_data.items():
         setattr(db_customer, field, value)
@@ -146,9 +149,10 @@ def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> 
     db.commit()
     db.refresh(db_customer)
     
-    # Auto-asignar al grupo del agente si cambió el agent_id
-    if "agent_id" in update_data and update_data["agent_id"]:
-        assign_customer_to_agent_group(db, customer_id, update_data["agent_id"])
+    # Auto-asignar al grupo del agente si cambió el agent_id y es válido
+    if "agent_id" in update_data and update_data["agent_id"] != old_agent_id:
+        if update_data["agent_id"]:
+            assign_customer_to_agent_group(db, customer_id, update_data["agent_id"])
     
     return db_customer
 
@@ -192,6 +196,14 @@ def create_or_update_customer_info(db: Session, customer_info: CustomerInfo, cus
     if existing_info:
         # Actualizar existente y agregar como campo el id
         update_data = customer_info.model_dump(exclude_unset=True)
+        
+        # PROTECCION: Si el cliente tiene agente asignado, NO permitir cambiar el grupo desde aqui
+        # El grupo debe ser gestionado por la asignacion de agente (update_customer)
+        # Esto evita que el frontend sobrescriba el grupo con datos viejos
+        current_customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+        if current_customer and current_customer.agent_id and 'sales_group_id' in update_data:
+            del update_data['sales_group_id']
+            
         for field, value in update_data.items():
             if field != 'customer_info_id':  # No actualizar el ID
                 setattr(existing_info, field, value)

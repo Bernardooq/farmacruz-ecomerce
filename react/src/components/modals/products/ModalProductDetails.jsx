@@ -58,7 +58,7 @@ export default function ModalProductDetails({ product, isOpen, onClose, onProduc
         <div className="modal__body modal__body--scroll">
           <div className="product-details">
             <div className="product-details__image">
-              <img src={product.image_url || '../../../images/default-product.jpg'} alt={product.name} />
+              <img src={product.image_url || '../../../images/default-product.jpg'} loading='lazy' alt={product.name} />
             </div>
             <div className="product-details__info">
               <div>

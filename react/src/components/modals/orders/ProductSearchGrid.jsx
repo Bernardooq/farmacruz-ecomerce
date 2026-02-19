@@ -10,18 +10,31 @@ const PRODUCTS_PER_PAGE = 12;
 export default function ProductSearchGrid({ customerId, onAddToOrder, onShowSimilar }) {
     const [availableProducts, setAvailableProducts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [productsPage, setProductsPage] = useState(0);
     const [hasMoreProducts, setHasMoreProducts] = useState(true);
     const [productsLoading, setProductsLoading] = useState(false);
 
-    useEffect(() => { if (customerId) loadAvailableProducts(); }, [customerId, productsPage]);
+    // Debounce effect
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+            setProductsPage(0);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Load products when debounced search or page changes
+    useEffect(() => {
+        if (customerId) loadAvailableProducts();
+    }, [customerId, productsPage, debouncedSearchTerm]);
 
     const loadAvailableProducts = async () => {
         if (!customerId) return;
         try {
             setProductsLoading(true);
             const params = { skip: productsPage * PRODUCTS_PER_PAGE, limit: PRODUCTS_PER_PAGE + 1 };
-            if (searchTerm) params.search = searchTerm;
+            if (debouncedSearchTerm) params.search = debouncedSearchTerm;
             const data = await catalogService.getCustomerCatalogProducts(customerId, params);
             const hasMorePages = data.length > PRODUCTS_PER_PAGE;
             setHasMoreProducts(hasMorePages);
@@ -30,7 +43,8 @@ export default function ProductSearchGrid({ customerId, onAddToOrder, onShowSimi
         finally { setProductsLoading(false); }
     };
 
-    const handleProductSearch = (e) => { e.preventDefault(); setProductsPage(0); loadAvailableProducts(); };
+    // Remove manual submit, just prevent default
+    const handleProductSearch = (e) => { e.preventDefault(); };
 
     return (
         <>

@@ -69,10 +69,10 @@ router = APIRouter()
 
 """ GET / - Obtener todos los grupos de ventas con conteos de miembros """
 @router.get("/", response_model=List[SalesGroupWithMembers])
-def read_sales_groups(skip: int = 0, limit: int = 100, is_active: Optional[bool] = None,
+def read_sales_groups(skip: int = 0, limit: int = 100, is_active: Optional[bool] = None, search: Optional[str] = None,
     db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Obtiene todos los grupos de ventas con conteos de miembros.
-    groups = get_sales_groups(db, skip=skip, limit=limit, is_active=is_active)
+    groups = get_sales_groups(db, skip=skip, limit=limit, is_active=is_active, search=search)
     
     # Add member counts to each group
     groups_with_counts = []

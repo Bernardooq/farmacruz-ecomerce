@@ -93,7 +93,8 @@ export default function SalesTeamManagement() {
       setLoading(true);
       setError(null);
       const groupsData = await salesGroupService.getSalesGroups({
-        skip: page * itemsPerPage, limit: itemsPerPage + 1
+        skip: page * itemsPerPage, limit: itemsPerPage + 1,
+        search: debouncedSearchTerm || undefined
       });
       const hasMorePages = groupsData.length > itemsPerPage;
       setHasMore(hasMorePages);
@@ -235,6 +236,21 @@ export default function SalesTeamManagement() {
         <button className="btn btn--primary btn--sm" onClick={openAddGroupModal}>
           <FontAwesomeIcon icon={faUsersGear} /> Crear Grupo
         </button>
+      </div>
+
+      <div className="dashboard-controls">
+        <form className="search-bar" onSubmit={handleSearch}>
+          <input
+            type="search"
+            className="input"
+            placeholder="Buscar grupo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button type="submit" className="btn btn--primary" aria-label="Buscar">
+            <FontAwesomeIcon icon={faSearch} />
+          </button>
+        </form>
       </div>
 
       <div className="table-container">

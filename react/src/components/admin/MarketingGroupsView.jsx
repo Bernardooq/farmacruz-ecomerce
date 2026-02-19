@@ -23,22 +23,42 @@ export default function MarketingGroupsView() {
 
     // Pagination for modals
     const [sellerSearch, setSellerSearch] = useState('');
+    const [debouncedSellerSearch, setDebouncedSellerSearch] = useState('');
     const [sellerPage, setSellerPage] = useState(0);
     const [sellerHasMore, setSellerHasMore] = useState(false);
+
     const [customerSearch, setCustomerSearch] = useState('');
+    const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState('');
     const [customerPage, setCustomerPage] = useState(0);
     const [customerHasMore, setCustomerHasMore] = useState(false);
     const itemsPerPage = 10;
 
     useEffect(() => { loadMyGroups(); }, []);
 
+    // Debounce effects
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSellerSearch(sellerSearch);
+            setSellerPage(0);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [sellerSearch]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedCustomerSearch(customerSearch);
+            setCustomerPage(0);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [customerSearch]);
+
     useEffect(() => {
         if (showSellersModal && selectedGroup) loadGroupSellers(selectedGroup.sales_group_id);
-    }, [sellerPage, sellerSearch, showSellersModal, selectedGroup]);
+    }, [sellerPage, debouncedSellerSearch, showSellersModal, selectedGroup]);
 
     useEffect(() => {
         if (showCustomersModal && selectedGroup) loadGroupCustomers(selectedGroup.sales_group_id);
-    }, [customerPage, customerSearch, showCustomersModal, selectedGroup]);
+    }, [customerPage, debouncedCustomerSearch, showCustomersModal, selectedGroup]);
 
     const loadMyGroups = async () => {
         try {
@@ -79,7 +99,7 @@ export default function MarketingGroupsView() {
             setModalLoading(true);
             const data = await salesGroupService.getGroupSellers(groupId, {
                 skip: sellerPage * itemsPerPage, limit: itemsPerPage + 1,
-                search: sellerSearch || undefined
+                search: debouncedSellerSearch || undefined
             });
             const hasMore = data.length > itemsPerPage;
             setSellerHasMore(hasMore);
@@ -97,7 +117,7 @@ export default function MarketingGroupsView() {
             setModalLoading(true);
             const data = await salesGroupService.getGroupCustomers(groupId, {
                 skip: customerPage * itemsPerPage, limit: itemsPerPage + 1,
-                search: customerSearch || undefined
+                search: debouncedCustomerSearch || undefined
             });
             const hasMore = data.length > itemsPerPage;
             setCustomerHasMore(hasMore);
@@ -124,12 +144,10 @@ export default function MarketingGroupsView() {
 
     const handleSellerSearchChange = useCallback((value) => {
         setSellerSearch(value);
-        setSellerPage(0);
     }, []);
 
     const handleCustomerSearchChange = useCallback((value) => {
         setCustomerSearch(value);
-        setCustomerPage(0);
     }, []);
 
     // ─── Shared modal render ──────────────────────

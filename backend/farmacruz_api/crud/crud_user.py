@@ -15,6 +15,7 @@ RANGOS DE IDs:
 
 from typing import List, Optional
 from .crud_sales_group import get_user_groups, create_sales_group, assign_seller_to_group
+from utils.sales_group_utils import auto_crear_grupo_seller
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func, and_
@@ -55,6 +56,8 @@ def get_users(db: Session, skip: int = 0, limit: int = 100, role: Optional[UserR
         )
     
     return query.offset(skip).limit(limit).all()
+
+
 
 """ Crear un nuevo usuario interno """
 def create_user(db: Session, user: UserCreate) -> User:
@@ -151,26 +154,7 @@ def create_user(db: Session, user: UserCreate) -> User:
     
     # Auto-crear grupo para sellers
     if user.role == UserRole.seller:
-        # Buscar si ya existe un grupo con este nombre
-        group_name = f"Grupo {db_user.full_name}"
-        existing_group = db.query(SalesGroup).filter(SalesGroup.group_name == group_name).first()
-        
-        if not existing_group:
-            # Crear nuevo grupo para el seller
-            group = create_sales_group(db, SalesGroupCreate(
-                group_name=group_name,
-                description=f"Grupo automático para el vendedor {db_user.username}",
-                is_active=True
-            ))
-        else:
-            group = existing_group
-        
-        # Asignar seller al grupo
-        try:
-            assign_seller_to_group(db, group.sales_group_id, db_user.user_id)
-        except HTTPException:
-            # Ya está asignado, ignorar
-            pass
+        auto_crear_grupo_seller(db, db_user)
     
     return db_user
 

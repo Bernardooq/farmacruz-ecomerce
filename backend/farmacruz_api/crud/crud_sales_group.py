@@ -49,11 +49,17 @@ def get_sales_group(db: Session, group_id: int) -> Optional[SalesGroup]:
     ).first()
 
 """ Obtiene lista de grupos de ventas con filtros """
-def get_sales_groups(db: Session, skip: int = 0, limit: int = 100, is_active: Optional[bool] = None) -> List[SalesGroup]:
+def get_sales_groups(db: Session, skip: int = 0, limit: int = 100, is_active: Optional[bool] = None, search: Optional[str] = None) -> List[SalesGroup]:
     query = db.query(SalesGroup)
     
     if is_active is not None:
         query = query.filter(SalesGroup.is_active == is_active)
+        
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            SalesGroup.group_name.ilike(search_term)
+        )
     
     return query.offset(skip).limit(limit).all()
 

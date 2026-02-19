@@ -18,7 +18,7 @@ from db.base import PriceList, Product, PriceListItem, Category, Customer, Custo
 from crud.crud_customer import get_password_hash
 
 from utils.price_utils import calculate_final_price_with_markup
-from utils.sales_group_utils import assign_customer_to_agent_group
+from utils.sales_group_utils import assign_customer_to_agent_group, bulk_ensure_seller_groups
 from decimal import Decimal
 
 # CATEGORiAS
@@ -656,6 +656,9 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
             }
         )
         db.execute(stmt)
+        
+        # Asegurar que existan grupos para estos sellers
+        bulk_ensure_seller_groups(db, user_ids)
         
         return creados, actualizados, errores
         

@@ -17,7 +17,7 @@ from sqlalchemy import text
 
 from db.base import Product, Category, PriceList, PriceListItem, User, Customer, CustomerInfo
 from crud.crud_customer import get_password_hash
-from utils.sales_group_utils import bulk_assign_customers_to_agent_groups
+from utils.sales_group_utils import bulk_assign_customers_to_agent_groups, bulk_ensure_seller_groups
 
 
 def process_productos_from_json(
@@ -289,6 +289,10 @@ def process_sellers_from_json(
                 }
             )
             db.execute(stmt)
+            db.commit()
+
+            # Asegurar que existan grupos para estos sellers
+            bulk_ensure_seller_groups(db, user_ids)
             db.commit()
 
         return {"creados": creados, "actualizados": actualizados, "errores": 0}

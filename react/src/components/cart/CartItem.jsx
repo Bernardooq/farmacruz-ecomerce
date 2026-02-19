@@ -75,7 +75,7 @@ export default function CartItem({ item, onQuantityChange, onRemove }) {
   return (
     <article className="cart-item">
       {/* Producto */}
-      <img src={image} alt={name} className="cart-item__image" />
+      <img src={image} alt={name} className="cart-item__image" loading='lazy'/>
 
       <div className="cart-item__info">
         <h3 className="cart-item__name">{name}</h3>
