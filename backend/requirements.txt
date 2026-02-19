@@ -12,7 +12,8 @@ psycopg2-binary==2.9.11
 requests==2.32.5
 pandas==2.2.3
 dbfread==2.0.7
-numpy<2.0.0 #Downgraded for compatibility with Python 3.9 on Amazon Linux
+numpy>=2.1.0 # (Updated for Python 3.13 support)
+# (Agregué numpy explícitamente pq Pandas lo necesita y esta versión es súper estable)
 
 # === VALIDACIÓN ===
 pydantic==2.12.5

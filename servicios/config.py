@@ -11,10 +11,10 @@ from pathlib import Path
 # BACKEND API CONFIGURATION
 # ============================================================================
 
-# BACKEND_URL = "http://ec2-54-225-140-250.compute-1.amazonaws.com/api/v1"
-BACKEND_URL = "http://localhost:8000/api/v1"
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "farmasaenz123"
+BACKEND_URL = "https://api.farmacruz.com.mx/api/v1"
+# BACKEND_URL = "http://localhost:8000/api/v1"
+ADMIN_USERNAME = "syncadminssuser2026"
+ADMIN_PASSWORD = "ahc4gjnw40blssrtvhjfl4563"
 
 # ============================================================================
 # FILE PATHS
@@ -27,7 +27,7 @@ DBF_DIR = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\ba
 IMAGES_FOLDER = Path("C:\\Users\\berna\\Downloads\\\CompressedImg")
 
 # URL del CDN para imágenes
-CDN_URL = "https://dp26cd995fa30.cloudfront.net/CompressedImg"
+CDN_URL = "https://imgs.farmacruz.com.mx"
 
 # ============================================================================
 # DBF FILES

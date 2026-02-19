@@ -7,7 +7,8 @@ const API_CONFIG = {
   // Solo usa HTTP para desarrollo local (localhost).
 
   // Desarrollo local (usa HTTP)
-  BASE_URL: 'http://localhost:8000',
+  // BASE_URL: 'http://localhost:8000',
+  BASE_URL: 'https://api.farmacruz.com.mx',
 
   // Producción con CloudFront (DEBE usar HTTPS, NO HTTP)
   // BASE_URL: 'http://ec2-54-225-140-250.compute-1.amazonaws.com',

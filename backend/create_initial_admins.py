@@ -30,28 +30,35 @@ ADMINS = [
         "username": "israel.saenz.admin",
         "email": "israel.saenz.admin@farmacruz.com",
         "full_name": "Israel Saenz",
-        "password": "farmasaenz123"  # Asignar contraseña aqui
+        "password": "farmasaenz2026"  # Asignar contraseña aqui
     },
     {
         "user_id": 9002,
         "username": "manuel.saenz.admin",
         "email": "manuel.saenz.admin@farmacruz.com",
         "full_name": "Manuel Saenz",
-        "password": "farmasaenz123"  # Asignar contraseña aqui
+        "password": "farmasaenz2026"  # Asignar contraseña aqui
     },
     {
         "user_id": 9003,
         "username": "andre.saenz.admin",
         "email": "andre.saenz.admin@farmacruz.com",
         "full_name": "Andre Saenz",
-        "password": "farmasaenz123"  # Asignar contraseña aqui
+        "password": "farmasaenz2026"  # Asignar contraseña aqui
     },
     {
         "user_id": 9004,
-        "username": "admin",
+        "username": "syncadminssuser2026",
         "email": "admin@farmacruz.com",
         "full_name": "Administrador",
-        "password": "farmasaenz123"  # Asignar contraseña aqui
+        "password": "ahc4gjnw40blssrtvhjfl4563"  # Asignar contraseña aqui
+    },
+    {
+        "user_id": 9005,
+        "username": "ivette.admin",
+        "email": "ivette@farmacruz.com",
+        "full_name": "Ivette",
+        "password": "farmasaenz2026"  # Asignar contraseña aqui
     }
 ]
 

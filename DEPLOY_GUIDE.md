@@ -14,7 +14,8 @@
 6. [Monitoreo y Control de Servicios](#6-monitoreo-y-control-de-servicios)
 7. [Deploy y Actualizaciones](#7-deploy-y-actualizaciones)
 8. [Troubleshooting](#8-troubleshooting)
-9. [Configurar HTTPS con Let&#39;s Encrypt](#9-configurar-https-con-lets-encrypt-opcional-pero-recomendado)
+9. [Configurar HTTPS con Let's Encrypt](#9-configurar-https-con-lets-encrypt-opcional-pero-recomendado)
+10. [Configurar CloudFront para React (SPA Routing)](#10-configurar-cloudfront-para-react-spa-routing)
 
 ---
 
@@ -179,10 +180,13 @@ CREATE DATABASE farmacruz_db;
 
 ```bash
 # Opción 1: Desde EC2 con psql
-psql -h farmacruzdb.c2fcii8uqcxl.us-east-1.rds.amazonaws.com \
-     -U manuel \
-     -d postgres \
-     -f ~/farmacruz-ecomerce/database/db_init_v2.sql
+psql "host=farmacruz-db.ccn22ys0s7ya.us-east-1.rds.amazonaws.com \
+user=farmacruzdb \
+dbname=postgres \
+port=5432 \
+sslmode=require" \
+-f ~/farmacruz-ecomerce/database/db_init_v2.sql
+
 
 # Opción 2: Copiar y pegar interactivamente
 psql -h farmacruzdb.c2fcii8uqcxl.us-east-1.rds.amazonaws.com \
@@ -269,17 +273,21 @@ server {
 
     location / {
         limit_req zone=api_limit burst=50 nodelay;
-      
+    
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      
+    
         proxy_connect_timeout 60s;
         proxy_read_timeout 300s;
     }
 }
 ```
+
+> [!WARNING]
+> **Conflicto con configuración por defecto**
+> Es posible que el archivo `/etc/nginx/nginx.conf` tenga un bloque `server { ... }` por defecto que entre en conflicto. Si al reiniciar Nginx ves errores como `conflicting server name "_"`, debes editar `/etc/nginx/nginx.conf` y comentar o eliminar ese bloque `server` por defecto.
 
 **Activar:**
 
@@ -667,13 +675,13 @@ server {
 
     location / {
         limit_req zone=api_limit burst=50 nodelay;
-      
+    
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-      
+    
         proxy_connect_timeout 60s;
         proxy_read_timeout 300s;
     }
@@ -767,3 +775,83 @@ sudo tail -f /var/log/nginx/access.log
 - [ ] Primer deploy exitoso
 
 **¡Listo para producción!** 🎯
+
+---
+
+## 10. Configurar CloudFront para React (SPA Routing)
+
+Si al recargar la página en una ruta como `/admindash` recibes un error `AccessDenied` (XML) o `404`, es porque CloudFront busca un archivo físico que no existe. React maneja el ruteo en el cliente, por lo que debemos redirigir todo al `index.html`.
+
+### Pasos en AWS Console:
+
+1.  Ve a **CloudFront** y selecciona tu distribución.
+2.  Ve a la pestaña **Error pages** (Páginas de error).
+3.  Haz clic en **Create custom error response**.
+
+#### Configuración para Error 403 (Access Denied):
+Esto pasa porque S3 deniega acceso a archivos no existentes.
+
+*   **HTTP error code**: `403: Forbidden`
+*   **Customize error response**: `Yes`
+*   **Response page path**: `/index.html`
+*   **HTTP response code**: `200: OK`
+*   Haz clic en **Create**.
+
+#### Configuración para Error 404 (Not Found):
+Opcional, pero recomendado para manejar rutas no existentes vía React.
+
+*   **HTTP error code**: `404: Not Found`
+*   **Customize error response**: `Yes`
+*   **Response page path**: `/index.html`
+*   **HTTP response code**: `200: OK`
+*   Haz clic en **Create**.
+
+**Resultado:**
+Ahora CloudFront servirá `index.html` para cualquier ruta que no sea un archivo físico, permitiendo que `react-router` tome el control y muestre la página correcta.
+
+**AWS CLI**
+s3-sync-farmacruz
+AKIA34YUT6S5EIR4xxxx
+JbZK+X6bJ1QiiMVcje9DtjFuZ6n9aK+0qithxxxx
+
+
+**Database**
+psql "host=farmacruz-db.ccn22ys0s7ya.us-east-1.rds.amazonaws.com \
+user=farmacruzdb \
+dbname=postgres \
+port=5432 \
+sslmode=require"
+
+-- 1. Desactivar triggers (para evitar errores de llaves foráneas al borrar)
+SET session_replication_role = 'replica';
+
+-- 2. Limpiar tablas transaccionales (Pedidos, Carrito)
+TRUNCATE TABLE orderitems CASCADE;
+TRUNCATE TABLE orders CASCADE;
+TRUNCATE TABLE cartcache CASCADE;
+
+-- 3. Limpiar catálogo y relaciones (Productos, Categorias, Listas)
+TRUNCATE TABLE pricelistitems CASCADE;
+TRUNCATE TABLE pricelists CASCADE;
+TRUNCATE TABLE product_recommendations CASCADE;
+TRUNCATE TABLE products CASCADE;
+TRUNCATE TABLE categories CASCADE;
+
+-- 4. Limpiar Clientes y Grupos de Ventas
+TRUNCATE TABLE customerinfo CASCADE;
+TRUNCATE TABLE customers CASCADE;
+TRUNCATE TABLE groupmarketingmanagers CASCADE;
+TRUNCATE TABLE groupsellers CASCADE;
+TRUNCATE TABLE salesgroups CASCADE;
+
+-- 5. Limpiar Usuarios INTERNOS (manteniendo Admins)
+-- Borra todo lo que NO sea admin, marketing o seller creado a mano.
+DELETE FROM users WHERE role NOT IN ('admin', 'marketing');
+
+-- 6. Reactivar triggers
+SET session_replication_role = 'origin';
+
+-- 7. Verificar limpieza
+SELECT 'Usuarios restantes' as tabla, count(*) FROM users
+UNION ALL
+SELECT 'Productos restantes', count(*) FROM products;

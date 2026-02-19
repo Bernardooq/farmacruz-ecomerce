@@ -41,6 +41,10 @@ sudo nano /etc/nginx/conf.d/farmacruz.conf
 ```
 
 ### 3. Contenido HTTP
+
+> [!WARNING]
+> **Importante:** Asegúrate de que no haya otros bloques `server` activos en `/etc/nginx/nginx.conf` que escuchen en el puerto 80. Si es así, coméntalos o elimínalos para evitar conflictos.
+
 ```nginx
 client_max_body_size 50M;
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
