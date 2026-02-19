@@ -231,31 +231,7 @@ export default function ModalEditProfile({ isOpen, onClose }) {
                 </div>
             </div>
 
-            <style jsx>{`
-                .modal__tabs {
-                    display: flex;
-                    border-bottom: 1px solid #e2e8f0;
-                    margin-bottom: 24px;
-                }
-                .modal__tab {
-                    padding: 12px 24px;
-                    background: none;
-                    border: none;
-                    border-bottom: 2px solid transparent;
-                    color: #64748b;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-                .modal__tab:hover {
-                    color: #1e293b;
-                }
-                .modal__tab.active {
-                    color: #3b82f6;
-                    border-bottom-color: #3b82f6;
-                }
-                .mb-4 { margin-bottom: 16px; }
-            `}</style>
         </div>
     );
 }
+

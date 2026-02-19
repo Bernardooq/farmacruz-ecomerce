@@ -123,6 +123,39 @@
         flex-direction: column;
         gap: var(--space-4);
     }
+
+    // Tabs (Adiciones para ModalEditProfile)
+    &__tabs {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        padding: 0 var(--space-6);
+        border-bottom: var(--border-width) solid var(--color-border);
+        background: var(--color-bg-subtle); // Para distinguirlo un poco del header
+        gap: var(--space-4);
+    }
+    
+    &__tab {
+        padding: var(--space-4) 0;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--color-text-muted);
+        font-weight: var(--font-medium);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: var(--text-sm);
+        margin-bottom: -1px; // Para solapar el borde inferior con el borde del contenedor
+    
+        &:hover {
+            color: var(--color-text);
+        }
+    
+        &.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+    }
 }
 
 // Animations
