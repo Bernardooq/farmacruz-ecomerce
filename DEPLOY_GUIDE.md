@@ -1,9 +1,11 @@
 # Guía Completa de Deploy - FarmaCruz E-commerce
+
 ## CloudFront + EC2 + Amazon RDS PostgreSQL
 
 ---
 
 ## 📋 Tabla de Contenido
+
 1. [Preparación GitHub y SSH](#1-preparación-github-y-ssh)
 2. [Configuración Inicial EC2](#2-configuración-inicial-ec2)
 3. [Instalación Backend (FastAPI)](#3-instalación-backend-fastapi)
@@ -12,13 +14,14 @@
 6. [Monitoreo y Control de Servicios](#6-monitoreo-y-control-de-servicios)
 7. [Deploy y Actualizaciones](#7-deploy-y-actualizaciones)
 8. [Troubleshooting](#8-troubleshooting)
-9. [Configurar HTTPS con Let's Encrypt](#9-configurar-https-con-lets-encrypt-opcional-pero-recomendado)
+9. [Configurar HTTPS con Let&#39;s Encrypt](#9-configurar-https-con-lets-encrypt-opcional-pero-recomendado)
 
 ---
 
 ## 1. Preparación GitHub y SSH
 
 ### Generar SSH Key en EC2
+
 ```bash
 # Conectarse a EC2 (Amazon Linux)
 ssh -i tu-llave.pem ec2-user@tu-ec2-ip
@@ -30,9 +33,11 @@ ssh-keygen -t ed25519
 # Ver la llave pública
 cat ~/.ssh/id_ed25519.pub
 # Copiar TODO el output
+wkasytznlnxeieix
 ```
 
 ### Agregar Deploy Key en GitHub
+
 1. GitHub repo: `https://github.com/tuusuario/farmacruz-ecomerce`
 2. **Settings** → **Deploy keys** → **Add deploy key**
 3. **Title**: `EC2 Production Server`
@@ -41,6 +46,7 @@ cat ~/.ssh/id_ed25519.pub
 6. **Add key**
 
 ### Clonar Repositorio
+
 ```bash
 cd ~
 git clone git@github.com:tuusuario/farmacruz-ecomerce.git
@@ -53,12 +59,14 @@ git status
 ## 2. Configuración Inicial EC2
 
 ### Actualizar Sistema
+
 ```bash
 sudo dnf update -y
 sudo dnf upgrade -y
 ```
 
 ### Instalar Dependencias
+
 ```bash
 # Python y herramientas
 sudo dnf install python3 python3-pip python3-devel -y
@@ -81,6 +89,7 @@ sudo dnf install git -y
 ## 3. Instalación Backend (FastAPI)
 
 ### Crear Virtual Environment
+
 ```bash
 cd ~/farmacruz-ecomerce/backend
 python3 -m venv venv
@@ -88,17 +97,20 @@ source venv/bin/activate
 ```
 
 ### Instalar Dependencias Python
+
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
 ### Configurar Variables de Entorno
+
 ```bash
 nano ~/farmacruz-ecomerce/backend/.env
 ```
 
 **Contenido del `.env`:**
+
 ```ini
 # Amazon RDS PostgreSQL (NO localhost)
 DATABASE_URL=postgresql://farmacruz_user:TU_PASSWORD@farmacruz.xxxxx.us-east-1.rds.amazonaws.com:5432/farmacruz_db
@@ -114,6 +126,7 @@ ENVIRONMENT=production
 ```
 
 **Generar SECRET_KEY:**
+
 ```bash
 openssl rand -hex 32
 # Copiar output al .env
@@ -124,12 +137,14 @@ openssl rand -hex 32
 ## 4. Conexión a Amazon RDS
 
 ### Obtener Endpoint de RDS
+
 1. AWS Console → **RDS** → **Databases**
 2. Click en tu instancia `farmacruz-db`
 3. **Connectivity & security**
 4. Copiar **Endpoint**: `farmacruz.xxxxx.us-east-1.rds.amazonaws.com`
 
 ### Verificar Security Group de RDS
+
 ```
 RDS Security Group Inbound Rules:
 ┌──────────────────────────────────────────────┐
@@ -140,6 +155,7 @@ RDS Security Group Inbound Rules:
 **Verificar que el security group de EC2 pueda acceder a RDS.**
 
 ### Conectarse a RDS desde EC2
+
 ```bash
 # Test de conexión
 psql -h farmacruz.xxxxx.us-east-1.rds.amazonaws.com \
@@ -152,6 +168,7 @@ psql -h farmacruz.xxxxx.us-east-1.rds.amazonaws.com \
 ```
 
 ### Crear Base de Datos (si no existe)
+
 ```bash
 # Conectado a psql (comando anterior)
 CREATE DATABASE farmacruz_db;
@@ -159,6 +176,7 @@ CREATE DATABASE farmacruz_db;
 ```
 
 ### Ejecutar initv2.sql
+
 ```bash
 # Opción 1: Desde EC2 con psql
 psql -h farmacruzdb.c2fcii8uqcxl.us-east-1.rds.amazonaws.com \
@@ -175,6 +193,7 @@ psql -h farmacruzdb.c2fcii8uqcxl.us-east-1.rds.amazonaws.com \
 ```
 
 ### Verificar Tablas Creadas
+
 ```sql
 -- Dentro de psql
 \dt
@@ -188,11 +207,13 @@ psql -h farmacruzdb.c2fcii8uqcxl.us-east-1.rds.amazonaws.com \
 ## 5. Configuración Servicios (systemd)
 
 ### A. Servicio FastAPI (Uvicorn)
+
 ```bash
 sudo nano /etc/systemd/system/farmacruz-api.service
 ```
 
 **Contenido:**
+
 ```ini
 [Unit]
 Description=FarmaCruz FastAPI Backend
@@ -222,6 +243,7 @@ WantedBy=multi-user.target
 ```
 
 **Activar:**
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable farmacruz-api
@@ -230,11 +252,13 @@ sudo systemctl status farmacruz-api
 ```
 
 ### B. Nginx (Reverse Proxy)
+
 ```bash
 sudo nano /etc/nginx/conf.d/farmacruz.conf
 ```
 
 **Contenido:**
+
 ```nginx
 client_max_body_size 50M;
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
@@ -245,12 +269,12 @@ server {
 
     location / {
         limit_req zone=api_limit burst=50 nodelay;
-        
+      
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        
+      
         proxy_connect_timeout 60s;
         proxy_read_timeout 300s;
     }
@@ -258,6 +282,7 @@ server {
 ```
 
 **Activar:**
+
 ```bash
 # Amazon Linux usa conf.d/, no sites-available/enabled
 sudo nginx -t
@@ -266,6 +291,7 @@ sudo systemctl restart nginx
 ```
 
 ### C. Job de Similitud (cron diario 3 AM)
+
 Ver: `servicios/cloud_service/4_similarity_job.md`
 
 ---
@@ -273,6 +299,7 @@ Ver: `servicios/cloud_service/4_similarity_job.md`
 ## 6. Monitoreo y Control de Servicios
 
 ### Ver Estado de Servicios
+
 ```bash
 # Backend API
 sudo systemctl status farmacruz-api
@@ -287,6 +314,7 @@ systemctl list-units --type=service --state=running | grep farma
 ### Control de Servicios
 
 #### Farmacruz API (Backend)
+
 ```bash
 # Iniciar
 sudo systemctl start farmacruz-api
@@ -311,6 +339,7 @@ sudo systemctl disable farmacruz-api
 ```
 
 #### Nginx
+
 ```bash
 # Iniciar
 sudo systemctl start nginx
@@ -331,6 +360,7 @@ sudo nginx -t
 ### Ver Logs en Tiempo Real
 
 #### Logs de Backend
+
 ```bash
 # Últimos 50 logs
 sudo journalctl -u farmacruz-api -n 50 --no-pager
@@ -349,6 +379,7 @@ sudo journalctl -u farmacruz-api --since today
 ```
 
 #### Logs de Nginx
+
 ```bash
 # Access log en tiempo real
 sudo tail -f /var/log/nginx/access.log
@@ -361,6 +392,7 @@ sudo tail -n 100 /var/log/nginx/error.log
 ```
 
 ### Verificar Puertos y Conexiones
+
 ```bash
 # Ver qué escucha en puerto 8000
 sudo netstat -tlnp | grep :8000
@@ -373,6 +405,7 @@ sudo ss -tlnp | grep :8000
 ```
 
 ### Monitoreo de Recursos
+
 ```bash
 # CPU, RAM, procesos
 htop
@@ -391,6 +424,7 @@ ps aux | grep nginx
 ```
 
 ### Verificar Conexión a RDS
+
 ```bash
 # Test rápido
 psql -h farmacruz.xxxxx.us-east-1.rds.amazonaws.com \
@@ -410,11 +444,13 @@ psql -h farmacruz.xxxxx.us-east-1.rds.amazonaws.com \
 ## 7. Deploy y Actualizaciones
 
 ### Script de Deploy Automatizado
+
 ```bash
 nano ~/deploy.sh
 ```
 
 **Contenido:**
+
 ```bash
 #!/bin/bash
 set -e
@@ -450,16 +486,19 @@ echo "✅ Deploy completado!"
 ```
 
 **Darle permisos:**
+
 ```bash
 chmod +x ~/deploy.sh
 ```
 
 **Ejecutar:**
+
 ```bash
 ~/deploy.sh
 ```
 
 ### Deploy Manual
+
 ```bash
 cd ~/farmacruz-ecomerce
 git pull
@@ -474,6 +513,7 @@ sudo systemctl restart farmacruz-api
 ## 8. Troubleshooting
 
 ### Backend no inicia
+
 ```bash
 # Ver errores detallados
 sudo journalctl -u farmacruz-api -n 200 --no-pager
@@ -488,6 +528,7 @@ cat ~/farmacruz-ecomerce/backend/.env
 ```
 
 ### No conecta a RDS
+
 ```bash
 # Test básico
 ping farmacruz.xxxxx.us-east-1.rds.amazonaws.com
@@ -502,6 +543,7 @@ python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.ge
 ```
 
 ### Nginx devuelve 502
+
 ```bash
 # Verificar backend activo
 sudo systemctl status farmacruz-api
@@ -514,6 +556,7 @@ sudo tail -f /var/log/nginx/error.log
 ```
 
 ### CloudFront no conecta a EC2
+
 ```bash
 # Verificar Security Group permite prefix list CloudFront
 # AWS Console → EC2 → Security Groups → Inbound rules
@@ -524,6 +567,7 @@ curl -I http://localhost:8000/api/v1/health
 ```
 
 ### Comandos de Emergencia
+
 ```bash
 # Reiniciar todo
 sudo systemctl restart farmacruz-api nginx
@@ -540,10 +584,11 @@ sudo journalctl --vacuum-time=7d
 ### Pre-requisitos
 
 1. **Dominio apuntando a EC2**
+
    - Configura DNS tipo A: `api.tudominio.com` → IP de tu EC2
    - O usa DuckDNS (gratis): `farmacruz.duckdns.org`
-
 2. **Puertos abiertos en Security Group**
+
    ```
    Inbound Rules:
    - SSH (22)    → Tu IP
@@ -554,11 +599,13 @@ sudo journalctl --vacuum-time=7d
 ### Instalar Certbot
 
 #### Amazon Linux 2023:
+
 ```bash
 sudo dnf install -y certbot python3-certbot-nginx
 ```
 
 #### Amazon Linux 2:
+
 ```bash
 sudo yum install -y epel-release
 sudo yum install -y certbot python3-certbot-nginx
@@ -573,12 +620,14 @@ sudo certbot --nginx -d api.tudominio.com
 ```
 
 **Responder:**
+
 1. Email: `tu@email.com` (notificaciones de renovación)
 2. Terms of Service: `Y`
 3. Share email: `N`
 4. Redirect HTTP to HTTPS: `2` (Sí)
 
 **Resultado esperado:**
+
 ```
 Successfully received certificate.
 Certificate is saved at: /etc/letsencrypt/live/api.tudominio.com/fullchain.pem
@@ -612,19 +661,19 @@ server {
 
     ssl_certificate /etc/letsencrypt/live/api.tudominio.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/api.tudominio.com/privkey.pem;
-    
+  
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
 
     location / {
         limit_req zone=api_limit burst=50 nodelay;
-        
+      
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+      
         proxy_connect_timeout 60s;
         proxy_read_timeout 300s;
     }
@@ -661,6 +710,7 @@ BASE_URL: 'https://api.tudominio.com',
 ```
 
 Rebuild y deploy:
+
 ```bash
 npm run build
 # Subir dist/ a S3 y invalidar CloudFront
@@ -676,6 +726,7 @@ FRONTEND_URL=https://ddyn91nmr858h.cloudfront.net
 ```
 
 Reiniciar backend:
+
 ```bash
 sudo systemctl restart farmacruz-api
 ```
