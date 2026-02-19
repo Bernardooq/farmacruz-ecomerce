@@ -3,13 +3,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import useTheme from '../../hooks/useTheme';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faKey, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
-import ModalChangePassword from '../users/ModalChangePassword';
+import { faKey, faSun, faMoon, faUser } from '@fortawesome/free-solid-svg-icons';
+import ModalEditProfile from '../users/ModalEditProfile';
 
 export default function Header2() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => { logout(); navigate('/login'); };
@@ -36,15 +36,15 @@ export default function Header2() {
               <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} />
             </button>
             <span className="text-sm">Hola, {user?.full_name || user?.username}</span>
-            <button className="btn btn--icon btn--ghost" onClick={() => setShowPasswordModal(true)} title="Cambiar contraseña">
-              <FontAwesomeIcon icon={faKey} />
+            <button className="btn btn--icon btn--ghost" onClick={() => setShowProfileModal(true)} title="Mi Perfil">
+              <FontAwesomeIcon icon={faUser} />
             </button>
             <button className="btn btn--secondary btn--sm" onClick={handleLogout}>Salir</button>
           </div>
         </div>
       </header>
 
-      <ModalChangePassword isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
+      <ModalEditProfile isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </>
   );
 }

@@ -1,108 +1,33 @@
-import { API_BASE } from '../config/api'
-
-const API_URL = API_BASE;
+import apiService from './apiService';
 
 export const userService = {
   // Obtener perfil del usuario actual
   async getCurrentUser() {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/users/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al obtener perfil de usuario');
-    }
-
-    return response.json();
+    return apiService.get('/users/me');
   },
 
   // Actualizar perfil del usuario actual
   async updateCurrentUser(userData) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/users/me`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(userData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al actualizar perfil de usuario');
-    }
-
-    return response.json();
+    return apiService.put('/users/me', userData);
   },
 
   // Obtener información de cliente del usuario actual
   async getCurrentUserCustomerInfo() {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/users/me/customer-info`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al obtener información de cliente');
-    }
-
-    return response.json();
+    return apiService.get('/users/me/customer-info');
   },
-
 
   // Admin: Obtener información de cliente de un usuario específico
   async getUserCustomerInfo(userId) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/admin/users/${userId}/customer-info`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al obtener información de cliente');
-    }
-
-    return response.json();
+    return apiService.get(`/admin/users/${userId}/customer-info`);
   },
 
   // Admin: Actualizar información de cliente de un usuario específico
   async updateUserCustomerInfo(userId, customerInfoData) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/admin/users/${userId}/customer-info`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(customerInfoData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al actualizar información de cliente');
-    }
-
-    return response.json();
+    return apiService.put(`/admin/users/${userId}/customer-info`, customerInfoData);
   },
 
   // Obtener vendedores disponibles (según permisos del usuario)
   async getAvailableSellers() {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/users/sellers`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al obtener vendedores');
-    }
-
-    return response.json();
+    return apiService.get('/users/sellers');
   },
 };

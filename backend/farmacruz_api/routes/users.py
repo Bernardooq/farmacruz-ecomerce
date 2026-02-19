@@ -84,8 +84,19 @@ def update_current_user_profile(user_update: UserUpdate, current_user = Depends(
         return JSONResponse(content={
             "customer_id": updated.customer_id, "username": updated.username, "email": updated.email,
             "full_name": updated.full_name, "is_active": updated.is_active,"role": "customer"})
-    elif current_user.role in {UserRole.admin}:
-        # === ACTUALIZAR USER ===
+    else:
+        # === ACTUALIZAR USER INTERN0 (Admin, Marketing, Seller) ===
+        user_data = user_update.model_dump(exclude_unset=True)
+        
+        # Si NO es admin, solo permitir cambio de password
+        if current_user.role != UserRole.admin:
+            disallowed_fields = set(user_data.keys()) - {'password'}
+            if disallowed_fields:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"No tiene permisos para modificar su perfil. Solo puede cambiar su contraseña."
+                )
+
         user = update_user(db, user_id=current_user.user_id, user=user_update)
         if not user:
             raise HTTPException(
