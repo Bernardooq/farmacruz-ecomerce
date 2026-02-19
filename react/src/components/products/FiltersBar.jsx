@@ -42,6 +42,7 @@ export default function FiltersBar({
           <option value="name_desc">Nombre: Z-A</option>
         </select>
       </div>
+      <br />
     </section>
   );
 }

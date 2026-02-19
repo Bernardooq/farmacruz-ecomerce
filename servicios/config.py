@@ -27,7 +27,7 @@ DBF_DIR = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\ba
 IMAGES_FOLDER = Path("C:\\Users\\berna\\Downloads\\\CompressedImg")
 
 # URL del CDN para imágenes
-CDN_URL = "https://imgs.farmacruz.com.mx"
+CDN_URL = "https://img.farmacruz.com.mx"
 
 # ============================================================================
 # DBF FILES
