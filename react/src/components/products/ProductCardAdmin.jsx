@@ -19,12 +19,9 @@ export default function ProductCardAdmin({ product, onAddToOrder, onShowSimilar 
         <article className="product-card product-card--admin">
             {/* Imagen del producto */}
             <img
-                src={product.image_url || '/images/default-product.jpg'}
+                src={product.image_url || '../../images/default-product.jpg'}
                 alt={product.name}
                 className="product-card__image"
-                onError={(e) => {
-                    e.target.src = '/images/default-product.jpg';
-                }}
             />
 
             <div className="product-card__info">
@@ -44,6 +41,12 @@ export default function ProductCardAdmin({ product, onAddToOrder, onShowSimilar 
                         )}
                     </p>
                 </div>
+
+                {product.similarity_score !== undefined && (
+                    <div className="product-card__similarity" style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
+                        Similitud: <strong>{Math.round(product.similarity_score * 100)}%</strong>
+                    </div>
+                )}
 
                 {/* Botones */}
                 <div className="product-card__buttons">

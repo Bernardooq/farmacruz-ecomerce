@@ -344,6 +344,15 @@ def update_order_status_route(order_id: UUID, order_update: OrderUpdate,
         if not user_can_manage_order(db, current_user.user_id, order.customer_id, current_user.role):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso para gestionar este pedido. El cliente no pertenece a sus grupos.")
+        
+        # VALIDACIÓN ADICIONAL PARA SELLERS:
+        # Un seller solo puede modificar pedidos ASIGNADOS a él,
+        # aunque el cliente esté en su grupo.
+        if is_seller and order.assigned_seller_id != current_user.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No puedes modificar este pedido porque no te ha sido asignado."
+            )
     
     current_status = order.status
     new_status = order_update.status

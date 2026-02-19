@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     # === CONFIGURACION DE SEGURIDAD Y JWT ===
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"  # Algoritmo para firmar tokens JWT
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Duracion de tokens de acceso
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # Duracion de tokens de acceso una jornada laboral
+    SYNC_TOKEN_EXPIRE_MINUTES: int = 5  # Duracion de tokens de acceso para sincronizaciones
     
     # === CONFIGURACION DE LA API ===
     PROJECT_NAME: str = "Farmacruz API"
@@ -48,6 +49,7 @@ DATABASE_URL = settings.DATABASE_URL
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+SYNC_TOKEN_EXPIRE_MINUTES = settings.SYNC_TOKEN_EXPIRE_MINUTES
 PROJECT_NAME = settings.PROJECT_NAME
 API_V1_STR = settings.API_V1_STR
 FRONTEND_URL = settings.FRONTEND_URL

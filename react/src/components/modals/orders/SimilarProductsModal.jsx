@@ -34,7 +34,7 @@ export default function SimilarProductsModal({ visible, product, customerId, onA
                     ) : similarProducts.length === 0 ? (
                         <p className="empty-state">No se encontraron productos similares.</p>
                     ) : (
-                        <div className="modal-product-grid">
+                        <div className="product-grid product-grid--3">
                             {similarProducts.map(p => (
                                 <ProductCardAdmin key={p.product_id} product={p} onAddToOrder={(selectedProduct) => { onAddToOrder(selectedProduct); onClose(); }} />
                             ))}

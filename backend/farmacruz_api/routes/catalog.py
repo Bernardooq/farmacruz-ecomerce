@@ -113,6 +113,16 @@ def get_product_similar_for_customer(
         limit=limit
     )
     
-    # Retornar solo los productos (sin similarity_score)
-    return [item["product"] for item in results]
+    # Retornar productos con su similarity_score inyectado
+    response = []
+    for item in results:
+        product_dict = item["product"]
+        # Inyectar el score. Asegurarse de que el objeto sea mutable (dict)
+        if hasattr(product_dict, "dict"):
+            product_dict = product_dict.dict()
+        
+        product_dict["similarity_score"] = item["similarity_score"]
+        response.append(product_dict)
+    
+    return response
 

@@ -27,7 +27,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from dependencies import get_db, get_current_user, get_current_admin_user
-from core.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from core.config import ACCESS_TOKEN_EXPIRE_MINUTES, SYNC_TOKEN_EXPIRE_MINUTES
 from core.security import create_access_token, verify_password
 from crud.crud_user import authenticate_user, create_user, get_user_by_username, get_user_by_email
 from schemas.user import User, UserCreate
@@ -137,6 +137,52 @@ def login(
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+""" POST /login/sync - Login con token de corta duracion (5 min) para sincronizaciones """
+@router.post("/login/sync", response_model=Token)
+def login_sync(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    # Siempre es user admin
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if user:
+        authenticated_user = user
+    
+    # Validar auth
+    if not authenticated_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario o contraseña incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Validar que este activo
+    if not authenticated_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Usuario inactivo. Contacta al administrador."
+        )
+    
+    # Generar token DE CORTA DURACION (5 minutos)
+    access_token_expires = timedelta(minutes=SYNC_TOKEN_EXPIRE_MINUTES)
+    
+    # Token para User interno
+    token_data = {
+        "sub": authenticated_user.username,
+        "role": authenticated_user.role.value,
+        "user_type": "user",
+        "user_id": authenticated_user.user_id
+    }
+    
+    access_token = create_access_token(
+        data=token_data,
+        expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
 
 """ GET /me - Informacion del usuario actual """
 @router.get("/me")

@@ -9,7 +9,7 @@ def login(backend_url, username, password):
     """Hace login y retorna el token"""
     try:
         response = requests.post(
-            f"{backend_url}/auth/login",
+            f"{backend_url}/auth/login/sync",
             data={"username": username, "password": password},
             timeout=30
         )

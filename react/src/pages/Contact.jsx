@@ -132,8 +132,7 @@ export default function Contact() {
                 <div className="stat-card__icon">✉️</div>
                 <h3>Email</h3>
                 <p className="text-muted text-sm">
-                  contacto@farmacruz.com<br />
-                  ventas@farmacruz.com
+                  auxiliarfarmacruz1@gmail.com
                 </p>
               </div>
 

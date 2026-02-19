@@ -23,10 +23,12 @@ export default function ProductRow({
     stockClass === 'low' ? `Bajo (${stockCount})` :
       stockCount;
 
-  const basePrice = parseFloat(product.base_price) || 0;
+  const finalPrice = parseFloat(product.base_price);
   const ivaPercentage = parseFloat(product.iva_percentage) ?? DEFAULT_IVA;
-  const ivaAmount = basePrice * (ivaPercentage / 100);
-  const finalPrice = basePrice + ivaAmount;
+  const ivaAmount = ivaPercentage > 0 ? finalPrice - (finalPrice / (1 + ivaPercentage / 100)) : 0;
+  const basePrice = finalPrice - ivaAmount || 0;
+
+  // const finalPrice = basePrice + ivaAmount;
 
   return (
     <tr>
