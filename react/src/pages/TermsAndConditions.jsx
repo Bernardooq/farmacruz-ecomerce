@@ -174,9 +174,9 @@ export default function TermsAndConditions() {
             <h2>14. Contacto</h2>
             <p>Si tiene preguntas sobre estos términos y condiciones, puede contactarnos en:</p>
             <ul>
-              <li>Email: legal@farmacruz.com</li>
-              <li>Teléfono: +52 33 1234 5678</li>
-              <li>Dirección: Av. Principal #123, Guadalajara, Jalisco, México</li>
+              <li>Email: auxiliarfarmacruz1@gmail.com</li>
+              <li>Teléfono: 33-36-14-67-70</li>
+              <li>Dirección: Calle Belén No 967, Col. Barranquitas C.P. 44270, Guadalajara, Jalisco, México</li>
             </ul>
           </section>
         </div>

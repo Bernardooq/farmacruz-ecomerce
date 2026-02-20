@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
   const { isAuthenticated, user, loading } = useAuth();
@@ -30,5 +31,12 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     );
   }
 
-  return children;
+  return (
+    <>
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      {children}
+    </>
+  );
 }

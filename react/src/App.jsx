@@ -1,3 +1,4 @@
+import { HelmetProvider } from 'react-helmet-async';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -16,7 +17,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <ScrollToTop />
       <Routes>
         {/* Public routes */}
@@ -76,7 +77,7 @@ function App() {
           }
         />
       </Routes>
-    </>
+    </HelmetProvider>
   );
 }
 

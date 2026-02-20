@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /$
+Allow: /about$
+Allow: /contact$
+Allow: /terms$
+Allow: /privacy$
+
+# Bloquear rutas que requieren JWT o son administrativas
+Disallow: /products
+Disallow: /profile
+Disallow: /cart
+Disallow: /checkout
+Disallow: /admindash
+Disallow: /sellerdash
+Disallow: /marketingdash
+Disallow: /login
+
+# Bloquear rutas de la API temporalmente
+Disallow: /api/
+
+Sitemap: https://farmacruz.com.mx/sitemap.xml

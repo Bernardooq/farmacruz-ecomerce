@@ -55,7 +55,8 @@ export default function PrivacyPolicy() {
               <li>Tipo de navegador</li>
               <li>Páginas visitadas</li>
               <li>Tiempo de navegación</li>
-              <li>Cookies y tecnologías similares</li>
+              <li>Tiempo de navegación</li>
+              <li>Datos de almacenamiento local (LocalStorage) para gestión de sesiones</li>
             </ul>
           </section>
 
@@ -110,10 +111,13 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2>7. Cookies</h2>
+            <h2>7. Uso de Tecnologías de Almacenamiento Local</h2>
             <p>
-              Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestra plataforma.
-              Puede configurar su navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio.
+              Este sitio <strong>no utiliza cookies</strong> de rastreo ni de terceros.
+            </p>
+            <p>
+              Utilizamos <strong>Almacenamiento Local (LocalStorage)</strong> únicamente para mantener su sesión activa y recordar sus preferencias básicas (como el tema visual o el carrito de compras).
+              Estos datos se guardan en su dispositivo y no son compartidos con terceros para fines publicitarios.
             </p>
           </section>
 

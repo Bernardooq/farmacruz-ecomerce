@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../tokens/breakpoints' as *;
 
 // ============================================
@@ -75,7 +76,7 @@
         color: #fff;
 
         &:hover {
-            background: darken(#22c55e, 8%);
+            background: color.adjust(#22c55e, $lightness: -8%);
         }
     }
 

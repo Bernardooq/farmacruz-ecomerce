@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { productService } from '../services/productService';
 import catalogService from '../services/catalogService';
 import { categoryService } from '../services/categoryService';
@@ -146,6 +147,7 @@ export default function Products() {
   if (loading) {
     return (
       <div className="page">
+        <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
         <SearchBar />
         <LoadingSpinner message="Cargando productos..." />
         <Footer />
@@ -158,6 +160,7 @@ export default function Products() {
   // ============================================
   return (
     <div className="page">
+      <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
       <SearchBar />
 
       <main className="page__content">
@@ -190,7 +193,7 @@ export default function Products() {
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
           />
-
+          <br />
           {/* Grid de productos */}
           <ProductGrid products={products} onProductClick={handleProductClick} />
         </div>

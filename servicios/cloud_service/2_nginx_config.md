@@ -47,14 +47,14 @@ sudo nano /etc/nginx/conf.d/farmacruz.conf
 
 ```nginx
 client_max_body_size 50M;
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+limit_req_zone $http_x_forwarded_for zone=api_limit:10m rate=50r/s;
 
 server {
     listen 80;
     server_name _;
 
     location / {
-        limit_req zone=api_limit burst=50 nodelay;
+        limit_req zone=api_limit burst=100 nodelay;
         
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -62,6 +62,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         
         proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
         proxy_read_timeout 300s;
     }
 }
@@ -115,7 +116,7 @@ sudo nano /etc/nginx/conf.d/farmacruz.conf
 
 ```nginx
 client_max_body_size 50M;
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+limit_req_zone $http_x_forwarded_for zone=api_limit:10m rate=50r/s;
 
 # Redirigir HTTP → HTTPS
 server {
@@ -140,7 +141,7 @@ server {
 
     # Proxy a FastAPI
     location / {
-        limit_req zone=api_limit burst=50 nodelay;
+        limit_req zone=api_limit burst=100 nodelay;
         
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -149,6 +150,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         
         proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
         proxy_read_timeout 300s;
     }
 }

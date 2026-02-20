@@ -2,7 +2,7 @@
 
 ## Arquitectura
 - **t3.micro**: 1 vCPU, 1GB RAM
-- **Uvicorn**: 1 worker (mejor para instancias pequeñas)
+- **Gunicorn+Uvicorn**: 4 workers (configuración robusta)
 - **ThreadPoolExecutor**: Maneja sync tasks en background (max_workers=2)
 
 ## 1. Crear el archivo del servicio
@@ -13,25 +13,23 @@ sudo nano /etc/systemd/system/farmacruz-api.service
 ## 2. Contenido del servicio
 ```ini
 [Unit]
-Description=FarmaCruz FastAPI Backend (Uvicorn)
+Description=FarmaCruz FastAPI Backend (Gunicorn + Uvicorn)
 After=network.target
 
 [Service]
-Type=notify
+Type=simple
 User=ec2-user
 Group=nginx
-WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend/farmacruz_api
+WorkingDirectory=/home/ec2-user/farmacruz-ecomerce/backend
 Environment="PATH=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin"
 Environment="PYTHONPATH=/home/ec2-user/farmacruz-ecomerce/backend"
 
-ExecStart=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin/uvicorn \
-    main:app \
-    --host 127.0.0.1 \
-    --port 8000 \
-    --workers 1 \
-    --log-level info
-    --access-log \
-    --use-colors
+ExecStart=/home/ec2-user/farmacruz-ecomerce/backend/venv/bin/gunicorn \
+    farmacruz_api.main:app \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8000 \
+    --timeout 120
 
 # Restart automático
 Restart=always
