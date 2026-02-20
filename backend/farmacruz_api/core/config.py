@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     # === CONFIGURACION DE LA API ===
     PROJECT_NAME: str = "Farmacruz API"
     API_V1_STR: str = "/api/v1"
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL")
     
     # === CONFIGURACION DE EMAIL (SMTP) ===
     # Se usa para enviar correos de contacto y notificaciones

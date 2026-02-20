@@ -629,7 +629,7 @@ sudo certbot --nginx -d api.tudominio.com
 
 **Responder:**
 
-1. Email: `tu@email.com` (notificaciones de renovación)
+1. Email: `tu@email.com` (notificaciones de renovación) ntkw hjll nnaf vrpm 
 2. Terms of Service: `Y`
 3. Share email: `N`
 4. Redirect HTTP to HTTPS: `2` (Sí)
