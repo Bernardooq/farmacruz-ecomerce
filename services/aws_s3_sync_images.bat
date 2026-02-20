@@ -33,4 +33,4 @@ echo [ERROR] No ingresaste ninguna ruta. Intentalo de nuevo.
 
 :end
 echo.
-pause
+

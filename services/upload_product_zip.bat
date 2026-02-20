@@ -9,4 +9,4 @@ echo Ejecutando script Python...
 
 echo.
 echo Proceso finalizado.
-pause
+

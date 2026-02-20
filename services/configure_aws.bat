@@ -15,4 +15,4 @@ echo ===================================================
 echo Configuracion completada.
 echo Ahora puedes ejecutar 'aws_s3_sync_images.bat'
 echo ===================================================
-pause
+
