@@ -28,7 +28,7 @@ export default function Login() {
           {/* Logo de la empresa */}
           <div className="auth-card__logo">
             {/* <img src="../images/...png" alt="Logo FarmaCruz" /> */}
-            <h1>FarmaCruz</h1>
+            <h1>Farmacruz</h1>
           </div>
 
           {/* Título de la página */}

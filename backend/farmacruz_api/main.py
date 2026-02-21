@@ -16,6 +16,10 @@ app.add_middleware(
 
 app.include_router(api_router, prefix=config.API_V1_STR)
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 @app.get("/")
 def read_root():
     try:

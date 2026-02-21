@@ -45,7 +45,7 @@ export const orderService = {
 
   // Obtener las órdenes del usuario actual (con filtros como paginación o estatus)
   async getOrders(params = {}) {
-    return apiService.get('/orders', params)
+    return apiService.get('/orders/', params)
   },
 
   // Obtener todas las órdenes (solo para admin o seller)
