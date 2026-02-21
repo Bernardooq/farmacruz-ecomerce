@@ -1,11 +1,16 @@
+# Farmacruz - Robots.txt
+# Plataforma B2B de distribución farmacéutica
+
 User-agent: *
+
+# Permitir páginas públicas
 Allow: /$
 Allow: /about$
 Allow: /contact$
 Allow: /terms$
 Allow: /privacy$
 
-# Bloquear rutas que requieren JWT o son administrativas
+# Bloquear rutas privadas (requieren autenticación)
 Disallow: /products
 Disallow: /profile
 Disallow: /cart
@@ -15,7 +20,14 @@ Disallow: /sellerdash
 Disallow: /marketingdash
 Disallow: /login
 
-# Bloquear rutas de la API temporalmente
+# Bloquear API
 Disallow: /api/
 
+# Bloquear archivos de sistema
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /*.json$
+Disallow: /*.map$
+
+# Sitemap
 Sitemap: https://farmacruz.com.mx/sitemap.xml

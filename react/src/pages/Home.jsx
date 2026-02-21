@@ -22,12 +22,22 @@ import IntroText from '../components/hero/IntroText';
 import Featured from '../components/hero/Featured';
 import Advantages from '../components/hero/Advantages';
 import Labs from '../components/common/Labs';
+import SEO from '../components/common/SEO';
+import { organizationSchema, websiteSchema } from '../utils/schemas';
 
 export default function Home() {
   // ============================================
   // HOOKS & STATE
   // ============================================
   const { isAuthenticated, user } = useAuth();
+
+  // ============================================
+  // SEO CONFIGURATION
+  // ============================================
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [organizationSchema, websiteSchema]
+  };
 
   // ============================================
   // RENDER HELPERS
@@ -48,6 +58,14 @@ export default function Home() {
   // ============================================
   return (
     <div className="page">
+      <SEO
+        title="Farmacruz - Distribuidora Farmacéutica B2B | Más de 20 Años de Experiencia"
+        description="Distribuidora farmacéutica líder en México. Más de 20 años conectando farmacias con productos de calidad. Plataforma B2B para pedidos en línea 24/7."
+        canonical="https://farmacruz.com.mx/"
+        ogType="website"
+        schema={combinedSchema}
+      />
+      
       {renderHeader()}
 
       <main className="page__content">

@@ -1,33 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Inicio -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Página Principal -->
   <url>
     <loc>https://farmacruz.com.mx/</loc>
+    <lastmod>2024-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-  <!-- Nosotros -->
+  
+  <!-- Sobre Nosotros -->
   <url>
     <loc>https://farmacruz.com.mx/about</loc>
+    <lastmod>2024-11-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  
   <!-- Contacto -->
   <url>
     <loc>https://farmacruz.com.mx/contact</loc>
+    <lastmod>2024-11-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Terms and Conditions -->
+  
+  <!-- Términos y Condiciones -->
   <url>
     <loc>https://farmacruz.com.mx/terms</loc>
+    <lastmod>2024-11-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
-  <!-- Privacy Policy -->
+  
+  <!-- Política de Privacidad -->
   <url>
     <loc>https://farmacruz.com.mx/privacy</loc>
+    <lastmod>2024-11-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
+  
 </urlset>

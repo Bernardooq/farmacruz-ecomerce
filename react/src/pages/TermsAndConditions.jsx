@@ -12,9 +12,17 @@ import Header from '../components/layout/Header';
 import Header2 from '../components/layout/Header2';
 import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
+import SEO from '../components/common/SEO';
+import { createBreadcrumbSchema } from '../utils/schemas';
 
 export default function TermsAndConditions() {
   const { isAuthenticated, user } = useAuth();
+
+  // SEO Configuration
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Inicio', url: 'https://farmacruz.com.mx/' },
+    { name: 'Términos y Condiciones', url: 'https://farmacruz.com.mx/terms' }
+  ]);
 
   const renderHeader = () => {
     if (!isAuthenticated) return <Header />;
@@ -24,6 +32,14 @@ export default function TermsAndConditions() {
 
   return (
     <div className="page">
+      <SEO
+        title="Términos y Condiciones - Farmacruz | Plataforma B2B"
+        description="Términos y condiciones de uso de la plataforma B2B de Farmacruz. Información sobre pedidos, pagos, envíos y políticas comerciales."
+        canonical="https://farmacruz.com.mx/terms"
+        ogType="website"
+        schema={breadcrumbSchema}
+      />
+      
       {renderHeader()}
 
       <main className="page__content">

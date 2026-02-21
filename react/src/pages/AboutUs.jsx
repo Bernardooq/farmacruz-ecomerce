@@ -20,12 +20,27 @@ import Header2 from '../components/layout/Header2';
 import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
 import { Link } from 'react-router-dom';
+import SEO from '../components/common/SEO';
+import { organizationSchema, createBreadcrumbSchema } from '../utils/schemas';
 
 export default function AboutUs() {
   // ============================================
   // HOOKS & STATE
   // ============================================
   const { isAuthenticated, user } = useAuth();
+
+  // ============================================
+  // SEO CONFIGURATION
+  // ============================================
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Inicio', url: 'https://farmacruz.com.mx/' },
+    { name: 'Nosotros', url: 'https://farmacruz.com.mx/about' }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [organizationSchema, breadcrumbSchema]
+  };
 
   const renderHeader = () => {
     if (!isAuthenticated) return <Header />;
@@ -38,6 +53,14 @@ export default function AboutUs() {
   // ============================================
   return (
     <div className="page">
+      <SEO
+        title="Sobre Nosotros - Farmacruz | 20+ Años Distribuyendo Salud en México"
+        description="Conoce la historia de Farmacruz. Más de 20 años como distribuidora farmacéutica líder en México. Misión, visión, valores y compromiso con la calidad."
+        canonical="https://farmacruz.com.mx/about"
+        ogType="website"
+        schema={combinedSchema}
+      />
+      
       {renderHeader()}
 
       <main className="page__content">

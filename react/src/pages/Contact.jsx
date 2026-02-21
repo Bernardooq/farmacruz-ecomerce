@@ -19,6 +19,8 @@ import Header2 from '../components/layout/Header2';
 import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
 import apiService from '../services/apiService';
+import SEO from '../components/common/SEO';
+import { localBusinessSchema, createBreadcrumbSchema } from '../utils/schemas';
 
 // ============================================
 // CONSTANTES
@@ -41,6 +43,19 @@ export default function Contact() {
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // ============================================
+  // SEO CONFIGURATION
+  // ============================================
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Inicio', url: 'https://farmacruz.com.mx/' },
+    { name: 'Contacto', url: 'https://farmacruz.com.mx/contact' }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [localBusinessSchema, breadcrumbSchema]
+  };
 
   // ============================================
   // EVENT HANDLERS
@@ -81,6 +96,14 @@ export default function Contact() {
   // ============================================
   return (
     <div className="page">
+      <SEO
+        title="Contacto - Farmacruz | Comunícate con Nosotros"
+        description="Contáctanos para más información sobre nuestros productos y servicios. Teléfono: 33-3614-6770. Dirección: Calle Belén 967, Guadalajara, Jalisco."
+        canonical="https://farmacruz.com.mx/contact"
+        ogType="website"
+        schema={combinedSchema}
+      />
+      
       {renderHeader()}
 
       <main className="page__content">

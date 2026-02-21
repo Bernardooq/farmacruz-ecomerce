@@ -12,9 +12,17 @@ import Header from '../components/layout/Header';
 import Header2 from '../components/layout/Header2';
 import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
+import SEO from '../components/common/SEO';
+import { createBreadcrumbSchema } from '../utils/schemas';
 
 export default function PrivacyPolicy() {
   const { isAuthenticated, user } = useAuth();
+
+  // SEO Configuration
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Inicio', url: 'https://farmacruz.com.mx/' },
+    { name: 'Política de Privacidad', url: 'https://farmacruz.com.mx/privacy' }
+  ]);
 
   const renderHeader = () => {
     if (!isAuthenticated) return <Header />;
@@ -24,6 +32,14 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="page">
+      <SEO
+        title="Política de Privacidad - Farmacruz | Protección de Datos"
+        description="Política de privacidad de Farmacruz. Información sobre cómo recopilamos, usamos y protegemos sus datos personales. Cumplimiento con LFPDPPP."
+        canonical="https://farmacruz.com.mx/privacy"
+        ogType="website"
+        schema={breadcrumbSchema}
+      />
+      
       {renderHeader()}
 
       <main className="page__content">
