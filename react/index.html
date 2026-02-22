@@ -3,17 +3,40 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   
   <!-- Meta Tags Básicos -->
   <meta name="description" content="Farmacruz - Distribuidora farmacéutica líder en México. Más de 20 años conectando farmacias con productos de calidad. Plataforma B2B para pedidos en línea." />
   <meta name="keywords" content="distribuidora farmacéutica, farmacia, medicamentos, B2B, Guadalajara, Jalisco, México" />
   <meta name="author" content="Farmacruz" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#63c1a5" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
   
   <!-- Favicon -->
   <link rel="icon" type="image/webp" href="/favicon.webp" />
-  <link rel="apple-touch-icon" href="/favicon.webp" />
+  
+  <!-- iOS Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Farmacruz" />
+  
+  <!-- iOS Icons -->
+  <link rel="apple-touch-icon" href="/pwa-icons/icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/pwa-icons/icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/pwa-icons/icon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="/pwa-icons/icon-192x192.png" />
+  
+  <!-- iOS Splash Screens (opcional pero recomendado) -->
+  <link rel="apple-touch-startup-image" href="/pwa-icons/icon-512x512.png" />
+  
+  <!-- Android/Chrome -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  
+  <!-- Microsoft -->
+  <meta name="msapplication-TileColor" content="#63c1a5" />
+  <meta name="msapplication-TileImage" content="/pwa-icons/icon-144x144.png" />
   
   <!-- Preconnect para mejorar performance -->
   <link rel="preconnect" href="https://api.farmacruz.com.mx" />

@@ -2,6 +2,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
 import ScrollToTop from './components/common/ScrollToTop';
+import IOSInstallPrompt from './components/common/IOSInstallPrompt';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -19,6 +20,7 @@ function App() {
   return (
     <HelmetProvider>
       <ScrollToTop />
+      <IOSInstallPrompt />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
