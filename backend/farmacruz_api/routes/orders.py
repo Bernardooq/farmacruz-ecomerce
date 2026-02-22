@@ -153,6 +153,7 @@ def clear_user_cart(current_user = Depends(get_current_user), db: Session = Depe
 # --- Pedidos ---
 class CheckoutRequest(BaseModel):
     shipping_address_number: int = 1  # Default to address 1
+    # shipping_cost removido - será manejado por el backend
 
 """ POST /checkout - Crear pedido desde el carrito """
 @router.post("/checkout", response_model=Order)
@@ -168,8 +169,17 @@ def checkout_cart(checkout_data: CheckoutRequest,
     if not customer_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No se pudo identificar el cliente")
     
+    # CLIENTES: Aplicar costo de envío por defecto (0 MXN)
+    # Solo admin/marketing pueden especificar costo personalizado
+    default_shipping_cost = Decimal("0.0")
+    
     try:
-        order = create_order_from_cart(db, customer_id=customer_id, shipping_address_number=checkout_data.shipping_address_number)
+        order = create_order_from_cart(
+            db, 
+            customer_id=customer_id, 
+            shipping_address_number=checkout_data.shipping_address_number,
+            shipping_cost=default_shipping_cost  # Costo fijo para clientes
+        )
         return order
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=str(e))
@@ -195,6 +205,8 @@ def create_order_for_customer(
         )
     
     # VERIFICAR PERMISOS
+    if current_user.role != UserRole.marketing and current_user.role != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No tiene permisos para crear ordenes")
     # Admin puede crear para cualquiera, marketing solo para sus grupos
     if current_user.role == UserRole.marketing:
         # Verificar que el cliente esté en un grupo que el marketing maneja
@@ -226,7 +238,8 @@ def create_order_for_customer(
             db=db,
             customer_id=order_data.customer_id,
             items=items_dict,
-            shipping_address_number=order_data.shipping_address_number
+            shipping_address_number=order_data.shipping_address_number,
+            shipping_cost=Decimal(str(order_data.shipping_cost))
         )
         return order
     except ValueError as e:
@@ -623,7 +636,13 @@ def edit_order_route(order_id: UUID, edit_data: OrderEditRequest, current_user: 
     
     # Editar el pedido
     try:
-        edited_order = edit_order_items(db, order_id=order_id, items=edit_data.items, customer_id=order.customer_id)
+        edited_order = edit_order_items(
+            db, 
+            order_id=order_id, 
+            items=edit_data.items, 
+            customer_id=order.customer_id,
+            shipping_cost=edit_data.shipping_cost
+        )
         return edited_order
     except ValueError as e:
         raise HTTPException(

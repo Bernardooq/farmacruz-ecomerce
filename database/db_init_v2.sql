@@ -245,6 +245,7 @@ CREATE TABLE orders (
         )
     ),
     total_amount NUMERIC(12, 2) DEFAULT 0.00,
+    shipping_cost NUMERIC(10, 2) DEFAULT 0.00,
     shipping_address_number INTEGER CHECK (
         shipping_address_number BETWEEN 1 AND 3
     ),

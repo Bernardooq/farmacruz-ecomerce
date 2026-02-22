@@ -83,3 +83,44 @@
         }
     }
 }
+
+
+// ============================================
+// ORDER SUMMARY (for shipping cost breakdown)
+// ============================================
+
+.order-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--border-radius);
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: var(--text-sm);
+        color: var(--color-text);
+        padding: var(--space-2) 0;
+
+        &:not(:last-child) {
+            border-bottom: var(--border-width) solid var(--color-border);
+        }
+    }
+
+    &__total {
+        font-size: var(--text-lg);
+        font-weight: var(--font-bold);
+        padding-top: var(--space-3);
+        margin-top: var(--space-2);
+        border-top: 2px solid var(--color-border);
+    }
+
+    &__total-amount {
+        font-size: var(--text-2xl);
+        color: var(--color-success);
+        font-weight: var(--font-bold);
+    }
+}

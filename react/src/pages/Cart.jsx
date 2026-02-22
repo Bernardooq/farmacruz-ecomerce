@@ -90,7 +90,9 @@ export default function Cart() {
     }
   };
 
-  const handleCheckoutClick = () => setShowConfirmModal(true);
+  const handleCheckoutClick = () => {
+    setShowConfirmModal(true);
+  };
 
   const handleConfirmCheckout = async () => {
     try {
@@ -98,7 +100,7 @@ export default function Cart() {
       setShowConfirmModal(false);
       setProcessingCheckout(true);
       const addressNumber = parseInt(selectedAddress.replace('address_', ''));
-      await checkout(addressNumber);
+      await checkout(addressNumber); // Sin shipping_cost
       navigate('/profile');
     } catch (err) {
       setError('Error al procesar el pedido. Intenta de nuevo.');

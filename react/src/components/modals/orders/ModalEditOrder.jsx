@@ -6,6 +6,7 @@ import SimilarProductsModal from './SimilarProductsModal';
 
 export default function ModalEditOrder({ visible, order, onClose, onSave }) {
     const [items, setItems] = useState([]);
+    const [shippingCost, setShippingCost] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showSimilarModal, setShowSimilarModal] = useState(false);
@@ -20,6 +21,8 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                 quantity: item.quantity,
                 final_price: item.final_price
             })));
+            // Cargar shipping_cost existente
+            setShippingCost(order.shipping_cost || 0);
         }
     }, [order]);
 
@@ -56,7 +59,14 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
         if (items.length === 0) { setError('El pedido debe tener al menos un producto'); return; }
         setLoading(true); setError(null);
         try {
-            await onSave(order.order_id, { items: items.map(item => ({ order_item_id: item.order_item_id, product_id: item.product_id, quantity: item.quantity })) });
+            await onSave(order.order_id, { 
+                items: items.map(item => ({ 
+                    order_item_id: item.order_item_id, 
+                    product_id: item.product_id, 
+                    quantity: item.quantity 
+                })),
+                shipping_cost: shippingCost
+            });
             onClose();
         } catch (err) { setError(err.message || 'Error al guardar cambios'); }
         finally { setLoading(false); }
@@ -79,6 +89,37 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                         </div>
 
                         <OrderItemsTable items={items} onQuantityChange={handleQuantityChange} onRemoveItem={handleRemoveItem} loading={loading} />
+                        
+                        {/* Resumen del Pedido */}
+                        <div className="order-summary mt-4">
+                            <div className="order-summary__row">
+                                <span>Subtotal Productos:</span>
+                                <span>${items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0).toFixed(2)}</span>
+                            </div>
+                            <div className="order-summary__row">
+                                <span>Costo de Envío:</span>
+                                <input
+                                    id="shipping-cost"
+                                    type="number"
+                                    min="0"
+                                    step="1.00"
+                                    value={shippingCost}
+                                    onChange={(e) => {
+                                        const value = parseFloat(e.target.value);
+                                        setShippingCost(isNaN(value) || value < 0 ? 0 : value);
+                                    }}
+                                    placeholder="0.00"
+                                    className="input input--sm"
+                                />
+                            </div>
+                            <div className="order-summary__row order-summary__total">
+                                <strong>Total:</strong>
+                                <span className="order-summary__total-amount">
+                                    ${(items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0) + Number(shippingCost)).toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+
                         <ProductSearchGrid customerId={customerId} onAddToOrder={handleAddProductToOrder} onShowSimilar={handleShowSimilar} />
 
                         <p className="text-muted text-sm mt-3">

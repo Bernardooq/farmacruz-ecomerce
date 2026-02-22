@@ -21,7 +21,7 @@ from db.base import Order, OrderItem, Product, PriceListItem, CustomerInfo, Orde
 from schemas.order_edit import OrderItemEdit
 
 """Edita los items de un pedido existente"""
-def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], customer_id: int) -> Order:    
+def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], customer_id: int, shipping_cost: float = None) -> Order:    
     # Obtener el pedido
     order = db.query(Order).filter(Order.order_id == order_id).first()
     if not order:
@@ -130,8 +130,13 @@ def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], cu
         if item_id not in items_to_keep:
             db.delete(item)
     
-    # Actualizar el total del pedido
-    order.total_amount = new_total
+    # Actualizar shipping_cost si se proporciona
+    if shipping_cost is not None:
+        order.shipping_cost = shipping_cost
+    
+    # Actualizar el total del pedido (items + shipping_cost)
+    shipping_cost_decimal = Decimal(str(order.shipping_cost or 0))
+    order.total_amount = new_total + shipping_cost_decimal
     
     db.commit()
     db.refresh(order)

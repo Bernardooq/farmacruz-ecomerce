@@ -122,6 +122,8 @@ export default function Profile() {
         date: new Date(order.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }),
         total: `$${parseFloat(order.total_amount).toFixed(2)} MXN`,
         totalAmount: parseFloat(order.total_amount),
+        subtotal: (order.items || []).reduce((sum, item) => sum + (parseFloat(item.final_price) * item.quantity), 0),
+        shippingCost: parseFloat(order.shipping_cost || 0),
         status: STATUS_LABELS[order.status] || order.status,
         statusClass: STATUS_CLASSES[order.status] || 'pending',
         rawStatus: order.status,

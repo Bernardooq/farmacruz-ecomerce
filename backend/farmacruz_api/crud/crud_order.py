@@ -93,7 +93,7 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[Or
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
 """ Crear un pedido a partir del carrito del cliente """
-def create_order_from_cart(db: Session, customer_id: int, shipping_address_number: int = 1) -> Order:
+def create_order_from_cart(db: Session, customer_id: int, shipping_address_number: int = 1, shipping_cost: Decimal = Decimal("0.00")) -> Order:
     # Validar direccion
     if shipping_address_number not in [1, 2, 3]:
         raise ValueError("Numero de direccion invalido. Debe ser 1, 2 o 3.")
@@ -124,6 +124,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
         customer_id=customer_id,
         status=OrderStatus.pending_validation,
         total_amount=0,  # Se calculara despues
+        shipping_cost=float(shipping_cost),  # Costo de envío
         shipping_address_number=shipping_address_number,
         assigned_seller_id=assigned_seller_id  # Auto-asignar agente
     )
@@ -187,8 +188,8 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
         # Acumular total
         total += final_price * cart_item.quantity
     
-    # Actualizar total del pedido
-    db_order.total_amount = float(total)
+    # Actualizar total del pedido (productos + envío)
+    db_order.total_amount = float(total + shipping_cost)
     
     # === LIMPIAR CARRITO ===
     db.query(CartCache).filter(CartCache.customer_id == customer_id).delete()
@@ -198,7 +199,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
     return db_order
 
 
-def create_order_direct(db: Session, customer_id: int, items: List[dict], shipping_address_number: int = 1) -> Order:
+def create_order_direct(db: Session, customer_id: int, items: List[dict], shipping_address_number: int = 1, shipping_cost: Decimal = Decimal("0.00")) -> Order:
     """
     Crea un pedido directamente sin pasar por el carrito.
     
@@ -209,6 +210,7 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
         customer_id: ID del cliente para quien se crea el pedido
         items: Lista de dicts con {'product_id': str, 'quantity': int}
         shipping_address_number: Número de dirección (1, 2 o 3)
+        shipping_cost: Costo de envío
     
     Returns:
         Order: El pedido creado
@@ -240,6 +242,7 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
         customer_id=customer_id,
         status=OrderStatus.pending_validation,
         total_amount=0,  # Se calculara despues
+        shipping_cost=float(shipping_cost),  # Costo de envío
         shipping_address_number=shipping_address_number,
         assigned_seller_id=assigned_seller_id
     )
@@ -306,8 +309,8 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
         # Acumular total
         total += final_price * quantity
     
-    # Actualizar total del pedido
-    db_order.total_amount = float(total)
+    # Actualizar total del pedido (productos + envío)
+    db_order.total_amount = float(total + shipping_cost)
     
     db.commit()
     db.refresh(db_order)

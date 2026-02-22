@@ -350,6 +350,7 @@ class Order(Base):
     assigned_by_user_id = Column(Integer, ForeignKey("users.user_id"))  # Quien hizo la asignacion
     status = Column(SQLAlchemyEnum(OrderStatus), nullable=False, default=OrderStatus.pending_validation, index=True)
     total_amount = Column(Numeric(12, 2), default=0.00)  # Monto total calculado
+    shipping_cost = Column(Numeric(10, 2), default=0.00)  # Costo de envío
     shipping_address_number = Column(Integer)  # 1, 2 o 3 (cual de las 3 direcciones usar)
     assignment_notes = Column(Text)  # Notas del admin al asignar vendedor
     created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)

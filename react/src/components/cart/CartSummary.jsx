@@ -8,7 +8,14 @@ export default function CartSummary({
     const product = item.product || {};
     const price = product.final_price || product.base_price || 0;
     return sum + price * item.quantity;
-  }, 0).toFixed(2);
+  }, 0);
+
+  // El costo de envío será manejado por el backend
+  const total = subtotal;
+
+  const handleCheckout = () => {
+    onCheckout(); // Ya no pasamos shipping_cost
+  };
 
   return (
     <aside className="cart-summary-card">
@@ -17,25 +24,24 @@ export default function CartSummary({
       {/* Subtotal */}
       <div className="cart-summary-card__row">
         <span>Subtotal:</span>
-        <span>${subtotal}</span>
+        <span>${subtotal.toFixed(2)}</span>
       </div>
 
-      {/* Envío */}
       <div className="cart-summary-card__row">
-        <span>Envío:</span>
-        <span>A calcular</span>
+        <span>Precios de envío:</span>
+        <span>A calcular...</span>
       </div>
 
-      {/* Total Estimado */}
+      {/* Total (sin costo de envío visible para clientes) */}
       <div className="cart-summary-card__row cart-summary-card__row--total">
-        <span>Total Estimado:</span>
-        <span>${subtotal}</span>
+        <span>Total:</span>
+        <span>${total.toFixed(2)}</span>
       </div>
 
       {/* Botón de Checkout */}
       <button
         className="btn btn--primary btn--block"
-        onClick={onCheckout}
+        onClick={handleCheckout}
         disabled={processingCheckout || items.length === 0}
       >
         {processingCheckout ? 'Procesando...' : 'Finalizar Pedido'}

@@ -9,12 +9,13 @@ import SimilarProductsModal from './SimilarProductsModal';
 export default function ModalCreateOrder({ visible, onClose, onSuccess }) {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [items, setItems] = useState([]);
+    const [shippingCost, setShippingCost] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showSimilarModal, setShowSimilarModal] = useState(false);
     const [selectedProductForSimilar, setSelectedProductForSimilar] = useState(null);
 
-    useEffect(() => { if (!visible) { setSelectedCustomer(null); setItems([]); setError(null); setShowSimilarModal(false); setSelectedProductForSimilar(null); } }, [visible]);
+    useEffect(() => { if (!visible) { setSelectedCustomer(null); setItems([]); setShippingCost(0); setError(null); setShowSimilarModal(false); setSelectedProductForSimilar(null); } }, [visible]);
 
     const handleQuantityChange = (index, newQuantity) => {
         const updated = [...items]; updated[index].quantity = Math.max(1, parseInt(newQuantity) || 1); setItems(updated);
@@ -38,7 +39,12 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess }) {
         if (items.length === 0) { setError('El pedido debe tener al menos un producto'); return; }
         setLoading(true); setError(null);
         try {
-            await orderService.createOrderForCustomer({ customer_id: selectedCustomer.customer_id, items: items.map(item => ({ product_id: item.product_id, quantity: item.quantity })), shipping_address_number: 1 });
+            await orderService.createOrderForCustomer({ 
+                customer_id: selectedCustomer.customer_id, 
+                items: items.map(item => ({ product_id: item.product_id, quantity: item.quantity })), 
+                shipping_address_number: 1,
+                shipping_cost: shippingCost
+            });
             onSuccess?.(); onClose();
         } catch (err) { setError(err.response?.data?.detail || err.message || 'Error al crear pedido'); }
         finally { setLoading(false); }
@@ -70,6 +76,37 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess }) {
                                 </div>
 
                                 <OrderItemsTable items={items} onQuantityChange={handleQuantityChange} onRemoveItem={handleRemoveItem} loading={loading} />
+                                
+                                {/* Resumen del Pedido */}
+                                <div className="order-summary mt-4">
+                                    <div className="order-summary__row">
+                                        <span>Subtotal Productos:</span>
+                                        <span>${items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0).toFixed(2)}</span>
+                                    </div>
+                                    <div className="order-summary__row">
+                                        <span>Costo de Envío:</span>
+                                        <input
+                                            id="shipping-cost-create"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={shippingCost}
+                                            onChange={(e) => {
+                                                const value = parseFloat(e.target.value);
+                                                setShippingCost(isNaN(value) || value < 0 ? 0 : value);
+                                            }}
+                                            placeholder="0.00"
+                                            className="input input--sm"
+                                        />
+                                    </div>
+                                    <div className="order-summary__row order-summary__total">
+                                        <strong>Total:</strong>
+                                        <span className="order-summary__total-amount">
+                                            ${(items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0) + Number(shippingCost)).toFixed(2)}
+                                        </span>
+                                    </div>
+                                </div>
+
                                 <ProductSearchGrid customerId={selectedCustomer.customer_id} onAddToOrder={handleAddProductToOrder} onShowSimilar={handleShowSimilar} />
                             </>
                         )}

@@ -126,7 +126,7 @@ export const CartProvider = ({ children }) => {
 
   const checkout = async (shippingAddressNumber = 1) => {
     try {
-      const order = await orderService.checkout(shippingAddressNumber);
+      const order = await orderService.checkout(shippingAddressNumber); // Sin shipping_cost
       setItems([]);
       return order;
     } catch (error) {

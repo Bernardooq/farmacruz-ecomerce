@@ -35,10 +35,12 @@ class OrderEditRequest(BaseModel):
     - Agregar nuevos productos
     - Eliminar productos existentes
     - Cambiar cantidades
+    - Modificar costo de envío
     
     Los precios se recalculan automaticamente segun la lista del cliente.
     """
     items: List[OrderItemEdit] = Field(..., description="Lista de items del pedido")
+    shipping_cost: Optional[float] = Field(None, ge=0, description="Costo de envío")
 
     model_config = {
         "json_schema_extra": {
@@ -46,7 +48,8 @@ class OrderEditRequest(BaseModel):
                 "items": [
                     {"order_item_id": None, "product_id": "PROD123", "quantity": 5},
                     {"order_item_id": "550e8400-e29b-41d4-a716-446655440000", "product_id": "PROD456", "quantity": 3}
-                ]
+                ],
+                "shipping_cost": 150.00
             }
         }
     }

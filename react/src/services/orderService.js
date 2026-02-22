@@ -40,6 +40,7 @@ export const orderService = {
   async checkout(shippingAddressNumber = 1) {
     return apiService.post('/orders/checkout', {
       shipping_address_number: shippingAddressNumber
+      // shipping_cost será manejado por el backend
     })
   },
 

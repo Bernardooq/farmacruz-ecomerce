@@ -94,6 +94,7 @@ class OrderCreate(OrderBase):
     Los items se agregan despues con OrderItemCreate.
     """
     shipping_address_number: Optional[int] = Field(None, ge=1, le=3)  # Cual direccion usar (1, 2 o 3)
+    shipping_cost: Optional[Decimal] = Field(default=Decimal("0.00"), ge=0)  # Costo de envío
 
 
 class OrderUpdate(BaseModel):
@@ -106,6 +107,7 @@ class OrderUpdate(BaseModel):
     assigned_seller_id: Optional[int] = None  # Asignar/cambiar vendedor
     shipping_address_number: Optional[int] = Field(None, ge=1, le=3)  # Cambiar direccion
     assignment_notes: Optional[str] = None  # Notas al asignar
+    shipping_cost: Optional[Decimal] = Field(None, ge=0)  # Costo de envío
 
 
 class OrderAssign(BaseModel):
@@ -151,6 +153,7 @@ class Order(OrderBase):
     assigned_seller_id: Optional[int] = None  # ID del vendedor asignado (si hay)
     assigned_by_user_id: Optional[int] = None  # ID de quien hizo la asignacion (si hay)
     total_amount: Decimal  # Monto total del pedido
+    shipping_cost: Decimal = Decimal("0.00")  # Costo de envío
     shipping_address_number: Optional[int] = None  # Que direccion se usa (1, 2 o 3)
     assignment_notes: Optional[str] = None  # Notas de asignacion
     
