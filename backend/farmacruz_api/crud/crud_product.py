@@ -45,9 +45,16 @@ def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Opti
     
     if image is not None:
         if image:
-            query = query.filter(Product.image_url.isnot(None))
+            # Tiene imagen: image_url no es NULL ni string vacío
+            query = query.filter(
+                Product.image_url.isnot(None),
+                Product.image_url != ""
+            )
         else:
-            query = query.filter(Product.image_url.is_(None))
+            # Sin imagen: image_url es NULL o string vacío
+            query = query.filter(
+                (Product.image_url.is_(None)) | (Product.image_url == "")
+            )
     
     # Filtrar por nivel de stock
     if stock_filter:
@@ -93,20 +100,27 @@ def search_products(db: Session, search: str, skip: int = 0, limit: int = 100) -
 
 """ Crea un nuevo producto en el catalogo """
 def create_product(db: Session, product: ProductCreate) -> Product:
-    db_product = Product(**product.model_dump())
+    product_data = product.model_dump()
+    # Normalizar image_url: guardar NULL en vez de string vacío
+    if not product_data.get("image_url"):
+        product_data["image_url"] = None
+    db_product = Product(**product_data)
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
     return db_product
 
 """ Actualiza un producto existente """
-def update_product(db: Session, product_id: str,product: ProductUpdate) -> Optional[Product]:
+def update_product(db: Session, product_id: str, product: ProductUpdate) -> Optional[Product]:
     db_product = get_product(db, product_id)
     if not db_product:
         return None
     
     # Actualizar solo campos proporcionados
     update_data = product.dict(exclude_unset=True)
+    # Normalizar image_url: guardar NULL en vez de string vacío
+    if "image_url" in update_data and not update_data["image_url"]:
+        update_data["image_url"] = None
     for field, value in update_data.items():
         setattr(db_product, field, value)
     

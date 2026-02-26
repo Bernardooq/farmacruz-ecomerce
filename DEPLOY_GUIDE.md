@@ -201,14 +201,16 @@ server {
     server_name _;
 
     location / {
+        # Burst de 100 para que React no se bloquee al cargar el dashboard
         limit_req zone=api_limit burst=100 nodelay;
 
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
 
+        # Timeouts largos para tus procesos de sincronización pesados
         proxy_connect_timeout 90s;
         proxy_send_timeout 300s;
         proxy_read_timeout 300s;

@@ -2,12 +2,14 @@
 
 ## Arquitectura
 
-### Opción 1: Con CloudFront (HTTP)
+### Opción actual (Load Balancer con SSL termination)
 ```
-Usuario → HTTPS → CloudFront → HTTP → EC2 nginx:80 → Uvicorn:8000
+Usuario → HTTPS → Load Balancer (SSL) → HTTP → EC2 nginx:80 → Uvicorn:8000
 ```
+> ⚠️ Con esta arquitectura, Nginx recibe tráfico por HTTP interno. Debes fijar
+> `X-Forwarded-Proto https` para que FastAPI construya redirects con HTTPS.
 
-### Opción 2: Directo EC2 HTTPS (Recomendado)
+### Opción alternativa: Nginx maneja SSL directamente
 ```
 Usuario → HTTPS → EC2 nginx:443 → Uvicorn:8000
 ```
@@ -47,6 +49,7 @@ sudo nano /etc/nginx/conf.d/farmacruz.conf
 
 ```nginx
 client_max_body_size 50M;
+# Rate limit usando el IP real detrás del Load Balancer/CloudFront
 limit_req_zone $http_x_forwarded_for zone=api_limit:10m rate=50r/s;
 
 server {
@@ -60,8 +63,12 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # IMPORTANTE: fijar https aunque Nginx reciba HTTP interno del LB
+        # Sin esto FastAPI genera redirects con http:// → Mixed Content en el browser
+        proxy_set_header X-Forwarded-Proto https;
         
-        proxy_connect_timeout 60s;
+        # Timeouts largos para procesos de sincronización pesados
+        proxy_connect_timeout 90s;
         proxy_send_timeout 300s;
         proxy_read_timeout 300s;
     }
@@ -147,7 +154,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
         
         proxy_connect_timeout 60s;
         proxy_send_timeout 300s;
