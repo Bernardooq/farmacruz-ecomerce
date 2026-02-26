@@ -21,6 +21,7 @@ Nota: Los precios finales para clientes se calculan en /catalog
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 
 from dependencies import get_db, get_current_admin_user, get_current_user
@@ -171,13 +172,20 @@ def delete_existing_product(
     current_user = Depends(get_current_admin_user)
 ):
     # Elimina un producto (soft delete)
-    db_product = delete_product(db, product_id=product_id)
-    if not db_product:
+    try:
+        db_product = delete_product(db, product_id=product_id)
+        if not db_product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Producto no encontrado"
+            )
+        return db_product
+    except IntegrityError:
+        db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Producto no encontrado"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar el producto porque ya forma parte de uno o más pedidos."
         )
-    return db_product
 
 """ PATCH /{product_id}/stock - Ajustar inventario de un producto """
 @router.patch("/{product_id}/stock", response_model=Product)
