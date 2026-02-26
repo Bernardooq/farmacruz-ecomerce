@@ -320,7 +320,13 @@ def assign_customer_to_sales_group(db: Session, group_id: int, customer_id: int)
                 detail="Customer no encontrado"
             )
         # Si existe pero no tiene CustomerInfo, lo creamos
-        customer = CustomerInfo(customer_id=customer_id, sales_group_id=group_id)
+        # Se agregan defaults a business_name y rfc para evitar violations de NOT NULL en la DB
+        customer = CustomerInfo(
+            customer_id=customer_id, 
+            sales_group_id=group_id,
+            business_name=base_customer.full_name or " ",
+            rfc=" "
+        )
         db.add(customer)
         db.commit()
         db.refresh(customer)
