@@ -187,9 +187,12 @@ export default function ClientManagement() {
         const updateData = { ...formData };
         if (!updateData.password || updateData.password.trim() === '') delete updateData.password;
         delete updateData.customer_id;
+        updateData.agent_id = updateData.agent_id ? parseInt(updateData.agent_id) : null;
         await customerService.updateCustomer(editingClient.customer_id, updateData);
         try {
-          await customerService.updateCustomerInfo(editingClient.customer_id, customerInfoData);
+          const infoToUpdate = { ...customerInfoData };
+          infoToUpdate.price_list_id = infoToUpdate.price_list_id ? parseInt(infoToUpdate.price_list_id) : null;
+          await customerService.updateCustomerInfo(editingClient.customer_id, infoToUpdate);
         } catch (err) {
           console.log('Could not update customer info:', err);
         }
@@ -201,6 +204,7 @@ export default function ClientManagement() {
         if (customerInfoData.business_name || customerInfoData.address_1 || customerInfoData.address_2 || customerInfoData.address_3 || customerInfoData.rfc) {
           try {
             const { customer_info_id, ...customerData } = customerInfoData;
+            customerData.price_list_id = customerData.price_list_id ? parseInt(customerData.price_list_id) : null;
             await customerService.updateCustomerInfo(newCustomer.customer_id, customerData);
           } catch (err) {
             console.log('Could not create customer info:', err);
