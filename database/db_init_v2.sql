@@ -29,8 +29,8 @@ DROP TABLE IF EXISTS customers CASCADE;
 
 DROP TABLE IF EXISTS users CASCADE;
 
--- Habilitar extension UUID si no existe
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- gen_random_uuid() es nativa en PostgreSQL 13+ — no requiere extensión
+-- (uuid-ossp requería permisos de superusuario en AWS RDS, ya no es necesaria)
 
 -- =====================================================
 -- TABLA: users (Usuarios internos: admin, marketing, seller)
@@ -67,6 +67,7 @@ CREATE TABLE customers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
 -- NUEVO: Agente/vendedor asignado desde DBF
+
 
 agent_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
     
@@ -231,7 +232,7 @@ CREATE INDEX idx_customerinfo_pricelist ON customerinfo (price_list_id);
 -- TABLA: orders (Pedidos)
 -- =====================================================
 CREATE TABLE orders (
-    order_id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    order_id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
     customer_id INTEGER NOT NULL REFERENCES customers (customer_id),
     assigned_seller_id INTEGER REFERENCES users (user_id),
     assigned_by_user_id INTEGER REFERENCES users (user_id),
@@ -273,7 +274,7 @@ CREATE INDEX idx_orders_created ON orders (created_at);
 -- TABLA: orderitems (Items de pedidos)
 -- =====================================================
 CREATE TABLE orderitems (
-    order_item_id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    order_item_id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
     order_id UUID NOT NULL REFERENCES orders (order_id) ON DELETE CASCADE,
     product_id VARCHAR(50) NOT NULL REFERENCES products (product_id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
