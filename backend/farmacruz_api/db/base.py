@@ -245,7 +245,7 @@ class Product(Base):
     category = relationship("Category", back_populates="products")
     order_items = relationship("OrderItem", back_populates="product")  # Items en pedidos
     cart_entries = relationship("CartCache", back_populates="product")  # Items en carritos
-    price_list_items = relationship("PriceListItem", back_populates="product")  # Markup por lista
+    price_list_items = relationship("PriceListItem", back_populates="product", cascade="all, delete-orphan", passive_deletes=True)  # Markup por lista
     suggested_products = relationship("ProductRecommendation", foreign_keys="[ProductRecommendation.product_id]", back_populates="product", cascade="all, delete-orphan")
 
 
