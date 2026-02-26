@@ -104,7 +104,7 @@ export default function AllOrders() {
 
   const handleAssign = async (sellerId, notes) => {
     try { await orderService.assignOrderToSeller(orderToAssign.order_id, sellerId, notes); await loadOrders(); setShowAssignModal(false); setOrderToAssign(null); }
-    catch (err) { throw new Error(err.message || 'Error al asignar vendedor'); }
+    catch (err) { setError(err.response?.data?.detail || err.message || 'Error al asignar vendedor'); }
   };
 
   const handleDownloadTXT = async (orderId) => {
@@ -121,7 +121,7 @@ export default function AllOrders() {
 
   const handleSaveEditedOrder = async (orderId, editData) => {
     try { await orderService.editOrder(orderId, editData); await loadOrders(); }
-    catch (err) { throw new Error(err.response?.data?.detail || err.message || 'Error al guardar cambios'); }
+    catch (err) { setError(err.response?.data?.detail || err.message || 'Error al guardar cambios'); }
   };
 
   const handleCreateOrderSuccess = async () => { await loadOrders(); };

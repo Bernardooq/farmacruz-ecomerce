@@ -86,7 +86,8 @@ export default function CategoryManagement() {
       await categoryService.deleteCategory(category.category_id);
       loadCategories();
     } catch (err) {
-      setError('Error al eliminar la categoría.');
+      const errorMsg = err.response?.data?.detail || err.message || err.detail || 'Error al eliminar la categoría.';
+      setError(errorMsg);
       console.error('Failed to delete category:', err);
     }
   };

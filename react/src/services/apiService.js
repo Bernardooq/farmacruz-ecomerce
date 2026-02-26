@@ -97,7 +97,15 @@ class ApiService {
           errorMessage = response.statusText || errorMessage
         }
 
-        throw new Error(errorMessage)
+        const finalError = new Error(errorMessage)
+        finalError.detail = errorMessage
+        // Emular la estructura de Axios para los componentes que aún hacen err.response?.data?.detail
+        finalError.response = {
+          data: {
+            detail: errorMessage
+          }
+        }
+        throw finalError
       }
 
       // Respuesta correcta → regresamos el JSON (si hay contenido)
