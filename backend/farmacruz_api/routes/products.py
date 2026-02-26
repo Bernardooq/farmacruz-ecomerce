@@ -186,6 +186,12 @@ def delete_existing_product(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No se puede eliminar el producto porque ya forma parte de uno o más pedidos."
         )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error inesperado al eliminar: {str(e)}"
+        )
 
 """ PATCH /{product_id}/stock - Ajustar inventario de un producto """
 @router.patch("/{product_id}/stock", response_model=Product)
