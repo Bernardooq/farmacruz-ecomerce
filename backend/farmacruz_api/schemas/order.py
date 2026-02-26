@@ -168,6 +168,10 @@ class Order(OrderBase):
     assigned_seller: Optional[OrderUser] = None  # Informacion del vendedor asignado
     assigned_by: Optional[OrderUser] = None  # Informacion de quien asigno
 
+    # Campo extra — NO está en el ORM Order. Lo inyecta el route handler
+    # a partir de un batch lookup de CustomerInfo → sales_group_id.
+    sales_group_id: Optional[int] = None
+
     model_config = {"from_attributes": True}
 
 

@@ -9,8 +9,9 @@ Funciones para manejar usuarios internos (admin, marketing, seller):
 NOTA: Los clientes estan en crud_customer.py (tabla separada).
 
 RANGOS DE IDs:
-- Sellers (agentes DBF): 1-9000
-- Admin/Marketing: 9001+
+- Sellers:    1 – 9,999,999
+- Marketing:  10,000,000 – 14,999,999
+- Admin:      15,000,000+
 """
 
 from typing import List, Optional
@@ -73,10 +74,12 @@ def create_user(db: Session, user: UserCreate) -> User:
     """
     # Definir rangos segun rol
     SELLER_ID_MIN = 1
-    SELLER_ID_MAX = 9000
-    ADMIN_MARKETING_ID_MIN = 9001
-    ADMIN_MARKETING_ID_MAX = 99999  # Limite razonable
-    
+    SELLER_ID_MAX = 9_999_999          # Sellers: 1 – 9,999,999
+    MARKETING_ID_MIN = 10_000_000      # Marketing: 10,000,000 – 14,999,999
+    MARKETING_ID_MAX = 14_999_999
+    ADMIN_ID_MIN = 15_000_000          # Admin: 15,000,000+
+    ADMIN_ID_MAX = 99_999_999          # Limite razonable
+
     # Hashear contraseña
     hashed_password = get_password_hash(user.password)
     
@@ -95,20 +98,25 @@ def create_user(db: Session, user: UserCreate) -> User:
             if not (SELLER_ID_MIN <= user.user_id <= SELLER_ID_MAX):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Los sellers deben tener IDs entre {SELLER_ID_MIN} y {SELLER_ID_MAX}. ID proporcionado: {user.user_id}"
+                    detail=f"Los sellers deben tener IDs entre {SELLER_ID_MIN:,} y {SELLER_ID_MAX:,}. ID proporcionado: {user.user_id}"
                 )
-        else:  # admin o marketing
-            if not (ADMIN_MARKETING_ID_MIN <= user.user_id <= ADMIN_MARKETING_ID_MAX):
+        elif user.role == UserRole.marketing:
+            if not (MARKETING_ID_MIN <= user.user_id <= MARKETING_ID_MAX):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Admin/Marketing deben tener IDs desde {ADMIN_MARKETING_ID_MIN} en adelante. ID proporcionado: {user.user_id}"
+                    detail=f"Marketing debe tener IDs entre {MARKETING_ID_MIN:,} y {MARKETING_ID_MAX:,}. ID proporcionado: {user.user_id}"
+                )
+        else:  # admin
+            if not (ADMIN_ID_MIN <= user.user_id <= ADMIN_ID_MAX):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Admins deben tener IDs desde {ADMIN_ID_MIN:,} en adelante. ID proporcionado: {user.user_id}"
                 )
         
         user_id_to_use = user.user_id
     else:
         # Auto-generar el siguiente ID disponible DENTRO DEL RANGO del rol
         if user.role == UserRole.seller:
-            # Buscar max ID en rango de sellers (1-9000)
             max_id = db.query(func.max(User.user_id)).filter(
                 and_(
                     User.user_id >= SELLER_ID_MIN,
@@ -117,25 +125,40 @@ def create_user(db: Session, user: UserCreate) -> User:
             ).scalar()
             
             if max_id is None:
-                # No hay sellers, empezar en 1
                 user_id_to_use = SELLER_ID_MIN
             elif max_id >= SELLER_ID_MAX:
-                # Rango de sellers agotado
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Rango de IDs para sellers agotado (max: {SELLER_ID_MAX})"
+                    detail=f"Rango de IDs para sellers agotado (max: {SELLER_ID_MAX:,})"
                 )
             else:
                 user_id_to_use = max_id + 1
-        else:
-            # Buscar max ID en rango de admin/marketing (9001+)
+
+        elif user.role == UserRole.marketing:
             max_id = db.query(func.max(User.user_id)).filter(
-                User.user_id >= ADMIN_MARKETING_ID_MIN
+                and_(
+                    User.user_id >= MARKETING_ID_MIN,
+                    User.user_id <= MARKETING_ID_MAX
+                )
             ).scalar()
             
             if max_id is None:
-                # No hay admin/marketing, empezar en 9001
-                user_id_to_use = ADMIN_MARKETING_ID_MIN
+                user_id_to_use = MARKETING_ID_MIN
+            elif max_id >= MARKETING_ID_MAX:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Rango de IDs para marketing agotado (max: {MARKETING_ID_MAX:,})"
+                )
+            else:
+                user_id_to_use = max_id + 1
+
+        else:  # admin
+            max_id = db.query(func.max(User.user_id)).filter(
+                User.user_id >= ADMIN_ID_MIN
+            ).scalar()
+            
+            if max_id is None:
+                user_id_to_use = ADMIN_ID_MIN
             else:
                 user_id_to_use = max_id + 1
     

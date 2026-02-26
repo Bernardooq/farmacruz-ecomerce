@@ -4,6 +4,9 @@ from core import config
 from db.session import engine 
 from routes.router import api_router
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title=config.PROJECT_NAME)
 
@@ -36,6 +39,7 @@ def health_check():
 def read_root():
     try:
         with engine.connect() as connection:
-            return {"message": "¡Hola Mundo! Conexion a la DB exitosa."}
+            return {"message": "OK"}
     except Exception as e:
-        return {"message": "¡Hola Mundo! ERROR al conectar a la DB.", "error": str(e)}
+        logger.error(f"DB connection error: {e}", exc_info=True)
+        return {"message": "OK"}

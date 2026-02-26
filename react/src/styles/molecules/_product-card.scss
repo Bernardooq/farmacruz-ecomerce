@@ -101,6 +101,49 @@
         margin-top: auto;
     }
 
+    // Inline quantity controls: − | input | +
+    &__quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+    }
+
+    &__qty-btn {
+        // Fixed-width square so the −/+ buttons don't stretch
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    &__qty-input {
+        width: 48px;
+        text-align: center;
+        // Remove browser spinner arrows
+        -moz-appearance: textfield;
+        appearance: textfield;
+
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+    }
+
+    &__message {
+        font-size: 0.78rem;
+        margin: var(--space-1) 0 0;
+        color: var(--color-danger, #e53e3e);
+
+        &--warning {
+            color: var(--color-warning, #d97706);
+        }
+    }
+
     &__button {
         flex: 1;
         padding: var(--space-2) var(--space-3);

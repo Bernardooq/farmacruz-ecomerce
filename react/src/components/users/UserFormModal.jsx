@@ -61,7 +61,11 @@ export default function UserFormModal({ user, role, onClose, onSaved }) {
                 <label className="form-group__label" htmlFor="user_id">ID (opcional)</label>
                 <input className="input" type="number" id="user_id" name="user_id" value={formData.user_id} onChange={handleChange} disabled={loading} placeholder="Auto-generado si se deja vacío" min="1" />
                 <small className="form-group__hint">
-                  {role === 'seller' ? 'Sellers: 1-9000' : 'Admin/Marketing: 9001+'}
+                  {role === 'seller'
+                    ? 'Vendedores: 1 – 9,999,999'
+                    : role === 'marketing'
+                      ? 'Marketing: 10,000,000 – 14,999,999'
+                      : 'Admin: 15,000,000+'}
                 </small>
               </div>
             )}

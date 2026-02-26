@@ -331,6 +331,37 @@ def update_order_status(db: Session, order_id: UUID, status: OrderStatus, seller
     
     db.commit()
     db.refresh(db_order)
+
+    # TODO: Notificar al cliente y a su marketing de grupo que cambio el estatus de su pedido
+    # from utils.email_utils import send_email_background
+    # from db.base import CustomerInfo, GroupMarketingManager, User
+    # 
+    # client_email = db_order.customer.email if db_order.customer else None
+    # subject = f"Actualización de pedido {db_order.order_id}"
+    # html_body = f"<p>Su pedido ha cambiado al estatus: <strong>{status.name if hasattr(status, 'name') else status}</strong></p>"
+    # 
+    # if client_email:
+    #     # send_email_background(to_email=client_email, subject=subject, html_body=html_body)
+    #     pass
+    # 
+    # # Obtener emails de los marketing managers asociados al grupo del cliente
+    # marketing_emails = []
+    # if db_order.customer_id:
+    #     customer_info = db.query(CustomerInfo).filter(CustomerInfo.customer_id == db_order.customer_id).first()
+    #     if customer_info and customer_info.sales_group_id:
+    #         managers = db.query(User.email).join(
+    #             GroupMarketingManager, GroupMarketingManager.marketing_id == User.user_id
+    #         ).filter(
+    #             GroupMarketingManager.sales_group_id == customer_info.sales_group_id,
+    #             User.is_active == True,
+    #             User.email.isnot(None)
+    #         ).all()
+    #         marketing_emails = [m[0] for m in managers if m[0]]
+    # 
+    # for m_email in marketing_emails:
+    #     # send_email_background(to_email=m_email, subject=subject, html_body=html_body)
+    #     pass
+
     return db_order
 
 """ Cancelar un pedido y restaurar stock """

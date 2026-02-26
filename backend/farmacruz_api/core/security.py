@@ -25,6 +25,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool: # Verifi
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str: # Crea un token JWT con los datos proporcionados y tiempo de expiracion opcional
+    import uuid
     to_encode = data.copy()
     
     # Determinar tiempo de expiracion
@@ -33,7 +34,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode.update({"exp": expire})
+    to_encode.update({
+        "exp": expire,
+        "jti": str(uuid.uuid4()),  # JWT ID único para revocación individual
+    })
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 

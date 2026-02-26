@@ -3,6 +3,7 @@ import ErrorMessage from '../../common/ErrorMessage';
 import OrderItemsTable from './OrderItemsTable';
 import ProductSearchGrid from './ProductSearchGrid';
 import SimilarProductsModal from './SimilarProductsModal';
+import StockConflictBanner from './StockConflictBanner';
 
 export default function ModalEditOrder({ visible, order, onClose, onSave }) {
     const [items, setItems] = useState([]);
@@ -11,6 +12,7 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
     const [error, setError] = useState(null);
     const [showSimilarModal, setShowSimilarModal] = useState(false);
     const [selectedProductForSimilar, setSelectedProductForSimilar] = useState(null);
+    const [stockConflict, setStockConflict] = useState(null);
 
     useEffect(() => {
         if (order && order.items) {
@@ -19,7 +21,8 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                 product_id: item.product?.product_id || item.product_id,
                 product_name: item.product?.name || 'Producto',
                 quantity: item.quantity,
-                final_price: item.final_price
+                final_price: item.final_price,
+                stock_count: item.product?.stock_count || 0,
             })));
             // Cargar shipping_cost existente
             setShippingCost(order.shipping_cost || 0);
@@ -31,9 +34,32 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
     const customerId = order.customer_id || order.customer?.customer_id;
 
     const handleQuantityChange = (index, newQuantity) => {
+        const newQty = Math.max(1, parseInt(newQuantity) || 1);
+        const item = items[index];
+        const stock = item.stock_count || 0;
+
+        // Siempre actualizar para que el input no quede bloqueado
         const updated = [...items];
-        updated[index].quantity = Math.max(1, parseInt(newQuantity) || 1);
+        updated[index].quantity = newQty;
         setItems(updated);
+
+        if (stock > 0 && newQty > stock) {
+            const doSet = (qty) => {
+                setItems(prev => { const u = [...prev]; u[index].quantity = qty; return u; });
+                setStockConflict(null);
+            };
+            setStockConflict({
+                productName: item.product_name,
+                stock,
+                existingQty: item.quantity,
+                quantity: newQty,
+                totalQty: newQty,
+                maxCanAdd: stock,
+                doAdd: doSet,
+            });
+        } else {
+            setStockConflict(null);
+        }
     };
 
     const handleRemoveItem = (index) => {
@@ -41,16 +67,45 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
         setItems(items.filter((_, i) => i !== index));
     };
 
-    const handleAddProductToOrder = (product) => {
-        if (product.stock_count === 0 || !product.stock_count) {
-            if (!window.confirm(`⚠️ ADVERTENCIA: El producto "${product.name}" no tiene stock disponible.\n\n¿Desea continuar y agregarlo al pedido de todas formas?`)) return;
+    const handleQuantityBlur = () => {
+        if (stockConflict) {
+            document.querySelector('.stock-conflict-banner')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+    };
+
+    const handleAddProductToOrder = (product, quantity = 1) => {
+        const stock = product.stock_count || 0;
         const existingIndex = items.findIndex(item => item.product_id === product.product_id);
-        if (existingIndex >= 0) {
-            const updated = [...items]; updated[existingIndex].quantity += 1; setItems(updated);
-        } else {
-            setItems([...items, { order_item_id: null, product_id: product.product_id, product_name: product.name, quantity: 1, final_price: product.final_price }]);
+        const existingQty = existingIndex >= 0 ? items[existingIndex].quantity : 0;
+        const totalQty = existingQty + quantity;
+
+        const doAdd = (qtyToAdd) => {
+            if (existingIndex >= 0) {
+                const updated = [...items];
+                updated[existingIndex].quantity += qtyToAdd;
+                setItems(updated);
+            } else {
+                setItems(prev => [...prev, { order_item_id: null, product_id: product.product_id, product_name: product.name, quantity: qtyToAdd, final_price: product.final_price, stock_count: stock }]);
+            }
+            setStockConflict(null);
+        };
+
+        const maxCanAdd = Math.max(0, stock - existingQty);
+
+        if (stock === 0 || totalQty > stock) {
+            setStockConflict({
+                productName: product.name,
+                stock,
+                existingQty,
+                quantity,
+                totalQty,
+                maxCanAdd,
+                doAdd,
+            });
+            return;
         }
+
+        doAdd(quantity);
     };
 
     const handleShowSimilar = (product) => { setSelectedProductForSimilar(product); setShowSimilarModal(true); };
@@ -59,11 +114,11 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
         if (items.length === 0) { setError('El pedido debe tener al menos un producto'); return; }
         setLoading(true); setError(null);
         try {
-            await onSave(order.order_id, { 
-                items: items.map(item => ({ 
-                    order_item_id: item.order_item_id, 
-                    product_id: item.product_id, 
-                    quantity: item.quantity 
+            await onSave(order.order_id, {
+                items: items.map(item => ({
+                    order_item_id: item.order_item_id,
+                    product_id: item.product_id,
+                    quantity: item.quantity
                 })),
                 shipping_cost: shippingCost
             });
@@ -88,8 +143,8 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                             <p><strong>Estado:</strong> {order.status}</p>
                         </div>
 
-                        <OrderItemsTable items={items} onQuantityChange={handleQuantityChange} onRemoveItem={handleRemoveItem} loading={loading} />
-                        
+                        <OrderItemsTable items={items} onQuantityChange={handleQuantityChange} onQuantityBlur={handleQuantityBlur} onRemoveItem={handleRemoveItem} loading={loading} />
+
                         {/* Resumen del Pedido */}
                         <div className="order-summary mt-4">
                             <div className="order-summary__row">
@@ -120,6 +175,14 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                             </div>
                         </div>
 
+                        {stockConflict && (
+                            <StockConflictBanner
+                                conflict={stockConflict}
+                                onOverride={() => stockConflict.doAdd(stockConflict.quantity)}
+                                onAdjust={() => stockConflict.doAdd(stockConflict.maxCanAdd)}
+                                onCancel={() => setStockConflict(null)}
+                            />
+                        )}
                         <ProductSearchGrid customerId={customerId} onAddToOrder={handleAddProductToOrder} onShowSimilar={handleShowSimilar} />
 
                         <p className="text-muted text-sm mt-3">

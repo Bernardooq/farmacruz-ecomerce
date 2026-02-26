@@ -85,7 +85,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                   <span>{formatDate(order.created_at)}</span>
                 </div>
                 <div className="order-details__item">
-                  <strong>N° Pedido:</strong>
+                  <strong>Id Pedido:</strong>
                   <span>#{order.order_id}</span>
                 </div>
               </div>
@@ -98,6 +98,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                   <thead>
                     <tr>
                       <th>Producto</th>
+                      <th>Descripción</th>
                       <th>Codigo de barras</th>
                       <th>Cantidad</th>
                       <th>Precio Unit.</th>
@@ -108,7 +109,10 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                     {order.items && order.items.length > 0 ? (
                       order.items.map((item, index) => (
                         <tr key={index}>
-                          <td data-label="Producto">{item.product?.name || 'N/A'}</td>
+                          <td data-label="Producto"><strong>{item.product?.name || 'N/A'}</strong></td>
+                          <td data-label="Descripción" className="text-muted text-sm">
+                            {[item.product?.description, item.product?.descripcion_2].filter(Boolean).join(' · ') || '—'}
+                          </td>
                           <td data-label="codebar">{item.product?.codebar || 'N/A'}</td>
                           <td data-label="Cantidad">{item.quantity}</td>
                           <td data-label="Precio Unit.">{formatCurrency(item.final_price)}</td>
@@ -117,7 +121,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className="text-center">No hay items en este pedido</td>
+                        <td colSpan="6" className="text-center">No hay items en este pedido</td>
                       </tr>
                     )}
                   </tbody>

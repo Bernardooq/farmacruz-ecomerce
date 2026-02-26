@@ -25,6 +25,7 @@ Solo administradores pueden usar estos endpoints.
 
 from datetime import datetime, timezone
 from typing import List
+import logging
 from schemas.category import CategorySync
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -41,6 +42,7 @@ from crud import crud_sync
 
 # Crear router con prefijo /sync
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 # SCHEMAS DE RESPUESTA
@@ -329,7 +331,7 @@ def limpieza_post_sincronizacion(
 ):
     """Desactiva o elimina productos, categorias, listas y items que no fueron sincronizados.
     NO toca usuarios (customers ni sellers)."""
-    print(f"DEBUG ROUTE CLEANUP: Received last_sync={last_sync}")
+    logger.debug(f"CLEANUP: Received last_sync={last_sync}")
     try:
         crud_sync.limpiar_items_no_sincronizados(db=db, last_sync=last_sync.last_sync)
         db.commit()

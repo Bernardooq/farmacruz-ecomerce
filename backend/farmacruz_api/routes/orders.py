@@ -303,6 +303,19 @@ def read_all_orders(skip: int = 0, limit: int = 100, status: Optional[str] = Non
     
     orders = get_orders_for_user_groups(db=db, user_id=current_user.user_id, user_role=current_user.role,
         skip=skip, limit=limit, status=order_status, status_filter=status_filter, search=search)
+
+    # Inject sales_group_id from CustomerInfo (single batch query, not N+1)
+    if orders:
+        customer_ids = [o.customer_id for o in orders]
+        group_by_customer = {
+            ci.customer_id: ci.sales_group_id
+            for ci in db.query(CustomerInfo)
+                        .filter(CustomerInfo.customer_id.in_(customer_ids))
+                        .all()
+        }
+        for order in orders:
+            order.sales_group_id = group_by_customer.get(order.customer_id)
+
     return orders
 
 """ GET /{id} - Ver detalle de un pedido """

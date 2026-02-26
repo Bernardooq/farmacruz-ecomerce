@@ -104,6 +104,7 @@ def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 
         query = query.filter(
             (Product.name.ilike(term)) |
             (Product.description.ilike(term)) |
+            (Product.descripcion_2.ilike(term)) |
             (Product.codebar.ilike(term))
         )
     
@@ -200,9 +201,10 @@ def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, 
         term = f"%{search}%"
         query = query.filter(
             (Product.product_id == search) |
+            (Product.codebar.ilike(term)) |
             (Product.name.ilike(term)) |
             (Product.description.ilike(term)) |
-            (Product.codebar.ilike(term))
+            (Product.descripcion_2.ilike(term))
         )
     
     if category_id:

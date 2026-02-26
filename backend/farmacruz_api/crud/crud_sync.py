@@ -17,9 +17,7 @@ from datetime import datetime, timezone
 from db.base import PriceList, Product, PriceListItem, Category, Customer, CustomerInfo, User
 from crud.crud_customer import get_password_hash
 
-from utils.price_utils import calculate_final_price_with_markup
-from utils.sales_group_utils import assign_customer_to_agent_group, bulk_ensure_seller_groups
-from decimal import Decimal
+from utils.sales_group_utils import bulk_ensure_seller_groups
 
 # CATEGORiAS
 """ Guarda una nueva categoria si no existe (basado en nombre) """
@@ -96,102 +94,6 @@ def guardar_o_actualizar_lista(db: Session, lista_id: int, nombre: str, descripc
     except Exception as error:
         return False, str(error)
 
-
-# PRODUCTOS
-""" Verifica si un producto existe """
-def verificar_si_producto_existe(db: Session, producto_id: str) -> bool:
-    producto_existente = db.query(Product).filter(
-        Product.product_id == producto_id
-    ).first()
-    
-    return producto_existente is not None
-
-""" Verifica si una categoria existe """
-def verificar_si_categoria_existe(db: Session, categoria_id: int) -> bool:
-    # Verifica si una categoria existe en la base de datos
-    categoria = db.query(Category).filter(
-        Category.category_id == categoria_id
-    ).first()
-    
-    return categoria is not None
-
-""" Busca una categoria por su nombre """
-def buscar_categoria_por_nombre(db: Session, nombre: str) -> Category:
-    # Busca una categoria por su nombre
-    categoria = db.query(Category).filter(
-        Category.name == nombre
-    ).first()
-    
-    return categoria    
-
-""" Guarda o actualiza un producto (UPSERT) """
-def guardar_o_actualizar_producto(db: Session, producto_id: str, codebar: str, nombre: str, descripcion: str = None, descripcion_2: str = None, unidad_medida: str = None,
-    precio_base: float = 0.0, porcentaje_iva: float = 0.0, cantidad_stock: int = 0, esta_activo: bool = True, category_name: str = None,
-    url_imagen: str = None, updated_at: datetime = None) -> Tuple[bool, str]:
-    # Guarda un nuevo producto o actualiza uno existente (UPSERT)
-    try:
-        # Obtener categoria_id desde el nombre si se proporciona
-        categoria_id = buscar_categoria_por_nombre(db, category_name).category_id if category_name else None
-        
-        # Validar categoria si se proporciona
-        if categoria_id and not verificar_si_categoria_existe(db, categoria_id):
-            return False, f"La categoria ID {categoria_id} no existe"
-        
-        # Verificar si ya existe
-        producto_existente = db.query(Product).filter(
-            Product.product_id == producto_id
-        ).first()
-        ya_existe = producto_existente is not None
-        
-        # Preparar los datos base
-        datos_producto = {
-            "product_id": producto_id,
-            "codebar": codebar,
-            "name": nombre,
-            "description": descripcion,
-            "descripcion_2": descripcion_2,
-            "unidad_medida": unidad_medida,
-            "base_price": precio_base,
-            "iva_percentage": porcentaje_iva,
-            "stock_count": cantidad_stock,
-            "is_active": esta_activo,
-            "category_id": categoria_id,
-            "image_url": url_imagen,
-            "updated_at": updated_at or datetime.now(timezone.utc)
-        }
-                
-        statement = insert(Product).values(**datos_producto)
-        
-        # Definir que campos actualizar si hay conflicto
-        campos_a_actualizar = {
-            'codebar': statement.excluded.codebar,
-            'name': statement.excluded.name,
-            'description': statement.excluded.description,
-            'descripcion_2': statement.excluded.descripcion_2,
-            'unidad_medida': statement.excluded.unidad_medida,
-            'base_price': statement.excluded.base_price,
-            'iva_percentage': statement.excluded.iva_percentage,
-            'stock_count': statement.excluded.stock_count,
-            'is_active': statement.excluded.is_active,
-            'category_id': statement.excluded.category_id,
-            'image_url': statement.excluded.image_url,
-            'updated_at': statement.excluded.updated_at
-        }
-        
-        
-        statement = statement.on_conflict_do_update(
-            index_elements=['product_id'],
-            set_=campos_a_actualizar
-        )
-        
-        db.execute(statement)
-        
-        # Retornar si fue creado (True) o actualizado (False)
-        fue_creado = not ya_existe
-        return fue_creado, None
-        
-    except Exception as error:
-        return False, str(error)
 
 
 """ BULK UPSERT de productos (OPTIMIZADO) """
@@ -271,73 +173,6 @@ def bulk_sync_prods(db: Session, productos: List[dict]) -> Tuple[int, int, List[
         return 0, 0, errores
 
 
-# RELACIONES PRODUCTO-LISTA (MARKUPS)
-""" Verifica si una relacion producto-lista existe """
-def verificar_si_relacion_existe(db: Session, lista_id: int, producto_id: str) -> bool:
-    # Verifica si ya existe una relacion producto-lista
-    relacion_existente = db.query(PriceListItem).filter(
-        PriceListItem.price_list_id == lista_id,
-        PriceListItem.product_id == producto_id
-    ).first()
-    
-    return relacion_existente is not None
-
-""" Guarda o actualiza el markup de un producto en una lista (UPSERT) """
-def guardar_o_actualizar_markup(db: Session, lista_id: int, producto_id: str, porcentaje_markup: float, final_price: float, updated_at: datetime) -> Tuple[bool, str]:
-    # Guarda o actualiza el markup de un producto en una lista (UPSERT)
-    try:
-        # Verificar si la lista existe
-        if not verificar_si_lista_existe(db, lista_id):
-            return False, f"La lista de precios ID {lista_id} no existe"
-        
-        # Verificar si el producto existe - SKIP silenciosamente si no existe
-        if not verificar_si_producto_existe(db, producto_id):
-            return None, None  # None indica "skip" (no es error, solo se omite)
-        
-        # Verificar si ya existe la relacion
-        ya_existe = verificar_si_relacion_existe(db, lista_id, producto_id)
-
-        if final_price is None:
-            # Calcular el precio final usando utilidad centralizada
-            
-            product = db.query(Product).filter(Product.product_id == producto_id).first()
-            if product:
-                final_price = float(calculate_final_price_with_markup(
-                    base_price=Decimal(str(product.base_price or 0)),
-                    markup_percentage=Decimal(str(porcentaje_markup)),
-                    stored_final_price=None
-                ))
-
-        # Preparar los datos
-        datos_relacion = {
-            "price_list_id": lista_id,
-            "product_id": producto_id,
-            "markup_percentage": porcentaje_markup,
-            "final_price": final_price,
-            "updated_at": updated_at
-        }
-        
-        # UPSERT: Insertar o actualizar segun exista
-        statement = insert(PriceListItem).values(**datos_relacion)
-        statement = statement.on_conflict_do_update(
-            index_elements=['price_list_id', 'product_id'],
-            set_={
-                'markup_percentage': statement.excluded.markup_percentage,
-                'final_price': statement.excluded.final_price,
-                'updated_at': statement.excluded.updated_at
-            }
-        )
-        
-        db.execute(statement)
-        
-        # Retornar si fue creada (True) o actualizada (False)
-        fue_creada = not ya_existe
-        return fue_creada, None
-        
-    except Exception as error:
-        return False, str(error)
-
-
 """ BULK UPSERT de items de listas de precios (OPTIMIZADO) """
 def bulk_upsert_price_list_items(db: Session, items: List[dict]) -> Tuple[int, int, int, List[str]]:
     if not items:
@@ -401,87 +236,6 @@ def bulk_upsert_price_list_items(db: Session, items: List[dict]) -> Tuple[int, i
     except Exception as error:
         errores.append(f"Error en bulk upsert: {str(error)}")
         return 0, 0, omitidos, errores
-
-# CLIENTES (CUSTOMERS)
-""" Guarda o actualiza un cliente completo (Customer + CustomerInfo) - UPSERT """
-def guardar_o_actualizar_cliente(db: Session, customer_id: int, username: str, email: str, full_name: str, password: str, business_name: str = None, rfc: str = None,
-    price_list_id: int = None, sales_group_id: int = None, address_1: str = None, address_2: str = None, address_3: str = None, agent_id: int = None, updated_at: datetime = None) -> Tuple[bool, str]:
-    # Guarda o actualiza un cliente completo (Customer + CustomerInfo) - UPSERT
-    
-    try:
-        # Verificar si ya existe
-        customer_existente = db.query(Customer).filter(
-            Customer.customer_id == customer_id
-        ).first()
-        ya_existe = customer_existente is not None
-        
-        # Hashear contraseña
-        password_hash = get_password_hash(password)
-        
-        # Preparar datos del Customer
-        datos_customer = {
-            "customer_id": customer_id,
-            "username": username,
-            "email": email,
-            "full_name": full_name,
-            "password_hash": password_hash,
-            "is_active": True,
-            "agent_id": agent_id,
-            "updated_at": updated_at or datetime.now(timezone.utc)
-        }
-        
-        # UPSERT Customer
-        statement = insert(Customer).values(**datos_customer)
-        statement = statement.on_conflict_do_update(
-            index_elements=['customer_id'],
-            set_={
-                'email': statement.excluded.email,
-                'full_name': statement.excluded.full_name,
-                'is_active': statement.excluded.is_active,
-                'agent_id': statement.excluded.agent_id,
-                'updated_at': statement.excluded.updated_at 
-            }
-            )
-        
-        db.execute(statement)
-        db.flush()  # Asegurar que el customer existe antes de crear info
-        
-        # Preparar datos del CustomerInfo
-        datos_info = {
-            "customer_id": customer_id,
-            "business_name": business_name or full_name,  # Usar full_name si no hay business_name
-            "rfc": rfc,
-            "price_list_id": price_list_id,
-            "sales_group_id": sales_group_id,
-            "address_1": address_1,
-            "address_2": address_2,
-            "address_3": address_3
-        }
-        
-        # UPSERT CustomerInfo
-        statement_info = insert(CustomerInfo).values(**datos_info)
-        statement_info = statement_info.on_conflict_do_update(
-            index_elements=['customer_id'],
-            set_={
-                'rfc': statement_info.excluded.rfc,
-                'price_list_id': statement_info.excluded.price_list_id,
-                'sales_group_id': statement_info.excluded.sales_group_id,
-                'address_1': statement_info.excluded.address_1,
-            }
-        )
-        
-        db.execute(statement_info)
-        
-        # Auto-asignar al grupo del agente si tiene agent_id
-        if agent_id:
-            assign_customer_to_agent_group(db, customer_id, agent_id)
-        
-        # Retornar si fue creado (True) o actualizado (False)
-        fue_creado = not ya_existe
-        return fue_creado, None
-        
-    except Exception as error:
-        return False, str(error)
 
 
 """ BULK UPSERT de clientes"""

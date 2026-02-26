@@ -80,6 +80,15 @@
         }
     }
 
+    &--warning {
+        background: var(--color-warning, #d97706);
+        color: #fff;
+
+        &:hover {
+            background: color.adjust(#d97706, $lightness: -8%);
+        }
+    }
+
     // ---- Sizes ----
 
     &--sm {

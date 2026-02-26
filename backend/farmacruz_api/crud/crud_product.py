@@ -86,8 +86,9 @@ def search_products(db: Session, search: str, skip: int = 0, limit: int = 100) -
         joinedload(Product.category)
     ).filter(
         (Product.product_id.ilike(f"%{search}%")) |  # Buscar por ID
-        (Product.name.ilike(f"%{search}%")) | 
-        (Product.description.ilike(f"%{search}%"))
+        (Product.name.ilike(f"%{search}%")) |
+        (Product.description.ilike(f"%{search}%")) |
+        (Product.descripcion_2.ilike(f"%{search}%"))  # Buscar por descripcion adicional
     ).offset(skip).limit(limit).all()
 
 """ Crea un nuevo producto en el catalogo """

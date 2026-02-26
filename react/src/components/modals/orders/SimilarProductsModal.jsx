@@ -36,7 +36,7 @@ export default function SimilarProductsModal({ visible, product, customerId, onA
                     ) : (
                         <div className="product-grid product-grid--3">
                             {similarProducts.map(p => (
-                                <ProductCardAdmin key={p.product_id} product={p} onAddToOrder={(selectedProduct) => { onAddToOrder(selectedProduct); onClose(); }} />
+                                <ProductCardAdmin key={p.product_id} product={p} onAddToOrder={(selectedProduct, qty) => { onAddToOrder(selectedProduct, qty); onClose(); }} />
                             ))}
                         </div>
                     )}

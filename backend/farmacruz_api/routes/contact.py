@@ -14,7 +14,7 @@ No requiere autenticacion (publico).
 """
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 import logging
 
 from core.config import settings
@@ -25,12 +25,12 @@ logger = logging.getLogger(__name__)
 
 
 class ContactMessage(BaseModel):
-    # Schema para mensaje de contacto
-    name: str
+    # Schema para mensaje de contacto con validacion de longitud
+    name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
-    phone: str = None
-    subject: str
-    message: str
+    phone: str = Field(None, max_length=30)
+    subject: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=1, max_length=5000)
 
 """ POST /send - Enviar mensaje de contacto """
 @router.post("/send")

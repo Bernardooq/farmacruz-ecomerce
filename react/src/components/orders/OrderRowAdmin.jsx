@@ -23,7 +23,7 @@ export default function OrderRowAdmin({
     <tr>
       <td data-label="Cliente">{clientName}</td>
       <td data-label="Contacto">{clientContact}</td>
-      <td data-label="N° Pedido">{order.order_id}</td>
+      <td data-label="Id Pedido">{order.order_id}</td>
       <td data-label="Fecha">{formatDate(order.created_at)}</td>
       <td data-label="Items">{itemCount}</td>
       <td data-label="Total">{formatCurrency(order.total_amount)}</td>

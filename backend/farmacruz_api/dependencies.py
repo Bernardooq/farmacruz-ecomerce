@@ -17,6 +17,7 @@ from jose import JWTError
 from db.session import SessionLocal
 from db.base import User, UserRole
 from core.security import decode_access_token
+from core import token_blacklist
 from crud.crud_user import get_user_by_username
 
 # Esquema de autenticacion OAuth2 con bearer token
@@ -50,6 +51,11 @@ async def get_current_user(
     # Decodificar el token JWT
     payload = decode_access_token(token)
     if payload is None:
+        raise credentials_exception
+
+    # Verificar que el token no haya sido revocado (logout)
+    jti = payload.get("jti")
+    if jti and token_blacklist.contains(jti):
         raise credentials_exception
     
     # Extraer informacion del payload

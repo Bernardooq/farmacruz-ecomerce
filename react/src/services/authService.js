@@ -38,8 +38,23 @@ export const authService = {
     return apiService.get('/auth/me')
   },
 
-  // Logout sencillo: solo quitamos el token del localStorage
-  logout() {
+  // Logout: revoca el token en el servidor (blacklist) y lo elimina localmente
+  async logout() {
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+      } catch (e) {
+        // Si falla la revocación server-side, al menos limpiamos localmente
+        console.warn('Server-side logout failed, clearing token locally:', e)
+      }
+    }
     localStorage.removeItem('token')
   }
 }

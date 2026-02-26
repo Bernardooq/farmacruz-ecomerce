@@ -243,8 +243,43 @@
         }
     }
 
-    button {
+    &__actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
         margin-top: var(--space-2);
+    }
+
+    &__qty {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
         width: 100%;
+
+        // Override qty-btn to be compact
+        .product-card__qty-btn {
+            flex-shrink: 0;
+            padding: var(--space-1) var(--space-2);
+        }
+
+        // Input takes remaining space but stays usable
+        .product-card__qty-input {
+            flex: 1;
+            min-width: 0; // critical: lets flex shrink it
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+    &__buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1);
+
+        button {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+        }
     }
 }

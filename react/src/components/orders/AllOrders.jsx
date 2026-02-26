@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faSpinner, faSync, faFileAlt, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons';
 import orderService from '../../services/orderService';
-import { userService } from '../../services/userService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import ModalOrderDetails from '../modals/orders/ModalOrderDetails';
@@ -30,7 +29,7 @@ export default function AllOrders() {
 
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [orderToAssign, setOrderToAssign] = useState(null);
-  const [availableSellers, setAvailableSellers] = useState([]);
+  const [assignGroupId, setAssignGroupId] = useState(null);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState(null);
@@ -92,9 +91,15 @@ export default function AllOrders() {
     finally { setActionLoading(null); }
   };
 
-  const handleAssignClick = async (order) => {
-    try { const sellers = await userService.getAvailableSellers(); setAvailableSellers(sellers); setOrderToAssign(order); setShowAssignModal(true); }
-    catch (err) { setError('Error al cargar vendedores'); console.error(err); }
+  const handleAssignClick = (order) => {
+    const groupId = order.sales_group_id;
+    if (!groupId) {
+      setError('El cliente de este pedido no está asignado a ningún grupo de ventas. Asígnalo a un grupo primero.');
+      return;
+    }
+    setAssignGroupId(groupId);
+    setOrderToAssign(order);
+    setShowAssignModal(true);
   };
 
   const handleAssign = async (sellerId, notes) => {
@@ -178,7 +183,7 @@ export default function AllOrders() {
                 {(user?.role === 'admin' || user?.role === 'marketing') && <th>Admin</th>}
                 <th>Cliente</th>
                 <th>Contacto</th>
-                <th>N° Pedido</th>
+                <th>Id Pedido</th>
                 <th>Fecha</th>
                 <th>Items</th>
                 <th>Total</th>
@@ -214,7 +219,7 @@ export default function AllOrders() {
       )}
 
       <ModalOrderDetails visible={showModal} order={selectedOrder} onClose={() => { setShowModal(false); setSelectedOrder(null); }} />
-      <ModalAssignSeller visible={showAssignModal} order={orderToAssign} availableSellers={availableSellers} onAssign={handleAssign} onClose={() => { setShowAssignModal(false); setOrderToAssign(null); }} />
+      <ModalAssignSeller visible={showAssignModal} order={orderToAssign} groupId={assignGroupId} onAssign={handleAssign} onClose={() => { setShowAssignModal(false); setOrderToAssign(null); setAssignGroupId(null); }} />
       <ModalEditOrder visible={showEditModal} order={orderToEdit} onSave={handleSaveEditedOrder} onClose={() => { setShowEditModal(false); setOrderToEdit(null); }} />
       <ModalCreateOrder visible={showCreateModal} onClose={() => setShowCreateModal(false)} onSuccess={handleCreateOrderSuccess} />
     </section>
@@ -261,7 +266,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
       )}
       <td data-label="Cliente">{clientName}</td>
       <td data-label="Contacto">{clientContact}</td>
-      <td data-label="N° Pedido">{order.order_id}</td>
+      <td data-label="Id Pedido">{order.order_id}</td>
       <td data-label="Fecha">{formatDate(order.created_at)}</td>
       <td data-label="Items">{itemCount}</td>
       <td data-label="Total">{formatCurrency(order.total_amount)}</td>

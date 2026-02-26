@@ -23,43 +23,58 @@ except ImportError as e:
     print("3. Haber instalado las dependencias: pip install -r requirements.txt")
     sys.exit(1)
 
-# Definir los 4 administradores
+# Definir los administradores
+# Rangos de IDs: Admin 15,000,000+  |  Marketing 10,000,000–14,999,999  |  Sellers <10,000,000
 ADMINS = [
     {
-        "user_id": 9001,
+        "user_id": 15_000_001,
         "username": "israel.saenz.admin",
         "email": "israel.saenz.admin@farmacruz.com",
         "full_name": "Israel Saenz",
-        "password": "farmasaenz2026"  # Asignar contraseña aqui
+        "password": "farmasaenz2026"
     },
     {
-        "user_id": 9002,
+        "user_id": 15_000_002,
         "username": "manuel.saenz.admin",
         "email": "manuel.saenz.admin@farmacruz.com",
         "full_name": "Manuel Saenz",
-        "password": "farmasaenz2026"  # Asignar contraseña aqui
+        "password": "farmasaenz2026"
     },
     {
-        "user_id": 9003,
+        "user_id": 15_000_003,
         "username": "andre.saenz.admin",
         "email": "andre.saenz.admin@farmacruz.com",
         "full_name": "Andre Saenz",
-        "password": "farmasaenz2026"  # Asignar contraseña aqui
+        "password": "farmasaenz2026"
     },
     {
-        "user_id": 9004,
+        "user_id": 15_000_004,
         "username": "syncadminssuser2026",
         "email": "admin@farmacruz.com",
         "full_name": "Administrador",
-        "password": "ahc4gjnw40blssrtvhjfl4563"  # Asignar contraseña aqui
+        "password": "ahc4gjnw40blssrtvhjfl4563"  # Credenciales especiales — no modificar
     },
     {
-        "user_id": 9005,
+        "user_id": 15_000_005,
         "username": "ivette.admin",
         "email": "ivette@farmacruz.com",
         "full_name": "Ivette",
-        "password": "farmasaenz2026"  # Asignar contraseña aqui
-    }
+        "password": "farmasaenz2026"
+    },
+    {
+        "user_id": 15_000_006,
+        "username": "temporaladmin1",
+        "email": "temporaladmin1@farmacruz.com",
+        "full_name": "Temporal Admin 1",
+        "password": "farmasaenz2026"
+    },
+    {
+        "user_id": 15_000_007,
+        "username": "temporaladmin2",
+        "email": "temporaladmin2@farmacruz.com",
+        "full_name": "Temporal Admin 2",
+        "password": "farmasaenz2026"
+    },
 ]
 
 def create_admin_users():

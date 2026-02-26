@@ -19,7 +19,7 @@ Flujo de Login:
 """
 
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -28,7 +28,8 @@ from typing import Optional
 
 from dependencies import get_db, get_current_user, get_current_admin_user
 from core.config import ACCESS_TOKEN_EXPIRE_MINUTES, SYNC_TOKEN_EXPIRE_MINUTES
-from core.security import create_access_token, verify_password
+from core.security import create_access_token, verify_password, decode_access_token
+from core import token_blacklist
 from crud.crud_user import authenticate_user, create_user, get_user_by_username, get_user_by_email
 from schemas.user import User, UserCreate
 from db.base import Customer
@@ -146,9 +147,7 @@ def login_sync(
     db: Session = Depends(get_db)
 ):
     # Siempre es user admin
-    user = authenticate_user(db, form_data.username, form_data.password)
-    if user:
-        authenticated_user = user
+    authenticated_user = authenticate_user(db, form_data.username, form_data.password)
     
     # Validar auth
     if not authenticated_user:
@@ -163,6 +162,14 @@ def login_sync(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Usuario inactivo. Contacta al administrador."
+        )
+    
+    # Validar que sea admin (sync solo para admins)
+    from db.base import UserRole
+    if not hasattr(authenticated_user, 'role') or authenticated_user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo administradores pueden usar el endpoint de sincronizacion"
         )
     
     # Generar token DE CORTA DURACION (5 minutos)
@@ -182,6 +189,22 @@ def login_sync(
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+""" POST /logout - Revocar token actual (logout real) """
+@router.post("/logout", status_code=status.HTTP_200_OK)
+def logout(request: Request, current_user = Depends(get_current_user)):
+    """Revoca el token JWT actual agregando su JTI a la blacklist.
+    El token queda inmediatamente inutilizable aunque no haya expirado."""
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.removeprefix("Bearer ").strip()
+    payload = decode_access_token(token)
+    if payload:
+        jti = payload.get("jti")
+        exp = payload.get("exp")   # unix timestamp — usado para auto-prune
+        if jti:
+            token_blacklist.add(jti, exp)
+    return {"message": "Sesión cerrada exitosamente"}
 
 
 """ GET /me - Informacion del usuario actual """

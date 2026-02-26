@@ -1,9 +1,123 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPills, faCapsules, faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { faPills, faCapsules, faCheckCircle, faTimesCircle, faCartShopping } from '@fortawesome/free-solid-svg-icons';
 import { productService } from '../../services/productService';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import LoadingSpinner from '../common/LoadingSpinner';
+
+const MSG_TIMEOUT = 2500;
+
+/**
+ * Sub-componente de control de cantidad + agregar al carrito para un producto similar.
+ * Cada tarjeta maneja su propio estado de quantity/adding/message.
+ */
+function SimilarProductActions({ product, onProductSelect }) {
+    const { addToCart } = useCart();
+    const { isAuthenticated } = useAuth();
+    const [qty, setQty] = useState(1);
+    const [adding, setAdding] = useState(false);
+    const [msg, setMsg] = useState(null); // { text, isWarning }
+
+    const isAvailable = product.stock_count > 0;
+
+    const showMsg = (text, isWarning = false) => {
+        setMsg({ text, isWarning });
+        setTimeout(() => setMsg(null), MSG_TIMEOUT);
+    };
+
+    const handleChange = (delta) => {
+        const next = qty + delta;
+        if (next >= 1 && next <= product.stock_count) setQty(next);
+    };
+
+    const handleInput = (e) => {
+        const v = e.target.value;
+        if (v === '') { setQty(''); return; }
+        const n = Number(v);
+        if (!isNaN(n) && n >= 1 && n <= product.stock_count) setQty(n);
+    };
+
+    const handleBlur = () => {
+        if (qty === '' || qty < 1) setQty(1);
+        else if (qty > product.stock_count) setQty(product.stock_count);
+        else setQty(Math.floor(Number(qty)));
+    };
+
+    const handleAdd = async () => {
+        if (!isAuthenticated) { showMsg('Inicia sesión para agregar productos'); return; }
+        try {
+            setAdding(true);
+            await addToCart(product.product_id, Number(qty));
+            showMsg('¡Producto agregado!');
+        } catch (err) {
+            showMsg(err.message || 'Error al agregar', !err.isWarning);
+        } finally {
+            setAdding(false);
+        }
+    };
+
+    return (
+        <div className="similar-product-card__actions">
+            {isAvailable && (
+                <div className="product-card__quantity-controls similar-product-card__qty">
+                    <button
+                        className="btn btn--secondary btn--sm product-card__qty-btn"
+                        onClick={() => handleChange(-1)}
+                        disabled={qty <= 1}
+                        type="button"
+                        aria-label="Disminuir cantidad"
+                    >−</button>
+                    <input
+                        className="input input--sm product-card__qty-input"
+                        type="number"
+                        value={qty}
+                        onChange={handleInput}
+                        onBlur={handleBlur}
+                        onKeyDown={(e) => { if (['-', 'e', '.', ','].includes(e.key)) e.preventDefault(); }}
+                        min="1"
+                        max={product.stock_count}
+                        aria-label="Cantidad"
+                    />
+                    <button
+                        className="btn btn--secondary btn--sm product-card__qty-btn"
+                        onClick={() => handleChange(1)}
+                        disabled={qty >= product.stock_count}
+                        type="button"
+                        aria-label="Aumentar cantidad"
+                    >+</button>
+                </div>
+            )}
+
+            {msg && (
+                <p className={`product-card__message ${msg.isWarning ? 'product-card__message--warning' : ''}`}>
+                    {msg.text}
+                </p>
+            )}
+
+            <div className="similar-product-card__buttons">
+                {isAvailable && (
+                    <button
+                        className="btn btn--primary btn--sm"
+                        onClick={handleAdd}
+                        disabled={adding}
+                        type="button"
+                    >
+                        {adding ? <><FontAwesomeIcon icon={faCartShopping} spin /> Añadiendo</> : <><FontAwesomeIcon icon={faCartShopping} /> Agregar</>}
+                    </button>
+                )}
+                <button
+                    onClick={() => { if (onProductSelect) onProductSelect(product); }}
+                    className="btn btn--secondary btn--sm"
+                    type="button"
+                >
+                    Ver detalles →
+                </button>
+            </div>
+        </div>
+    );
+}
+
 
 export default function SimilarProducts({ productId, onProductSelect }) {
     const { user } = useAuth();
@@ -65,7 +179,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                         <div key={product.product_id} className="similar-product-card">
                             <div className="similar-product-card__image">
                                 {product.image_url ? (
-                                    <img src={product.image_url} loading='lazy' alt={product.name} />
+                                    <img src={product.image_url} loading="lazy" alt={product.name} />
                                 ) : (
                                     <div className="similar-product-card__no-image">
                                         <FontAwesomeIcon icon={faCapsules} />
@@ -94,7 +208,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                                 <div className="similar-product-card__stock">
                                     {product.stock_count > 0 ? (
                                         <span className="stock-badge stock-badge--in-stock">
-                                            <FontAwesomeIcon icon={faCheckCircle} /> Disponible
+                                            <FontAwesomeIcon icon={faCheckCircle} /> Disponible ({product.stock_count} unid.)
                                         </span>
                                     ) : (
                                         <span className="stock-badge stock-badge--out-of-stock">
@@ -103,12 +217,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                                     )}
                                 </div>
 
-                                <button
-                                    onClick={() => { if (onProductSelect) onProductSelect(product); }}
-                                    className="btn btn--secondary btn--sm"
-                                >
-                                    Ver detalles →
-                                </button>
+                                <SimilarProductActions product={product} onProductSelect={onProductSelect} />
                             </div>
                         </div>
                     );

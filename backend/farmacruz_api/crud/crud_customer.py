@@ -62,9 +62,9 @@ def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional
             CustomerInfo.sales_group_id.in_(user_group_ids)
         )
     
-    # Buscar en nombre, username y email todo tolower
+    # Buscar en nombre, username y email — case-insensitive
     if search:
-        search_term = f"%{search}%"
+        search_term = f"%{search.lower()}%"
         query = query.filter(
             or_(
                 func.lower(Customer.full_name).like(search_term),

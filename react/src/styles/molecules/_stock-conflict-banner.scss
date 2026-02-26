@@ -1,0 +1,64 @@
+// ============================================
+// MOLECULE — STOCK CONFLICT BANNER
+// Inline 3-button dialog shown inside order modals when
+// a product's requested quantity exceeds registered stock.
+// ============================================
+
+.stock-conflict-banner {
+    background: var(--color-warning-bg, #fffbeb);
+    border: 2px solid var(--color-warning, #d97706);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-2);
+        font-size: var(--text-sm);
+        color: var(--color-warning-text, #92400e);
+    }
+
+    &__icon {
+        font-size: 1.1em;
+    }
+
+    &__product {
+        font-size: var(--text-sm);
+        font-weight: var(--font-semibold);
+        color: var(--color-text);
+        margin-bottom: var(--space-3);
+    }
+
+    &__details {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 var(--space-4);
+        font-size: var(--text-sm);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px dashed var(--color-border);
+
+            &:last-child {
+                border-bottom: none;
+            }
+        }
+    }
+
+    &__total--over {
+        color: var(--color-danger);
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+}
