@@ -312,10 +312,19 @@ def assign_customer_to_sales_group(db: Session, group_id: int, customer_id: int)
     # Validar customer
     customer = db.query(CustomerInfo).filter(CustomerInfo.customer_id == customer_id).first()
     if not customer:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Customer no encontrado"
-        )
+        # Verificar si el cliente existe en la tabla principal
+        base_customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+        if not base_customer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Customer no encontrado"
+            )
+        # Si existe pero no tiene CustomerInfo, lo creamos
+        customer = CustomerInfo(customer_id=customer_id, sales_group_id=group_id)
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+        return customer
 
     # Verificar si ya tiene un grupo asignado (N:1)
     if customer.sales_group_id is not None:
