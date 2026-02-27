@@ -13,7 +13,7 @@ Sistema de Email:
 No requiere autenticacion (publico).
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel, EmailStr, Field
 import logging
 
@@ -34,7 +34,7 @@ class ContactMessage(BaseModel):
 
 """ POST /send - Enviar mensaje de contacto """
 @router.post("/send")
-def send_contact_email(contact: ContactMessage):
+def send_contact_email(contact: ContactMessage, background_tasks: BackgroundTasks):
     
     try:
         # === CREAR CUERPO HTML ESPECÍFICO DE CONTACTO ===
@@ -68,17 +68,18 @@ def send_contact_email(contact: ContactMessage):
         </html>
         """
         
-        logger.info(f"Enviando email de contacto de {contact.name} ({contact.email})")
+        logger.info(f"Encolando envío de email de contacto de {contact.name} ({contact.email})")
         
-        # Enviar email directamente (sin BackgroundTasks)
-        send_email_background(
+        # Enviar email de forma asíncrona real con BackgroundTasks
+        background_tasks.add_task(
+            send_email_background,
             to_email=settings.CONTACT_EMAIL,
             subject=f"Contacto Web: {contact.subject}",
             html_body=html_body,
             reply_to=contact.email
         )
         
-        logger.info(f"Email enviado exitosamente a {settings.CONTACT_EMAIL}")
+        logger.info(f"Email encolado para {settings.CONTACT_EMAIL}")
         
         return {"message": "Mensaje enviado exitosamente"}
         
