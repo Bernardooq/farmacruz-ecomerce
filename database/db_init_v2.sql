@@ -167,6 +167,8 @@ CREATE INDEX idx_products_is_active ON products (is_active);
 
 CREATE INDEX idx_products_category ON products (category_id);
 
+CREATE INDEX idx_products_desc2 ON products (descripcion_2);
+
 -- =====================================================
 -- TABLA: pricelists (Listas de precios)
 -- =====================================================

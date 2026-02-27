@@ -36,7 +36,7 @@ export default function Cart() {
   // ============================================
   // HOOKS & STATE
   // ============================================
-  const { items, loading, updateQuantity, removeItem, checkout } = useCart();
+  const { items, loading, updateQuantity, removeItem, checkout, refreshCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -103,7 +103,15 @@ export default function Cart() {
       await checkout(addressNumber); // Sin shipping_cost
       navigate('/profile');
     } catch (err) {
-      setError('Error al procesar el pedido. Intenta de nuevo.');
+      const errorMsg = err.response?.data?.detail || err.message || 'Error al procesar el pedido. Intenta de nuevo.';
+
+      // Si el backend rechaza por problemas de inventario
+      if (errorMsg.toLowerCase().includes('stock')) {
+        setError(`⚠️ ${errorMsg}. Hemos recargado tu carrito con el inventario actual. Por favor, revisa y ajusta las cantidades rojas antes de reintentar.`);
+        refreshCart(); // Forzamos recarga desde el backend para que los items limiten su "maxQty" a la nueva realidad
+      } else {
+        setError(errorMsg);
+      }
       console.error('Checkout failed:', err);
     } finally {
       setProcessingCheckout(false);

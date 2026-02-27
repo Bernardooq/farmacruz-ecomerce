@@ -9,6 +9,7 @@ Precio final = (precio_base × (1 + markup%)) × (1 + IVA%)
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List, Optional, Tuple
 from decimal import Decimal
 from utils.price_utils import get_product_final_price, calculate_final_price_with_markup
@@ -100,12 +101,13 @@ def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 
     
     # Filtros opcionales
     if search:
-        term = f"%{search}%"
+        # Aseguramos case-insensitivity y busqueda parcial en todos los campos
+        term = f"%{search.strip().lower()}%"
         query = query.filter(
-            (Product.name.ilike(term)) |
-            (Product.description.ilike(term)) |
-            (Product.descripcion_2.ilike(term)) |
-            (Product.codebar.ilike(term))
+            (func.lower(Product.name).ilike(term)) |
+            (func.lower(Product.description).ilike(term)) |
+            (func.lower(Product.descripcion_2).ilike(term)) |
+            (func.lower(Product.codebar).ilike(term))
         )
     
     if category_id:
@@ -198,13 +200,14 @@ def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, 
     
     # Filtros opcionales
     if search:
-        term = f"%{search}%"
+        # Aseguramos case-insensitivity y busqueda parcial en todos los campos
+        term = f"%{search.strip().lower()}%"
         query = query.filter(
             (Product.product_id == search) |
-            (Product.codebar.ilike(term)) |
-            (Product.name.ilike(term)) |
-            (Product.description.ilike(term)) |
-            (Product.descripcion_2.ilike(term))
+            (func.lower(Product.codebar).ilike(term)) |
+            (func.lower(Product.name).ilike(term)) |
+            (func.lower(Product.description).ilike(term)) |
+            (func.lower(Product.descripcion_2).ilike(term))
         )
     
     if category_id:
