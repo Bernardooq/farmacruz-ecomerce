@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: str = os.getenv("SMTP_USER", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    SENDER: str = os.getenv("SENDER", "notificaciones@farmacruz.com.mx")
     CONTACT_EMAIL: str = os.getenv("CONTACT_EMAIL", "contacto@farmacruz.com")
     
     class Config:

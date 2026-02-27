@@ -25,18 +25,25 @@ def send_email_background(to_email: str, subject: str, html_body: str, reply_to:
         if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
             logger.error("SMTP_USER o SMTP_PASSWORD no están configurados en .env")
             raise ValueError("Configuración SMTP incompleta")
-        
+            
         if not settings.CONTACT_EMAIL:
             logger.error("CONTACT_EMAIL no está configurado en .env")
             raise ValueError("CONTACT_EMAIL no configurado")
         
         logger.info(f"Intentando enviar email a {to_email}")
         logger.info(f"SMTP Host: {settings.SMTP_HOST}:{settings.SMTP_PORT}")
-        logger.info(f"SMTP User: {settings.SMTP_USER}")
+        logger.info(f"SMTP User (Oculto): ***{str(settings.SMTP_USER)[-4:] if len(settings.SMTP_USER)>4 else '***'}")
         
         # === CONFIGURACION DEL EMAIL ===
-        sender_email = settings.SMTP_USER
         password = settings.SMTP_PASSWORD
+        
+        # Lógica híbrida para determinar el "From" (Remitente)
+        # 1. Si estás usando Gmail, el remitente oficial DEBE SER el correo de Gmail.
+        # 2. Si estás usando Amazon SES, usamos el SENDER (porque el user es un API Key de AWS).
+        if "gmail" in settings.SMTP_HOST.lower():
+            sender_email = settings.SMTP_USER
+        else:
+            sender_email = getattr(settings, 'SENDER', settings.SMTP_USER)
         
         # === CREAR MENSAJE ===
         msg = MIMEMultipart("alternative")
@@ -58,7 +65,7 @@ def send_email_background(to_email: str, subject: str, html_body: str, reply_to:
             server.starttls()  # Habilitar TLS
             
             logger.info("Autenticando...")
-            server.login(sender_email, password)
+            server.login(settings.SMTP_USER, password)
             
             logger.info("Enviando mensaje...")
             server.sendmail(sender_email, to_email, msg.as_string())
