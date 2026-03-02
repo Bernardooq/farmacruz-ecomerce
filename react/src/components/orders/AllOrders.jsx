@@ -70,7 +70,7 @@ export default function AllOrders() {
     finally { setActionLoading(null); }
   };
 
-  const handleApprove = (orderId) => handleStatusChange(orderId, 'approved');
+  const handleApprove = async (orderId) => { if (window.confirm('¿Aprobar este pedido?')) await handleStatusChange(orderId, 'approved'); };
   const handleShip = async (orderId) => { if (window.confirm('¿Marcar como enviado?')) await handleStatusChange(orderId, 'shipped'); };
   const handleDeliver = async (orderId) => { if (window.confirm('¿Marcar como entregado?')) await handleStatusChange(orderId, 'delivered'); };
   const handleCancel = async (orderId) => {
