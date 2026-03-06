@@ -284,8 +284,8 @@ export default function ClientManagement() {
               ) : (
                 clients.map((client) => (
                   <tr key={client.customer_id}>
-                    <td>{client.customer_id}</td>
-                    <td>
+                    <td data-label="ID">{client.customer_id}</td>
+                    <td data-label="Cliente">
                       <div className="user-cell">
                         <FontAwesomeIcon icon={faUserCircle} className="user-cell__avatar" />
                         <div className="user-cell__info">
@@ -294,13 +294,13 @@ export default function ClientManagement() {
                         </div>
                       </div>
                     </td>
-                    <td>{client.username}</td>
-                    <td>
+                    <td data-label="Usuario">{client.username}</td>
+                    <td data-label="Estado">
                       <span className={`status-badge ${client.is_active ? 'status--active' : 'status--inactive'}`}>
                         {client.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="actions-cell">
+                    <td data-label="Acciones" className="actions-cell">
                       <button className="btn btn--icon btn--ghost" onClick={() => openEditModal(client)} aria-label="Editar cliente">
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>

@@ -234,7 +234,7 @@ CREATE INDEX idx_customerinfo_pricelist ON customerinfo (price_list_id);
 -- TABLA: orders (Pedidos)
 -- =====================================================
 CREATE TABLE orders (
-    order_id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    order_id BIGSERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES customers (customer_id),
     assigned_seller_id INTEGER REFERENCES users (user_id),
     assigned_by_user_id INTEGER REFERENCES users (user_id),
@@ -277,12 +277,13 @@ CREATE INDEX idx_orders_created ON orders (created_at);
 -- =====================================================
 CREATE TABLE orderitems (
     order_item_id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-    order_id UUID NOT NULL REFERENCES orders (order_id) ON DELETE CASCADE,
+    order_id BIGINT NOT NULL REFERENCES orders (order_id) ON DELETE CASCADE,
     product_id VARCHAR(50) NOT NULL REFERENCES products (product_id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     base_price NUMERIC(10, 2) NOT NULL,
     markup_percentage NUMERIC(5, 2) NOT NULL,
     iva_percentage NUMERIC(5, 2) NOT NULL,
+    price_without_iva NUMERIC(10, 2) NOT NULL,
     final_price NUMERIC(10, 2) NOT NULL
 );
 

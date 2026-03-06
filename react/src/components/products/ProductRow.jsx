@@ -23,12 +23,8 @@ export default function ProductRow({
     stockClass === 'low' ? `Bajo (${stockCount})` :
       stockCount;
 
-  const finalPrice = parseFloat(product.base_price);
+  const basePrice = parseFloat(product.base_price) || 0;
   const ivaPercentage = parseFloat(product.iva_percentage) ?? DEFAULT_IVA;
-  const ivaAmount = ivaPercentage > 0 ? finalPrice - (finalPrice / (1 + ivaPercentage / 100)) : 0;
-  const basePrice = finalPrice - ivaAmount || 0;
-
-  // const finalPrice = basePrice + ivaAmount;
 
   return (
     <tr>
@@ -38,10 +34,7 @@ export default function ProductRow({
       <td data-label="Categoría">{product.category?.name || 'N/A'}</td>
       <td data-label="Precio Base">${basePrice.toFixed(2)}</td>
       <td data-label="IVA">
-        {ivaPercentage.toFixed(0)}% (${ivaAmount.toFixed(2)})
-      </td>
-      <td data-label="Precio Final">
-        <strong>${finalPrice.toFixed(2)}</strong>
+        {ivaPercentage.toFixed(0)}%
       </td>
       <td data-label="Stock Actual">
         <span className={`stock-badge stock-badge--${stockClass}`}>

@@ -1,3 +1,5 @@
+@use '../tokens/breakpoints' as *;
+
 // ============================================
 // ORGANISM — ORDER DETAILS
 // Specific styles for the Order Details modal content
@@ -80,6 +82,49 @@
             font-size: var(--text-2xl);
             font-weight: var(--font-bold);
             color: var(--color-success);
+        }
+    }
+
+    // ─── Mobile compact mode ──────────────────
+    @include max-tablet {
+        gap: var(--space-3);
+
+        &__section {
+            padding-bottom: var(--space-3);
+            margin-bottom: var(--space-1);
+
+            h3 {
+                font-size: var(--text-sm);
+                margin-bottom: var(--space-2);
+            }
+        }
+
+        &__grid {
+            gap: var(--space-2);
+        }
+
+        &__item {
+            flex-direction: row;
+            align-items: baseline;
+            gap: var(--space-2);
+
+            strong {
+                flex-shrink: 0;
+                min-width: 0;
+            }
+
+            span {
+                text-align: right;
+                flex: 1;
+            }
+
+            &--full {
+                flex-direction: column;
+
+                span {
+                    text-align: left;
+                }
+            }
         }
     }
 }

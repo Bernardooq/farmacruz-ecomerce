@@ -22,18 +22,18 @@ Flujo tipico de un pedido:
 from typing import List, Optional
 from datetime import datetime, timezone
 from decimal import Decimal
-from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_, cast, String
 
 from db.base import Order, OrderItem, OrderStatus, Product, CartCache, CustomerInfo, PriceListItem, User, Customer
 from schemas.order import OrderAssign, OrderCreate, OrderUpdate, OrderItemCreate
-from utils.price_utils import calculate_final_price_with_markup
+from utils.price_utils import calculate_final_price_with_markup, apply_iva
 
 
 """ Obtener pedidos por ID con relaciones """
-def get_order(db: Session, order_id: UUID) -> Optional[Order]:
+def get_order(db: Session, order_id: int) -> Optional[Order]:
     return db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product),
         joinedload(Order.customer),
@@ -67,28 +67,19 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[Or
     
     # Busqueda
     if search:
-        from uuid import UUID
         query = query.join(Order.customer)
         
-        # Intentar parsear como UUID
-        order_id_filter = None
+        # Si es numero puro, buscar solo por order_id exacto
         try:
-            search_uuid = UUID(search)
-            order_id_filter = Order.order_id == search_uuid
+            search_int = int(search)
+            query = query.filter(Order.order_id == search_int)
         except (ValueError, AttributeError):
-            # No es UUID completo, buscar parcialmente convirtiendo a texto
-            search_term_uuid = f"%{search}%"
-            order_id_filter = cast(Order.order_id, String).ilike(search_term_uuid)
-        
-        # Buscar por nombre de cliente
-        search_term = f"%{search}%"
-        name_filters = or_(
-            Customer.full_name.ilike(search_term),
-            Customer.username.ilike(search_term)
-        )
-        
-        # Combinar filtros (siempre busca en order_id Y nombres)
-        query = query.filter(or_(order_id_filter, name_filters))
+            # No es numero, buscar por nombre de cliente
+            search_term = f"%{search}%"
+            query = query.filter(or_(
+                Customer.full_name.ilike(search_term),
+                Customer.username.ilike(search_term)
+            ))
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
@@ -162,13 +153,17 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
         markup_percentage = Decimal(str(price_item.markup_percentage or 0))
         stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
         
-        final_price = calculate_final_price_with_markup(
+        # Precio con markup, SIN IVA
+        price_without_iva = calculate_final_price_with_markup(
             base_price=base_price,
             markup_percentage=markup_percentage,
             stored_final_price=stored_final_price
         )
         
         iva = Decimal(str(product.iva_percentage or 0))
+        
+        # Precio con markup Y con IVA
+        final_price = apply_iva(price_without_iva, iva)
         
         # Crear item del pedido (precios "congelados")
         order_item = OrderItem(
@@ -178,6 +173,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
             base_price=float(base_price),
             markup_percentage=float(markup_percentage),
             iva_percentage=float(iva),
+            price_without_iva=float(price_without_iva),
             final_price=float(final_price)
         )
         db.add(order_item)
@@ -185,7 +181,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
         # Reducir stock
         # product.stock_count -= cart_item.quantity
         
-        # Acumular total
+        # Acumular total (con IVA)
         total += final_price * cart_item.quantity
     
     # Actualizar total del pedido (productos + envío)
@@ -286,13 +282,17 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
         markup_percentage = Decimal(str(price_item.markup_percentage or 0))
         stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
         
-        final_price = calculate_final_price_with_markup(
+        # Precio con markup, SIN IVA
+        price_without_iva = calculate_final_price_with_markup(
             base_price=base_price,
             markup_percentage=markup_percentage,
             stored_final_price=stored_final_price
         )
         
         iva = Decimal(str(product.iva_percentage or 0))
+        
+        # Precio con markup Y con IVA
+        final_price = apply_iva(price_without_iva, iva)
         
         # Crear item del pedido (precios "congelados")
         order_item = OrderItem(
@@ -302,11 +302,12 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
             base_price=float(base_price),
             markup_percentage=float(markup_percentage),
             iva_percentage=float(iva),
+            price_without_iva=float(price_without_iva),
             final_price=float(final_price)
         )
         db.add(order_item)
         
-        # Acumular total
+        # Acumular total (con IVA)
         total += final_price * quantity
     
     # Actualizar total del pedido (productos + envío)
@@ -317,7 +318,7 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
     return db_order
 
 """ Actualizar el estado de un pedido """
-def update_order_status(db: Session, order_id: UUID, status: OrderStatus, seller_id: Optional[int] = None) -> Optional[Order]:
+def update_order_status(db: Session, order_id: int, status: OrderStatus, seller_id: Optional[int] = None) -> Optional[Order]:
     # Actualiza el estado de un pedido
     db_order = get_order(db, order_id)
     if not db_order:
@@ -365,7 +366,7 @@ def update_order_status(db: Session, order_id: UUID, status: OrderStatus, seller
     return db_order
 
 """ Cancelar un pedido y restaurar stock """
-def cancel_order(db: Session, order_id: UUID) -> Optional[Order]:
+def cancel_order(db: Session, order_id: int) -> Optional[Order]:
     # Cancela un pedido y puede restaurar el stock
     
     db_order = get_order(db, order_id)
@@ -443,31 +444,21 @@ def get_orders_for_user_groups(db: Session, user_id: int, user_role,
     
     # Busqueda
     if search:
-        from uuid import UUID
-        
         # Re-join con Customer si no se hizo antes
         if user_role == UserRole.admin:
             query = query.join(Order.customer)
         
-        # Intentar parsear como UUID
-        order_id_filter = None
+        # Si es numero puro, buscar solo por order_id exacto
         try:
-            search_uuid = UUID(search)
-            order_id_filter = Order.order_id == search_uuid
+            search_int = int(search)
+            query = query.filter(Order.order_id == search_int)
         except (ValueError, AttributeError):
-            # No es UUID completo, buscar parcialmente convirtiendo a texto
-            search_term_uuid = f"%{search}%"
-            order_id_filter = cast(Order.order_id, String).ilike(search_term_uuid)
-        
-        # Buscar por nombre de cliente
-        search_term = f"%{search}%"
-        name_filters = or_(
-            Customer.full_name.ilike(search_term),
-            Customer.username.ilike(search_term)
-        )
-        
-        # Combinar filtros (siempre busca en order_id Y nombres)
-        query = query.filter(or_(order_id_filter, name_filters))
+            # No es numero, buscar por nombre de cliente
+            search_term = f"%{search}%"
+            query = query.filter(or_(
+                Customer.full_name.ilike(search_term),
+                Customer.username.ilike(search_term)
+            ))
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
     
@@ -528,7 +519,7 @@ def assign_order_seller(db: Session, order: Order, assign_data: OrderAssign, cur
     return order
 
 """ Generar archivo TXT del pedido en formato de ancho fijo """
-def generate_order_txt(db: Session, order_id: UUID) -> str:
+def generate_order_txt(db: Session, order_id: int) -> str:
     """
     Genera el contenido TXT del pedido en formato de ancho fijo.
     
@@ -559,7 +550,7 @@ def generate_order_txt(db: Session, order_id: UUID) -> str:
         # Obtener datos del producto y item
         product_id = item.product.product_id or ""
         quantity = item.quantity
-        unit_price = Decimal(str(item.final_price))
+        unit_price = Decimal(str(item.price_without_iva))  # Precio SIN IVA para ERP
         total_price = unit_price * Decimal(str(quantity))
         
         # 1. Product ID (40 chars, alineado izquierda)

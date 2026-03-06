@@ -1,7 +1,9 @@
 """
 Utilidades centralizadas para cálculo de precios.
 
-El IVA ya viene incluido en base_price, solo se aplica markup.
+Flujo de precios:
+1. base_price × (1 + markup%) = precio sin IVA (price_without_iva)
+2. price_without_iva × (1 + iva%) = precio final con IVA (final_price)
 """
 
 from decimal import Decimal, ROUND_HALF_UP
@@ -20,16 +22,16 @@ def calculate_final_price_with_markup(
     stored_final_price: Optional[Decimal] = None
 ) -> Decimal:
     """
-    Calcula el precio final aplicando markup sobre el precio base.
-    El IVA ya está incluido en base_price, NO se calcula aparte.
+    Calcula el precio CON MARKUP pero SIN IVA.
+    Este es el precio que se guarda en price_without_iva de orderitems.
     
     Args:
-        base_price: Precio base del producto (ya incluye IVA)
+        base_price: Precio base del producto (sin IVA, sin markup)
         markup_percentage: Porcentaje de markup a aplicar
-        stored_final_price: Precio final almacenado en BD (opcional)
+        stored_final_price: Precio final almacenado en BD de pricelistitems (opcional)
     
     Returns:
-        Precio final redondeado a 2 decimales
+        Precio con markup, SIN IVA, redondeado a 2 decimales
     
     Lógica:
         1. calculated_price = base_price * (1 + markup_percentage/100)
@@ -75,7 +77,7 @@ def get_product_final_price(
     price_list_id: int
 ) -> Optional[dict]:
     """
-    Obtiene el precio final de un producto para una lista de precios.
+    Obtiene el precio con markup (SIN IVA) de un producto para una lista de precios.
     
     Args:
         db: Sesión de base de datos
@@ -145,3 +147,24 @@ def format_price_info(
         "markup_amount": round(float(markup_amount), 2),
         "final_price": round(float(final_price), 2)
     }
+
+
+def apply_iva(price: Decimal, iva_percentage: Decimal) -> Decimal:
+    """
+    Aplica IVA a un precio.
+    
+    Args:
+        price: Precio sin IVA (ya con markup)
+        iva_percentage: Porcentaje de IVA (ej: 16.0)
+    
+    Returns:
+        Precio con IVA, redondeado a 2 decimales
+    """
+    price = Decimal(str(price))
+    iva_percentage = Decimal(str(iva_percentage))
+    
+    iva_multiplier = Decimal('1') + (iva_percentage / Decimal('100'))
+    price_with_iva = price * iva_multiplier
+    
+    two_places = Decimal('0.01')
+    return price_with_iva.quantize(two_places, rounding=ROUND_HALF_UP)

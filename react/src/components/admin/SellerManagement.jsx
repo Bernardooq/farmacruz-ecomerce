@@ -193,13 +193,13 @@ export default function SellerManagement() {
                         </div>
                       </div>
                     </td>
-                    <td>{seller.username}</td>
-                    <td>
+                    <td data-label="Usuario">{seller.username}</td>
+                    <td data-label="Estado">
                       <span className={`status-badge ${seller.is_active ? 'status--active' : 'status--inactive'}`}>
                         {seller.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="actions-cell">
+                    <td data-label="Acciones" className="actions-cell">
                       <button className="btn btn--icon btn--ghost" onClick={() => openEditModal(seller)} aria-label="Editar vendedor">
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>

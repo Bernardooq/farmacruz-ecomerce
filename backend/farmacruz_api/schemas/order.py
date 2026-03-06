@@ -73,7 +73,8 @@ class OrderItem(OrderItemBase):
     base_price: Decimal  # Precio base del producto cuando se ordeno
     markup_percentage: Decimal  # % de markup cuando se ordeno
     iva_percentage: Decimal  # % de IVA cuando se ordeno
-    final_price: Decimal  # Precio final calculado
+    price_without_iva: Decimal  # Precio con markup SIN IVA (para TXT/ERP)
+    final_price: Decimal  # Precio final CON IVA
     product: Optional[Product] = None  # Informacion del producto (opcional)
 
     model_config = {"from_attributes": True}
@@ -148,7 +149,7 @@ class Order(OrderBase):
     
     Incluye toda la informacion del pedido con relaciones.
     """
-    order_id: UUID  # ID unico del pedido
+    order_id: int  # ID unico del pedido (BIGSERIAL)
     customer_id: int  # ID del cliente que hizo el pedido (cambio de user_id)
     assigned_seller_id: Optional[int] = None  # ID del vendedor asignado (si hay)
     assigned_by_user_id: Optional[int] = None  # ID de quien hizo la asignacion (si hay)

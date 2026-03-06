@@ -132,7 +132,7 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
             <div className="modal-overlay" onClick={onClose}>
                 <div className="modal modal--lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal__header">
-                        <h2>Editar Pedido #{order.order_id?.slice(0, 8)}</h2>
+                        <h2>Editar Pedido #{order.order_id}</h2>
                         <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">&times;</button>
                     </div>
                     <div className="modal__body">

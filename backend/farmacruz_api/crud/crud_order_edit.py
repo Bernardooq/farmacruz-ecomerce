@@ -10,18 +10,18 @@ Los precios se calculan segun la lista de precios del cliente.
 """
 
 from typing import List
-from uuid import UUID
+
 from decimal import Decimal
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from utils.price_utils import calculate_final_price_with_markup
+from utils.price_utils import calculate_final_price_with_markup, apply_iva
 
 
 from db.base import Order, OrderItem, Product, PriceListItem, CustomerInfo, OrderStatus
 from schemas.order_edit import OrderItemEdit
 
 """Edita los items de un pedido existente"""
-def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], customer_id: int, shipping_cost: float = None) -> Order:    
+def edit_order_items(db: Session, order_id: int, items: List[OrderItemEdit], customer_id: int, shipping_cost: float = None) -> Order:    
     # Obtener el pedido
     order = db.query(Order).filter(Order.order_id == order_id).first()
     if not order:
@@ -92,11 +92,15 @@ def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], cu
         stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
         iva_percentage = Decimal(str(product.iva_percentage or 0))
         
-        final_price = calculate_final_price_with_markup(
+        # Precio con markup, SIN IVA
+        price_without_iva = calculate_final_price_with_markup(
             base_price=base_price,
             markup_percentage=markup_percentage,
             stored_final_price=stored_final_price
         )
+        
+        # Precio con markup Y con IVA
+        final_price = apply_iva(price_without_iva, iva_percentage)
         
         # Si el item ya existe, actualizarlo
         if item_data.order_item_id and item_data.order_item_id in existing_items:
@@ -106,6 +110,7 @@ def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], cu
             existing_item.base_price = base_price
             existing_item.markup_percentage = markup_percentage
             existing_item.iva_percentage = iva_percentage
+            existing_item.price_without_iva = price_without_iva
             existing_item.final_price = final_price
             
             items_to_keep.add(item_data.order_item_id)
@@ -118,11 +123,12 @@ def edit_order_items(db: Session, order_id: UUID, items: List[OrderItemEdit], cu
                 base_price=base_price,
                 markup_percentage=markup_percentage,
                 iva_percentage=iva_percentage,
+                price_without_iva=price_without_iva,
                 final_price=final_price
             )
             db.add(new_item)
         
-        # Sumar al total
+        # Sumar al total (con IVA)
         new_total += final_price * item_data.quantity
     
     # Eliminar items que ya no estan en la lista

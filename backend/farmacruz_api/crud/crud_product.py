@@ -12,7 +12,7 @@ Funciones para manejar productos del catalogo:
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_
-from utils.price_utils import get_product_final_price, format_price_info
+from utils.price_utils import get_product_final_price, format_price_info, apply_iva
 
 from db.base import Product, ProductRecommendation
 from schemas.product import ProductCreate, ProductUpdate
@@ -189,12 +189,17 @@ def get_similar_products(
         # Obtener precio si el cliente tiene price_list
         final_price = None
         markup_percentage = 0.0
+        iva_pct = 0.0
         
         if price_list_id:
             price_data = get_product_final_price(db, product, price_list_id)
             if price_data:
-                final_price = price_data["final_price"]
+                price_without_iva = price_data["final_price"]  # Precio con markup, SIN IVA
                 markup_percentage = price_data["markup_percentage"]
+                iva_pct = float(product.iva_percentage or 0)
+                # Aplicar IVA para obtener precio final
+                from decimal import Decimal
+                final_price = float(apply_iva(Decimal(str(price_without_iva)), Decimal(str(iva_pct))))
         
         # Construir dict del producto SIN base_price (igual que catálogo)
         product_dict = {
@@ -205,14 +210,14 @@ def get_similar_products(
             'descripcion_2': product.descripcion_2,
             'unidad_medida': product.unidad_medida,
             # base_price: EXCLUIDO - información sensible
-            # iva_percentage: EXCLUIDO - ya incluido en final_price
+            # markup_percentage: EXCLUIDO - información sensible
+            'iva_percentage': iva_pct,
             'image_url': product.image_url,
             'stock_count': product.stock_count,
             'is_active': product.is_active,
             'category_id': product.category_id,
             'category': product.category,
-            'final_price': float(final_price) if final_price else None,
-            'markup_percentage': float(markup_percentage)
+            'final_price': final_price,  # CON IVA
         }
         
         result = {

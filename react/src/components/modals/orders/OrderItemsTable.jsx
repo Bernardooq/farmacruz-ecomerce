@@ -25,18 +25,18 @@ export default function OrderItemsTable({ items, onQuantityChange, onQuantityBlu
                         ) : (
                             items.map((item, index) => (
                                 <tr key={index}>
-                                    <td><strong>{item.product_name}</strong></td>
-                                    <td>
+                                    <td data-label="Producto"><strong>{item.product_name}</strong></td>
+                                    <td data-label="Descripción">
                                         <span className="text-muted text-sm">
                                             {item.product?.description || item.description || item.product?.descripcion_2 || '—'}
                                         </span>
                                     </td>
-                                    <td>${parseFloat(item.final_price).toFixed(2)}</td>
-                                    <td>
+                                    <td data-label="Precio Unit.">${parseFloat(item.final_price).toFixed(2)}</td>
+                                    <td data-label="Cantidad">
                                         <input className="input input--sm" type="number" value={item.quantity} onChange={(e) => onQuantityChange(index, e.target.value)} onBlur={() => onQuantityBlur?.(index)} min="1" disabled={loading} style={{ width: '80px' }} />
                                     </td>
-                                    <td>${(item.final_price * item.quantity).toFixed(2)}</td>
-                                    <td>
+                                    <td data-label="Subtotal">${(item.final_price * item.quantity).toFixed(2)}</td>
+                                    <td data-label="Acciones">
                                         <button className="btn btn--icon btn--danger" onClick={() => onRemoveItem(index)} title="Eliminar producto" disabled={loading}>
                                             <FontAwesomeIcon icon={faTrash} />
                                         </button>

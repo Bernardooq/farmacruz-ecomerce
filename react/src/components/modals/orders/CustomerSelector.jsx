@@ -43,36 +43,24 @@ export default function CustomerSelector({ onSelect, visible }) {
 
             {customersLoading ? (
                 <LoadingSpinner message="Cargando clientes..." />
+            ) : customers.length === 0 ? (
+                <p className="text-center text-muted py-4">No se encontraron clientes</p>
             ) : (
-                <div className="table-container">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {customers.length === 0 ? (
-                                <tr><td colSpan="4" className="text-center">No se encontraron clientes</td></tr>
-                            ) : (
-                                customers.map((customer) => (
-                                    <tr key={customer.customer_id}>
-                                        <td>{customer.customer_id}</td>
-                                        <td>{customer.full_name}</td>
-                                        <td>{customer.email}</td>
-                                        <td>
-                                            <button type="button" className="btn btn--primary btn--sm" onClick={() => onSelect(customer)}>
-                                                Seleccionar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="customer-select-list">
+                    {customers.map((customer) => (
+                        <button
+                            key={customer.customer_id}
+                            type="button"
+                            className="customer-select-list__item"
+                            onClick={() => onSelect(customer)}
+                        >
+                            <span className="customer-select-list__id">{customer.customer_id}</span>
+                            <span className="customer-select-list__info">
+                                <strong>{customer.full_name}</strong>
+                                <span className="customer-select-list__email">{customer.email}</span>
+                            </span>
+                        </button>
+                    ))}
                 </div>
             )}
 

@@ -33,7 +33,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from uuid import UUID
+
 
 from dependencies import get_db, get_current_user, get_current_seller_user
 from crud.crud_customer import get_customer_info
@@ -320,7 +320,7 @@ def read_all_orders(skip: int = 0, limit: int = 100, status: Optional[str] = Non
 
 """ GET /{id} - Ver detalle de un pedido """
 @router.get("/{order_id}", response_model=OrderWithAddress)
-def read_order(order_id: UUID, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def read_order(order_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     order = get_order(db, order_id=order_id)
     if not order:
@@ -354,7 +354,7 @@ def read_order(order_id: UUID, current_user = Depends(get_current_user), db: Ses
 
 """ PUT /{id}/status - Actualizar estado del pedido (Admin/Marketing/Seller) """
 @router.put("/{order_id}/status", response_model=Order)
-def update_order_status_route(order_id: UUID, order_update: OrderUpdate,
+def update_order_status_route(order_id: int, order_update: OrderUpdate,
     current_user: User = Depends(get_current_seller_user), db: Session = Depends(get_db)):    
     # Obtener el pedido actual
     order = get_order(db, order_id=order_id)
@@ -460,7 +460,7 @@ def update_order_status_route(order_id: UUID, order_update: OrderUpdate,
 
 """ POST /{id}/assign - Asignar vendedor a un pedido (Marketing/Admin) """
 @router.post("/{order_id}/assign", response_model=Order)
-def assign_order_to_seller(order_id: UUID, assign_data: OrderAssign,
+def assign_order_to_seller(order_id: int, assign_data: OrderAssign,
     current_user: User = Depends(get_current_seller_user), db: Session = Depends(get_db)):
     # Obtener la orden
     order = get_order(db, order_id=order_id)
@@ -530,7 +530,7 @@ def assign_order_to_seller(order_id: UUID, assign_data: OrderAssign,
 
 """ POST /{id}/cancel - Cancelar un pedido """
 @router.post("/{order_id}/cancel", response_model=Order)
-def cancel_order_route(order_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def cancel_order_route(order_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Cancela un pedido.
     order = get_order(db, order_id=order_id)
     if not order:
@@ -621,7 +621,7 @@ def cancel_order_route(order_id: UUID, current_user: User = Depends(get_current_
 
 """ PUT /{id}/edit - Editar un pedido (Marketing/Admin) """
 @router.put("/{order_id}/edit", response_model=Order)
-def edit_order_route(order_id: UUID, edit_data: OrderEditRequest, current_user: User = Depends(get_current_seller_user),
+def edit_order_route(order_id: int, edit_data: OrderEditRequest, current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)):
     # Verificar que el usuario sea marketing o admin
     if current_user.role not in [UserRole.marketing, UserRole.admin]:
@@ -667,7 +667,7 @@ def edit_order_route(order_id: UUID, edit_data: OrderEditRequest, current_user: 
 """ GET /{id}/download-txt - Descargar pedido en formato TXT """
 @router.get("/{order_id}/download-txt")
 def download_order_txt(
-    order_id: UUID,
+    order_id: int,
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)
 ):

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from typing import List, Optional, Tuple
 from decimal import Decimal
-from utils.price_utils import get_product_final_price, calculate_final_price_with_markup
+from utils.price_utils import get_product_final_price, calculate_final_price_with_markup, apply_iva
 
 
 from db.base import Customer, CustomerInfo, Product, PriceListItem
@@ -40,26 +40,31 @@ def _get_customer_price_list(current_user, db: Session) -> int:
     
     return customer_info.price_list_id
 
-"""Calcula el precio final de un producto aplicando markup (IVA ya incluido en base_price)"""
-def _calculate_price(product: Product, price_item: PriceListItem) -> Tuple[Decimal, Decimal]:
-    # Retorna (precio_final, markup)
+"""Calcula el precio con markup y luego aplica IVA"""
+def _calculate_price(product: Product, price_item: PriceListItem) -> Tuple[Decimal, Decimal, Decimal, Decimal]:
+    # Retorna (precio_con_iva, precio_sin_iva, markup, iva_percentage)
     
     base_price = Decimal(str(product.base_price or 0))
     markup_percentage = Decimal(str(price_item.markup_percentage or 0))
     stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
+    iva_percentage = Decimal(str(product.iva_percentage or 0))
     
-    final_price = calculate_final_price_with_markup(
+    # Precio con markup, SIN IVA
+    price_without_iva = calculate_final_price_with_markup(
         base_price=base_price,
         markup_percentage=markup_percentage,
         stored_final_price=stored_final_price
     )
     
-    return final_price, markup_percentage
+    # Precio con markup Y con IVA
+    final_price = apply_iva(price_without_iva, iva_percentage)
+    
+    return final_price, price_without_iva, markup_percentage, iva_percentage
 
 """Construye un CatalogProduct desde el ORM Product y precios calculados (sin exponer base_price)"""
-def _build_catalog_product(product: Product, final_price: Decimal, markup: Decimal) -> dict:
+def _build_catalog_product(product: Product, final_price: Decimal, iva_percentage: Decimal) -> dict:
     # Construye un dict con información de producto SIN base_price para clientes
-    # Los clientes SOLO necesitan final_price, no deben ver costos (base_price)
+    # Los clientes SOLO necesitan final_price (con IVA), no deben ver costos ni márgenes
     
     catalog_product_data = {
         'product_id': product.product_id,
@@ -69,14 +74,14 @@ def _build_catalog_product(product: Product, final_price: Decimal, markup: Decim
         'descripcion_2': product.descripcion_2,  
         'unidad_medida': product.unidad_medida,  
         # base_price: EXCLUIDO - información sensible
-        # iva_percentage: EXCLUIDO - ya está incluido en final_price
+        # markup_percentage: EXCLUIDO - información sensible
+        'iva_percentage': float(iva_percentage),  # % de IVA aplicado
         'image_url': product.image_url,
         'stock_count': product.stock_count,
         'is_active': product.is_active,
         'category_id': product.category_id,
         'category': product.category,
-        'final_price': final_price,  # ← Precio que el cliente paga
-        'markup_percentage': markup  # ← % de ganancia (puede ser útil para el cliente)
+        'final_price': final_price,  # ← Precio que el cliente paga (CON IVA)
     }
     
     return catalog_product_data
@@ -130,8 +135,8 @@ def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 
     # Construir lista de productos con precios calculados
     catalog_products = []
     for product, price_item in results:
-        final_price, markup = _calculate_price(product, price_item)
-        catalog_product = _build_catalog_product(product, final_price, markup)
+        final_price, price_without_iva, markup, iva_pct = _calculate_price(product, price_item)
+        catalog_product = _build_catalog_product(product, final_price, iva_pct)
         catalog_products.append(catalog_product)
     
     return catalog_products
@@ -161,9 +166,9 @@ def get_catalog_product(db: Session, current_user, product_id: str  ) -> dict:
     
     # Calcular precio y construir respuesta
     product, price_item = result
-    final_price, markup = _calculate_price(product, price_item)
+    final_price, price_without_iva, markup, iva_pct = _calculate_price(product, price_item)
     
-    return _build_catalog_product(product, final_price, markup)
+    return _build_catalog_product(product, final_price, iva_pct)
 
 
 """Obtiene productos del catalogo con precios personalizados de un cliente especifico (para admin/marketing)"""
@@ -228,8 +233,8 @@ def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, 
     # Construir lista de productos con precios calculados
     catalog_products = []
     for product, price_item in results:
-        final_price, markup = _calculate_price(product, price_item)
-        catalog_product = _build_catalog_product(product, final_price, markup)
+        final_price, price_without_iva, markup, iva_pct = _calculate_price(product, price_item)
+        catalog_product = _build_catalog_product(product, final_price, iva_pct)
         catalog_products.append(catalog_product)
     
     return catalog_products

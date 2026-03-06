@@ -198,15 +198,15 @@ export default function MarketingGroupsView() {
                                             ) : (
                                                 members.map((member) => (
                                                     <tr key={member[memberKey]}>
-                                                        <td>
+                                                        <td data-label="Nombre">
                                                             <div className="user-cell">
                                                                 <FontAwesomeIcon icon={faUserCircle} className="user-cell__avatar" />
                                                                 <span className="user-cell__name">{member.full_name}</span>
                                                             </div>
                                                         </td>
-                                                        <td>{member.username}</td>
-                                                        <td>{member.email}</td>
-                                                        <td>
+                                                        <td data-label="Usuario">{member.username}</td>
+                                                        <td data-label="Email">{member.email}</td>
+                                                        <td data-label="Estado">
                                                             <span className={`status-badge ${member.is_active ? 'status--active' : 'status--inactive'}`}>
                                                                 {member.is_active ? 'Activo' : 'Inactivo'}
                                                             </span>

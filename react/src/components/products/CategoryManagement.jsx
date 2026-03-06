@@ -127,14 +127,14 @@ export default function CategoryManagement() {
               ) : (
                 categories.map((category) => (
                   <tr key={category.category_id}>
-                    <td>
+                    <td data-label="Categoría">
                       <div className="d-flex align-center gap-2">
                         <FontAwesomeIcon icon={faTag} className="text-primary" />
                         <strong>{category.name}</strong>
                       </div>
                     </td>
-                    <td>{category.description || '-'}</td>
-                    <td className="actions-cell">
+                    <td data-label="Descripción">{category.description || '-'}</td>
+                    <td data-label="Acciones" className="actions-cell">
                       {isAdmin ? (
                         <>
                           <button className="btn btn--icon btn--ghost" onClick={() => openEditModal(category)} aria-label="Editar categoría" title="Editar">

@@ -197,13 +197,13 @@ export default function SalesTeamManagement() {
                       </div>
                     </div>
                   </td>
-                  <td>{user.username}</td>
-                  <td>
+                  <td data-label="Usuario">{user.username}</td>
+                  <td data-label="Estado">
                     <span className={`status-badge ${user.is_active ? 'status--active' : 'status--inactive'}`}>
                       {user.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td className="actions-cell">
+                  <td data-label="Acciones" className="actions-cell">
                     <button className="btn btn--icon btn--ghost" onClick={() => openEditUserModal(user, role)} aria-label={`Editar ${role}`}>
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>
@@ -273,21 +273,21 @@ export default function SalesTeamManagement() {
             ) : (
               groups.map((group) => (
                 <tr key={group.sales_group_id}>
-                  <td>
+                  <td data-label="Grupo">
                     <div>
                       <div><b>{group.group_name}</b></div>
                       {group.description && <div className="text-muted text-sm">{group.description}</div>}
                     </div>
                   </td>
-                  <td><span className="badge badge--info">{group.marketing_count || 0}</span></td>
-                  <td><span className="badge badge--success">{group.seller_count || 0}</span></td>
-                  <td><span className="badge badge--primary">{group.customer_count || 0}</span></td>
-                  <td>
+                  <td data-label="Marketing"><span className="badge badge--info">{group.marketing_count || 0}</span></td>
+                  <td data-label="Vendedores"><span className="badge badge--success">{group.seller_count || 0}</span></td>
+                  <td data-label="Clientes"><span className="badge badge--primary">{group.customer_count || 0}</span></td>
+                  <td data-label="Estado">
                     <span className={`status-badge ${group.is_active ? 'status--active' : 'status--inactive'}`}>
                       {group.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td className="actions-cell">
+                  <td data-label="Acciones" className="actions-cell">
                     <button className="btn btn--icon btn--ghost" onClick={() => openGroupDetailsModal(group)} aria-label="Ver detalles" title="Ver miembros">
                       <FontAwesomeIcon icon={faEye} />
                     </button>

@@ -12,7 +12,7 @@ Arquitectura de base de datos:
 import enum
 from datetime import datetime, timezone
 from sqlalchemy import (
-    Column, Integer, String, Boolean, Enum as SQLAlchemyEnum, 
+    Column, Integer, BigInteger, String, Boolean, Enum as SQLAlchemyEnum, 
     ForeignKey, Numeric, TIMESTAMP, func, Text, UniqueConstraint, CheckConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -344,7 +344,7 @@ class Order(Base):
     """
     __tablename__ = "orders"
 
-    order_id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())
+    order_id = Column(BigInteger, primary_key=True, autoincrement=True)
     customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False, index=True)
     assigned_seller_id = Column(Integer, ForeignKey("users.user_id"), index=True)  # Vendedor asignado
     assigned_by_user_id = Column(Integer, ForeignKey("users.user_id"))  # Quien hizo la asignacion
@@ -380,14 +380,15 @@ class OrderItem(Base):
     __tablename__ = "orderitems"
 
     order_item_id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())
-    order_id = Column(PG_UUID(as_uuid=True), ForeignKey("orders.order_id", ondelete="CASCADE"), nullable=False, index=True)
+    order_id = Column(BigInteger, ForeignKey("orders.order_id", ondelete="CASCADE"), nullable=False, index=True)
     product_id = Column(String(50), ForeignKey("products.product_id"), nullable=False, index=True)
     quantity = Column(Integer, nullable=False)  # Cantidad del producto
     # Precios congelados al momento del pedido
     base_price = Column(Numeric(10, 2), nullable=False)  # Precio base snapshot
     markup_percentage = Column(Numeric(5, 2), nullable=False)  # % markup snapshot
     iva_percentage = Column(Numeric(5, 2), nullable=False)  # % IVA snapshot
-    final_price = Column(Numeric(10, 2), nullable=False)  # Precio final calculado
+    price_without_iva = Column(Numeric(10, 2), nullable=False)  # Precio con markup SIN IVA (para TXT/ERP)
+    final_price = Column(Numeric(10, 2), nullable=False)  # Precio final CON IVA
 
     # Constraint: cantidad debe ser positiva
     __table_args__ = (

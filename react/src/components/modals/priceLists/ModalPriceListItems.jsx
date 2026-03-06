@@ -142,16 +142,20 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                     {listItems.map(item => {
                       const isEditing = editingItem === item.product?.product_id;
                       const markup = isEditing ? parseFloat(editMarkup) : (item.markup_percentage || 0);
-                      let finalPrice, markupAmount;
-                      if (isEditing) { const basePrice = parseFloat(item.product?.base_price || 0); markupAmount = basePrice * (markup / 100); finalPrice = basePrice + markupAmount; }
-                      else { finalPrice = item.final_price ?? 0; markupAmount = item.markup_amount ?? 0; }
+                      const basePrice = parseFloat(item.product?.base_price || 0);
+                      const ivaPercentage = parseFloat(item.product?.iva_percentage || 0);
+                      let priceWithoutIva, markupAmount, ivaAmount, finalPriceWithIva;
+                      if (isEditing) { markupAmount = basePrice * (markup / 100); priceWithoutIva = basePrice + markupAmount; }
+                      else { priceWithoutIva = item.final_price ?? 0; markupAmount = item.markup_amount ?? 0; }
+                      ivaAmount = priceWithoutIva * (ivaPercentage / 100);
+                      finalPriceWithIva = priceWithoutIva + ivaAmount;
 
                       return (
                         <div key={item.product?.product_id} className="product-card product-card--in-list">
                           <div className="product-card__info">
                             <div className="product-card__name">{item.product?.name}</div>
                             <div className="product-card__meta">Codigo de barras: {item.product?.codebar}</div>
-                            <div className="product-card__price text-sm">Base: ${parseFloat(item.product?.base_price || 0).toFixed(2)}</div>
+                            <div className="product-card__price text-sm">Base: ${basePrice.toFixed(2)}</div>
                             <div className="product-card__meta my-1">
                               {isEditing ? (
                                 <input className="input input--sm" type="number" value={editMarkup} onChange={(e) => setEditMarkup(e.target.value)} step="0.01" min="0" autoFocus style={{ width: '90px' }} />
@@ -159,7 +163,8 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                                 <span>Markup: {markup.toFixed(2)}% (${markupAmount.toFixed(2)})</span>
                               )}
                             </div>
-                            <div className="product-card__price">Final: ${finalPrice.toFixed(2)}</div>
+                            <div className="product-card__meta">IVA: {ivaPercentage.toFixed(0)}% (${ivaAmount.toFixed(2)})</div>
+                            <div className="product-card__price"><strong>Final: ${finalPriceWithIva.toFixed(2)}</strong></div>
                           </div>
                           <div className="product-card__actions justify-end">
                             {isEditing ? (
