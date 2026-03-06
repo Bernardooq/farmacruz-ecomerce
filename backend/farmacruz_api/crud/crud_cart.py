@@ -14,7 +14,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
-from utils.price_utils import get_product_final_price
+from utils.price_utils import get_product_final_price, apply_iva
 
 
 from db.base import CartCache, CustomerInfo, PriceListItem, Product
@@ -47,8 +47,12 @@ def get_cart(db: Session, customer_id: int) -> List[CartCache]:
             )
             
             if price_data:
-                final_price = float(price_data["final_price"])
+                price_without_iva = price_data["final_price"]
                 markup_percentage = float(price_data["markup_percentage"])
+                
+                # Aplicar IVA al precio (base_price * markup * iva)
+                iva_percentage = item.product.iva_percentage or 0
+                final_price = float(apply_iva(price_without_iva, iva_percentage))
         
         # Si no se pudo calcular precio, usar base_price
         if final_price is None and item.product:
