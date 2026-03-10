@@ -124,6 +124,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
     
     # CREAR ITEMS Y CALCULAR TOTAL
     total = Decimal('0')
+    profit = Decimal('0')
     
     for cart_item in cart_items:
         # Obtener producto
@@ -181,11 +182,13 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
         # Reducir stock
         # product.stock_count -= cart_item.quantity
         
-        # Acumular total (con IVA)
+        # Acumular total (con IVA) y ganancia (markup)
         total += final_price * cart_item.quantity
+        profit += (price_without_iva - base_price) * cart_item.quantity
     
-    # Actualizar total del pedido (productos + envío)
+    # Actualizar total y ganancia del pedido
     db_order.total_amount = float(total + shipping_cost)
+    db_order.order_profit = float(profit)
     
     # === LIMPIAR CARRITO ===
     db.query(CartCache).filter(CartCache.customer_id == customer_id).delete()
@@ -247,6 +250,7 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
     
     # CREAR ITEMS Y CALCULAR TOTAL
     total = Decimal('0')
+    profit = Decimal('0')
     
     for item_data in items:
         product_id = item_data.get('product_id')
@@ -307,11 +311,13 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
         )
         db.add(order_item)
         
-        # Acumular total (con IVA)
+        # Acumular total (con IVA) y ganancia (markup)
         total += final_price * quantity
+        profit += (price_without_iva - base_price) * quantity
     
-    # Actualizar total del pedido (productos + envío)
+    # Actualizar total y ganancia del pedido
     db_order.total_amount = float(total + shipping_cost)
+    db_order.order_profit = float(profit)
     
     db.commit()
     db.refresh(db_order)

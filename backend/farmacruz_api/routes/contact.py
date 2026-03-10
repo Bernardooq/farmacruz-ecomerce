@@ -13,11 +13,11 @@ Sistema de Email:
 No requiere autenticacion (publico).
 """
 
-from fastapi import APIRouter, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Request
 from pydantic import BaseModel, EmailStr, Field
 import logging
 
-from core.config import settings
+from core.config import settings, TURNSTILE_SECRET_KEY
 from utils.email_utils import send_email_background
 
 router = APIRouter()
@@ -34,7 +34,45 @@ class ContactMessage(BaseModel):
 
 """ POST /send - Enviar mensaje de contacto """
 @router.post("/send")
-def send_contact_email(contact: ContactMessage, background_tasks: BackgroundTasks):
+def send_contact_email(contact: ContactMessage, request: Request, background_tasks: BackgroundTasks):
+    
+    # Validar Cloudflare Turnstile (si está configurado)
+    if TURNSTILE_SECRET_KEY:
+        import httpx
+        captcha_token = request.headers.get("X-Turnstile-Token", "")
+        
+        if not captcha_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Verificación CAPTCHA requerida"
+            )
+        
+        try:
+            response = httpx.post(
+                "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                data={
+                    "secret": TURNSTILE_SECRET_KEY,
+                    "response": captcha_token
+                },
+                timeout=10.0
+            )
+            
+            # Si Cloudflare responde un error 500 o rate limit, dejamos pasar
+            if response.status_code != 200:
+                logger.warning(f"Turnstile API falló en contacto con status {response.status_code}. Permitiendo envío por fallback.")
+                pass
+            else:
+                result = response.json()
+                if not result.get("success"):
+                    logger.warning(f"Turnstile rechazó el token de contacto: {result.get('error-codes')}")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Verificación CAPTCHA fallida. Intenta de nuevo."
+                    )
+        except httpx.RequestError as e:
+            # Si Turnstile está caído/timeout, dejamos que el formulario pase
+            logger.warning(f"Error de red contactando Turnstile en contacto: {str(e)}. Permitiendo envío por fallback.")
+            pass
     
     try:
         # === CREAR CUERPO HTML ESPECÍFICO DE CONTACTO ===

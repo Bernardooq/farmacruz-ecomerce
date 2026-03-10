@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     FRONTEND_URL: str = os.getenv("FRONTEND_URL")
     
+    # === CONFIGURACION DE CLOUDFLARE TURNSTILE ===
+    TURNSTILE_SECRET_KEY: str = os.getenv("TURNSTILE_SECRET_KEY", "")  # Clave secreta de Turnstile
+    
     # === CONFIGURACION DE EMAIL (SMTP) ===
     # Se usa para enviar correos de contacto y notificaciones
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
@@ -54,3 +57,4 @@ SYNC_TOKEN_EXPIRE_MINUTES = settings.SYNC_TOKEN_EXPIRE_MINUTES
 PROJECT_NAME = settings.PROJECT_NAME
 API_V1_STR = settings.API_V1_STR
 FRONTEND_URL = settings.FRONTEND_URL
+TURNSTILE_SECRET_KEY = settings.TURNSTILE_SECRET_KEY

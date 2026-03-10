@@ -14,6 +14,7 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
 import LoginForm from '../components/users/LoginForm';
 
@@ -28,7 +29,9 @@ export default function Login() {
           {/* Logo de la empresa */}
           <div className="auth-card__logo">
             {/* <img src="../images/...png" alt="Logo FarmaCruz" /> */}
-            <h1>Farmacruz</h1>
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <h1>Farmacruz</h1>
+            </Link>
           </div>
 
           {/* Título de la página */}

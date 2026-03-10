@@ -31,6 +31,16 @@ export default function SummaryCards({ summary }) {
         </div>
       )}
 
+      {summary.total_profit !== undefined && summary.total_profit > 0 && (
+        <div className="stat-card">
+          <div className="stat-card__icon">💹</div>
+          <div className="stat-card__content">
+            <span className="stat-card__value text-success">{formatCurrency(summary.total_profit)}</span>
+            <span className="stat-card__label">Ganancia Estimada</span>
+          </div>
+        </div>
+      )}
+
       {summary.delivered_orders !== undefined && (
         <div className="stat-card">
           <div className="stat-card__icon"><FontAwesomeIcon icon={faCheckCircle} /></div>

@@ -1,4 +1,4 @@
-export default function ModalOrderDetails({ visible, order, onClose }) {
+export default function ModalOrderDetails({ visible, order, isAdmin = false, onClose }) {
   if (!order) return null;
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -88,6 +88,12 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                   <strong>Id Pedido:</strong>
                   <span>#{order.order_id}</span>
                 </div>
+                {isAdmin && order.order_profit > 0 && (
+                  <div className="order-details__item">
+                    <strong>Ganancia Estimada:</strong>
+                    <span className="text-success">{formatCurrency(order.order_profit)}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -101,6 +107,7 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                       <th>Descripción</th>
                       <th>Codigo de barras</th>
                       <th>Cantidad</th>
+                      {isAdmin && <th>Precio s/IVA</th>}
                       <th>Precio Unit.</th>
                       <th>Subtotal</th>
                     </tr>
@@ -115,13 +122,14 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                           </td>
                           <td data-label="codebar">{item.product?.codebar || 'N/A'}</td>
                           <td data-label="Cantidad">{item.quantity}</td>
+                          {isAdmin && <td data-label="Precio s/IVA">{formatCurrency(item.price_without_iva)}</td>}
                           <td data-label="Precio Unit.">{formatCurrency(item.final_price)}</td>
                           <td data-label="Subtotal">{formatCurrency(item.quantity * item.final_price)}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center">No hay items en este pedido</td>
+                        <td colSpan={isAdmin ? 7 : 6} className="text-center">No hay items en este pedido</td>
                       </tr>
                     )}
                   </tbody>
@@ -144,6 +152,12 @@ export default function ModalOrderDetails({ visible, order, onClose }) {
                   <strong>Total:</strong>
                   <span className="order-summary__total-amount">{formatCurrency(order.total_amount)} MXN</span>
                 </div>
+                {isAdmin && order.order_profit > 0 && (
+                  <div className="order-summary__row">
+                    <span>💹 Ganancia Estimada:</span>
+                    <span className="text-success" style={{ fontWeight: 'bold' }}>{formatCurrency(order.order_profit)} MXN</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

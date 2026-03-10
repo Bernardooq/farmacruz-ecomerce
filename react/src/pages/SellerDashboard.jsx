@@ -3,11 +3,9 @@
  * ===================
  * Dashboard del vendedor de FarmaCruz
  * 
- * Funcionalidades:
- * - Ver estadísticas resumidas (pedidos pendientes, productos en catálogo, stock bajo)
- * - Gestión de pedidos asignados
- * - Gestión de inventario (productos y stock)
- * - Gestión de categorías
+ * Sub-paneles:
+ * 1. Pedidos: Gestión de pedidos asignados (vista por defecto)
+ * 2. Inventario: Mini dashboard + inventario + categorías
  * 
  * Permisos: Solo para usuarios con role: 'seller'
  */
@@ -23,6 +21,14 @@ import CategoryManagement from '../components/products/CategoryManagement';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 
+// ============================================
+// CONSTANTES
+// ============================================
+const SELLER_TABS = [
+  { id: 'pedidos', label: 'Pedidos', icon: '📦' },
+  { id: 'inventario', label: 'Inventario', icon: '📋' }
+];
+
 export default function SellerDashboard() {
   // ============================================
   // HOOKS & STATE
@@ -30,6 +36,7 @@ export default function SellerDashboard() {
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('pedidos');
 
   // ============================================
   // EFFECTS
@@ -54,6 +61,26 @@ export default function SellerDashboard() {
       console.error('Failed to load dashboard data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ============================================
+  // RENDER HELPERS
+  // ============================================
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'pedidos':
+        return <AllOrders />;
+      case 'inventario':
+        return (
+          <>
+            <SummaryCards summary={summary} />
+            <InventoryManager />
+            <CategoryManagement />
+          </>
+        );
+      default:
+        return <AllOrders />;
     }
   };
 
@@ -88,17 +115,23 @@ export default function SellerDashboard() {
           {/* Mensaje de error */}
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-          {/* Tarjetas de resumen */}
-          <SummaryCards summary={summary} />
+          {/* Tabs de navegación */}
+          <nav className="dashboard-layout__tabs-nav">
+            {SELLER_TABS.map(tab => (
+              <button
+                key={tab.id}
+                className={`dashboard-layout__tab ${activeTab === tab.id ? 'dashboard-layout__tab--active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </nav>
 
-          {/* Gestión de pedidos */}
-          <AllOrders />
-
-          {/* Gestión de inventario */}
-          <InventoryManager />
-
-          {/* Gestión de categorías */}
-          <CategoryManagement />
+          {/* Contenido del tab activo */}
+          <div className="dashboard-layout__tabs-content">
+            {renderContent()}
+          </div>
         </div>
       </main>
 

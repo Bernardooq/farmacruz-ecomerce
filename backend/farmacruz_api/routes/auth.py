@@ -27,7 +27,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from dependencies import get_db, get_current_user, get_current_admin_user
-from core.config import ACCESS_TOKEN_EXPIRE_MINUTES, SYNC_TOKEN_EXPIRE_MINUTES
+from core.config import ACCESS_TOKEN_EXPIRE_MINUTES, SYNC_TOKEN_EXPIRE_MINUTES, TURNSTILE_SECRET_KEY
 from core.security import create_access_token, verify_password, decode_access_token
 from core import token_blacklist
 from crud.crud_user import authenticate_user, create_user, get_user_by_username, get_user_by_email
@@ -74,9 +74,50 @@ def register(
 """ POST /login - Login (customers o users internos) """
 @router.post("/login", response_model=Token)
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
+    # Validar Turnstile CAPTCHA (si está configurado)
+    if TURNSTILE_SECRET_KEY:
+        import httpx
+        captcha_token = request.headers.get("X-Turnstile-Token", "")
+        
+        if not captcha_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Verificación CAPTCHA requerida"
+            )
+        
+        # Validar contra la API de Cloudflare
+        try:
+            response = httpx.post(
+                "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                data={
+                    "secret": TURNSTILE_SECRET_KEY,
+                    "response": captcha_token
+                },
+                timeout=10.0
+            )
+            
+            # Si Cloudflare responde un error 500 o rate limit, dejamos pasar
+            if response.status_code != 200:
+                logger.warning(f"Turnstile API falló con status {response.status_code}. Permitiendo login por fallback.")
+                pass
+            else:
+                result = response.json()
+                # Solo bloqueamos si explícitamente Cloudflare dice que es inválido
+                if not result.get("success"):
+                    logger.warning(f"Turnstile rechazó el token: {result.get('error-codes')}")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Verificación CAPTCHA fallida. Intenta de nuevo."
+                    )
+        except httpx.RequestError as e:
+            # Si no se puede contactar a Cloudflare (caída, timeout de RED, etc), permitir el login
+            logger.warning(f"Error de red contactando Turnstile: {str(e)}. Permitiendo login por fallback.")
+            pass
+    
     # Autenticacion con username y password
     authenticated_user = None
     is_customer = False

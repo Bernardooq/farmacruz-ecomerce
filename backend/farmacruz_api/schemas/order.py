@@ -73,7 +73,7 @@ class OrderItem(OrderItemBase):
     base_price: Decimal  # Precio base del producto cuando se ordeno
     markup_percentage: Decimal  # % de markup cuando se ordeno
     iva_percentage: Decimal  # % de IVA cuando se ordeno
-    price_without_iva: Decimal  # Precio con markup SIN IVA (para TXT/ERP)
+    price_without_iva: Optional[Decimal] = None  # Precio con markup SIN IVA (solo admin)
     final_price: Decimal  # Precio final CON IVA
     product: Optional[Product] = None  # Informacion del producto (opcional)
 
@@ -154,6 +154,7 @@ class Order(OrderBase):
     assigned_seller_id: Optional[int] = None  # ID del vendedor asignado (si hay)
     assigned_by_user_id: Optional[int] = None  # ID de quien hizo la asignacion (si hay)
     total_amount: Decimal  # Monto total del pedido
+    order_profit: Optional[Decimal] = None  # Ganancia por markup (solo admin)
     shipping_cost: Decimal = Decimal("0.00")  # Costo de envío
     shipping_address_number: Optional[int] = None  # Que direccion se usa (1, 2 o 3)
     assignment_notes: Optional[str] = None  # Notas de asignacion

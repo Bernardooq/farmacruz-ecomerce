@@ -55,6 +55,15 @@ from crud.crud_sales_group import get_user_groups, user_can_manage_order
 
 router = APIRouter()
 
+
+def _strip_admin_fields(order_dict: dict) -> dict:
+    """Strip order_profit and price_without_iva from order responses for non-admin users."""
+    order_dict.pop("order_profit", None)
+    if "items" in order_dict:
+        for item in order_dict["items"]:
+            item.pop("price_without_iva", None)
+    return order_dict
+
 # === CARRITO DE COMPRAS ===
 
 class CartItemAdd(BaseModel):
@@ -316,6 +325,11 @@ def read_all_orders(skip: int = 0, limit: int = 100, status: Optional[str] = Non
         for order in orders:
             order.sales_group_id = group_by_customer.get(order.customer_id)
 
+    # Strip admin-only fields for non-admin users
+    is_admin = current_user.role == UserRole.admin
+    if not is_admin:
+        return [_strip_admin_fields(Order.model_validate(o, from_attributes=True).model_dump()) for o in orders]
+
     return orders
 
 """ GET /{id} - Ver detalle de un pedido """
@@ -350,7 +364,15 @@ def read_order(order_id: int, current_user = Depends(get_current_user), db: Sess
         )
     
     # Calcular direccion de envio
-    return calculate_order_shipping_address(db, order)
+    order_with_address = calculate_order_shipping_address(db, order)
+    
+    # Strip admin-only fields for non-admin users
+    if not user_role or user_role != UserRole.admin:
+        return _strip_admin_fields(
+            OrderWithAddress.model_validate(order_with_address, from_attributes=True).model_dump()
+        )
+    
+    return order_with_address
 
 """ PUT /{id}/status - Actualizar estado del pedido (Admin/Marketing/Seller) """
 @router.put("/{order_id}/status", response_model=Order)

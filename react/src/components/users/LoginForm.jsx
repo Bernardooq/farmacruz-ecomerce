@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,6 +9,9 @@ const ROLE_ROUTES = {
   customer: '/products'
 };
 
+// Site key de Cloudflare Turnstile
+const TURNSTILE_SITE_KEY = '0x4AAAAAACozwagS-q-IOY-7';
+
 export default function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -18,16 +21,91 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const widgetIdRef = useRef(null);
+  const containerRef = useRef(null);
+
+  // Cargar script de Turnstile
+  useEffect(() => {
+    if (document.getElementById('turnstile-script')) {
+      if (window.turnstile) setTurnstileReady(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'turnstile-script';
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback';
+    script.async = true;
+    script.defer = true;
+
+    window.onloadTurnstileCallback = () => {
+      setTurnstileReady(true);
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      delete window.onloadTurnstileCallback;
+    };
+  }, []);
+
+  // Renderizar widget invisible de Turnstile
+  useEffect(() => {
+    if (turnstileReady && window.turnstile && containerRef.current && widgetIdRef.current === null) {
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token) => { setTurnstileToken(token); },
+        'expired-callback': () => { setTurnstileToken(''); },
+        'error-callback': () => { setTurnstileToken(''); },
+        theme: 'light',
+        size: 'invisible' // Invisible para el usuario
+      });
+    }
+
+    return () => {
+      if (widgetIdRef.current !== null && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [turnstileReady]);
+
+  const getTurnstileToken = async () => {
+    if (!turnstileReady || !window.turnstile || widgetIdRef.current === null) return '';
+    try {
+      // Pedir un nuevo token explícitamente y esperar el string
+      return await window.turnstile.getResponse(widgetIdRef.current);
+    } catch (e) {
+      console.warn('Turnstile failed:', e);
+      return '';
+    }
+  };
+
+  const resetTurnstile = () => {
+    setTurnstileToken('');
+    if (widgetIdRef.current !== null && window.turnstile) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
-      const user = await login(username, password);
+      // Obtener el token del callback automático (o forzar uno)
+      let currentToken = turnstileToken;
+      if (!currentToken) {
+        currentToken = await getTurnstileToken();
+      }
+
+      const user = await login(username, password, currentToken);
       navigate(ROLE_ROUTES[user.role] || ROLE_ROUTES.customer);
     } catch (err) {
-      setError('Usuario o contraseña incorrectos');
+      setError(err.message || 'Usuario o contraseña incorrectos');
+      resetTurnstile();
     } finally {
       setLoading(false);
     }
@@ -52,9 +130,16 @@ export default function LoginForm() {
         <label htmlFor="showPass">Mostrar contraseña</label>
       </div>
 
+      {/* Contenedor (vacío) para el widget invisible */}
+      <div ref={containerRef}></div>
+
       <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
         {loading ? 'Ingresando...' : 'Ingresar'}
       </button>
+
+      <p className="text-muted text-center text-xs" style={{ marginTop: '0.75rem', fontSize: '0.7rem' }}>
+        Protegido por Cloudflare Turnstile
+      </p>
     </form>
   );
 }

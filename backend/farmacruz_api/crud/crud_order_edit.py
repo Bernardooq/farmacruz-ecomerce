@@ -58,6 +58,7 @@ def edit_order_items(db: Session, order_id: int, items: List[OrderItemEdit], cus
     
     # Procesar cada item de la solicitud
     new_total = Decimal('0.00')
+    new_profit = Decimal('0.00')
     
     for item_data in items:
         # Obtener informacion del producto
@@ -128,8 +129,9 @@ def edit_order_items(db: Session, order_id: int, items: List[OrderItemEdit], cus
             )
             db.add(new_item)
         
-        # Sumar al total (con IVA)
+        # Sumar al total (con IVA) y ganancia (markup)
         new_total += final_price * item_data.quantity
+        new_profit += (price_without_iva - base_price) * item_data.quantity
     
     # Eliminar items que ya no estan en la lista
     for item_id, item in existing_items.items():
@@ -140,9 +142,10 @@ def edit_order_items(db: Session, order_id: int, items: List[OrderItemEdit], cus
     if shipping_cost is not None:
         order.shipping_cost = shipping_cost
     
-    # Actualizar el total del pedido (items + shipping_cost)
+    # Actualizar el total y ganancia del pedido
     shipping_cost_decimal = Decimal(str(order.shipping_cost or 0))
     order.total_amount = new_total + shipping_cost_decimal
+    order.order_profit = new_profit
     
     db.commit()
     db.refresh(order)

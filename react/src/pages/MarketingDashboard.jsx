@@ -29,10 +29,9 @@ import ErrorMessage from '../components/common/ErrorMessage';
 // CONSTANTES
 // ============================================
 const MARKETING_TABS = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'pedidos', label: 'Pedidos', icon: '📦' },
-    { id: 'grupos', label: 'Grupos de Ventas', icon: '👥' },
-    { id: 'inventario', label: 'Inventario', icon: '📋' }
+    { id: 'inventario', label: 'Inventario', icon: '📋' },
+    { id: 'grupos', label: 'Grupos de Ventas', icon: '👥' }
 ];
 
 export default function MarketingDashboard() {
@@ -43,7 +42,7 @@ export default function MarketingDashboard() {
     const [summary, setSummary] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState('pedidos');
 
     // ============================================
     // EFFECTS
@@ -76,21 +75,20 @@ export default function MarketingDashboard() {
     // ============================================
     const renderContent = () => {
         switch (activeTab) {
-            case 'dashboard':
-                return <SummaryCards summary={summary} />;
             case 'pedidos':
                 return <AllOrders />;
-            case 'grupos':
-                return <MarketingGroupsView />;
             case 'inventario':
                 return (
                     <>
+                        <SummaryCards summary={summary} />
                         <InventoryManager />
                         <CategoryManagement />
                     </>
                 );
+            case 'grupos':
+                return <MarketingGroupsView />;
             default:
-                return <SummaryCards summary={summary} />;
+                return <AllOrders />;
         }
     };
 

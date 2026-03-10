@@ -21,11 +21,20 @@
         justify-content: center;
         aspect-ratio: 1;
         overflow: hidden;
+        max-width: 100%;
+
+        @include max-tablet {
+            max-height: 300px;
+            aspect-ratio: auto;
+            margin: 0 auto;
+        }
 
         img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            width: auto;
+            height: auto;
         }
 
         &::after {

@@ -218,7 +218,7 @@ export default function AllOrders() {
         <PaginationButtons onPrev={() => setPage(p => Math.max(0, p - 1))} onNext={() => setPage(p => p + 1)} canGoPrev={page > 0} canGoNext={hasMore} />
       )}
 
-      <ModalOrderDetails visible={showModal} order={selectedOrder} onClose={() => { setShowModal(false); setSelectedOrder(null); }} />
+      <ModalOrderDetails visible={showModal} order={selectedOrder} isAdmin={user?.role === 'admin'} onClose={() => { setShowModal(false); setSelectedOrder(null); }} />
       <ModalAssignSeller visible={showAssignModal} order={orderToAssign} groupId={assignGroupId} onAssign={handleAssign} onClose={() => { setShowAssignModal(false); setOrderToAssign(null); setAssignGroupId(null); }} />
       <ModalEditOrder visible={showEditModal} order={orderToEdit} onSave={handleSaveEditedOrder} onClose={() => { setShowEditModal(false); setOrderToEdit(null); }} />
       <ModalCreateOrder visible={showCreateModal} onClose={() => setShowCreateModal(false)} onSuccess={handleCreateOrderSuccess} />

@@ -27,6 +27,7 @@ class DashboardStats(BaseModel):
     other_orders: int  # Total de pedidos en otros estados (no delivered)
     pending_orders: int  # Pedidos pendientes de asignacion
     total_revenue: float  # Ingresos totales (pedidos completados)
+    total_profit: float = 0.0  # Ganancia total estimada por markup
     low_stock_count: int  # Productos con bajo inventario (< 10 unidades)
 
 
@@ -53,6 +54,7 @@ class SalesReportItem(BaseModel):
     order_date: str  # Fecha del pedido (formato: "YYYY-MM-DD HH:MM")
     status: str  # Estado actual del pedido
     total_amount: float  # Monto total del pedido
+    order_profit: float = 0.0  # Ganancia del pedido por markup
     items_count: int  # Numero de productos en el pedido
 
 
@@ -66,4 +68,5 @@ class SalesReport(BaseModel):
     end_date: str  # Fecha final del reporte (formato: "YYYY-MM-DD")
     total_orders: int  # Numero total de pedidos en el periodo
     total_revenue: float  # Ingresos totales en el periodo
+    total_profit: float = 0.0  # Ganancia total en el periodo
     orders: List[SalesReportItem]  # Lista de pedidos con detalles

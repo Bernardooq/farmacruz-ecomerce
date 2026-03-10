@@ -6,16 +6,23 @@ export const authService = {
 
   // Logear usuario con usuario/contraseña
   // Ojo: FastAPI recibe los datos como form-data (URLSearchParams), no como JSON
-  async login(username, password) {
+  async login(username, password, turnstileToken = '') {
     const formData = new URLSearchParams()
     formData.append('username', username)
     formData.append('password', password)
 
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    }
+
+    // Agregar token de Turnstile CAPTCHA si existe
+    if (turnstileToken) {
+      headers['X-Turnstile-Token'] = turnstileToken
+    }
+
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers,
       body: formData
     })
 

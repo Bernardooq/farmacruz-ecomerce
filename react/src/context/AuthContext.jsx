@@ -51,8 +51,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (username, password) => {
-    const data = await authService.login(username, password);
+  const login = async (username, password, turnstileToken = '') => {
+    const data = await authService.login(username, password, turnstileToken);
     const accessToken = data.access_token;
 
     localStorage.setItem('token', accessToken);

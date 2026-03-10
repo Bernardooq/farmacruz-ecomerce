@@ -171,10 +171,17 @@ class ApiService {
    * @param {Object} contactData - Datos del formulario {name, email, phone, subject, message}
    * @returns {Promise<Object>} Respuesta del servidor
    */
-  async sendContactForm(contactData) {
+  async sendContactForm(contactData, captchaToken = '') {
     // Este endpoint NO requiere autenticación, así que usamos fetch directo
     // sin headers de autorización
     const url = `${this.baseURL}/contact/send`
+
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    if (captchaToken) {
+      headers['X-Turnstile-Token'] = captchaToken
+    }
 
     try {
       const controller = new AbortController()
@@ -182,9 +189,7 @@ class ApiService {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify(contactData),
         signal: controller.signal
       })

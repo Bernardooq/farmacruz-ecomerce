@@ -77,6 +77,15 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         ])
     ).scalar() or 0  # Usar 0 si no hay pedidos completados
     
+    # Calcular ganancia total estimada
+    total_profit = db.query(func.sum(Order.order_profit)).filter(
+        Order.status.in_([
+            OrderStatus.approved,
+            OrderStatus.shipped,
+            OrderStatus.delivered
+        ])
+    ).scalar() or 0
+    
     return DashboardStats(
         total_users=total_users,
         total_customers=total_customers,
@@ -88,6 +97,7 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         other_orders=other_orders,
         pending_orders=pending_orders,
         total_revenue=float(total_revenue),
+        total_profit=float(total_profit),
         low_stock_count=low_stock_count
     )
 
@@ -162,6 +172,7 @@ def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Op
     # CALCULAR TOTALES 
     total_orders = len(orders)
     total_revenue = sum(float(order.total_amount) for order in orders)
+    total_profit = sum(float(order.order_profit or 0) for order in orders)
 
     # CONSTRUIR ITEMS DEL REPORTE
     report_items: List[SalesReportItem] = []
@@ -184,6 +195,7 @@ def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Op
             order_date=order.created_at.strftime("%Y-%m-%d %H:%M"),
             status=order.status.value,  # Convertir enum a string
             total_amount=float(order.total_amount),
+            order_profit=float(order.order_profit or 0),
             items_count=items_count
         ))
 
@@ -192,5 +204,6 @@ def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Op
         end_date=end_dt.strftime("%Y-%m-%d"),
         total_orders=total_orders,
         total_revenue=total_revenue,
+        total_profit=total_profit,
         orders=report_items
     )
