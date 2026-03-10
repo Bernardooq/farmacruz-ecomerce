@@ -137,14 +137,16 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (turnstileReady && !turnstileToken) {
+      alert('Por favor completa la verificación de seguridad');
+      return;
+    }
+
     setSending(true);
 
     try {
-      let currentToken = turnstileToken;
-      if (!currentToken) {
-        currentToken = await getTurnstileToken();
-      }
-      await apiService.sendContactForm(formData, currentToken);
+      await apiService.sendContactForm(formData, turnstileToken);
       setSent(true);
       setFormData(INITIAL_FORM_STATE);
       resetTurnstile();
@@ -336,21 +338,16 @@ export default function Contact() {
                   />
                 </div>
 
-                {/* Botón de envío */}
-                {/* Contenedor del widget oculto visualmente */}
-                <div style={{ display: 'none' }} ref={containerRef}></div>
+                {/* Contenedor del widget (Cloudflare necesita que sea visible) */}
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0' }} ref={containerRef}></div>
 
                 <button
                   type="submit"
                   className="btn btn--primary btn--block"
-                  disabled={sending}
+                  disabled={sending || (turnstileReady && !turnstileToken)}
                 >
                   {sending ? 'Enviando...' : 'Enviar Mensaje'}
                 </button>
-
-                <p className="text-muted text-center text-xs" style={{ marginTop: '0.75rem', fontSize: '0.7rem' }}>
-                  Protegido por Cloudflare Turnstile
-                </p>
               </form>
             </div>
           </div>

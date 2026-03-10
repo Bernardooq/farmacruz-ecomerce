@@ -92,16 +92,17 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (turnstileReady && !turnstileToken) {
+      setError('Por favor completa la verificación de seguridad');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Obtener el token del callback automático (o forzar uno)
-      let currentToken = turnstileToken;
-      if (!currentToken) {
-        currentToken = await getTurnstileToken();
-      }
-
-      const user = await login(username, password, currentToken);
+      // Usar el token que generó el widget
+      const user = await login(username, password, turnstileToken);
       navigate(ROLE_ROUTES[user.role] || ROLE_ROUTES.customer);
     } catch (err) {
       setError(err.message || 'Usuario o contraseña incorrectos');
@@ -130,16 +131,12 @@ export default function LoginForm() {
         <label htmlFor="showPass">Mostrar contraseña</label>
       </div>
 
-      {/* Contenedor del widget oculto visualmente */}
-      <div style={{ display: 'none' }} ref={containerRef}></div>
+      {/* Contenedor del widget (Cloudflare necesita que sea visible) */}
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0' }} ref={containerRef}></div>
 
-      <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
+      <button type="submit" className="btn btn--primary btn--block" disabled={loading || (turnstileReady && !turnstileToken)}>
         {loading ? 'Ingresando...' : 'Ingresar'}
       </button>
-
-      <p className="text-muted text-center text-xs" style={{ marginTop: '0.75rem', fontSize: '0.7rem' }}>
-        Protegido por Cloudflare Turnstile
-      </p>
     </form>
   );
 }
