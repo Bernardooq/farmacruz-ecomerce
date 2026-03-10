@@ -100,7 +100,7 @@ export default function Contact() {
         'expired-callback': () => { setTurnstileToken(''); },
         'error-callback': () => { setTurnstileToken(''); },
         theme: 'light',
-        size: 'invisible' // Invisible para el usuario
+        size: 'flexible'
       });
     }
 
@@ -337,8 +337,8 @@ export default function Contact() {
                 </div>
 
                 {/* Botón de envío */}
-                {/* Contenedor (vacío) para el widget invisible */}
-                <div ref={containerRef}></div>
+                {/* Contenedor del widget oculto visualmente */}
+                <div style={{ display: 'none' }} ref={containerRef}></div>
 
                 <button
                   type="submit"

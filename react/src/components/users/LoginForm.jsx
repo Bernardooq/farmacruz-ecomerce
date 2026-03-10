@@ -59,7 +59,7 @@ export default function LoginForm() {
         'expired-callback': () => { setTurnstileToken(''); },
         'error-callback': () => { setTurnstileToken(''); },
         theme: 'light',
-        size: 'invisible' // Invisible para el usuario
+        size: 'flexible'
       });
     }
 
@@ -130,8 +130,8 @@ export default function LoginForm() {
         <label htmlFor="showPass">Mostrar contraseña</label>
       </div>
 
-      {/* Contenedor (vacío) para el widget invisible */}
-      <div ref={containerRef}></div>
+      {/* Contenedor del widget oculto visualmente */}
+      <div style={{ display: 'none' }} ref={containerRef}></div>
 
       <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
         {loading ? 'Ingresando...' : 'Ingresar'}
