@@ -6,21 +6,39 @@
 
 .dashboard-layout {
     flex: 1;
-    padding: var(--space-6) 0;
+    padding: var(--space-4) 0;
     min-height: calc(100vh - 70px);
 
+    @include tablet {
+        padding: var(--space-6) 0;
+    }
 
+    @include desktop {
+        padding: var(--space-8) 0;
+    }
 
     &__container {
         @include container;
     }
 
     &__greeting {
-        font-size: var(--text-2xl);
+        font-size: var(--text-xl);
         font-weight: var(--font-bold);
         color: var(--color-text);
-        margin-bottom: var(--space-6);
+        margin-bottom: var(--space-4);
         text-align: center;
+        letter-spacing: -0.5px;
+
+        @include tablet {
+            font-size: var(--text-3xl);
+            margin-bottom: var(--space-6);
+            letter-spacing: -1px;
+        }
+
+        @include desktop {
+            font-size: var(--text-4xl);
+            text-align: left; // Align to the left on larger screens for cleaner look
+        }
 
         span {
             color: var(--color-primary);
@@ -30,6 +48,10 @@
     // ── Pill-style tabs navigation ──────────────
     &__tabs {
         margin-bottom: var(--space-6);
+
+        @include desktop {
+            margin-bottom: var(--space-8);
+        }
     }
 
     &__tabs-nav {
@@ -37,12 +59,28 @@
         gap: var(--space-1);
         background: var(--color-surface);
         border-radius: var(--radius-xl);
-        padding: var(--space-1);
+        padding: var(--space-1) var(--space-2);
         margin-bottom: var(--space-6);
         box-shadow: var(--shadow-sm);
         border: var(--border-width) solid var(--color-border);
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+
+        // Hide scrollbar but keep functionality
+        scrollbar-width: none; // Firefox
+
+        &::-webkit-scrollbar {
+            display: none; // Safari and Chrome
+        }
+
+        @include tablet {
+            padding: var(--space-2);
+            gap: var(--space-2);
+        }
+
+        @include desktop {
+            flex-wrap: wrap; // Wrap tabs on desktop if there are many
+        }
     }
 
     &__tabs-content {
@@ -53,7 +91,7 @@
         display: inline-flex;
         align-items: center;
         gap: var(--space-2);
-        padding: var(--space-2) var(--space-5);
+        padding: var(--space-2) var(--space-4);
         font-size: var(--text-sm);
         font-weight: var(--font-medium);
         color: var(--color-text-muted);
@@ -64,6 +102,11 @@
         background: transparent;
         transition: all 0.2s ease;
 
+        @include tablet {
+            padding: var(--space-2) var(--space-5);
+            font-size: var(--text-base);
+        }
+
         &:hover {
             color: var(--color-text);
             background: var(--color-bg-subtle);
@@ -73,6 +116,7 @@
             background: var(--color-primary);
             color: var(--color-text-inverse);
             font-weight: var(--font-semibold);
+            box-shadow: var(--shadow-sm);
 
             &:hover {
                 background: var(--color-primary-hover);
@@ -83,12 +127,14 @@
 
     &__tab-icon {
         font-size: var(--text-base);
+
+        @include tablet {
+            font-size: var(--text-lg);
+        }
     }
 
     &__tab-label {
-        @include max-phone {
-            display: none;
-        }
+        display: inline; // Always show the label but make text smaller on mobile
     }
 }
 
