@@ -21,12 +21,11 @@ ADMIN_PASSWORD = "ahc4gjnw40blssrtvhjfl4563"
 # ============================================================================
 
 # Directorio donde están los archivos DBF
-DBF_DIR = Path("C:\\Users\\berna\\Documents\\GitProjects\\farmacruz-ecomerce\\backend\\dbfs")
+DBF_DIR = Path("C:\\VSAI\\Empresas\\PFC2026")
 
 # Directorio donde están las imágenes de productos
-IMAGES_FOLDER = Path("C:\\Users\\berna\\Downloads\\\CompressedImg")
-
-IMAGES_FOLDER_INPUT = Path("C:\\Users\\berna\\Downloads\\Imagenes")
+IMAGES_FOLDER =Path("C:\\ecommerce\\compressedIMG")
+IMAGES_FOLDER_INPUT = Path("C:\\ecommerce\\compressedIMG")
 
 # URL del CDN para imágenes
 CDN_URL = "https://img.farmacruz.com.mx"
