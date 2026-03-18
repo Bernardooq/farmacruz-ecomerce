@@ -294,7 +294,6 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
             set_={
                 'email': stmt_customer.excluded.email,
                 'full_name': stmt_customer.excluded.full_name,
-                'is_active': stmt_customer.excluded.is_active,
                 'agent_id': stmt_customer.excluded.agent_id,
                 'updated_at': stmt_customer.excluded.updated_at
             }
@@ -326,8 +325,6 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
                 'rfc': stmt_info.excluded.rfc,
                 'price_list_id': stmt_info.excluded.price_list_id,
                 'address_1': stmt_info.excluded.address_1,
-                'address_2': stmt_info.excluded.address_2,
-                'address_3': stmt_info.excluded.address_3,
                 'telefono_1': stmt_info.excluded.telefono_1,
                 'telefono_2': stmt_info.excluded.telefono_2
             }
@@ -405,7 +402,6 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
             set_={
                 'email': stmt.excluded.email,
                 'full_name': stmt.excluded.full_name,
-                'is_active': stmt.excluded.is_active,
                 'updated_at': stmt.excluded.updated_at
             }
         )
