@@ -406,8 +406,8 @@ Lo primero es usar el Centro de Control:
 
 ## Limpieza de Base de Datos
 
-psql "host=farmacruz-db.ccn22ys0s7ya.us-east-1.rds.amazonaws.com \
-user=farmacruzdb \
+psql "host=b2b-platform.ccn22ys0s7ya.us-east-1.rds.amazonaws.com \
+user=farmacruz \
 dbname=postgres \
 port=5432 \
 sslmode=require"
