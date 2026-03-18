@@ -101,7 +101,7 @@ def process_productos_from_json(
             stmt = insert(Product)
             stmt = stmt.on_conflict_do_update(
                 index_elements=['product_id'],
-                set_={c.name: c for c in stmt.excluded if c.name != 'product_id' and c.name != 'created_at'}
+                set_={c.name: c for c in stmt.excluded if c.name not in ('product_id', 'created_at', 'is_active')}
             )
             db.execute(stmt, chunk)
             
@@ -138,7 +138,7 @@ def process_listas_precios_from_json(
         stmt = insert(PriceList)
         stmt = stmt.on_conflict_do_update(
             index_elements=['price_list_id'],
-            set_={c.name: c for c in stmt.excluded if c.name != 'price_list_id'}
+            set_={c.name: c for c in stmt.excluded if c.name not in('price_list_id', 'is_active')}
         )
         db.execute(stmt, listas_data)
         db.commit()
@@ -284,7 +284,6 @@ def process_sellers_from_json(
                 set_={
                     'email': stmt.excluded.email,
                     'full_name': stmt.excluded.full_name,
-                    'is_active': stmt.excluded.is_active,
                     'updated_at': stmt.excluded.updated_at
                 }
             )
@@ -385,7 +384,6 @@ def process_customers_from_json(
                 set_={
                     'email': stmt_cust.excluded.email,
                     'full_name': stmt_cust.excluded.full_name,
-                    'is_active': stmt_cust.excluded.is_active,
                     'agent_id': stmt_cust.excluded.agent_id,
                     'updated_at': stmt_cust.excluded.updated_at
                 }
@@ -402,8 +400,6 @@ def process_customers_from_json(
                     'rfc': stmt_info.excluded.rfc,
                     'price_list_id': stmt_info.excluded.price_list_id,
                     'address_1': stmt_info.excluded.address_1,
-                    'address_2': stmt_info.excluded.address_2,
-                    'address_3': stmt_info.excluded.address_3,
                     'telefono_1': stmt_info.excluded.telefono_1,
                     'telefono_2': stmt_info.excluded.telefono_2
                 }

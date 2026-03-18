@@ -80,7 +80,6 @@ def guardar_o_actualizar_lista(db: Session, lista_id: int, nombre: str, descripc
             set_={
                 'list_name': statement.excluded.list_name,
                 'description': statement.excluded.description,
-                'is_active': statement.excluded.is_active,
                 'updated_at': statement.excluded.updated_at
             }
         )
@@ -158,7 +157,6 @@ def bulk_sync_prods(db: Session, productos: List[dict]) -> Tuple[int, int, List[
                 'base_price': stmt.excluded.base_price,
                 'iva_percentage': stmt.excluded.iva_percentage,
                 'stock_count': stmt.excluded.stock_count,
-                'is_active': stmt.excluded.is_active,
                 'category_id': stmt.excluded.category_id,
                 'image_url': stmt.excluded.image_url,
                 'updated_at': stmt.excluded.updated_at
