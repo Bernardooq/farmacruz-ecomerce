@@ -119,24 +119,6 @@ def main():
     try:
         process_and_upload_sellers(token)
         process_and_upload_customers(token)
-        
-        # Cleanup users no sincronizados
-        # IMPORTANTE: Restamos 5 minutos para dar tiempo al procesamiento de la cola
-        from datetime import timedelta
-        cleanup_time = (start - timedelta(minutes=5)).isoformat()
-        
-        print("\n--- CLEANUP: USERS ---")
-        try:
-            response = requests.post(
-                f"{BACKEND_URL}/sync/cleanup-users",
-                json={"last_sync": cleanup_time},
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=30
-            )
-            response.raise_for_status()
-            print("  ✓ Usuarios no sincronizados desactivados")
-        except Exception as e:
-            print(f"  ⚠ Cleanup warning: {e}")
             
     except Exception as e:
         print(f"\nCRITICAL FAILURE: {e}")

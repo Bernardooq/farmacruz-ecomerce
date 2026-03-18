@@ -101,7 +101,7 @@ def process_productos_from_json(
             stmt = insert(Product)
             stmt = stmt.on_conflict_do_update(
                 index_elements=['product_id'],
-                set_={c.name: c for c in stmt.excluded if c.name not in ('product_id', 'created_at', 'is_active')}
+                set_={c.name: c for c in stmt.excluded if c.name not in ('product_id', 'created_at')}
             )
             db.execute(stmt, chunk)
             
@@ -138,7 +138,7 @@ def process_listas_precios_from_json(
         stmt = insert(PriceList)
         stmt = stmt.on_conflict_do_update(
             index_elements=['price_list_id'],
-            set_={c.name: c for c in stmt.excluded if c.name not in('price_list_id', 'is_active')}
+            set_={c.name: c for c in stmt.excluded if c.name not in('price_list_id')}
         )
         db.execute(stmt, listas_data)
         db.commit()

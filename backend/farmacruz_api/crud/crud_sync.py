@@ -80,6 +80,7 @@ def guardar_o_actualizar_lista(db: Session, lista_id: int, nombre: str, descripc
             set_={
                 'list_name': statement.excluded.list_name,
                 'description': statement.excluded.description,
+                'is_active': statement.excluded.is_active,
                 'updated_at': statement.excluded.updated_at
             }
         )
@@ -157,6 +158,7 @@ def bulk_sync_prods(db: Session, productos: List[dict]) -> Tuple[int, int, List[
                 'base_price': stmt.excluded.base_price,
                 'iva_percentage': stmt.excluded.iva_percentage,
                 'stock_count': stmt.excluded.stock_count,
+                'is_active': stmt.excluded.is_active,
                 'category_id': stmt.excluded.category_id,
                 'image_url': stmt.excluded.image_url,
                 'updated_at': stmt.excluded.updated_at
@@ -443,24 +445,4 @@ def limpiar_items_no_sincronizados(db: Session, last_sync: datetime):
 
     # Desactivar listas de precios no actualizadas (Padres después - Soft Delete para evitar error FK con Customers)
     db.query(PriceList).filter(PriceList.updated_at < last_sync).update({PriceList.is_active: False})
-    
-    
-
-
-def limpiar_users_no_sincronizados(db: Session, last_sync: datetime):
-    """
-    Desactiva usuarios (customers y sellers) que no fueron actualizados 
-    desde la fecha de ultima sincronizacion.
-    
-    - Clientes no actualizados: Se desactivan (is_active = False)
-    - Vendedores no actualizados: Se desactivan (is_active = False)
-    """
-    # Desactivar clientes no actualizados
-    db.query(Customer).filter(Customer.updated_at < last_sync).update({Customer.is_active: False})
-
-    # Desactivar vendedores no actualizados
-    db.query(User).filter(
-        User.role == 'seller',
-        User.updated_at < last_sync
-    ).update({User.is_active: False})
     

@@ -217,21 +217,8 @@ def main():
             print(f"  Errors: {total_errores} records")
         print()
     
-    # 4. Cleanup usuarios no sincronizados
-    print("--- CLEANUP: USERS ---")
-    try:
-        response = requests.post(
-            f"{BACKEND_URL}/sync/cleanup-users",
-            json={"last_sync": sync_time},
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=30
-        )
-        response.raise_for_status()
-        print("  ✓ Usuarios no sincronizados desactivados\n")
-    except Exception as e:
-        print(f"  ⚠ Cleanup warning: {e}\n")
     
-    # 5. Resumen final
+    # 4. Resumen final
     fin = datetime.now(timezone.utc)
     duracion = (fin - inicio).total_seconds()
     

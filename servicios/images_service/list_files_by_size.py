@@ -10,13 +10,14 @@ ordenados de mayor a menor.
 
 from pathlib import Path
 import os
+from config import (IMAGES_FOLDER, IMAGES_FOLDER_INPUT)
 
 # ============================================================================
 # CONFIGURACIÓN
 # ============================================================================
 
 # Carpeta a analizar
-FOLDER_TO_ANALYZE = Path("/Users/bernardoorozco/Downloads/CompressedImg")
+FOLDER_TO_ANALYZE = IMAGES_FOLDER_INPUT
 
 # Mostrar solo ciertos tipos de archivo (dejar vacío para todos)
 # Ejemplo: {'.webp', '.jpg', '.png'} o {} para todos

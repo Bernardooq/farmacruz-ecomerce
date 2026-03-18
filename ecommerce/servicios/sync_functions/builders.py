@@ -116,8 +116,11 @@ def build_cliente_dict(row, sync_time=None):
     # Dirección completa
     direccion = (
         f"{row.get('DIR_CTE', '')} "
-        f"{row.get('COL_CTE', '')} "
-        f"{row.get('CD_CTE', '')}"
+        f"{row.get('NE_CTE', '')}, "
+        f"{row.get('COL_CTE', '')}, "
+        f"{row.get('CP_CTE', '')}, "
+        f"{row.get('CD_CTE', '')}, "
+        f"{row.get('EDO_CTE', '')}."
     ).strip() or None
     
     cliente = {

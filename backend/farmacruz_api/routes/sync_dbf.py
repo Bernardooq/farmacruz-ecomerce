@@ -343,24 +343,3 @@ def limpieza_post_sincronizacion(
         )
     
     return last_sync
-
-
-""" POST /cleanup-users - Limpiar usuarios (customers y sellers) no sincronizados """
-@router.post("/cleanup-users", response_model=CleanupSchema)
-def limpieza_users_post_sincronizacion(
-    last_sync: CleanupSchema,
-    usuario_actual: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
-    """Desactiva customers y sellers que no fueron sincronizados recientement."""
-    try:
-        crud_sync.limpiar_users_no_sincronizados(db=db, last_sync=last_sync.last_sync)
-        db.commit()
-    except Exception as error:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al limpiar usuarios no sincronizados: {str(error)}"
-        )
-    
-    return last_sync
