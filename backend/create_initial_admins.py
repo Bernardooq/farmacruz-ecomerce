@@ -16,7 +16,7 @@ try:
     from core.security import get_password_hash
     from core.config import DATABASE_URL
 except ImportError as e:
-    print(f"❌ Error al importar modulos: {e}")
+    print(f"Error al importar modulos: {e}")
     print("\nAsegurate de:")
     print("1. Estar en la carpeta 'backend'")
     print("2. Tener el entorno virtual activado")
@@ -89,7 +89,7 @@ def create_admin_users():
     # Verificar que todas las contraseñas esten asignadas
     missing_passwords = [admin["username"] for admin in ADMINS if not admin["password"]]
     if missing_passwords:
-        print("❌ ERROR: Las siguientes cuentas no tienen contraseña asignada:")
+        print("ERROR: Las siguientes cuentas no tienen contraseña asignada:")
         for username in missing_passwords:
             print(f"   - {username}")
         print()
@@ -103,7 +103,7 @@ def create_admin_users():
         if len(admin["password"]) < 8
     ]
     if weak_passwords:
-        print("❌ ERROR: Las siguientes cuentas tienen contraseñas muy cortas (minimo 8 caracteres):")
+        print("ERROR: Las siguientes cuentas tienen contraseñas muy cortas (minimo 8 caracteres):")
         for username in weak_passwords:
             print(f"   - {username}")
         return False
@@ -120,7 +120,7 @@ def create_admin_users():
                 ).first()
                 
                 if existing_user:
-                    print(f"⚠️  Usuario '{admin_data['username']}' ya existe - OMITIDO")
+                    print(f"Usuario '{admin_data['username']}' ya existe - OMITIDO")
                     skipped_count += 1
                     continue
                 
@@ -140,7 +140,7 @@ def create_admin_users():
                 db.commit()
                 db.refresh(new_admin)
                 
-                print(f"✅ Usuario '{admin_data['username']}' creado exitosamente")
+                print(f"Usuario '{admin_data['username']}' creado exitosamente")
                 print(f"   Email: {admin_data['email']}")
                 print(f"   Nombre: {admin_data['full_name']}")
                 print(f"   ID: {new_admin.user_id}")
@@ -149,7 +149,7 @@ def create_admin_users():
                 created_count += 1
                 
             except Exception as user_error:
-                print(f"❌ Error al crear '{admin_data['username']}': {user_error}")
+                print(f"Error al crear '{admin_data['username']}': {user_error}")
                 db.rollback()
                 continue
         
@@ -161,9 +161,9 @@ def create_admin_users():
         print()
         
         if created_count > 0:
-            print("✅ Proceso completado exitosamente")
+            print("Proceso completado exitosamente")
             print()
-            print("⚠️  IMPORTANTE:")
+            print("IMPORTANTE:")
             print("   1. Guarda las credenciales en un lugar seguro")
             print("   2. Comparte las contraseñas de forma segura con cada usuario")
             print("   3. Pideles que cambien su contraseña en el primer login")
@@ -172,7 +172,7 @@ def create_admin_users():
         return True
         
     except Exception as e:
-        print(f"\n❌ Error durante la creacion de usuarios: {e}")
+        print(f"\nError durante la creacion de usuarios: {e}")
         db.rollback()
         return False
     finally:
@@ -181,7 +181,7 @@ def create_admin_users():
 def verify_database_connection():
     """Verifica que la conexion a la base de datos funcione"""
     try:
-        print(f"🔍 Intentando conectar a la base de datos...")
+        print(f"Intentando conectar a la base de datos...")
         print(f"   URL: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'configurada'}\n")
         
         db: Session = SessionLocal()
@@ -190,12 +190,12 @@ def verify_database_connection():
         # Verificar que la tabla Users existe
         result = db.execute(text("SELECT COUNT(*) FROM users"))
         count = result.scalar()
-        print(f"✅ Conexion exitosa - {count} usuarios existentes en la base de datos\n")
+        print(f"Conexion exitosa - {count} usuarios existentes en la base de datos\n")
         
         db.close()
         return True
     except Exception as e:
-        print(f"❌ Error de conexion a la base de datos:")
+        print(f"Error de conexion a la base de datos:")
         print(f"   {type(e).__name__}: {e}\n")
         print("Verifica que:")
         print("1. PostgreSQL este corriendo (docker-compose up)")
@@ -213,7 +213,7 @@ def main():
     success = create_admin_users()
     
     if not success:
-        print("\n❌ El proceso fallo. Revisa los errores anteriores.")
+        print("\nEl proceso fallo. Revisa los errores anteriores.")
         exit(1)
 
 if __name__ == "__main__":
