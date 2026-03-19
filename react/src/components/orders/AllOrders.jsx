@@ -43,9 +43,26 @@ export default function AllOrders() {
 
   useEffect(() => { loadOrders(); }, [page, statusFilter, debouncedSearchTerm]);
 
-  const loadOrders = async () => {
+  // Auto-refresh interval (every 60s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Only refresh if tab is visible and no modals are open
+      if (
+        document.visibilityState === 'visible' &&
+        !showModal &&
+        !showAssignModal &&
+        !showEditModal &&
+        !showCreateModal
+      ) {
+        loadOrders(true); // silent refresh
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [page, statusFilter, debouncedSearchTerm, showModal, showAssignModal, showEditModal, showCreateModal]);
+
+  const loadOrders = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       const params = { skip: page * itemsPerPage, limit: itemsPerPage + 1 };
       if (statusFilter) params.status = statusFilter;
@@ -58,7 +75,7 @@ export default function AllOrders() {
       setError('No se pudieron cargar los pedidos. Intenta de nuevo.');
       console.error('Failed to load orders:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -155,9 +172,14 @@ export default function AllOrders() {
           </button>
         </form>
 
-        <button className="btn btn--secondary btn--sm" onClick={loadOrders} disabled={loading} title="Recargar Pedidos">
-          <FontAwesomeIcon icon={faSync} spin={loading} /> {loading ? 'Cargando...' : 'Recargar'}
-        </button>
+        <div className="d-flex align-items-center gap-1">
+          <button className="btn btn--secondary btn--sm" onClick={() => loadOrders(false)} disabled={loading} title="Recargar Pedidos">
+            <FontAwesomeIcon icon={faSync} spin={loading} /> {loading ? 'Cargando...' : 'Recargar'}
+          </button>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }} title="Se actualiza automáticamente cada minuto" aria-label="Auto-refresh activado">
+            <span style={{ color: 'var(--success)', marginRight: '4px' }}>●</span>Auto
+          </span>
+        </div>
 
         <div className="filter-group">
           <label className="filter-group__label" htmlFor="status-filter">Estado:</label>
