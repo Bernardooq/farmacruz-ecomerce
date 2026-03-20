@@ -54,6 +54,7 @@ PyYAML==6.0.3
 colorama==0.4.6
 packaging==26.0
 gunicorn==23.0.0
+openpyxl==3.1.5
 
 # === RED ===
 urllib3==2.6.3

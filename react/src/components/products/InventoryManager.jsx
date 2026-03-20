@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faPlus, faFileExport } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import { productService } from '../../services/productService';
 import { categoryService } from '../../services/categoryService';
+import adminService from '../../services/adminService';
 import ProductRow from './ProductRow';
 import ModalAddProduct from '../modals/products/ModalAddProduct';
 import ModalEditProduct from '../modals/products/ModalEditProduct';
@@ -164,12 +165,17 @@ export default function InventoryManager() {
       <div className="section-header">
         <h2 className="section-title">Gestión de Inventario</h2>
         {isAdmin && (
-          <button
-            className="btn btn--primary btn--sm"
-            onClick={() => { setShowEditModal(false); setShowStockModal(false); setSelectedProduct(null); setShowAddModal(true); }}
-          >
-            <FontAwesomeIcon icon={faPlus} /> Añadir Nuevo Producto
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn--secondary btn--sm" onClick={() => adminService.exportXLSX('productos')} title="Exportar a Excel">
+              <FontAwesomeIcon icon={faFileExport} /> Exportar Excel
+            </button>
+            <button
+              className="btn btn--primary btn--sm"
+              onClick={() => { setShowEditModal(false); setShowStockModal(false); setSelectedProduct(null); setShowAddModal(true); }}
+            >
+              <FontAwesomeIcon icon={faPlus} /> Añadir Nuevo Producto
+            </button>
+          </div>
         )}
       </div>
 

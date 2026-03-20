@@ -43,6 +43,33 @@ export const adminService = {
       start_date: startDate,
       end_date: endDate
     })
+  },
+
+  // ==================== Exportaciones ====================
+
+  // Descargar XLSX con data del sistema por tipo (solo admin)
+  // exportType: 'clientes' | 'vendedores' | 'marketing' | 'grupos' | 'productos' | 'precios'
+  async exportXLSX(exportType) {
+    const { API_BASE } = await import('../config/api')
+    const token = localStorage.getItem('token')
+    const response = await fetch(`${API_BASE}/admin/export-xlsx?type=${exportType}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: 'Error desconocido' }))
+      throw new Error(err.detail || 'Error al exportar datos')
+    }
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const disposition = response.headers.get('Content-Disposition')
+    a.download = disposition?.split('filename=')[1] || `farmacruz_${exportType}.xlsx`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
   }
 }
 

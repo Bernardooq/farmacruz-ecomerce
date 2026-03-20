@@ -5,7 +5,8 @@ import ModalPriceListItems from '../modals/priceLists/ModalPriceListItems';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faTrashAlt, faList } from '@fortawesome/free-solid-svg-icons';
+import { faPencilAlt, faTrashAlt, faList, faFileExport } from '@fortawesome/free-solid-svg-icons';
+import adminService from '../../services/adminService';
 
 export default function PriceListManager() {
   const [priceLists, setPriceLists] = useState([]);
@@ -57,9 +58,14 @@ export default function PriceListManager() {
     <section className="dashboard-section">
       <div className="section-header">
         <h2 className="section-title">Listas de Precios</h2>
-        <button className="btn btn--primary btn--sm" onClick={handleCreate}>
-          + Nueva Lista
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn--secondary btn--sm" onClick={() => adminService.exportXLSX('precios')} title="Exportar a Excel">
+            <FontAwesomeIcon icon={faFileExport} /> Exportar Excel
+          </button>
+          <button className="btn btn--primary btn--sm" onClick={handleCreate}>
+            + Nueva Lista
+          </button>
+        </div>
       </div>
 
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}

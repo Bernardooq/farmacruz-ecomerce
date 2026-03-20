@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserTie, faUsers, faUsersGear, faSearch, faUserCircle,
-  faPencilAlt, faTrashAlt, faPlus, faEye
+  faPencilAlt, faTrashAlt, faPlus, faEye, faFileExport
 } from '@fortawesome/free-solid-svg-icons';
 import adminService from '../../services/adminService';
 import salesGroupService from '../../services/salesGroupService';
@@ -145,10 +145,15 @@ export default function SalesTeamManagement() {
     <>
       <div className="section-header">
         <h2 className="section-title">{role === 'seller' ? 'Vendedores' : 'Marketing Managers'}</h2>
-        <button className="btn btn--primary btn--sm" onClick={() => openAddUserModal(role)}>
-          <FontAwesomeIcon icon={role === 'seller' ? faUserTie : faUsers} />
-          {' '}Añadir {role === 'seller' ? 'Vendedor' : 'Marketing'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn--secondary btn--sm" onClick={() => adminService.exportXLSX(role === 'seller' ? 'vendedores' : 'marketing')} title="Exportar a Excel">
+            <FontAwesomeIcon icon={faFileExport} /> Exportar Excel
+          </button>
+          <button className="btn btn--primary btn--sm" onClick={() => openAddUserModal(role)}>
+            <FontAwesomeIcon icon={role === 'seller' ? faUserTie : faUsers} />
+            {' '}Añadir {role === 'seller' ? 'Vendedor' : 'Marketing'}
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-controls">
@@ -233,9 +238,14 @@ export default function SalesTeamManagement() {
     <>
       <div className="section-header">
         <h2 className="section-title">Grupos de Ventas</h2>
-        <button className="btn btn--primary btn--sm" onClick={openAddGroupModal}>
-          <FontAwesomeIcon icon={faUsersGear} /> Crear Grupo
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn--secondary btn--sm" onClick={() => adminService.exportXLSX('grupos')} title="Exportar a Excel">
+            <FontAwesomeIcon icon={faFileExport} /> Exportar Excel
+          </button>
+          <button className="btn btn--primary btn--sm" onClick={openAddGroupModal}>
+            <FontAwesomeIcon icon={faUsersGear} /> Crear Grupo
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-controls">

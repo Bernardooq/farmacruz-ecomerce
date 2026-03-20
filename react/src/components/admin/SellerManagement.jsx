@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserTie, faSearch, faUserCircle, faPencilAlt, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faUserTie, faSearch, faUserCircle, faPencilAlt, faTrashAlt, faFileExport } from '@fortawesome/free-solid-svg-icons';
 import adminService from '../../services/adminService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
@@ -142,9 +142,14 @@ export default function SellerManagement() {
       <section className="dashboard-section">
         <div className="section-header">
           <h2 className="section-title">Gestión de Vendedores</h2>
-          <button className="btn btn--primary btn--sm" onClick={openAddModal}>
-            <FontAwesomeIcon icon={faUserTie} /> Añadir Vendedor
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn--secondary btn--sm" onClick={() => adminService.exportXLSX('vendedores')} title="Exportar a Excel">
+              <FontAwesomeIcon icon={faFileExport} /> Exportar Excel
+            </button>
+            <button className="btn btn--primary btn--sm" onClick={openAddModal}>
+              <FontAwesomeIcon icon={faUserTie} /> Añadir Vendedor
+            </button>
+          </div>
         </div>
 
         {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}

@@ -26,6 +26,15 @@ from crud.crud_user import (
     get_users, get_user, update_user, delete_user,
     create_user, get_user_by_username, get_user_by_email
 )
+from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from fastapi.responses import StreamingResponse
+from datetime import datetime
+from db.base import (
+    Customer, CustomerInfo, SalesGroup, GroupMarketingManager, GroupSeller,
+    Category, Product, PriceList, PriceListItem
+)
 
 router = APIRouter()
 
@@ -128,3 +137,165 @@ def delete_user_account(
         )
     
     return {"message": "Usuario eliminado exitosamente"}
+
+
+""" GET /export-xlsx - Exportar data del sistema a Excel por tipo """
+@router.get("/export-xlsx")
+def export_data_xlsx(
+    type: str = Query(..., description="Tipo de datos: clientes, vendedores, marketing, grupos, productos, precios"),
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Exporta datos a XLSX según el tipo solicitado.
+    Tipos válidos: clientes, vendedores, marketing, grupos, productos, precios
+    Solo accesible por admin.
+    """
+
+    valid_types = ["clientes", "vendedores", "marketing", "grupos", "productos", "precios"]
+    if type not in valid_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tipo inválido: '{type}'. Tipos válidos: {', '.join(valid_types)}"
+        )
+
+    wb = Workbook()
+    ws = wb.active
+
+    # Estilos para headers
+    header_font = Font(name="Calibri", bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="2F5496", end_color="2F5496", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center")
+
+    def style_headers(ws, headers):
+        ws.append(headers)
+        for col_idx, _ in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+
+    def auto_width(ws):
+        for col in ws.columns:
+            max_len = 0
+            col_letter = col[0].column_letter
+            for cell in col:
+                val = str(cell.value) if cell.value is not None else ""
+                max_len = max(max_len, len(val))
+            ws.column_dimensions[col_letter].width = min(max_len + 3, 50)
+
+    if type == "clientes":
+        ws.title = "Clientes"
+        style_headers(ws, [
+            "ID", "Username", "Email", "Nombre Completo", "Activo", "Agente ID",
+            "Razón Social", "RFC", "Grupo Ventas ID", "Lista Precios ID",
+            "Dirección 1", "Dirección 2", "Dirección 3", "Teléfono 1", "Teléfono 2", "Creado"
+        ])
+        for c in db.query(Customer).outerjoin(CustomerInfo).order_by(Customer.customer_id).all():
+            ci = c.customer_info
+            ws.append([
+                c.customer_id, c.username, c.email, c.full_name, c.is_active, c.agent_id,
+                ci.business_name if ci else "", ci.rfc if ci else "",
+                ci.sales_group_id if ci else "", ci.price_list_id if ci else "",
+                ci.address_1 if ci else "", ci.address_2 if ci else "", ci.address_3 if ci else "",
+                ci.telefono_1 if ci else "", ci.telefono_2 if ci else "",
+                c.created_at.strftime("%Y-%m-%d %H:%M") if c.created_at else ""
+            ])
+        filename_label = "clientes"
+
+    elif type == "vendedores":
+        ws.title = "Vendedores"
+        style_headers(ws, ["ID", "Username", "Email", "Nombre Completo", "Activo", "Creado"])
+        for u in db.query(User).filter(User.role == UserRole.seller).order_by(User.user_id).all():
+            ws.append([
+                u.user_id, u.username, u.email, u.full_name, u.is_active,
+                u.created_at.strftime("%Y-%m-%d %H:%M") if u.created_at else ""
+            ])
+        filename_label = "vendedores"
+
+    elif type == "marketing":
+        ws.title = "Marketing"
+        style_headers(ws, ["ID", "Username", "Email", "Nombre Completo", "Activo", "Creado"])
+        for u in db.query(User).filter(User.role == UserRole.marketing).order_by(User.user_id).all():
+            ws.append([
+                u.user_id, u.username, u.email, u.full_name, u.is_active,
+                u.created_at.strftime("%Y-%m-%d %H:%M") if u.created_at else ""
+            ])
+        filename_label = "marketing"
+
+    elif type == "grupos":
+        ws.title = "Grupos de Ventas"
+        style_headers(ws, ["ID", "Nombre", "Descripción", "Activo"])
+        for g in db.query(SalesGroup).order_by(SalesGroup.sales_group_id).all():
+            ws.append([g.sales_group_id, g.group_name, g.description, g.is_active])
+
+        # Segunda hoja: Miembros
+        ws2 = wb.create_sheet("Miembros")
+        style_headers(ws2, ["Grupo ID", "Grupo Nombre", "Tipo", "User ID", "Username", "Nombre Completo"])
+        for gm in db.query(GroupMarketingManager).all():
+            group = gm.sales_group
+            user = gm.marketing_user
+            ws2.append([
+                group.sales_group_id if group else "", group.group_name if group else "",
+                "Marketing", user.user_id if user else "", user.username if user else "",
+                user.full_name if user else ""
+            ])
+        for gs in db.query(GroupSeller).all():
+            group = gs.sales_group
+            user = gs.seller_user
+            ws2.append([
+                group.sales_group_id if group else "", group.group_name if group else "",
+                "Seller", user.user_id if user else "", user.username if user else "",
+                user.full_name if user else ""
+            ])
+        auto_width(ws2)
+        filename_label = "grupos_y_miembros"
+
+    elif type == "productos":
+        ws.title = "Productos"
+        style_headers(ws, [
+            "ID", "Código Barras", "Nombre", "Descripción", "Desc. 2", "Unidad",
+            "Precio Base", "IVA %", "Stock", "Activo", "Categoría ID"
+        ])
+        for p in db.query(Product).order_by(Product.product_id).all():
+            ws.append([
+                p.product_id, p.codebar, p.name, p.description, p.descripcion_2,
+                p.unidad_medida, float(p.base_price) if p.base_price else 0,
+                float(p.iva_percentage) if p.iva_percentage else 0,
+                p.stock_count, p.is_active, p.category_id
+            ])
+        filename_label = "inventario"
+
+    elif type == "precios":
+        ws.title = "Listas de Precios"
+        style_headers(ws, ["ID", "Nombre", "Descripción", "Activo"])
+        for pl in db.query(PriceList).order_by(PriceList.price_list_id).all():
+            ws.append([pl.price_list_id, pl.list_name, pl.description, pl.is_active])
+
+        # Segunda hoja: Items con markup
+        ws2 = wb.create_sheet("Markup por Producto")
+        style_headers(ws2, ["ID", "Lista ID", "Producto ID", "Producto Nombre", "Markup %", "Precio Final"])
+        for pli in db.query(PriceListItem).order_by(PriceListItem.price_list_id, PriceListItem.product_id).all():
+            product_name = pli.product.name if pli.product else ""
+            ws2.append([
+                pli.price_list_item_id, pli.price_list_id, pli.product_id, product_name,
+                float(pli.markup_percentage) if pli.markup_percentage else 0,
+                float(pli.final_price) if pli.final_price else 0
+            ])
+        auto_width(ws2)
+        filename_label = "listas_de_precios"
+
+    auto_width(ws)
+
+    # Generar respuesta
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"farmacruz_{filename_label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserPlus, faSearch, faUserCircle, faPencilAlt, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faSearch, faUserCircle, faPencilAlt, faTrashAlt, faFileExport } from '@fortawesome/free-solid-svg-icons';
 import customerService from '../../services/customerService';
 import priceListService from '../../services/priceListService';
 import { userService } from '../../services/userService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import PaginationButtons from '../common/PaginationButtons';
+import adminService from '../../services/adminService';
 
 export default function ClientManagement() {
   const [clients, setClients] = useState([]);
@@ -243,9 +244,14 @@ export default function ClientManagement() {
       <section className="dashboard-section">
         <div className="section-header">
           <h2 className="section-title">Gestión de Clientes</h2>
-          <button className="btn btn--primary btn--sm" onClick={openAddModal}>
-            <FontAwesomeIcon icon={faUserPlus} /> Añadir Cliente
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn--secondary btn--sm" onClick={() => adminService.exportXLSX('clientes')} title="Exportar a Excel">
+              <FontAwesomeIcon icon={faFileExport} /> Exportar Excel
+            </button>
+            <button className="btn btn--primary btn--sm" onClick={openAddModal}>
+              <FontAwesomeIcon icon={faUserPlus} /> Añadir Cliente
+            </button>
+          </div>
         </div>
 
         {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
