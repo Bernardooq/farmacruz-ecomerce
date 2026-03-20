@@ -194,15 +194,16 @@ def checkout_cart(checkout_data: CheckoutRequest,
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=str(e))
 
 
-""" POST /create-for-customer - Crear pedido para un cliente (Admin/Marketing) """
+""" POST /create-for-customer - Crear pedido para un cliente (Admin/Marketing/Seller) """
 @router.post("/create-for-customer", response_model=Order)
 def create_order_for_customer(
     order_data: DirectOrderCreate,
     current_user: User = Depends(get_current_seller_user),
     db: Session = Depends(get_db)):
     """
-    Permite a admin/marketing crear pedidos en nombre de clientes.
-    Marketing solo puede crear para clientes en sus grupos.
+    Permite a admin/marketing/seller crear pedidos en nombre de clientes.
+    Marketing y Seller solo pueden crear para clientes en sus grupos.
+    Pedidos creados por sellers quedan en pending_validation.
     """
     
     # Verificar que el cliente existe
@@ -213,12 +214,12 @@ def create_order_for_customer(
             detail="Cliente no encontrado"
         )
     
-    # VERIFICAR PERMISOS
-    if current_user.role != UserRole.marketing and current_user.role != UserRole.admin:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No tiene permisos para crear ordenes")
-    # Admin puede crear para cualquiera, marketing solo para sus grupos
-    if current_user.role == UserRole.marketing:
-        # Verificar que el cliente esté en un grupo que el marketing maneja
+    # VERIFICAR PERMISOS - Admin, Marketing y Seller pueden crear pedidos
+    if current_user.role not in [UserRole.admin, UserRole.marketing, UserRole.seller]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tiene permisos para crear ordenes")
+    
+    # Admin puede crear para cualquiera; marketing y seller solo para clientes en sus grupos
+    if current_user.role in [UserRole.marketing, UserRole.seller]:
         customer_info = db.query(CustomerInfo).filter(
             CustomerInfo.customer_id == order_data.customer_id
         ).first()

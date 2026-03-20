@@ -7,7 +7,7 @@ import ProductSearchGrid from './ProductSearchGrid';
 import SimilarProductsModal from './SimilarProductsModal';
 import StockConflictBanner from './StockConflictBanner';
 
-export default function ModalCreateOrder({ visible, onClose, onSuccess }) {
+export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole }) {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [items, setItems] = useState([]);
     const [shippingCost, setShippingCost] = useState(0);
@@ -126,7 +126,7 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess }) {
                         {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
                         {!selectedCustomer ? (
-                            <CustomerSelector onSelect={setSelectedCustomer} visible={visible} />
+                            <CustomerSelector onSelect={setSelectedCustomer} visible={visible} userRole={userRole} />
                         ) : (
                             <>
                                 <div className="card mb-4 p-3">

@@ -159,7 +159,7 @@ export default function AllOrders() {
       {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
       <div className="dashboard-controls">
-        {(user?.role === 'admin' || user?.role === 'marketing') && (
+        {(user?.role === 'admin' || user?.role === 'marketing' || user?.role === 'seller') && (
           <button className="btn btn--primary btn--sm" onClick={() => setShowCreateModal(true)} title="Crear Pedido para Cliente">
             <FontAwesomeIcon icon={faPlus} /> Crear Pedido
           </button>
@@ -243,7 +243,7 @@ export default function AllOrders() {
       <ModalOrderDetails visible={showModal} order={selectedOrder} isAdmin={user?.role === 'admin'} onClose={() => { setShowModal(false); setSelectedOrder(null); }} />
       <ModalAssignSeller visible={showAssignModal} order={orderToAssign} groupId={assignGroupId} onAssign={handleAssign} onClose={() => { setShowAssignModal(false); setOrderToAssign(null); setAssignGroupId(null); }} />
       <ModalEditOrder visible={showEditModal} order={orderToEdit} onSave={handleSaveEditedOrder} onClose={() => { setShowEditModal(false); setOrderToEdit(null); }} />
-      <ModalCreateOrder visible={showCreateModal} onClose={() => setShowCreateModal(false)} onSuccess={handleCreateOrderSuccess} />
+      <ModalCreateOrder visible={showCreateModal} onClose={() => setShowCreateModal(false)} onSuccess={handleCreateOrderSuccess} userRole={user?.role} />
     </section>
   );
 }
