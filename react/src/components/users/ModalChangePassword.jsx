@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { userService } from '../../services/userService';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 export default function ModalChangePassword({ isOpen, onClose }) {
     const [formData, setFormData] = useState({ newPassword: '', confirmPassword: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -21,6 +24,7 @@ export default function ModalChangePassword({ isOpen, onClose }) {
             await userService.updateCurrentUser({ password: formData.newPassword });
             alert('Contraseña actualizada exitosamente');
             setFormData({ newPassword: '', confirmPassword: '' });
+            setShowPassword(false);
             onClose();
         } catch (err) { setError(err.message || 'Error al actualizar la contraseña'); }
         finally { setLoading(false); }
@@ -40,7 +44,18 @@ export default function ModalChangePassword({ isOpen, onClose }) {
                         {error && <div className="alert alert--danger">{error}</div>}
                         <div className="form-group">
                             <label className="form-group__label" htmlFor="newPassword">Nueva Contraseña *</label>
-                            <input className="input" type="password" id="newPassword" name="newPassword" value={formData.newPassword} onChange={handleChange} required disabled={loading} minLength="8" placeholder="Mínimo 8 caracteres" />
+                            <div style={{ position: 'relative' }}>
+                                <input className="input" type={showPassword ? 'text' : 'password'} id="newPassword" name="newPassword" value={formData.newPassword} onChange={handleChange} required disabled={loading} minLength="8" placeholder="Mínimo 8 caracteres" style={{ paddingRight: '2.5rem' }} />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}
+                                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                    tabIndex={-1}
+                                >
+                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                </button>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label className="form-group__label" htmlFor="confirmPassword">Confirmar Contraseña *</label>

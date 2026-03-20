@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 export default function ModalEditProfile({ isOpen, onClose }) {
     const { user, login } = useAuth(); // Need login to update context if profile changes
@@ -22,6 +24,7 @@ export default function ModalEditProfile({ isOpen, onClose }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (isOpen && user) {
@@ -29,6 +32,7 @@ export default function ModalEditProfile({ isOpen, onClose }) {
             setError('');
             setSuccess('');
             setPasswordData({ newPassword: '', confirmPassword: '' });
+            setShowPassword(false);
             setActiveTab('profile');
         }
     }, [isOpen, user]);
@@ -192,18 +196,30 @@ export default function ModalEditProfile({ isOpen, onClose }) {
                         <form onSubmit={handlePasswordSubmit} className="modal__form">
                             <div className="form-group">
                                 <label className="form-group__label" htmlFor="newPassword">Nueva Contraseña</label>
-                                <input
-                                    className="input"
-                                    type="password"
-                                    id="newPassword"
-                                    name="newPassword"
-                                    value={passwordData.newPassword}
-                                    onChange={handlePasswordChange}
-                                    required
-                                    disabled={loading}
-                                    minLength="8"
-                                    placeholder="Mínimo 8 caracteres"
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        className="input"
+                                        type={showPassword ? 'text' : 'password'}
+                                        id="newPassword"
+                                        name="newPassword"
+                                        value={passwordData.newPassword}
+                                        onChange={handlePasswordChange}
+                                        required
+                                        disabled={loading}
+                                        minLength="8"
+                                        placeholder="Mínimo 8 caracteres"
+                                        style={{ paddingRight: '2.5rem' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}
+                                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                        tabIndex={-1}
+                                    >
+                                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                    </button>
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label className="form-group__label" htmlFor="confirmPassword">Confirmar Contraseña</label>
