@@ -10,6 +10,11 @@ ordenados de mayor a menor.
 
 from pathlib import Path
 import os
+import sys
+
+# Agregar la carpeta 'servicios' al path para poder importar config.py
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from config import (IMAGES_FOLDER, IMAGES_FOLDER_INPUT)
 
 # ============================================================================

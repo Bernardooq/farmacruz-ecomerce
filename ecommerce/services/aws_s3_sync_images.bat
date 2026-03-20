@@ -1,5 +1,5 @@
 @echo off
-cd /d "%~dp0.."
+cd /d "C:\ecommerce"
 echo ===================================================
 echo Sincronizacion de Imagenes a S3 (farmacruz-imgs)
 echo ===================================================
@@ -12,11 +12,11 @@ set LOCAL_DIR="C:\ecommerce\compressedIMG"
 if "%LOCAL_DIR%"=="" goto error
 
 echo.
-echo Sincronizando: "%LOCAL_DIR%" -> s3://farmacruz-imgs
+echo Sincronizando: "%LOCAL_DIR%" a s3://farmacruz-imgs
 echo Perfil AWS: s3-sync-farmacruz
 echo.
 
-aws s3 sync "%LOCAL_DIR%" s3://farmacruz-imgs --profile s3-sync-farmacruz
+aws s3 sync "%LOCAL_DIR%" s3://farmacruz-imgs --exclude "*" --include "*.webp" --cache-control "max-age=2592000" --profile s3-sync-farmacruz
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

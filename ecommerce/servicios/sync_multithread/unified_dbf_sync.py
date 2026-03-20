@@ -202,18 +202,7 @@ def main():
     except Exception as e:
         print(f"  ⚠ Products cleanup failed: {e}")
     
-    # Cleanup usuarios
-    try:
-        response = requests.post(
-            f"{BACKEND_URL}/sync/cleanup-users",
-            json={"last_sync": sync_time},
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=30
-        )
-        response.raise_for_status()
-        print("  ✓ Usuarios limpiados")
-    except Exception as e:
-        print(f"  ⚠ Users cleanup failed: {e}")
+
 
     end_total = datetime.now()
     print(f"\n{'='*60}")

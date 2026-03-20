@@ -12,7 +12,7 @@ Este servicio tiene dos partes:
 Asegurate de activar el venv de servicios (creado en la guía de Sync) e instalar Pillow:
 
 ```cmd
-cd C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios
+cd C:\ecommerce\servicios
 venv\Scripts\activate
 pip install pillow
 ```
@@ -44,13 +44,13 @@ echo --- INICIANDO SERVICIO DE IMAGENES ---
 date /t & time /t
 
 echo [1/2] Comprimiendo imagenes...
-cd /d "C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios\images_service"
+cd /d "C:\ecommerce\servicios\images_service"
 :: Usamos el Python del venv de servicios
-"C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios\venv\Scripts\python.exe" compress_images_to_webp.py
+"C:\ecommerce\servicios\venv\Scripts\python.exe" compress_images_to_webp.py
 
 echo [2/2] Sincronizando con AWS S3...
-:: Reemplaza 'farmacruz-images-bucket' con el bucket real
-aws s3 sync "C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\backend\images" s3://farmacruz-images-bucket --exclude "*" --include "*.webp" --cache-control "max-age=31536000"
+:: Reemplaza 'farmacruz-imgs' con el bucket real
+aws s3 sync "C:\ecommerce\compressedIMG" s3://farmacruz-imgs --exclude "*" --include "*.webp" --cache-control "max-age=31536000"
 
 echo --- FINALIZADO ---
 ```
@@ -69,7 +69,7 @@ echo --- FINALIZADO ---
     *   Inicio: **02:00:00 AM** (Cuando la tienda está tranquila).
 5.  **Acciones:**
     *   Programa: `run_daily_images.bat`
-    *   Iniciar en: `C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios\images_service`
+    *   Iniciar en: `C:\ecommerce\servicios\images_service`
 
 
 ### Extra: Cache-Control imagenes de ecommerce

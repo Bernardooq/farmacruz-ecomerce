@@ -25,7 +25,7 @@ DBF_DIR = Path("C:\\VSAI\\Empresas\\PFC2026")
 
 # Directorio donde están las imágenes de productos
 IMAGES_FOLDER =Path("C:\\ecommerce\\compressedIMG")
-IMAGES_FOLDER_INPUT = Path("C:\\ecommerce\\compressedIMG")
+IMAGES_FOLDER_INPUT = Path("C:\\VSAI\\Empresas\\PFC2026")
 
 # URL del CDN para imágenes
 CDN_URL = "https://img.farmacruz.com.mx"

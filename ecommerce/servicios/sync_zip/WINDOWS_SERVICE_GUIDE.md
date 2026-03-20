@@ -9,7 +9,7 @@ Como usarás un `venv` específico para servicios, primero debes crearlo e insta
 
 1.  Abre una terminal (`cmd` o `powershell`) en la carpeta `servicios`:
     ```cmd
-    cd C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios
+    cd C:\ecommerce\servicios
     python -m venv venv
     ```
 2.  Actívalo e instala las dependencias:
@@ -40,10 +40,10 @@ Esta tarea mantendrá actualizados Precios, Existencias y Nuevos Productos.
 5.  **Pestaña Acciones:**
     *   Nuevo...
     *   Acción: **Iniciar un programa**.
-    *   Programa o script: `C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios\venv\Scripts\python.exe`
+    *   Programa o script: `C:\ecommerce\servicios\venv\Scripts\python.exe`
         *   **IMPORTANTE:** Usamos el Python del `venv` de servicios.
     *   Agregar argumentos: `upload_products_sync.py`
-    *   Iniciar en (Start in): `C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios\sync_zip`
+    *   Iniciar en (Start in): `C:\ecommerce\servicios\sync_zip`
 
 6.  **Pestaña Condiciones:**
     *   Desmarca "Iniciar la tarea solo si el equipo está conectado a corriente AC".
@@ -56,9 +56,9 @@ Esta tarea mantendrá actualizados Precios, Existencias y Nuevos Productos.
 2.  **General:** Nombre `FarmaCruz_Sync_Users`.
 3.  **Desencadenadores:** Repetir tarea cada **1 hora**.
 4.  **Acciones:**
-    *   Programa: `C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios\venv\Scripts\python.exe`
+    *   Programa: `C:\ecommerce\servicios\venv\Scripts\python.exe`
     *   Argumentos: `upload_users_sync.py`
-    *   Iniciar en: `C:\Users\berna\Documents\GitProjects\farmacruz-ecomerce\servicios\sync_zip`
+    *   Iniciar en: `C:\ecommerce\servicios\sync_zip`
 
 ---
 

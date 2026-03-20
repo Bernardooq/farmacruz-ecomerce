@@ -232,19 +232,7 @@ def main():
         except Exception as e:
             print(f"  ⚠ Cleanup warning: {e}")
         
-        # Cleanup usuarios no sincronizados
-        print("\n--- CLEANUP: USERS ---")
-        try:
-            response = requests.post(
-                f"{BACKEND_URL}/sync/cleanup-users",
-                json={"last_sync": cleanup_time},
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=30
-            )
-            response.raise_for_status()
-            print("  ✓ Usuarios limpiados")
-        except Exception as e:
-            print(f"  ⚠ Cleanup warning: {e}")
+
             
     except Exception as e:
         print(f"\nCRITICAL FAILURE: {e}")
