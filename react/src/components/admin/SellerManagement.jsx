@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserTie, faSearch, faUserCircle, faPencilAlt, faTrashAlt, faFileExport } from '@fortawesome/free-solid-svg-icons';
+import { faUserTie, faSearch, faUserCircle, faPencilAlt, faTrashAlt, faFileExport, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import adminService from '../../services/adminService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
@@ -133,6 +133,18 @@ export default function SellerManagement() {
     }
   };
 
+  const handlePromote = async (seller) => {
+    if (!window.confirm(`¿Promover a ${seller.full_name} de Vendedor a Marketing?\n\nSus membresías de grupo se migrarán automáticamente.`)) return;
+    try {
+      await adminService.promoteUser(seller.user_id);
+      alert(`${seller.full_name} promovido a Marketing exitosamente`);
+      loadSellers();
+    } catch (err) {
+      setError(err.detail || err.message || 'Error al promover vendedor');
+      console.error('Failed to promote seller:', err);
+    }
+  };
+
   if (loading && sellers.length === 0) {
     return <LoadingSpinner message="Cargando vendedores..." />;
   }
@@ -205,6 +217,9 @@ export default function SellerManagement() {
                       </span>
                     </td>
                     <td data-label="Acciones" className="actions-cell">
+                      <button className="btn btn--icon btn--ghost" onClick={() => handlePromote(seller)} aria-label="Promover a Marketing" title="Promover a Marketing">
+                        <FontAwesomeIcon icon={faExchangeAlt} />
+                      </button>
                       <button className="btn btn--icon btn--ghost" onClick={() => openEditModal(seller)} aria-label="Editar vendedor">
                         <FontAwesomeIcon icon={faPencilAlt} />
                       </button>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserTie, faUsers, faUsersGear, faSearch, faUserCircle,
-  faPencilAlt, faTrashAlt, faPlus, faEye, faFileExport
+  faPencilAlt, faTrashAlt, faPlus, faEye, faFileExport, faExchangeAlt
 } from '@fortawesome/free-solid-svg-icons';
 import adminService from '../../services/adminService';
 import salesGroupService from '../../services/salesGroupService';
@@ -139,6 +139,19 @@ export default function SalesTeamManagement() {
   const handleUserSaved = () => { setShowUserModal(false); loadData(); };
   const handleGroupSaved = () => { setShowGroupModal(false); loadGroups(); };
 
+  const handlePromoteUser = async (user, role) => {
+    const newRole = role === 'seller' ? 'Marketing' : 'Vendedor';
+    if (!window.confirm(`¿Promover a ${user.full_name} de ${role === 'seller' ? 'Vendedor' : 'Marketing'} a ${newRole}?\n\nSus membresías de grupo se migrarán automáticamente.`)) return;
+    try {
+      await adminService.promoteUser(user.user_id);
+      alert(`${user.full_name} promovido a ${newRole} exitosamente`);
+      loadData();
+    } catch (err) {
+      setError(err.detail || err.message || 'Error al promover usuario');
+      console.error('Failed to promote user:', err);
+    }
+  };
+
   // ─── Render helpers ──────────────────────────
 
   const renderUserTable = (users, role) => (
@@ -209,6 +222,9 @@ export default function SalesTeamManagement() {
                     </span>
                   </td>
                   <td data-label="Acciones" className="actions-cell">
+                    <button className="btn btn--icon btn--ghost" onClick={() => handlePromoteUser(user, role)} aria-label={`Promover a ${role === 'seller' ? 'Marketing' : 'Vendedor'}`} title={`Promover a ${role === 'seller' ? 'Marketing' : 'Vendedor'}`}>
+                      <FontAwesomeIcon icon={faExchangeAlt} />
+                    </button>
                     <button className="btn btn--icon btn--ghost" onClick={() => openEditUserModal(user, role)} aria-label={`Editar ${role}`}>
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>

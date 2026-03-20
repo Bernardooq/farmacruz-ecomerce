@@ -35,6 +35,11 @@ export const adminService = {
     return apiService.delete(`/admin/users/${id}`)
   },
 
+  // Promover usuario: seller <-> marketing (toggle)
+  async promoteUser(id) {
+    return apiService.put(`/admin/users/${id}/promote`)
+  },
+
   // ==================== Reportes ====================
 
   // Obtener reporte de ventas por rango de fechas

@@ -139,6 +139,89 @@ def delete_user_account(
     return {"message": "Usuario eliminado exitosamente"}
 
 
+""" PUT /users/{user_id}/promote - Cambiar rol seller<->marketing """
+@router.put("/users/{user_id}/promote")
+def promote_user(
+    user_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Promueve un usuario entre seller <-> marketing.
+    - Si es seller -> se convierte en marketing
+    - Si es marketing -> se convierte en seller
+    - NUNCA se puede promover a/desde admin
+    Todas las membresías de grupo se migran automáticamente.
+    Solo accesible por admin.
+    """
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado"
+        )
+
+    # Bloquear cualquier operación con admin
+    if user.role == UserRole.admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede cambiar el rol de un administrador"
+        )
+
+    if user.role == UserRole.seller:
+        # Seller → Marketing: mover GroupSeller → GroupMarketingManager
+        seller_memberships = db.query(GroupSeller).filter(GroupSeller.seller_id == user_id).all()
+
+        for membership in seller_memberships:
+            # Verificar que no exista ya como marketing en ese grupo
+            existing = db.query(GroupMarketingManager).filter(
+                GroupMarketingManager.sales_group_id == membership.sales_group_id,
+                GroupMarketingManager.marketing_id == user_id
+            ).first()
+            if not existing:
+                new_membership = GroupMarketingManager(
+                    sales_group_id=membership.sales_group_id,
+                    marketing_id=user_id
+                )
+                db.add(new_membership)
+            db.delete(membership)
+
+        user.role = UserRole.marketing
+        new_role = "marketing"
+
+    elif user.role == UserRole.marketing:
+        # Marketing → Seller: mover GroupMarketingManager → GroupSeller
+        marketing_memberships = db.query(GroupMarketingManager).filter(
+            GroupMarketingManager.marketing_id == user_id
+        ).all()
+
+        for membership in marketing_memberships:
+            # Verificar que no exista ya como seller en ese grupo
+            existing = db.query(GroupSeller).filter(
+                GroupSeller.sales_group_id == membership.sales_group_id,
+                GroupSeller.seller_id == user_id
+            ).first()
+            if not existing:
+                new_membership = GroupSeller(
+                    sales_group_id=membership.sales_group_id,
+                    seller_id=user_id
+                )
+                db.add(new_membership)
+            db.delete(membership)
+
+        user.role = UserRole.seller
+        new_role = "seller"
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": f"Usuario '{user.full_name}' promovido a {new_role} exitosamente",
+        "user_id": user.user_id,
+        "new_role": new_role,
+        "full_name": user.full_name
+    }
+
 """ GET /export-xlsx - Exportar data del sistema a Excel por tipo """
 @router.get("/export-xlsx")
 def export_data_xlsx(

@@ -69,8 +69,12 @@ def bulk_ensure_seller_groups(db: Session, seller_ids: List[int]) -> None:
     # 5. Ensure all expected groups are in the map (already done by update)
     
     # 6. Asignar sellers a sus grupos (bulk upsert)
+    # IMPORTANTE: Solo asignar como GroupSeller si el usuario SIGUE siendo seller
+    # Si fue promovido a marketing, no re-crear la entrada de GroupSeller
     seller_assignments = []
     for seller in sellers:
+        if seller.role != 'seller':
+            continue  # Skip usuarios promovidos a marketing
         group_name = f"Grupo {seller.full_name}"
         group = group_name_map.get(group_name)
         if group:
