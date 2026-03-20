@@ -152,7 +152,7 @@ def export_data_xlsx(
     Solo accesible por admin.
     """
 
-    valid_types = ["clientes", "vendedores", "marketing", "grupos", "productos", "precios"]
+    valid_types = ["clientes", "vendedores", "marketing", "grupos", "productos"]
     if type not in valid_types:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -265,25 +265,6 @@ def export_data_xlsx(
                 p.stock_count, p.is_active, p.category_id
             ])
         filename_label = "inventario"
-
-    elif type == "precios":
-        ws.title = "Listas de Precios"
-        style_headers(ws, ["ID", "Nombre", "Descripción", "Activo"])
-        for pl in db.query(PriceList).order_by(PriceList.price_list_id).all():
-            ws.append([pl.price_list_id, pl.list_name, pl.description, pl.is_active])
-
-        # Segunda hoja: Items con markup
-        ws2 = wb.create_sheet("Markup por Producto")
-        style_headers(ws2, ["ID", "Lista ID", "Producto ID", "Producto Nombre", "Markup %", "Precio Final"])
-        for pli in db.query(PriceListItem).order_by(PriceListItem.price_list_id, PriceListItem.product_id).all():
-            product_name = pli.product.name if pli.product else ""
-            ws2.append([
-                pli.price_list_item_id, pli.price_list_id, pli.product_id, product_name,
-                float(pli.markup_percentage) if pli.markup_percentage else 0,
-                float(pli.final_price) if pli.final_price else 0
-            ])
-        auto_width(ws2)
-        filename_label = "listas_de_precios"
 
     auto_width(ws)
 
