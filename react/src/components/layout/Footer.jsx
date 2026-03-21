@@ -12,7 +12,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer__bottom">
-        &copy; 2025 Farmacruz. Todos los derechos reservados.
+        &copy; 2026 Farmacruz. Todos los derechos reservados.
       </div>
     </footer>
   );

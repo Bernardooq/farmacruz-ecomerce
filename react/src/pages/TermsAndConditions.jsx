@@ -39,13 +39,13 @@ export default function TermsAndConditions() {
         ogType="website"
         schema={breadcrumbSchema}
       />
-      
+
       {renderHeader()}
 
       <main className="page__content">
         <div className="content-page">
           <h1>Términos y Condiciones</h1>
-          <p className="text-muted text-sm mb-8">Última actualización: Noviembre 2024</p>
+          <p className="text-muted text-sm mb-8">Última actualización: Marzo 2026</p>
 
           <section>
             <h2>1. Aceptación de los Términos</h2>

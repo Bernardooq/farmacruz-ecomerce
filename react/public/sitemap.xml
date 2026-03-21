@@ -5,7 +5,7 @@
   <!-- Página Principal -->
   <url>
     <loc>https://farmacruz.com.mx/</loc>
-    <lastmod>2024-11-01</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -13,7 +13,7 @@
   <!-- Sobre Nosotros -->
   <url>
     <loc>https://farmacruz.com.mx/about</loc>
-    <lastmod>2024-11-01</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -21,7 +21,7 @@
   <!-- Contacto -->
   <url>
     <loc>https://farmacruz.com.mx/contact</loc>
-    <lastmod>2024-11-01</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -29,7 +29,7 @@
   <!-- Términos y Condiciones -->
   <url>
     <loc>https://farmacruz.com.mx/terms</loc>
-    <lastmod>2024-11-01</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -37,7 +37,7 @@
   <!-- Política de Privacidad -->
   <url>
     <loc>https://farmacruz.com.mx/privacy</loc>
-    <lastmod>2024-11-01</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
