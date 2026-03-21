@@ -3,8 +3,11 @@ export default function Hero() {
     <section className="hero">
       <div className="hero__bg-image"></div>
       <div className="hero__content">
-        <h1 className="hero__title">Farmacruz - Distribuidora Farmacéutica</h1>
-        <p className="hero__subtitle">Tu socio confiable en distribución farmacéutica</p>
+        <h1 className="hero__title">
+          Farmacruz
+          <span className="sr-only"> - Distribuidor de Medicamentos y Productos Farmacéuticos B2B</span>
+        </h1>
+        <h2 className="hero__subtitle">Tu socio confiable en distribución farmacéutica</h2>
       </div>
     </section>
   );
