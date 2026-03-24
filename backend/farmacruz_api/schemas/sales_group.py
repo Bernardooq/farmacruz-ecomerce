@@ -135,3 +135,7 @@ class SalesGroupWithMembers(SalesGroupInDBBase):
     marketing_count: Optional[int] = 0  # Numero de marketing managers
     seller_count: Optional[int] = 0  # Numero de sellers
     customer_count: Optional[int] = 0  # Numero de customers
+
+class SalesGroupPaginatedResponse(BaseModel):
+    items: List[SalesGroupWithMembers]
+    total: int

@@ -21,6 +21,7 @@ import Footer from '../components/layout/Footer';
 import OrderHistory from '../components/orders/OrderHistory';
 import PaginationButtons from '../components/common/PaginationButtons';
 import OrderModal from '../components/orders/OrderModal';
+import MyTickets from '../components/tickets/MyTickets';
 import { userService } from '../services/userService';
 import orderService from '../services/orderService';
 
@@ -291,6 +292,13 @@ export default function Profile() {
               canGoNext={hasMore}
             />
           )}
+
+          {/* ============================================ */}
+          {/* SECCIÓN DE TICKETS DE SOPORTE               */}
+          {/* ============================================ */}
+          <div style={{ marginTop: '2rem' }}>
+            <MyTickets />
+          </div>
         </div>
       </main>
 

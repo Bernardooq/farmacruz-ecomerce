@@ -28,6 +28,7 @@ import ClientManagement from '../components/admin/ClientManagement';
 import SalesTeamManagement from '../components/admin/SalesTeamManagement';
 import SalesReport from '../components/sales/SalesReport';
 import PriceListManager from '../components/admin/PriceListManager';
+import TicketDashboard from '../components/tickets/TicketDashboard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 // ============================================
@@ -40,7 +41,8 @@ const ADMIN_TABS = [
   { id: 'vendedores', label: 'Vendedores', icon: '👔' },
   { id: 'pedidos', label: 'Pedidos', icon: '📦' },
   { id: 'inventario', label: 'Inventario', icon: '📋' },
-  { id: 'precios', label: 'Listas de Precios', icon: '💰' }
+  { id: 'precios', label: 'Listas de Precios', icon: '💰' },
+  { id: 'soporte', label: 'Soporte', icon: '🎫' }
 ];
 
 export default function AdminDashboard() {
@@ -96,6 +98,8 @@ export default function AdminDashboard() {
         );
       case 'precios':
         return <PriceListManager />;
+      case 'soporte':
+        return <TicketDashboard />;
       default:
         return summary && <SummaryCards summary={summary} />;
     }

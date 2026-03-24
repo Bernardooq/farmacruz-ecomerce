@@ -40,6 +40,11 @@ export const adminService = {
     return apiService.put(`/admin/users/${id}/promote`)
   },
 
+  // Asignar masivamente grupos a un usuario (seller o marketing)
+  async assignUserGroups(id, groupIds) {
+    return apiService.put(`/sales-groups/users/${id}/groups`, { group_ids: groupIds })
+  },
+
   // ==================== Reportes ====================
 
   // Obtener reporte de ventas por rango de fechas

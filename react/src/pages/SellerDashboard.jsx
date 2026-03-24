@@ -18,6 +18,7 @@ import SummaryCards from '../components/sales/SummaryCards';
 import AllOrders from '../components/orders/AllOrders';
 import InventoryManager from '../components/products/InventoryManager';
 import CategoryManagement from '../components/products/CategoryManagement';
+import MyTickets from '../components/tickets/MyTickets';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 
@@ -26,7 +27,8 @@ import ErrorMessage from '../components/common/ErrorMessage';
 // ============================================
 const SELLER_TABS = [
   { id: 'pedidos', label: 'Pedidos', icon: '📦' },
-  { id: 'inventario', label: 'Inventario', icon: '📋' }
+  { id: 'inventario', label: 'Inventario', icon: '📋' },
+  { id: 'soporte', label: 'Soporte', icon: '🎫' }
 ];
 
 export default function SellerDashboard() {
@@ -79,6 +81,8 @@ export default function SellerDashboard() {
             <CategoryManagement />
           </>
         );
+      case 'soporte':
+        return <MyTickets />;
       default:
         return <AllOrders />;
     }

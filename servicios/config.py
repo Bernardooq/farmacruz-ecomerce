@@ -11,8 +11,8 @@ from pathlib import Path
 # BACKEND API CONFIGURATION
 # ============================================================================
 
-BACKEND_URL = "https://api.farmacruz.com.mx/api/v1"
-# BACKEND_URL = "http://localhost:8000/api/v1"
+# BACKEND_URL = "https://api.farmacruz.com.mx/api/v1"
+BACKEND_URL = "http://localhost:8000/api/v1"
 ADMIN_USERNAME = "syncadminssuser2026"
 ADMIN_PASSWORD = "ahc4gjnw40blssrtvhjfl4563"
 

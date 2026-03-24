@@ -40,7 +40,8 @@ from . import (
     customers,
     catalog,
     sync_dbf,
-    sync_dbf_upload
+    sync_dbf_upload,
+    tickets
 )
 
 # Router principal que agrupa todos los modulos
@@ -138,4 +139,11 @@ api_router.include_router(
     sync_dbf_upload.router,
     prefix="/sync-upload",
     tags=["Sincronizacion DBF Upload"]
+)
+
+# === SOPORTE (TICKETS) ===
+api_router.include_router(
+    tickets.router,
+    prefix="/tickets",
+    tags=["Tickets de Soporte"]
 )

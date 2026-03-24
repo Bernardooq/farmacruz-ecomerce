@@ -22,6 +22,7 @@ import AllOrders from '../components/orders/AllOrders';
 import MarketingGroupsView from '../components/admin/MarketingGroupsView';
 import InventoryManager from '../components/products/InventoryManager';
 import CategoryManagement from '../components/products/CategoryManagement';
+import TicketDashboard from '../components/tickets/TicketDashboard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 
@@ -31,7 +32,8 @@ import ErrorMessage from '../components/common/ErrorMessage';
 const MARKETING_TABS = [
     { id: 'pedidos', label: 'Pedidos', icon: '📦' },
     { id: 'inventario', label: 'Inventario', icon: '📋' },
-    { id: 'grupos', label: 'Grupos de Ventas', icon: '👥' }
+    { id: 'grupos', label: 'Grupos de Ventas', icon: '👥' },
+    { id: 'soporte', label: 'Soporte', icon: '🎫' }
 ];
 
 export default function MarketingDashboard() {
@@ -87,6 +89,8 @@ export default function MarketingDashboard() {
                 );
             case 'grupos':
                 return <MarketingGroupsView />;
+            case 'soporte':
+                return <TicketDashboard />;
             default:
                 return <AllOrders />;
         }

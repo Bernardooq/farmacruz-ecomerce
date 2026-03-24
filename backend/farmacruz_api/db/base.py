@@ -30,6 +30,27 @@ class UserRole(str, enum.Enum):
     seller = "seller"
 
 
+class TicketStatus(str, enum.Enum):
+    open = "open"
+    in_progress = "in_progress"
+    resolved = "resolved"
+    cancelled = "cancelled"
+    escalated = "escalated"
+
+class TicketPriority(str, enum.Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+    urgent = "urgent"
+
+class CreatorType(str, enum.Enum):
+    customer = "customer"
+    user = "user"  # Admin, Marketing, Seller
+
+class SenderType(str, enum.Enum):
+    customer = "customer"
+    user = "user"
+
 class OrderStatus(str, enum.Enum):
     """
     Estados del ciclo de vida de un pedido
@@ -447,3 +468,42 @@ class ProductRecommendation(Base):
     # Relaciones para navegar fácilmente
     product = relationship("Product", foreign_keys=[product_id], back_populates="suggested_products")
     recommended_product = relationship("Product", foreign_keys=[recommended_product_id], backref="recommendations_in")
+
+
+class Ticket(Base):
+    """
+    Tickets de Soporte generados por Clientes o Vendedores.
+    Los tickets son atendidos por Marketing o Admin.
+    """
+    __tablename__ = "tickets"
+
+    ticket_id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(SQLAlchemyEnum(TicketStatus), nullable=False, default=TicketStatus.open, index=True)
+    priority = Column(SQLAlchemyEnum(TicketPriority), nullable=False, default=TicketPriority.medium)
+    creator_id = Column(Integer, nullable=False, index=True)
+    creator_type = Column(SQLAlchemyEnum(CreatorType), nullable=False)
+    assigned_to = Column(Integer, ForeignKey("users.user_id"), nullable=True, index=True)  # Marketing o Admin
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    assignee = relationship("User", foreign_keys=[assigned_to])
+    messages = relationship("TicketMessage", back_populates="ticket", cascade="all, delete-orphan", order_by="TicketMessage.created_at")
+
+
+class TicketMessage(Base):
+    """
+    Mensajes dentro de un hilo de Ticket de Soporte.
+    Pueden ser enviados por el Creador (Customer/Seller) o por el Agente (Marketing/Admin).
+    """
+    __tablename__ = "ticket_messages"
+
+    message_id = Column(Integer, primary_key=True, autoincrement=True)
+    ticket_id = Column(Integer, ForeignKey("tickets.ticket_id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_id = Column(Integer, nullable=False)
+    sender_type = Column(SQLAlchemyEnum(SenderType), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), index=True)
+
+    ticket = relationship("Ticket", back_populates="messages")

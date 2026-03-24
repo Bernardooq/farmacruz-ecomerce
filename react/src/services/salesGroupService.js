@@ -83,6 +83,11 @@ const salesGroupService = {
     return apiService.get('/sales-groups/my-groups', params);
   },
 
+  // Get User Group IDs (for admin assigning modal)
+  async getUserGroupIds(userId) {
+    return apiService.get(`/sales-groups/users/${userId}/groups`);
+  },
+
   // Sellers assignables para un pedido: filtrados por el grupo del cliente
   // Admin ve todos los del grupo; Marketing solo los de sus propios grupos.
   async getSellersByGroup(groupId, params = {}) {

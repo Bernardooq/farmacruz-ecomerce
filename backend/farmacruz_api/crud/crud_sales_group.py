@@ -60,8 +60,8 @@ def get_sales_groups(db: Session, skip: int = 0, limit: int = 100, is_active: Op
         query = query.filter(
             SalesGroup.group_name.ilike(search_term)
         )
-    
-    return query.offset(skip).limit(limit).all()
+    total = query.count()
+    return query.offset(skip).limit(limit).all(), total
 
 """ Actualiza un grupo de ventas existente """
 def update_sales_group(db: Session, group_id: int, group: SalesGroupUpdate) -> Optional[SalesGroup]:
@@ -513,3 +513,37 @@ def user_can_manage_order(db: Session, user_id: int, customer_id: int, user_role
 def user_belongs_to_group(db: Session, user_id: int, group_id: int) -> bool:    
     user_groups = get_user_groups(db, user_id)
     return group_id in user_groups
+
+""" Asignacion masiva de grupos a un usuario """
+def assign_user_groups_bulk(db: Session, user_id: int, group_ids: List[int]) -> dict:
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        raise ValueError("Usuario no encontrado")
+
+    if user.role == UserRole.admin:
+        raise ValueError("No se pueden asignar grupos a un administrador")
+
+    # Validar grupos
+    if group_ids:
+        existing = db.query(SalesGroup.sales_group_id).filter(SalesGroup.sales_group_id.in_(group_ids)).all()
+        existing_ids = {g[0] for g in existing}
+        if len(existing_ids) != len(set(group_ids)):
+            raise ValueError("Uno o más IDs de grupo proporcionados no existen.")
+
+    if user.role == UserRole.marketing:
+        db.query(GroupMarketingManager).filter(GroupMarketingManager.marketing_id == user_id).delete(synchronize_session=False)
+        if group_ids:
+            new_memberships = [GroupMarketingManager(sales_group_id=g_id, marketing_id=user_id) for g_id in set(group_ids)]
+            db.bulk_save_objects(new_memberships)
+
+    elif user.role == UserRole.seller:
+        db.query(GroupSeller).filter(GroupSeller.seller_id == user_id).delete(synchronize_session=False)
+        if group_ids:
+            new_memberships = [GroupSeller(sales_group_id=g_id, seller_id=user_id) for g_id in set(group_ids)]
+            db.bulk_save_objects(new_memberships)
+
+    db.commit()
+    return {
+        "message": f"Grupos asignados exitosamente a {user.full_name}",
+        "assigned_groups_count": len(group_ids)
+    }

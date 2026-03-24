@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserTie, faSearch, faUserCircle, faPencilAlt, faTrashAlt, faFileExport, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { faUserTie, faSearch, faUserCircle, faPencilAlt, faTrashAlt, faFileExport, faExchangeAlt, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 import adminService from '../../services/adminService';
+import salesGroupService from '../../services/salesGroupService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import PaginationButtons from '../common/PaginationButtons';
+import ModalAssignGroups from '../modals/users/ModalAssignGroups';
 
 export default function SellerManagement() {
   const [sellers, setSellers] = useState([]);
@@ -23,6 +25,15 @@ export default function SellerManagement() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
+
+  // Groups and Modal Assignments
+  const [groups, setGroups] = useState([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedSellerForAssign, setSelectedSellerForAssign] = useState(null);
+
+  useEffect(() => {
+    loadGroups();
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 500);
@@ -55,6 +66,15 @@ export default function SellerManagement() {
       console.error('Failed to load sellers:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGroups = async () => {
+    try {
+      const data = await salesGroupService.getSalesGroups({ limit: 1000 });
+      setGroups(data.items || []);
+    } catch (err) {
+      console.error('Failed to load groups for assignment modal:', err);
     }
   };
 
@@ -145,6 +165,16 @@ export default function SellerManagement() {
     }
   };
 
+  const handleAssignGroupsSave = async (userId, groupIds) => {
+    try {
+      await adminService.assignUserGroups(userId, groupIds);
+      alert('Grupos asignados exitosamente');
+      loadGroups(); // Recargar grupos para reflejar los cambios en el frontend local
+    } catch (err) {
+      throw err;
+    }
+  };
+
   if (loading && sellers.length === 0) {
     return <LoadingSpinner message="Cargando vendedores..." />;
   }
@@ -217,6 +247,9 @@ export default function SellerManagement() {
                       </span>
                     </td>
                     <td data-label="Acciones" className="actions-cell">
+                      <button className="btn btn--icon btn--ghost" onClick={() => { setSelectedSellerForAssign(seller); setShowAssignModal(true); }} aria-label={`Asignar grupos a ${seller.full_name}`} title="Asignar grupos">
+                        <FontAwesomeIcon icon={faLayerGroup} />
+                      </button>
                       <button className="btn btn--icon btn--ghost" onClick={() => handlePromote(seller)} aria-label="Promover a Marketing" title="Promover a Marketing">
                         <FontAwesomeIcon icon={faExchangeAlt} />
                       </button>
@@ -291,6 +324,15 @@ export default function SellerManagement() {
             </div>
           </div>
         </div>
+      )}
+
+      {showAssignModal && selectedSellerForAssign && (
+        <ModalAssignGroups
+          isOpen={showAssignModal}
+          onClose={() => { setShowAssignModal(false); setSelectedSellerForAssign(null); }}
+          user={selectedSellerForAssign}
+          onSave={handleAssignGroupsSave}
+        />
       )}
     </>
   );

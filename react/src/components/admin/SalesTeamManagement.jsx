@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserTie, faUsers, faUsersGear, faSearch, faUserCircle,
-  faPencilAlt, faTrashAlt, faPlus, faEye, faFileExport, faExchangeAlt
+  faPencilAlt, faTrashAlt, faPlus, faEye, faFileExport, faExchangeAlt, faLayerGroup
 } from '@fortawesome/free-solid-svg-icons';
 import adminService from '../../services/adminService';
 import salesGroupService from '../../services/salesGroupService';
@@ -12,6 +12,7 @@ import PaginationButtons from '../common/PaginationButtons';
 import GroupDetailsModal from '../modals/groups/GroupDetailsModal';
 import UserFormModal from '../users/UserFormModal';
 import GroupFormModal from '../modals/groups/GroupFormModal';
+import ModalAssignGroups from '../modals/users/ModalAssignGroups';
 
 export default function SalesTeamManagement() {
   const [activeTab, setActiveTab] = useState('sellers');
@@ -34,6 +35,8 @@ export default function SalesTeamManagement() {
   const [editingGroup, setEditingGroup] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [userRole, setUserRole] = useState('seller');
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedUserForAssign, setSelectedUserForAssign] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 500);
@@ -93,12 +96,12 @@ export default function SalesTeamManagement() {
       setLoading(true);
       setError(null);
       const groupsData = await salesGroupService.getSalesGroups({
-        skip: page * itemsPerPage, limit: itemsPerPage + 1,
+        skip: page * itemsPerPage, limit: itemsPerPage,
         search: debouncedSearchTerm || undefined
       });
-      const hasMorePages = groupsData.length > itemsPerPage;
-      setHasMore(hasMorePages);
-      setGroups(hasMorePages ? groupsData.slice(0, itemsPerPage) : groupsData);
+      const total = groupsData.total || 0;
+      setHasMore((page + 1) * itemsPerPage < total);
+      setGroups(groupsData.items || []);
     } catch (err) {
       setError('No se pudieron cargar los grupos de ventas.');
       console.error('Failed to load groups:', err);
@@ -149,6 +152,16 @@ export default function SalesTeamManagement() {
     } catch (err) {
       setError(err.detail || err.message || 'Error al promover usuario');
       console.error('Failed to promote user:', err);
+    }
+  };
+
+  const handleAssignGroupsSave = async (userId, groupIds) => {
+    try {
+      await adminService.assignUserGroups(userId, groupIds);
+      alert('Grupos asignados exitosamente');
+      loadData();
+    } catch (err) {
+      throw err; // Passed up to the modal's catch handler
     }
   };
 
@@ -222,6 +235,9 @@ export default function SalesTeamManagement() {
                     </span>
                   </td>
                   <td data-label="Acciones" className="actions-cell">
+                    <button className="btn btn--icon btn--ghost" onClick={() => { setSelectedUserForAssign(user); setShowAssignModal(true); }} aria-label={`Asignar grupos a ${user.full_name}`} title="Asignar grupos">
+                      <FontAwesomeIcon icon={faLayerGroup} />
+                    </button>
                     <button className="btn btn--icon btn--ghost" onClick={() => handlePromoteUser(user, role)} aria-label={`Promover a ${role === 'seller' ? 'Marketing' : 'Vendedor'}`} title={`Promover a ${role === 'seller' ? 'Marketing' : 'Vendedor'}`}>
                       <FontAwesomeIcon icon={faExchangeAlt} />
                     </button>
@@ -394,6 +410,15 @@ export default function SalesTeamManagement() {
           group={editingGroup}
           onClose={() => setShowGroupModal(false)}
           onSaved={handleGroupSaved}
+        />
+      )}
+
+      {showAssignModal && selectedUserForAssign && (
+        <ModalAssignGroups
+          isOpen={showAssignModal}
+          onClose={() => { setShowAssignModal(false); setSelectedUserForAssign(null); }}
+          user={selectedUserForAssign}
+          onSave={handleAssignGroupsSave}
         />
       )}
 

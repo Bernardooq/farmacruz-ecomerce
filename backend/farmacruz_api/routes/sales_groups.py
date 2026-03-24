@@ -54,25 +54,34 @@ from db.base import User as UserModel, UserRole
 
 from dependencies import get_db, get_current_admin_user, get_current_seller_user
 from schemas.sales_group import ( SalesGroup, SalesGroupCreate,
-SalesGroupUpdate, SalesGroupWithMembers, GroupMarketingManager, GroupSeller, UserAssignment)
+SalesGroupUpdate, SalesGroupWithMembers, GroupMarketingManager, GroupSeller, UserAssignment, SalesGroupPaginatedResponse)
 
 from schemas.user import User
 from crud.crud_sales_group import ( get_available_customers, create_sales_group, get_available_marketing_managers, get_available_sellers, 
     get_group_customers_paginated, get_group_sellers_paginated, get_sales_group, get_sales_groups, get_user_groups, remove_customer_from_sales_group, 
     update_sales_group, delete_sales_group, get_sales_group_with_counts, assign_marketing_to_group, assign_seller_to_group, remove_marketing_from_group, 
-    remove_seller_from_group, get_group_marketing_managers, get_group_sellers, get_group_marketing_managers_paginated, user_belongs_to_group, assign_customer_to_sales_group
+    remove_seller_from_group, get_group_marketing_managers, get_group_sellers, get_group_marketing_managers_paginated, user_belongs_to_group, assign_customer_to_sales_group,
+    assign_user_groups_bulk
 )
 
 router = APIRouter()
 
+""" GET /users/{user_id}/groups - Obtener IDs de grupos de un usuario """
+@router.get("/users/{user_id}/groups", response_model=List[int])
+def get_groups_for_user(user_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
+    return get_user_groups(db, user_id)
+
+class BulkGroupAssign(BaseModel):
+    group_ids: List[int]
+
 ### Sales Group Endpoints ###
 
 """ GET / - Obtener todos los grupos de ventas con conteos de miembros """
-@router.get("/", response_model=List[SalesGroupWithMembers])
+@router.get("/", response_model=SalesGroupPaginatedResponse)
 def read_sales_groups(skip: int = 0, limit: int = 100, is_active: Optional[bool] = None, search: Optional[str] = None,
     db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Obtiene todos los grupos de ventas con conteos de miembros.
-    groups = get_sales_groups(db, skip=skip, limit=limit, is_active=is_active, search=search)
+    groups, total = get_sales_groups(db, skip=skip, limit=limit, is_active=is_active, search=search)
     
     # Add member counts to each group
     groups_with_counts = []
@@ -81,7 +90,7 @@ def read_sales_groups(skip: int = 0, limit: int = 100, is_active: Optional[bool]
         if group_with_counts:
             groups_with_counts.append(group_with_counts)
     
-    return groups_with_counts
+    return {"items": groups_with_counts, "total": total}
 
 
 """ GET /my-groups - Obtener los grupos de ventas asignados al usuario actual (marketing/seller) """
@@ -301,3 +310,25 @@ def read_available_customers(group_id: int, skip: int = 0, limit: int = 20, sear
     db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Obtiene customers que NO estan en el grupo (disponibles)
     return get_available_customers(db, group_id=group_id, skip=skip, limit=limit, search=search )
+
+
+""" PUT /users/{user_id}/groups - Asignacion masiva de grupos a un usuario """
+@router.put("/users/{user_id}/groups")
+def bulk_assign_user_groups(
+    user_id: int,
+    data: BulkGroupAssign,
+    current_user: UserModel = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Asigna masivamente un usuario a múltiples grupos.
+    Elimina relaciones anteriores e inserta las nuevas de forma transaccional.
+    Solo accesible por admin.
+    """
+    try:
+        result = assign_user_groups_bulk(db, user_id=user_id, group_ids=data.group_ids)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al asignar grupos: {str(e)}")
