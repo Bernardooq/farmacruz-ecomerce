@@ -37,7 +37,7 @@ export default function AllOrders() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); setPage(0); }, 500);
+    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); setPage(0); }, 2500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 

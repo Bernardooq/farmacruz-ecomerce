@@ -36,7 +36,7 @@ export default function CustomerSelector({ onSelect, visible, userRole }) {
                     loadCustomers();
                 }
             }
-        }, 2000); // 2000ms debounce
+        }, 2500); // 2500ms (2.5 seconds) debounce as requested
         return () => clearTimeout(timer);
     }, [visible, customersPage, selectedGroupId, customerSearch]);
 
@@ -138,7 +138,14 @@ export default function CustomerSelector({ onSelect, visible, userRole }) {
             {(userRole !== 'seller' || selectedGroupId) && (
                 <>
                     <form className="search-bar mb-3" onSubmit={handleCustomerSearch}>
-                        <input className="input" type="search" placeholder="Buscar cliente por nombre, email, RFC o ID..." value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} disabled={customersLoading} />
+                        <input 
+                            className="input" 
+                            type="search" 
+                            placeholder="Buscar cliente por nombre, email, RFC o ID..." 
+                            value={customerSearch} 
+                            onChange={(e) => setCustomerSearch(e.target.value)} 
+                            // Removed disabled={customersLoading} to keep the mobile keyboard open
+                        />
                         <button className="btn btn--primary" type="submit" aria-label="Buscar" disabled={customersLoading}>
                             <FontAwesomeIcon icon={faSearch} />
                         </button>

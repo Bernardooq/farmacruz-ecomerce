@@ -65,7 +65,7 @@ export default function SalesGroupsView() {
         const timer = setTimeout(() => {
             setDebouncedMarketingSearch(marketingSearch);
             setMarketingPage(0);
-        }, 500);
+        }, 2500);
         return () => clearTimeout(timer);
     }, [marketingSearch]);
 

@@ -52,7 +52,7 @@ export default function ProductSearchGrid({ customerId, onAddToOrder, onShowSimi
             <h3 className="mb-3">Agregar Productos</h3>
 
             <form className="search-bar mb-3" onSubmit={handleProductSearch}>
-                <input className="input" type="search" placeholder="Buscar productos por nombre, ID o descripción..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={productsLoading} />
+                <input className="input" type="search" placeholder="Buscar productos por nombre, ID o descripción..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 <button className="btn btn--primary" type="submit" aria-label="Buscar" disabled={productsLoading}>
                     <FontAwesomeIcon icon={faSearch} />
                 </button>

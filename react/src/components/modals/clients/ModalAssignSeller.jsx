@@ -4,7 +4,7 @@ import { faSpinner, faSearch } from '@fortawesome/free-solid-svg-icons';
 import salesGroupService from '../../../services/salesGroupService';
 import PaginationButtons from '../../common/PaginationButtons';
 
-const DEBOUNCE_MS = 350;
+const DEBOUNCE_MS = 1000;
 const PAGE_SIZE = 50;
 
 export default function ModalAssignSeller({ visible, order, groupId, onAssign, onClose }) {

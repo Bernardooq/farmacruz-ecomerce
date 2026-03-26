@@ -25,8 +25,8 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
   const [listLoading, setListLoading] = useState(true);
   const [listSearch, setListSearch] = useState('');
 
-  const debouncedAvailableSearch = useDebounce(availableSearch, 500);
-  const debouncedListSearch = useDebounce(listSearch, 500);
+  const debouncedAvailableSearch = useDebounce(availableSearch, 1000);
+  const debouncedListSearch = useDebounce(listSearch, 1000);
 
   const [error, setError] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
