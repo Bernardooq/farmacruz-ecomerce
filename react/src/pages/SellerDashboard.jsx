@@ -17,6 +17,7 @@ import Footer from '../components/layout/Footer';
 import SummaryCards from '../components/sales/SummaryCards';
 import AllOrders from '../components/orders/AllOrders';
 import CategoryManagement from '../components/products/CategoryManagement';
+import InventoryManager from '../components/products/InventoryManager';
 import MyTickets from '../components/tickets/MyTickets';
 import SalesGroupsView from '../components/admin/SalesGroupsView';
 import LoadingSpinner from '../components/common/LoadingSpinner';

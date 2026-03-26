@@ -417,32 +417,47 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
         return 0, 0, errores
 
 
-def limpiar_items_no_sincronizados(db: Session, last_sync: datetime):
+def limpiar_items_no_sincronizados(db: Session, last_sync: datetime, force: bool = False):
     """
     Desactiva o elimina productos, categorias, listas y items que no fueron 
     actualizados desde la fecha de ultima sincronizacion.
     
-    NO toca usuarios (customers ni sellers) - para eso usar limpiar_users_no_sincronizados.
-    
-    - Productos no actualizados: Se desactivan (is_active = False)
-    - Categorias no actualizadas: Se desactivan (is_active = False)
-    - Listas de precios no actualizadas: Se eliminan
-    - Relaciones producto-lista no actualizadas: Se eliminan
+    SEGURIDAD: 
+    1. Restamos 20 minutos adicionales a last_sync para evitar race conditions 
+       con hilos de procesamiento en segundo plano (async).
+    2. Si el cleanup desactivaría más del 20% del catálogo, abortamos por seguridad
+       a menos que se pase force=True.
     """
+    from datetime import timedelta
+    # Aplicar buffer de seguridad de 20 minutos
+    last_sync_buffered = last_sync - timedelta(minutes=20)
+    
+    # 1. SEGURIDAD: Contar cuántos se desactivarían
+    total_products = db.query(Product).count()
+    to_deactivate = db.query(Product).filter(
+        Product.updated_at < last_sync_buffered,
+        Product.is_active == True
+    ).count()
+    
+    if total_products > 100 and to_deactivate > (total_products * 0.20) and not force:
+        print(f"ALERTA SEGURIDAD: Abortando cleanup. Se desactivarían {to_deactivate} de {total_products} productos (>20%). Use force=True.")
+        return False
+
+    # Proceder con la desactivación/eliminación
     # Desactivar productos no actualizados
-    db.query(Product).filter(Product.updated_at < last_sync).update({Product.is_active: False})
+    db.query(Product).filter(Product.updated_at < last_sync_buffered).update({Product.is_active: False})
     
     # Eliminar categorias no actualizadas SOLO si no tienen productos asociados
-    # Proteger integridad referencial
     subq = select(Product.category_id).distinct()
     db.query(Category).filter(
-        Category.updated_at < last_sync,
+        Category.updated_at < last_sync_buffered,
         ~Category.category_id.in_(subq)
     ).delete(synchronize_session=False)
     
-    # Eliminar relaciones producto-lista no actualizadas (Hijos primero)
-    db.query(PriceListItem).filter(PriceListItem.updated_at < last_sync).delete(synchronize_session=False)
+    # Eliminar relaciones producto-lista no actualizadas
+    db.query(PriceListItem).filter(PriceListItem.updated_at < last_sync_buffered).delete(synchronize_session=False)
 
-    # Desactivar listas de precios no actualizadas (Padres después - Soft Delete para evitar error FK con Customers)
-    db.query(PriceList).filter(PriceList.updated_at < last_sync).update({PriceList.is_active: False})
+    # Desactivar listas de precios no actualizadas
+    db.query(PriceList).filter(PriceList.updated_at < last_sync_buffered).update({PriceList.is_active: False})
     
+    return True

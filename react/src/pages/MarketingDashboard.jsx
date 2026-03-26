@@ -8,8 +8,6 @@
  * - Ver pedidos relacionados con sus grupos de ventas asignados
  * - Ver grupos de ventas asignados (solo lectura)
  * - Ver inventario y categorías (solo lectura)
- * 
- * Permisos: Solo para usuarios con role: 'marketing'
  */
 
 import { useEffect, useState } from 'react';
@@ -26,9 +24,6 @@ import TicketDashboard from '../components/tickets/TicketDashboard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 
-// ============================================
-// CONSTANTES
-// ============================================
 const MARKETING_TABS = [
     { id: 'pedidos', label: 'Pedidos', icon: '📦' },
     { id: 'inventario', label: 'Inventario', icon: '📋' },
@@ -37,44 +32,31 @@ const MARKETING_TABS = [
 ];
 
 export default function MarketingDashboard() {
-    // ============================================
-    // HOOKS & STATE
-    // ============================================
     const { user } = useAuth();
     const [summary, setSummary] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('pedidos');
 
-    // ============================================
-    // EFFECTS
-    // ============================================
     useEffect(() => { loadDashboardData(); }, []);
 
-    // ============================================
-    // DATA FETCHING
-    // ============================================
     const loadDashboardData = async () => {
         try {
             setLoading(true);
             setError(null);
             const stats = await dashboardService.getSellerMarketingStats();
             setSummary({
-                pendingOrders: stats.pending_orders,
-                catalogCount: stats.total_products,
-                lowStockCount: stats.low_stock_count
+                pending_orders: stats.pending_orders,
+                total_products: stats.total_products,
+                low_stock_count: stats.low_stock_count
             });
         } catch (err) {
             setError('No se pudieron cargar los datos del dashboard. Intenta de nuevo.');
-            console.error('Failed to load dashboard data:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    // ============================================
-    // RENDER HELPERS
-    // ============================================
     const renderContent = () => {
         switch (activeTab) {
             case 'pedidos':
@@ -96,13 +78,10 @@ export default function MarketingDashboard() {
         }
     };
 
-    // ============================================
-    // RENDER - LOADING STATE
-    // ============================================
     if (loading) {
         return (
             <div className="page">
-                <Header user={user} />
+                <Header />
                 <main className="dashboard-layout">
                     <div className="dashboard-layout__container">
                         <LoadingSpinner message="Cargando dashboard..." />
@@ -113,21 +92,15 @@ export default function MarketingDashboard() {
         );
     }
 
-    // ============================================
-    // RENDER - MAIN CONTENT
-    // ============================================
     return (
         <div className="page">
-            <Header user={user} />
+            <Header />
 
             <main className="dashboard-layout">
                 <div className="dashboard-layout__container">
                     <h1 className="dashboard-layout__greeting">Panel de Marketing</h1>
-
-                    {/* Mensaje de error */}
                     {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-                    {/* Sistema de pestañas */}
                     <div className="dashboard-layout__tabs">
                         <nav className="dashboard-layout__tabs-nav">
                             {MARKETING_TABS.map((tab) => (
@@ -135,8 +108,6 @@ export default function MarketingDashboard() {
                                     key={tab.id}
                                     className={`dashboard-layout__tab ${activeTab === tab.id ? 'dashboard-layout__tab--active' : ''}`}
                                     onClick={() => setActiveTab(tab.id)}
-                                    aria-label={tab.label}
-                                    aria-selected={activeTab === tab.id}
                                 >
                                     <span className="dashboard-layout__tab-icon">{tab.icon}</span>
                                     <span className="dashboard-layout__tab-label">{tab.label}</span>
