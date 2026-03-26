@@ -40,33 +40,33 @@ def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional
                   user_id: Optional[int] = None, user_role = None) -> List[Customer]:    
     from db.base import UserRole
     
-    query = db.query(Customer).options(
-        joinedload(Customer.customer_info)
-    )
+    # Empezar con la query base
+    query = db.query(Customer)
     
-    # Si es Marketing, filtrar por grupos
-    if user_role and user_role == UserRole.marketing and user_id:
+    # Manejar joins necesarios de forma unificada
+    # Si es Marketing o hay búsqueda (que requiere RFC), necesitamos CustomerInfo
+    needs_info = (user_role == UserRole.marketing or user_role == UserRole.seller) or bool(search)
+    
+    if needs_info:
+        # Usar outerjoin por defecto para no excluir clientes sin info comercial en búsquedas generales
+        # Pero si es marketing, forzamos el filtro de grupo después
+        query = query.outerjoin(Customer.customer_info)
+    
+    # 1. Filtrar por rol (si es Marketing)
+    if (user_role == UserRole.marketing or user_role == UserRole.seller) and user_id:
         from crud.crud_sales_group import get_user_groups
-        
         user_group_ids = get_user_groups(db, user_id)
         
         if not user_group_ids:
-            # Si no tiene grupos asignados, no puede ver clientes
             return []
         
-        # Filtrar clientes que pertenecen a los grupos del usuario
-        query = query.join(
-            CustomerInfo,
-            Customer.customer_id == CustomerInfo.customer_id
-        ).filter(
-            CustomerInfo.sales_group_id.in_(user_group_ids)
-        )
+        # Filtro de seguridad para Marketing: solo sus grupos
+        query = query.filter(CustomerInfo.sales_group_id.in_(user_group_ids))
     
-    # Buscar en nombre, username, email, RFC — case-insensitive
+    # 2. Aplicar búsqueda si existe
     if search:
         search_term = f"%{search.lower()}%"
-        # Necesitamos join con CustomerInfo para buscar por rfc
-        query = query.outerjoin(Customer.customer_info).filter(
+        query = query.filter(
             or_(
                 func.lower(Customer.full_name).like(search_term),
                 func.lower(Customer.username).like(search_term),
@@ -74,6 +74,9 @@ def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional
                 func.lower(CustomerInfo.rfc).like(search_term)
             )
         )
+    
+    # Pre-cargar la relación para evitar N+1 queries al retornar
+    query = query.options(joinedload(Customer.customer_info))
     
     return query.offset(skip).limit(limit).all()
 

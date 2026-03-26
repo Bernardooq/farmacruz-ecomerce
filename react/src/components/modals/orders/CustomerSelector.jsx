@@ -26,16 +26,19 @@ export default function CustomerSelector({ onSelect, visible, userRole }) {
         }
     }, [visible, userRole]);
 
-    // Load customers when page/group changes
+    // Load customers when page/group changes or search terms (debounced)
     useEffect(() => {
-        if (visible) {
-            if (userRole === 'seller') {
-                if (selectedGroupId) loadSellerGroupCustomers();
-            } else {
-                loadCustomers();
+        const timer = setTimeout(() => {
+            if (visible) {
+                if (userRole === 'seller') {
+                    if (selectedGroupId) loadSellerGroupCustomers();
+                } else {
+                    loadCustomers();
+                }
             }
-        }
-    }, [visible, customersPage, selectedGroupId]);
+        }, 2000); // 2000ms debounce
+        return () => clearTimeout(timer);
+    }, [visible, customersPage, selectedGroupId, customerSearch]);
 
     const loadSellerGroups = async () => {
         try {
