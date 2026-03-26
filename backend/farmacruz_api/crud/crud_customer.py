@@ -62,14 +62,16 @@ def get_customers(db: Session, skip: int = 0, limit: int = 100, search: Optional
             CustomerInfo.sales_group_id.in_(user_group_ids)
         )
     
-    # Buscar en nombre, username y email — case-insensitive
+    # Buscar en nombre, username, email, RFC — case-insensitive
     if search:
         search_term = f"%{search.lower()}%"
-        query = query.filter(
+        # Necesitamos join con CustomerInfo para buscar por rfc
+        query = query.outerjoin(Customer.customer_info).filter(
             or_(
                 func.lower(Customer.full_name).like(search_term),
                 func.lower(Customer.username).like(search_term),
-                func.lower(Customer.email).like(search_term)
+                func.lower(Customer.email).like(search_term),
+                func.lower(CustomerInfo.rfc).like(search_term)
             )
         )
     

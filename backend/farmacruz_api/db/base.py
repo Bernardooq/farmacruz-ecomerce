@@ -146,6 +146,11 @@ class Customer(Base):
     # Agente/vendedor asignado a este cliente
     agent = relationship("User", back_populates="customers_as_agent", foreign_keys=[agent_id])
 
+    # Propiedades para aplanar el acceso a CustomerInfo (facilita serializacion Pydantic)
+    @property
+    def rfc(self):
+        return self.customer_info.rfc if self.customer_info else None
+
 
 class SalesGroup(Base):
     """

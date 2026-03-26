@@ -277,6 +277,7 @@ export default function ClientManagement() {
               <tr>
                 <th>ID</th>
                 <th>Cliente</th>
+                <th>RFC</th>
                 <th>Usuario</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -285,7 +286,7 @@ export default function ClientManagement() {
             <tbody>
               {clients.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center">No se encontraron clientes</td>
+                  <td colSpan="6" className="text-center">No se encontraron clientes</td>
                 </tr>
               ) : (
                 clients.map((client) => (
@@ -299,6 +300,9 @@ export default function ClientManagement() {
                           <span className="user-cell__email">{client.email}</span>
                         </div>
                       </div>
+                    </td>
+                    <td data-label="RFC">
+                      <span className="text-sm font-medium">{client.rfc || <span className="text-muted" style={{ fontStyle: 'italic' }}>No registrado</span>}</span>
                     </td>
                     <td data-label="Usuario">{client.username}</td>
                     <td data-label="Estado">
