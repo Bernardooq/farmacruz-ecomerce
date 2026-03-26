@@ -57,6 +57,7 @@ from schemas.sales_group import ( SalesGroup, SalesGroupCreate,
 SalesGroupUpdate, SalesGroupWithMembers, GroupMarketingManager, GroupSeller, UserAssignment, SalesGroupPaginatedResponse)
 
 from schemas.user import User
+from schemas.customer import CustomerWithInfo
 from crud.crud_sales_group import ( get_available_customers, create_sales_group, get_available_marketing_managers, get_available_sellers, 
     get_group_customers_paginated, get_group_sellers_paginated, get_sales_group, get_sales_groups, get_user_groups, remove_customer_from_sales_group, 
     update_sales_group, delete_sales_group, get_sales_group_with_counts, assign_marketing_to_group, assign_seller_to_group, remove_marketing_from_group, 
@@ -295,7 +296,7 @@ def remove_customer_from_group(group_id: int, customer_id: int, db: Session = De
 
 
 """ GET /{group_id}/customers - Obtener customers de un grupo con paginacion y busqueda server-side """
-@router.get("/{group_id}/customers")
+@router.get("/{group_id}/customers", response_model=List[CustomerWithInfo])
 def read_group_customers(group_id: int, skip: int = 0,limit: int = 100, search: str = None, 
     db: Session = Depends(get_db), current_user = Depends(get_current_seller_user)):
     # Verificar que el grupo existe
@@ -312,7 +313,7 @@ def read_group_customers(group_id: int, skip: int = 0,limit: int = 100, search: 
     return get_group_customers_paginated(db, group_id=group_id, skip=skip, limit=limit, search=search)
 
 """ GET /{group_id}/available-customers - Obtener customers que NO estan en el grupo (disponibles) """
-@router.get("/{group_id}/available-customers")
+@router.get("/{group_id}/available-customers", response_model=List[CustomerWithInfo])
 def read_available_customers(group_id: int, skip: int = 0, limit: int = 20, search: Optional[str] = None,
     db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     # Obtiene customers que NO estan en el grupo (disponibles)
