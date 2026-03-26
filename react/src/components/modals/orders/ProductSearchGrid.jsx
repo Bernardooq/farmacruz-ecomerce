@@ -44,7 +44,12 @@ export default function ProductSearchGrid({ customerId, onAddToOrder, onShowSimi
     };
 
     // Remove manual submit, just prevent default
-    const handleProductSearch = (e) => { e.preventDefault(); };
+    // Manual search trigger (Button click or Enter)
+    const handleProductSearch = (e) => { 
+        e.preventDefault(); 
+        setDebouncedSearchTerm(searchTerm);
+        setProductsPage(0);
+    };
 
     return (
         <>

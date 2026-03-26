@@ -6,11 +6,6 @@ import LoadingSpinner from '../../common/LoadingSpinner';
 import ErrorMessage from '../../common/ErrorMessage';
 import PaginationButtons from '../../common/PaginationButtons';
 
-function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(() => { const handler = setTimeout(() => setDebouncedValue(value), delay); return () => clearTimeout(handler); }, [value, delay]);
-  return debouncedValue;
-}
 
 export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
   const [availableProducts, setAvailableProducts] = useState([]);
@@ -25,8 +20,8 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
   const [listLoading, setListLoading] = useState(true);
   const [listSearch, setListSearch] = useState('');
 
-  const debouncedAvailableSearch = useDebounce(availableSearch, 1000);
-  const debouncedListSearch = useDebounce(listSearch, 1000);
+  const [debouncedAvailableSearch, setDebouncedAvailableSearch] = useState('');
+  const [debouncedListSearch, setDebouncedListSearch] = useState('');
 
   const [error, setError] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
@@ -34,6 +29,36 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
   const [newItemMarkup, setNewItemMarkup] = useState({});
 
   const itemsPerPage = 10;
+
+  // Debounce effects for typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAvailableSearch(availableSearch);
+      setAvailablePage(0);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [availableSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedListSearch(listSearch);
+      setAvailableListPage(0);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [listSearch]);
+
+  // Immediate handlers for Search Buttons / Enter
+  const handleAvailableSearch = (e) => {
+    if (e) e.preventDefault();
+    setDebouncedAvailableSearch(availableSearch);
+    setAvailablePage(0);
+  };
+
+  const handleListSearch = (e) => {
+    if (e) e.preventDefault();
+    setDebouncedListSearch(listSearch);
+    setAvailableListPage(0);
+  };
 
   useEffect(() => { if (isOpen && priceList) { loadListItems(); loadAvailableProducts(); } }, [isOpen, priceList]);
   useEffect(() => { if (isOpen && priceList) loadAvailableProducts(); }, [availablePage, debouncedAvailableSearch]);
@@ -97,10 +122,10 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
             {/* LEFT: Available Products */}
             <div className="split-view__column">
               <h3>Productos Disponibles</h3>
-              <div className="search-bar search-bar--sm">
-                <input className="input" type="search" placeholder="Buscar producto..." value={availableSearch} onChange={(e) => { setAvailableSearch(e.target.value); setAvailablePage(0); }} />
-                <button className="btn btn--primary" type="button" aria-label="Buscar"><FontAwesomeIcon icon={faSearch} /></button>
-              </div>
+              <form className="search-bar search-bar--sm" onSubmit={handleAvailableSearch}>
+                <input className="input" type="search" placeholder="Buscar producto..." value={availableSearch} onChange={(e) => { setAvailableSearch(e.target.value); }} />
+                <button className="btn btn--primary" type="submit" aria-label="Buscar"><FontAwesomeIcon icon={faSearch} /></button>
+              </form>
               <div className="split-view__list-container">
                 {availableLoading ? <LoadingSpinner message="Cargando..." /> : availableProducts.length === 0 ? (
                   <p className="empty-state">{availableSearch ? 'No se encontraron productos' : 'Todos los productos están en la lista'}</p>
@@ -130,10 +155,10 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
             {/* RIGHT: Products in List */}
             <div className="split-view__column">
               <h3>Productos en la Lista</h3>
-              <div className="search-bar search-bar--sm">
-                <input className="input" type="search" placeholder="Buscar en la lista..." value={listSearch} onChange={(e) => { setListSearch(e.target.value); setAvailableListPage(0); }} />
-                <button className="btn btn--primary" type="button" aria-label="Buscar"><FontAwesomeIcon icon={faSearch} /></button>
-              </div>
+              <form className="search-bar search-bar--sm" onSubmit={handleListSearch}>
+                <input className="input" type="search" placeholder="Buscar en la lista..." value={listSearch} onChange={(e) => { setListSearch(e.target.value); }} />
+                <button className="btn btn--primary" type="submit" aria-label="Buscar"><FontAwesomeIcon icon={faSearch} /></button>
+              </form>
               <div className="split-view__list-container">
                 {listLoading ? <LoadingSpinner message="Cargando..." /> : listItems.length === 0 ? (
                   <p className="empty-state">{listSearch ? 'No se encontraron productos con esa búsqueda' : 'No hay productos en esta lista'}</p>

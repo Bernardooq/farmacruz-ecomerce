@@ -26,8 +26,24 @@ export default function CustomerSelector({ onSelect, visible, userRole }) {
         }
     }, [visible, userRole]);
 
-    // Load customers when page/group changes or search terms (debounced)
+    // 1. Initial/Simple Load Effect (Immediate)
+    // Triggers on page change, group change, or visibility
     useEffect(() => {
+        if (visible) {
+            // Load immediately for pagination/group changes
+            if (userRole === 'seller') {
+                if (selectedGroupId) loadSellerGroupCustomers();
+            } else {
+                loadCustomers();
+            }
+        }
+    }, [visible, customersPage, selectedGroupId]);
+
+    // 2. Search Load Effect (Debounced)
+    // Only triggers when typing in customerSearch
+    useEffect(() => {
+        if (!customerSearch) return; // Resetting search is handled by the immediate effect above if user clears it
+
         const timer = setTimeout(() => {
             if (visible) {
                 if (userRole === 'seller') {
@@ -36,9 +52,9 @@ export default function CustomerSelector({ onSelect, visible, userRole }) {
                     loadCustomers();
                 }
             }
-        }, 2500); // 2500ms (2.5 seconds) debounce as requested
+        }, 2500); // 2500ms debounce for typing
         return () => clearTimeout(timer);
-    }, [visible, customersPage, selectedGroupId, customerSearch]);
+    }, [customerSearch, visible]);
 
     const loadSellerGroups = async () => {
         try {

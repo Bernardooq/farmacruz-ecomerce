@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faUsers, faUserTie, faUserCircle, faEye, faTimes
+    faUsers, faUserTie, faUserCircle, faEye, faTimes, faSearch
 } from '@fortawesome/free-solid-svg-icons';
 import salesGroupService from '../../services/salesGroupService';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -157,6 +157,18 @@ export default function SalesGroupsView() {
         setModalError(null);
     };
 
+    const handleSearchImmediate = (e, searchType) => {
+        if (e) e.preventDefault();
+        if (searchType === 'Vendedores') setDebouncedSellerSearch(sellerSearch);
+        if (searchType === 'Clientes') setDebouncedCustomerSearch(customerSearch);
+        if (searchType === 'Marketing') setDebouncedMarketingSearch(marketingSearch);
+
+        // Reset page for this specific type
+        if (searchType === 'Vendedores') setSellerPage(0);
+        if (searchType === 'Clientes') setCustomerPage(0);
+        if (searchType === 'Marketing') setMarketingPage(0);
+    };
+
     const renderMembersModal = (isOpen, title, members, search, onSearchChange, page, setPageFn, hasMore, memberKey) => {
         if (!isOpen || !selectedGroup) return null;
         return (
@@ -168,13 +180,16 @@ export default function SalesGroupsView() {
                     </div>
                     <div className="modal__body">
                         {modalError && <ErrorMessage error={modalError} onDismiss={() => setModalError(null)} />}
-                        <div className="search-bar search-bar--compact mb-3">
+                        <form className="search-bar search-bar--compact mb-3" onSubmit={(e) => handleSearchImmediate(e, title)}>
                             <input
                                 type="search" className="input"
                                 placeholder={`🔍 Buscar ${title.toLowerCase()}${title === 'Clientes' ? ' (nombre, email, RFC)...' : '...'}`}
                                 value={search} onChange={(e) => onSearchChange(e.target.value)}
                             />
-                        </div>
+                            <button type="submit" className="btn btn--primary" aria-label="Buscar" disabled={modalLoading}>
+                                <FontAwesomeIcon icon={faSearch} />
+                            </button>
+                        </form>
                         {modalLoading ? <LoadingSpinner message="Cargando..." /> : (
                             <>
                                 <div className="table-container">

@@ -31,14 +31,20 @@ export default function ModalAssignSeller({ visible, order, groupId, onAssign, o
         }
     }, [visible]);
 
-    // Debounce search input
+    // Debounce search input (Typing)
     useEffect(() => {
         const t = setTimeout(() => {
             setDebouncedSearch(searchTerm);
             setSkip(0);
-        }, DEBOUNCE_MS);
+        }, 2500); // 2.5s debounce
         return () => clearTimeout(t);
     }, [searchTerm]);
+
+    const handleSearch = (e) => {
+        if (e) e.preventDefault();
+        setDebouncedSearch(searchTerm);
+        setSkip(0);
+    };
 
     // Load sellers whenever groupId, debouncedSearch or skip changes
     const loadSellers = useCallback(async () => {
@@ -93,8 +99,7 @@ export default function ModalAssignSeller({ visible, order, groupId, onAssign, o
                         <label className="form-group__label" htmlFor="seller-search">
                             Buscar vendedor
                         </label>
-                        <div className="search-bar">
-                            <FontAwesomeIcon icon={faSearch} className="search-bar__icon" />
+                        <form className="search-bar" onSubmit={handleSearch}>
                             <input
                                 id="seller-search"
                                 className="input"
@@ -104,8 +109,11 @@ export default function ModalAssignSeller({ visible, order, groupId, onAssign, o
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 autoFocus
                             />
+                            <button type="submit" className="btn btn--primary" aria-label="Buscar" disabled={sellersLoading}>
+                                <FontAwesomeIcon icon={faSearch} />
+                            </button>
                             {sellersLoading && <FontAwesomeIcon icon={faSpinner} spin className="search-bar__spinner" />}
-                        </div>
+                        </form>
                     </div>
 
                     {sellersError && <p className="text-danger text-sm mb-2">{sellersError}</p>}

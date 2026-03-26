@@ -16,7 +16,7 @@ export default function MyTickets() {
   const [error, setError] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  
+
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const PAGE_SIZE = 15;
@@ -67,10 +67,10 @@ export default function MyTickets() {
   return (
     <>
       <section className="dashboard-section">
-        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="section-header">
           <div>
             <h2 className="section-title">Mis Tickets de Soporte</h2>
-            <p className="text-muted" style={{ margin: '0.25rem 0 0' }}>Aquí puedes reportar problemas y darles seguimiento con un asesor.</p>
+            <p className="text-muted">Aquí puedes reportar problemas y darles seguimiento con un asesor.</p>
           </div>
           <button className="btn btn--primary" onClick={() => setShowCreateModal(true)}>
             <FontAwesomeIcon icon={faPlus} /> Abrir Nuevo Caso
@@ -81,6 +81,16 @@ export default function MyTickets() {
 
         {loading ? (
           <LoadingSpinner message="Cargando tus tickets..." />
+        ) : tickets.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state__icon">
+              <FontAwesomeIcon icon={faExclamationTriangle} />
+            </div>
+            <p className="empty-state__text mb-4">No has reportado ningún problema hasta ahora.</p>
+            <button className="btn btn--outline" onClick={() => setShowCreateModal(true)}>
+              <FontAwesomeIcon icon={faPlus} /> Crear mi primer Ticket
+            </button>
+          </div>
         ) : (
           <div className="table-container ticket-filters">
             <table className="data-table">
@@ -93,32 +103,21 @@ export default function MyTickets() {
                 </tr>
               </thead>
               <tbody>
-                {tickets.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="table-empty-state">
-                      <p className="text-muted mb-4">No has reportado ningún problema hasta ahora.</p>
-                      <button className="btn btn--outline" onClick={() => setShowCreateModal(true)}>
-                        <FontAwesomeIcon icon={faPlus} /> Crear mi primer Ticket
-                      </button>
-                    </td>
+                {tickets.map(t => (
+                  <tr key={t.ticket_id} onClick={() => handleTicketClick(t)} className="row-hover" style={{ cursor: 'pointer' }}>
+                    <td data-label="No. Ticket"><strong>#{t.ticket_id}</strong></td>
+                    <td data-label="Asunto">{t.title}</td>
+                    <td data-label="Estado">{renderStatusBadge(t.status)}</td>
+                    <td data-label="Fecha de Reporte">{new Date(t.created_at).toLocaleDateString()}</td>
                   </tr>
-                ) : (
-                  tickets.map(t => (
-                    <tr key={t.ticket_id} onClick={() => handleTicketClick(t)} className="row-hover" style={{ cursor: 'pointer' }}>
-                      <td data-label="No. Ticket"><strong>#{t.ticket_id}</strong></td>
-                      <td data-label="Asunto">{t.title}</td>
-                      <td data-label="Estado">{renderStatusBadge(t.status)}</td>
-                      <td data-label="Fecha de Reporte">{new Date(t.created_at).toLocaleDateString()}</td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
-            <PaginationButtons 
-              onPrev={() => setPage(p => Math.max(0, p - 1))} 
-              onNext={() => setPage(p => p + 1)} 
-              canGoPrev={page > 0} 
-              canGoNext={(page + 1) * PAGE_SIZE < total} 
+            <PaginationButtons
+              onPrev={() => setPage(p => Math.max(0, p - 1))}
+              onNext={() => setPage(p => p + 1)}
+              canGoPrev={page > 0}
+              canGoNext={(page + 1) * PAGE_SIZE < total}
             />
           </div>
         )}
@@ -126,15 +125,15 @@ export default function MyTickets() {
 
       {/* Modals */}
       {selectedTicket && (
-        <TicketThread 
-          ticketId={selectedTicket.ticket_id} 
-          onClose={handleCloseThread} 
-          currentUser={user} 
+        <TicketThread
+          ticketId={selectedTicket.ticket_id}
+          onClose={handleCloseThread}
+          currentUser={user}
         />
       )}
 
-      <TicketCreateModal 
-        isOpen={showCreateModal} 
+      <TicketCreateModal
+        isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onTicketCreated={handleTicketCreated}
       />
