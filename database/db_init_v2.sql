@@ -228,6 +228,8 @@ CREATE TABLE customerinfo (
     telefono_2 VARCHAR(15)
 );
 
+CREATE INDEX idx_customerinfo_rfc ON customerinfo (rfc);
+
 CREATE INDEX idx_customerinfo_customer ON customerinfo (customer_id);
 
 CREATE INDEX idx_customerinfo_group ON customerinfo (sales_group_id);
