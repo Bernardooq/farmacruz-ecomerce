@@ -2,45 +2,53 @@ import sys
 import os
 from pathlib import Path
 
-# Encontrar la raíz del proyecto (la carpeta que contiene 'backend')
-# Si el script está en backend/farmacruz_api/scripts/restore_products.py
-# La raíz es .parent.parent.parent.parent
-current_path = Path(__file__).resolve()
-project_root = current_path.parent.parent.parent.parent
+# Configuración de rutas para EC2 / Producción
+# 1. Directorio del script
+script_dir = Path(__file__).resolve().parent
+# 2. Directorio de la API (farmacruz_api)
+api_dir = script_dir.parent
+# 3. Directorio del proyecto raíz (que contiene 'backend')
+project_root = api_dir.parent.parent
 
-sys.path.append(str(project_root))
+# Agregar ambos al path para resolver 'from backend...' y 'from core...'
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(api_dir))
 
 print(f"DEBUG: Project Root: {project_root}")
-print(f"DEBUG: Current Working Dir: {os.getcwd()}")
+print(f"DEBUG: API Dir: {api_dir}")
 
 try:
-    from backend.farmacruz_api.db.session import SessionLocal
-    from backend.farmacruz_api.db.base import Product, Category, PriceList
+    # Intentar importaciones relativas al root o a la api
+    try:
+        from backend.farmacruz_api.db.session import SessionLocal
+        from backend.farmacruz_api.db.base import Product, Category, PriceList
+    except ImportError:
+        from db.session import SessionLocal
+        from db.base import Product, Category, PriceList
+        
 except ImportError as e:
     print(f"Error importando módulos: {e}")
-    print("Asegúrate de ejecutar el script con python3")
     sys.exit(1)
 
 def restore():
     db = SessionLocal()
     try:
-        print("Restoring Products (setting is_active=True)...")
+        print("\nRestaurando visibilidad del catálogo...")
         products_count = db.query(Product).filter(Product.is_active == False).update({Product.is_active: True})
         
-        print("Restoring Categories (touching updated_at)...")
-        # Categories usually don't have is_active in this schema, just updated_at
+        print("Restaurando categorías...")
         db.query(Category).update({Category.updated_at: Category.updated_at})
         
-        print("Restoring Price Lists (setting is_active=True)...")
+        print("Restaurando listas de precios...")
         pricelists_count = db.query(PriceList).filter(PriceList.is_active == False).update({PriceList.is_active: True})
         
         db.commit()
-        print(f"\nSUCCESS!")
-        print(f"- {products_count} products reactivated.")
-        print(f"- {pricelists_count} price lists reactivated.")
-        print("\nVerificar ahora el dashboard de Inventario.")
+        print(f"\n¡ÉXITO TOTAL!")
+        print(f"- {products_count} productos reactivados.")
+        print(f"- {pricelists_count} listas de precios reactivadas.")
+        print("\nYa puedes verificar el Inventario en el Dashboard.")
     except Exception as e:
-        print(f"Error during restoration: {e}")
+        print(f"Error durante la restauración: {e}")
         db.rollback()
     finally:
         db.close()
