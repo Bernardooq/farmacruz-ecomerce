@@ -36,14 +36,14 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
 
   useEffect(() => {
     if (searchAvailableTimeout) clearTimeout(searchAvailableTimeout);
-    const timeout = setTimeout(() => { setAvailablePage(0); if (group) loadAvailableUsers(0, searchAvailable); }, 500);
+    const timeout = setTimeout(() => { setAvailablePage(0); if (group) loadAvailableUsers(0, searchAvailable); }, 2500);
     setSearchAvailableTimeout(timeout);
     return () => { if (timeout) clearTimeout(timeout); };
   }, [searchAvailable]);
 
   useEffect(() => {
     if (searchInGroupTimeout) clearTimeout(searchInGroupTimeout);
-    const timeout = setTimeout(() => { setInGroupPage(0); if (group) loadInGroupUsers(0, searchInGroup); }, 500);
+    const timeout = setTimeout(() => { setInGroupPage(0); if (group) loadInGroupUsers(0, searchInGroup); }, 2500);
     setSearchInGroupTimeout(timeout);
     return () => { if (timeout) clearTimeout(timeout); };
   }, [searchInGroup]);
@@ -137,7 +137,13 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
                 <div className="split-view__column">
                   <h3>Disponibles</h3>
                   <div className="search-bar search-bar--sm">
-                    <input className="input" type="search" placeholder="Buscar..." value={searchAvailable} onChange={(e) => setSearchAvailable(e.target.value)} />
+                    <input
+                      className="input"
+                      type="search"
+                      placeholder={activeTab === 'customers' ? "Nombre, email, RFC..." : "Buscar..."}
+                      value={searchAvailable}
+                      onChange={(e) => setSearchAvailable(e.target.value)}
+                    />
                     <button className="btn btn--primary" type="button"><FontAwesomeIcon icon={faSearch} /></button>
                   </div>
                   <div className="split-view__list-container">
@@ -170,7 +176,13 @@ export default function GroupDetailsModal({ group, onClose, onUpdate }) {
                 <div className="split-view__column">
                   <h3>En el Grupo</h3>
                   <div className="search-bar search-bar--sm">
-                    <input className="input" type="search" placeholder="Buscar..." value={searchInGroup} onChange={(e) => setSearchInGroup(e.target.value)} />
+                    <input
+                      className="input"
+                      type="search"
+                      placeholder={activeTab === 'customers' ? "Nombre, email, RFC..." : "Buscar..."}
+                      value={searchInGroup}
+                      onChange={(e) => setSearchInGroup(e.target.value)}
+                    />
                     <button className="btn btn--primary" type="button"><FontAwesomeIcon icon={faSearch} /></button>
                   </div>
                   <div className="split-view__list-container">

@@ -36,7 +36,7 @@ export default function SellerManagement() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 500);
+    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 2500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 

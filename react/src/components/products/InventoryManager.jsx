@@ -50,12 +50,12 @@ export default function InventoryManager() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearchName(searchName); setPage(0); }, 500);
+    const timer = setTimeout(() => { setDebouncedSearchName(searchName); setPage(0); }, 2500);
     return () => clearTimeout(timer);
   }, [searchName]);
 
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearchcodebar(searchcodebar); setPage(0); }, 500);
+    const timer = setTimeout(() => { setDebouncedSearchcodebar(searchcodebar); setPage(0); }, 2500);
     return () => clearTimeout(timer);
   }, [searchcodebar]);
 

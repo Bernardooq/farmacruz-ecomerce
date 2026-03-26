@@ -20,7 +20,7 @@ export default function ProductSearchGrid({ customerId, onAddToOrder, onShowSimi
         const timer = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
             setProductsPage(0);
-        }, 500);
+        }, 2500);
         return () => clearTimeout(timer);
     }, [searchTerm]);
 

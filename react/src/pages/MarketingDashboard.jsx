@@ -19,7 +19,7 @@ import Header from '../components/layout/Header2';
 import Footer from '../components/layout/Footer';
 import SummaryCards from '../components/sales/SummaryCards';
 import AllOrders from '../components/orders/AllOrders';
-import MarketingGroupsView from '../components/admin/MarketingGroupsView';
+import SalesGroupsView from '../components/admin/SalesGroupsView';
 import InventoryManager from '../components/products/InventoryManager';
 import CategoryManagement from '../components/products/CategoryManagement';
 import TicketDashboard from '../components/tickets/TicketDashboard';
@@ -88,7 +88,7 @@ export default function MarketingDashboard() {
                     </>
                 );
             case 'grupos':
-                return <MarketingGroupsView />;
+                return <SalesGroupsView />;
             case 'soporte':
                 return <TicketDashboard />;
             default:

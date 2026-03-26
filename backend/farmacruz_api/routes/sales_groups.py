@@ -172,14 +172,21 @@ def remove_marketing_manager(group_id: int, user_id: int,
 
 """ GET /{group_id}/marketing - Obtener marketing managers de un grupo con paginacion y busqueda server-side """
 @router.get("/{group_id}/marketing", response_model=List[User])
-def read_group_marketing_managers(group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None,
-    db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
-    
-    # Verificar que el grupo existe
+def read_group_marketing_managers(group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None, 
+    db: Session = Depends(get_db), current_user = Depends(get_current_seller_user)):    
+    # Obtiene marketing managers de un grupo con paginacion y busqueda server-side
     group = get_sales_group(db, group_id)
     if not group:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Grupo de ventas no encontrado")
     
+    # Verificar permisos: Admin puede ver todo, otros deben pertenecer al grupo
+    if current_user.role != UserRole.admin:
+        if not user_belongs_to_group(db, current_user.user_id, group_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permiso para ver los miembros de marketing de este grupo"
+            )
+            
     return get_group_marketing_managers_paginated(db, group_id=group_id, skip=skip, limit=limit, search=search)
 
 """ GET /{group_id}/available-marketing - Obtener marketing managers que NO estan en el grupo (disponibles) """

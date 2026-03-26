@@ -173,6 +173,19 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
 
+    &__list__rfc {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        @include max-tablet {
+            white-space: normal;
+            word-break: break-all;
+        }
+    }
+
     &__item {
         display: flex;
         align-items: center;

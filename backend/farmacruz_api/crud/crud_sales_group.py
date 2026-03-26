@@ -187,7 +187,7 @@ def get_group_marketing_managers(db: Session, group_id: int) -> List[User]:
     ).all()
 
 """ Obtiene marketing managers paginados con busqueda """
-def get_group_marketing_managers_paginated(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[User]:    
+def get_group_marketing_managers_paginated(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[User]:
     query = db.query(User).join(
         GroupMarketingManager,
         User.user_id == GroupMarketingManager.marketing_id
@@ -200,7 +200,8 @@ def get_group_marketing_managers_paginated(db: Session, group_id: int, skip: int
         query = query.filter(
             or_(
                 User.full_name.ilike(search_term),
-                User.username.ilike(search_term)
+                User.username.ilike(search_term),
+                User.email.ilike(search_term)
             )
         )
     
@@ -375,7 +376,8 @@ def get_group_customers_paginated(db: Session, group_id: int, skip: int = 0, lim
             or_(
                 Customer.full_name.ilike(search_term),
                 Customer.username.ilike(search_term),
-                Customer.email.ilike(search_term)
+                Customer.email.ilike(search_term),
+                CustomerInfo.rfc.ilike(search_term)
             )
         )
     
@@ -460,11 +462,13 @@ def get_available_customers(db: Session, group_id: int, skip: int = 0, limit: in
     
     if search:
         search_term = f"%{search}%"
-        query = query.filter(
+        # Necesitamos join con CustomerInfo para buscar por RFC
+        query = query.outerjoin(Customer.customer_info).filter(
             or_(
                 Customer.full_name.ilike(search_term),
                 Customer.username.ilike(search_term),
-                Customer.email.ilike(search_term)
+                Customer.email.ilike(search_term),
+                CustomerInfo.rfc.ilike(search_term)
             )
         )
     return query.order_by(Customer.full_name).offset(skip).limit(limit).all()

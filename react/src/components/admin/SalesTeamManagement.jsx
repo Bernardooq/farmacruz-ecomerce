@@ -39,7 +39,7 @@ export default function SalesTeamManagement() {
   const [selectedUserForAssign, setSelectedUserForAssign] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 500);
+    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 2500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 

@@ -16,9 +16,9 @@ import Header from '../components/layout/Header2';
 import Footer from '../components/layout/Footer';
 import SummaryCards from '../components/sales/SummaryCards';
 import AllOrders from '../components/orders/AllOrders';
-import InventoryManager from '../components/products/InventoryManager';
 import CategoryManagement from '../components/products/CategoryManagement';
 import MyTickets from '../components/tickets/MyTickets';
+import SalesGroupsView from '../components/admin/SalesGroupsView';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 
@@ -28,6 +28,7 @@ import ErrorMessage from '../components/common/ErrorMessage';
 const SELLER_TABS = [
   { id: 'pedidos', label: 'Pedidos', icon: '📦' },
   { id: 'inventario', label: 'Inventario', icon: '📋' },
+  { id: 'grupos', label: 'Grupos de Ventas', icon: '👥' },
   { id: 'soporte', label: 'Soporte', icon: '🎫' }
 ];
 
@@ -81,6 +82,8 @@ export default function SellerDashboard() {
             <CategoryManagement />
           </>
         );
+      case 'grupos':
+        return <SalesGroupsView />;
       case 'soporte':
         return <MyTickets />;
       default:

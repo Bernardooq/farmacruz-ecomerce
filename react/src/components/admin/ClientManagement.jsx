@@ -51,7 +51,7 @@ export default function ClientManagement() {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
       setPage(0);
-    }, 500);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 

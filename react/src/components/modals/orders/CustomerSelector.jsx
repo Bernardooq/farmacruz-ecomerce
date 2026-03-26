@@ -135,7 +135,7 @@ export default function CustomerSelector({ onSelect, visible, userRole }) {
             {(userRole !== 'seller' || selectedGroupId) && (
                 <>
                     <form className="search-bar mb-3" onSubmit={handleCustomerSearch}>
-                        <input className="input" type="search" placeholder="Buscar cliente por nombre, email o ID..." value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} disabled={customersLoading} />
+                        <input className="input" type="search" placeholder="Buscar cliente por nombre, email, RFC o ID..." value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} disabled={customersLoading} />
                         <button className="btn btn--primary" type="submit" aria-label="Buscar" disabled={customersLoading}>
                             <FontAwesomeIcon icon={faSearch} />
                         </button>
@@ -158,6 +158,11 @@ export default function CustomerSelector({ onSelect, visible, userRole }) {
                                     <span className="customer-select-list__info">
                                         <strong>{customer.full_name}</strong>
                                         <span className="customer-select-list__email">{customer.email}</span>
+                                        {customer.rfc && (
+                                            <span className="customer-select-list__rfc">
+                                                RFC: {customer.rfc}
+                                            </span>
+                                        )}
                                     </span>
                                 </button>
                             ))}
