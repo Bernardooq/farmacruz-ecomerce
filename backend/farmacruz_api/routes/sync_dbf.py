@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 # SCHEMAS DE RESPUESTA
 class CleanupSchema(BaseModel):
     last_sync: datetime
+    force: bool = False
 
 class ResultadoSincronizacion(BaseModel):
     total_recibidos: int  # Total de registros enviados
@@ -333,8 +334,15 @@ def limpieza_post_sincronizacion(
     NO toca usuarios (customers ni sellers)."""
     logger.debug(f"CLEANUP: Received last_sync={last_sync}")
     try:
-        crud_sync.limpiar_items_no_sincronizados(db=db, last_sync=last_sync.last_sync)
+        exitoso = crud_sync.limpiar_items_no_sincronizados(db=db, last_sync=last_sync.last_sync, force=last_sync.force)
+        if not exitoso:
+             raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Operación cancelada por seguridad: se desactivarían demasiados productos. Use force=true para confirmar."
+            )
         db.commit()
+    except HTTPException:
+        raise
     except Exception as error:
         db.rollback()
         raise HTTPException(
