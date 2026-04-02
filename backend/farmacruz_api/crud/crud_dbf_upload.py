@@ -70,24 +70,24 @@ def process_productos_from_json(
     
     productos_cleaned = []
     for p in productos:
-        # Map category name to ID
+        # En el upsert de stock, permitimos que falten campos descriptivos
         category_id = None
         if p.get('category_name'):
             category_id = cat_map.get(p['category_name'])
         
-        # Ensure values are strictly typed
+        # Ensure values are strictly typed and handle missing metadata for stock-only syncs
         updated_prod = {
             "product_id": p["product_id"],
             "codebar": p.get("codebar"),
-            "name": p["name"],
-            "description": p.get("description"),      # Technical description
-            "descripcion_2": p.get("descripcion_2"),  # Long description
+            "name": p.get("name", "Producto Sincronizado"),
+            "description": p.get("description"),      
+            "descripcion_2": p.get("descripcion_2"),  
             "unidad_medida": p.get("unidad_medida"),
             "base_price": float(p.get("base_price", 0.0)),
             "iva_percentage": float(p.get("iva_percentage", 16.0)),
             "image_url": p.get("image_url"),
             "stock_count": int(p.get("stock_count", 0)),
-            "is_active": p.get("is_active", True),
+            "is_active": True, # Siempre forzamos True
             "category_id": category_id,
             "updated_at": fecha_sync
         }
@@ -102,7 +102,11 @@ def process_productos_from_json(
             stmt = insert(Product).values(chunk)
             stmt = stmt.on_conflict_do_update(
                 index_elements=['product_id'],
-                set_={c.name: c for c in stmt.excluded if c.name not in ('product_id', 'created_at')}
+                set_={
+                    'stock_count': stmt.excluded.stock_count,
+                    'is_active': True,
+                    'updated_at': stmt.excluded.updated_at
+                }
             )
             db.execute(stmt)
             db.commit()
