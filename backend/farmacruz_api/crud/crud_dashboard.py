@@ -68,6 +68,11 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         Order.status == OrderStatus.shipped
     ).scalar()
 
+    # Total de pedidos aprobados
+    approved_orders = db.query(func.count(Order.order_id)).filter(
+        Order.status == OrderStatus.approved
+    ).scalar()
+
     # Total de pedidos cancelados
     cancelled_orders = db.query(func.count(Order.order_id)).filter(
         Order.status == OrderStatus.cancelled
@@ -107,6 +112,7 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         total_orders=total_orders,
         delivered_orders=delivered_orders,
         shipped_orders=shipped_orders,
+        approved_orders=approved_orders,
         cancelled_orders=cancelled_orders,
         pending_orders=pending_orders,
         total_revenue=float(total_revenue),

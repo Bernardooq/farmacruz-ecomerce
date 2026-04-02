@@ -25,6 +25,7 @@ class DashboardStats(BaseModel):
     total_orders: int  # Total de pedidos historicos
     delivered_orders: int  # Total de pedidos entregados (delivered)
     shipped_orders: int  # Total de pedidos enviados (shipped)
+    approved_orders: int  # Total de pedidos aprobados (approved)
     cancelled_orders: int  # Total de pedidos cancelados (cancelled)
     pending_orders: int  # Pedidos pendientes de asignacion
     total_revenue: float  # Ingresos totales (pedidos completados)

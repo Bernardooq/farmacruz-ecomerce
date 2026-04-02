@@ -3,7 +3,7 @@ import {
   faInbox, faBoxOpen, faExclamationCircle, faDollarSign,
   faUsers, faUserTie, faCheckCircle, faClipboardList, faBullhorn,
   faChartLine, faBox, faUserFriends, faWarehouse, faChartPie,
-  faTruck, faTimesCircle, faExclamationTriangle
+  faTruck, faTimesCircle, faExclamationTriangle, faClipboardCheck
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function SummaryCards({ summary }) {
@@ -13,7 +13,7 @@ export default function SummaryCards({ summary }) {
 
   // Check if sections have any data to determine if we should show the group header
   const hasVentas = summary.total_revenue !== undefined || (summary.total_profit !== undefined && summary.total_profit > 0);
-  const hasPedidos = summary.pending_orders !== undefined || summary.delivered_orders !== undefined || summary.shipped_orders !== undefined || summary.cancelled_orders !== undefined;
+  const hasPedidos = summary.pending_orders !== undefined || summary.delivered_orders !== undefined || summary.shipped_orders !== undefined || summary.cancelled_orders !== undefined || summary.approved_orders !== undefined;
   const hasPersonal = summary.total_customers !== undefined || summary.total_sellers !== undefined || summary.total_marketing !== undefined;
   // Inventory is always assumed to be present for sellers and admins, but we'll check just to be safe based on catalogCount or total_products
   const hasInventario = summary.total_products !== undefined || summary.catalogCount !== undefined || summary.low_stock_count !== undefined || summary.lowStockCount !== undefined;
@@ -63,6 +63,15 @@ export default function SummaryCards({ summary }) {
                 <div className="stat-card__content">
                   <span className="stat-card__value">{summary.pending_orders || summary.pendingOrders || 0}</span>
                   <span className="stat-card__label">Pedidos Pendientes</span>
+                </div>
+              </div>
+            )}
+            {summary.approved_orders !== undefined && (
+              <div className="stat-card">
+                <div className="stat-card__icon stat-card__icon--success"><FontAwesomeIcon icon={faClipboardCheck} /></div>
+                <div className="stat-card__content">
+                  <span className="stat-card__value">{summary.approved_orders}</span>
+                  <span className="stat-card__label">Pedidos Aprobados</span>
                 </div>
               </div>
             )}
