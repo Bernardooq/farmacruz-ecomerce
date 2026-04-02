@@ -47,6 +47,12 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         Product.stock_count > 0,  # No contar productos sin stock
         Product.is_active == True
     ).scalar()
+
+    # Productos agotados (stock == 0)
+    out_of_stock_count = db.query(func.count(Product.product_id)).filter(
+        Product.stock_count <= 0,
+        Product.is_active == True
+    ).scalar()
     
     # PEDIDOS
     # Total de pedidos historicos
@@ -56,16 +62,22 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
     delivered_orders = db.query(func.count(Order.order_id)).filter(
         Order.status == OrderStatus.delivered
     ).scalar()
+
+    # Total de pedidos enviados
+    shipped_orders = db.query(func.count(Order.order_id)).filter(
+        Order.status == OrderStatus.shipped
+    ).scalar()
+
+    # Total de pedidos cancelados
+    cancelled_orders = db.query(func.count(Order.order_id)).filter(
+        Order.status == OrderStatus.cancelled
+    ).scalar()
     
-    # Total de pedidos en otros estados (no entregados)
-    other_orders = total_orders - delivered_orders
-    
-    # Pedidos pendientes de asignacion a vendedor
-    # Estos requieren atencion inmediata del admin/marketing
+    # Pedidos pendientes de validacion
     pending_orders = db.query(func.count(Order.order_id)).filter(
         Order.status == OrderStatus.pending_validation
     ).scalar()
-    
+
     # INGRESOS
     # Calcular revenue total de ordenes completadas
     # Solo se cuentan pedidos en estados: approved, shipped, delivered
@@ -94,11 +106,13 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         total_products=total_products,
         total_orders=total_orders,
         delivered_orders=delivered_orders,
-        other_orders=other_orders,
+        shipped_orders=shipped_orders,
+        cancelled_orders=cancelled_orders,
         pending_orders=pending_orders,
         total_revenue=float(total_revenue),
         total_profit=float(total_profit),
-        low_stock_count=low_stock_count
+        low_stock_count=low_stock_count,
+        out_of_stock_count=out_of_stock_count
     )
 
 """Obtiene estadisticas simplificadas para el dashboard de vendedores y marketing"""
@@ -121,11 +135,18 @@ def get_seller_marketing_dashboard_stats(db: Session) -> SellerMarketingDashboar
     pending_orders = db.query(func.count(Order.order_id)).filter(
         Order.status == OrderStatus.pending_validation
     ).scalar()
+
+    # Productos agotados
+    out_of_stock_count = db.query(func.count(Product.product_id)).filter(
+        Product.stock_count <= 0,
+        Product.is_active == True
+    ).scalar()
     
     return SellerMarketingDashboardStats(
         pending_orders=pending_orders,
         total_products=total_products,
-        low_stock_count=low_stock_count
+        low_stock_count=low_stock_count,
+        out_of_stock_count=out_of_stock_count
     )
 
 """Genera un reporte de ventas para un rango de fechas"""

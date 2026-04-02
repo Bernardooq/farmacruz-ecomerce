@@ -2,7 +2,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faInbox, faBoxOpen, faExclamationCircle, faDollarSign,
   faUsers, faUserTie, faCheckCircle, faClipboardList, faBullhorn,
-  faChartLine, faBox, faUserFriends, faWarehouse, faChartPie
+  faChartLine, faBox, faUserFriends, faWarehouse, faChartPie,
+  faTruck, faTimesCircle, faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function SummaryCards({ summary }) {
@@ -12,7 +13,7 @@ export default function SummaryCards({ summary }) {
 
   // Check if sections have any data to determine if we should show the group header
   const hasVentas = summary.total_revenue !== undefined || (summary.total_profit !== undefined && summary.total_profit > 0);
-  const hasPedidos = summary.pending_orders !== undefined || summary.delivered_orders !== undefined || summary.other_orders !== undefined;
+  const hasPedidos = summary.pending_orders !== undefined || summary.delivered_orders !== undefined || summary.shipped_orders !== undefined || summary.cancelled_orders !== undefined;
   const hasPersonal = summary.total_customers !== undefined || summary.total_sellers !== undefined || summary.total_marketing !== undefined;
   // Inventory is always assumed to be present for sellers and admins, but we'll check just to be safe based on catalogCount or total_products
   const hasInventario = summary.total_products !== undefined || summary.catalogCount !== undefined || summary.low_stock_count !== undefined || summary.lowStockCount !== undefined;
@@ -65,6 +66,15 @@ export default function SummaryCards({ summary }) {
                 </div>
               </div>
             )}
+            {summary.shipped_orders !== undefined && (
+              <div className="stat-card">
+                <div className="stat-card__icon stat-card__icon--info"><FontAwesomeIcon icon={faTruck} /></div>
+                <div className="stat-card__content">
+                  <span className="stat-card__value">{summary.shipped_orders}</span>
+                  <span className="stat-card__label">Pedidos Enviados</span>
+                </div>
+              </div>
+            )}
             {summary.delivered_orders !== undefined && (
               <div className="stat-card">
                 <div className="stat-card__icon"><FontAwesomeIcon icon={faCheckCircle} /></div>
@@ -74,12 +84,12 @@ export default function SummaryCards({ summary }) {
                 </div>
               </div>
             )}
-            {summary.other_orders !== undefined && (
+            {summary.cancelled_orders !== undefined && (
               <div className="stat-card">
-                <div className="stat-card__icon"><FontAwesomeIcon icon={faClipboardList} /></div>
+                <div className="stat-card__icon stat-card__icon--danger"><FontAwesomeIcon icon={faTimesCircle} /></div>
                 <div className="stat-card__content">
-                  <span className="stat-card__value">{summary.other_orders}</span>
-                  <span className="stat-card__label">Pedidos en Otros Estados</span>
+                  <span className="stat-card__value">{summary.cancelled_orders}</span>
+                  <span className="stat-card__label">Pedidos Cancelados</span>
                 </div>
               </div>
             )}
@@ -144,6 +154,13 @@ export default function SummaryCards({ summary }) {
               <div className="stat-card__content">
                 <span className="stat-card__value">{summary.low_stock_count || summary.lowStockCount || 0}</span>
                 <span className="stat-card__label">Productos con Bajo Stock</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__icon stat-card__icon--danger"><FontAwesomeIcon icon={faExclamationTriangle} /></div>
+              <div className="stat-card__content">
+                <span className="stat-card__value">{summary.out_of_stock_count || summary.outOfStockCount || 0}</span>
+                <span className="stat-card__label">Productos Agotados</span>
               </div>
             </div>
           </section>

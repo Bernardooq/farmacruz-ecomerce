@@ -24,11 +24,13 @@ class DashboardStats(BaseModel):
     total_products: int  # Total de productos en catalogo
     total_orders: int  # Total de pedidos historicos
     delivered_orders: int  # Total de pedidos entregados (delivered)
-    other_orders: int  # Total de pedidos en otros estados (no delivered)
+    shipped_orders: int  # Total de pedidos enviados (shipped)
+    cancelled_orders: int  # Total de pedidos cancelados (cancelled)
     pending_orders: int  # Pedidos pendientes de asignacion
     total_revenue: float  # Ingresos totales (pedidos completados)
     total_profit: float = 0.0  # Ganancia total estimada por markup
     low_stock_count: int  # Productos con bajo inventario (< 10 unidades)
+    out_of_stock_count: int  # Productos sin stock (0 unidades)
 
 
 class SellerMarketingDashboardStats(BaseModel):
@@ -40,6 +42,7 @@ class SellerMarketingDashboardStats(BaseModel):
     pending_orders: int  # Pedidos pendientes de validación
     total_products: int  # Total de productos en catálogo
     low_stock_count: int  # Productos con bajo inventario (< 10 unidades)
+    out_of_stock_count: int  # Productos sin stock (0 unidades)
 
 
 class SalesReportItem(BaseModel):
