@@ -53,7 +53,7 @@ SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'}
 def crear_carpeta_destino():
     """Crea la carpeta de salida si no existe"""
     OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
-    print(f"✅ Carpeta destino: {OUTPUT_FOLDER}")
+    print(f"[OK] Carpeta destino: {OUTPUT_FOLDER}")
 
 
 def obtener_tamaño_mb(ruta):
@@ -80,7 +80,7 @@ def comprimir_a_webp_adaptativo(imagen_path):
         
         # Si ya existe, saltar
         if webp_path.exists():
-            print(f"⏭️  Ya existe: {nombre_base}.webp")
+            print(f" [SKIP] Ya existe: {nombre_base}.webp")
             return False, 0, 0
         
         # Abrir imagen
@@ -142,10 +142,10 @@ def comprimir_a_webp_adaptativo(imagen_path):
                     
                     # Mostrar resultado exitoso
                     if tamaño_original_mb >= 0.1:
-                        print(f"✅ {nombre_base}: {tamaño_original_mb:.2f}MB → {tamaño_final_kb:.1f}KB ({reduccion:.0f}%)", end="")
+                        print(f" [OK] {nombre_base}: {tamaño_original_mb:.2f}MB -> {tamaño_final_kb:.1f}KB ({reduccion:.0f}%)", end="")
                     else:
                         orig_kb = obtener_tamaño_kb(imagen_path)
-                        print(f"✅ {nombre_base}: {orig_kb:.1f}KB → {tamaño_final_kb:.1f}KB ({reduccion:.0f}%)", end="")
+                        print(f" [OK] {nombre_base}: {orig_kb:.1f}KB -> {tamaño_final_kb:.1f}KB ({reduccion:.0f}%)", end="")
                     
                     # Mostrar optimizaciones aplicadas
                     if redimensionado or intento > 0:
@@ -177,19 +177,19 @@ def comprimir_a_webp_adaptativo(imagen_path):
             tamaño_final_kb = obtener_tamaño_kb(webp_path)
             reduccion = ((tamaño_original_mb - tamaño_final_mb) / tamaño_original_mb) * 100
             
-            print(f"⚠️  {nombre_base}: {tamaño_original_mb:.2f}MB → {tamaño_final_kb:.1f}KB ({reduccion:.0f}%) [excede {TARGET_SIZE_KB}KB]")
+            print(f" [!] {nombre_base}: {tamaño_original_mb:.2f}MB -> {tamaño_final_kb:.1f}KB ({reduccion:.0f}%) [excede {TARGET_SIZE_KB}KB]")
             
             return True, tamaño_original_mb, tamaño_final_mb
             
     except Exception as e:
-        print(f"❌ Error con {imagen_path.name}: {e}")
+        print(f" [ERR] Error con {imagen_path.name}: {e}")
         return False, 0, 0
 
 
 def main():
     """Función principal"""
     print("="*70)
-    print("🖼️  Compresor ADAPTATIVO de Imágenes a WebP")
+    print(" [IMG] Compresor ADAPTATIVO de Imágenes a WebP")
     print(f"   Objetivo: <{TARGET_SIZE_KB}KB por imagen")
     print("="*70)
     print()
@@ -210,7 +210,7 @@ def main():
         imagenes.extend(SOURCE_FOLDER.glob(f"*{ext.upper()}"))
     
     if not imagenes:
-        print(f"⚠️  No se encontraron imágenes en {SOURCE_FOLDER}")
+        print(f" [!] No se encontraron imágenes en {SOURCE_FOLDER}")
         return
     
     print(f"📁 Encontradas {len(imagenes)} imágenes")
@@ -237,7 +237,7 @@ def main():
     # Resumen
     print()
     print("="*70)
-    print(f"✅ Compresión completada")
+    print(f" [OK] Compresión completada")
     print(f"   Procesadas: {exitos}/{len(imagenes)} imágenes")
     if exitos > 0:
         print(f"   Bajo objetivo (<{TARGET_SIZE_KB}KB): {imagenes_bajo_objetivo}/{exitos} ({imagenes_bajo_objetivo*100/exitos:.0f}%)")

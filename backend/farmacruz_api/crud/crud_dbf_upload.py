@@ -28,7 +28,7 @@ def process_productos_from_json(
     """
     Process pre-parsed products JSON.
     """
-    fecha_sync = datetime.now(timezone.utc).isoformat()
+    fecha_sync = datetime.now(timezone.utc)
     
     # 1. UPSERT CATEGORIAS
     print(f"Upserting {len(categorias)} categories...")
@@ -53,7 +53,8 @@ def process_productos_from_json(
             }
         )
         db.execute(stmt)
-        
+        db.commit()
+    
     # RELOAD Category Map with DB IDs (Critical: Product.category_id is Integer)
     # Since we don't know the IDs of existing categories without querying
     db_categories = db.query(Category.category_id, Category.name).filter(
@@ -98,13 +99,15 @@ def process_productos_from_json(
         for i in range(0, len(productos_cleaned), CHUNK_SIZE):
             chunk = productos_cleaned[i:i + CHUNK_SIZE]
             
-            stmt = insert(Product)
+            stmt = insert(Product).values(chunk)
             stmt = stmt.on_conflict_do_update(
                 index_elements=['product_id'],
                 set_={c.name: c for c in stmt.excluded if c.name not in ('product_id', 'created_at')}
             )
-            db.execute(stmt, chunk)
-            
+            db.execute(stmt)
+            db.commit()
+            print(f"[THREAD-SYNC] Products chunk processed: {len(chunk)} items at {datetime.now()}")
+    
     db.commit()
     
     return {
@@ -121,7 +124,7 @@ def process_listas_precios_from_json(
     """
     Process unique price lists (Header information).
     """
-    fecha_sync = datetime.now(timezone.utc).isoformat()
+    fecha_sync = datetime.now(timezone.utc)
     print(f"Upserting {len(listas)} price lists headers...")
 
     listas_data = [
@@ -135,12 +138,12 @@ def process_listas_precios_from_json(
     ]
     
     if listas_data:
-        stmt = insert(PriceList)
+        stmt = insert(PriceList).values(listas_data)
         stmt = stmt.on_conflict_do_update(
             index_elements=['price_list_id'],
             set_={c.name: c for c in stmt.excluded if c.name not in('price_list_id')}
         )
-        db.execute(stmt, listas_data)
+        db.execute(stmt)
         db.commit()
     
     return {
@@ -158,7 +161,7 @@ def process_items_precios_from_json(
     Process price list items (Product relations).
     Validates logical consistency between markup and final price roughly.
     """
-    fecha_sync = datetime.now(timezone.utc).isoformat()
+    fecha_sync = datetime.now(timezone.utc)
     print(f"Processing {len(items)} price list items...")
     
     
@@ -202,14 +205,14 @@ def process_items_precios_from_json(
         for i in range(0, len(items_data), CHUNK_SIZE):
             chunk = items_data[i:i + CHUNK_SIZE]
             
-            # Define statement without values
-            stmt = insert(PriceListItem)
+            # Define statement with values(chunk)
+            stmt = insert(PriceListItem).values(chunk)
             stmt = stmt.on_conflict_do_update(
                 index_elements=['price_list_id', 'product_id'],
                 set_={c.name: c for c in stmt.excluded if c.name not in ['price_list_id', 'product_id']}
             )
-            # Execute with parameters
-            db.execute(stmt, chunk)
+            # Execute without parameters (values are already in stmt)
+            db.execute(stmt)
             db.commit()
     
 
@@ -236,7 +239,7 @@ def process_sellers_from_json(
         return {"creados": 0, "actualizados": 0, "errores": 0}
 
     print(f"Upserting {len(sellers)} sellers...")
-    fecha_sync = datetime.now(timezone.utc).isoformat()
+    fecha_sync = datetime.now(timezone.utc)
     
     creados = 0
     actualizados = 0
@@ -314,7 +317,7 @@ def process_customers_from_json(
         return {"creados": 0, "actualizados": 0, "errores": 0}
 
     print(f"Upserting {len(customers)} customers...")
-    fecha_sync = datetime.now(timezone.utc).isoformat()
+    fecha_sync = datetime.now(timezone.utc)
     
     creados = 0
     actualizados = 0

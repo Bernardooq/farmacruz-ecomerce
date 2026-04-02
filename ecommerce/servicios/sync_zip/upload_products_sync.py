@@ -53,15 +53,22 @@ def upload_compressed_json(endpoint, data, token):
         "Content-Type": "application/json"
     }
     
-    response = requests.post(f"{BACKEND_URL}{endpoint}", data=compressed, headers=headers, timeout=300)
-    response.raise_for_status()
+    try:
+        response = requests.post(f"{BACKEND_URL}{endpoint}", data=compressed, headers=headers, timeout=300)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"  [ERROR] {e}")
+        try:
+            print(f"  [DETALLE] {response.text}")
+        except: pass
+        raise e
     
     result = response.json()
     
     if response.status_code == 202 or 'status' in result:
-        print(f"  ✓ Encolado: {result.get('message', 'Procesando en background')}")
+        print(f"  [OK] Encolado: {result.get('message', 'Procesando en background')}")
     elif 'actualizados' in result:
-        print(f"  ✓ Completado: {result['actualizados']} actualizados")
+        print(f"  [OK] Completado: {result['actualizados']} actualizados")
     
     return result
 
@@ -182,9 +189,12 @@ def main():
                 timeout=30
             )
             response.raise_for_status()
-            print("  ✓ Productos/categorias/listas no sincronizados limpiados")
+            print("  [OK] Productos/categorias/listas no sincronizados limpiados")
         except Exception as e:
-            print(f"  ⚠ Cleanup warning: {e}")
+            if "400" in str(e):
+                print(f"  [!] CLEANUP ABORTADO: {e.response.json().get('detail')}")
+            else:
+                print(f"  [!] Cleanup warning: {e}")
             
     except Exception as e:
         print(f"\nCRITICAL FAILURE: {e}")

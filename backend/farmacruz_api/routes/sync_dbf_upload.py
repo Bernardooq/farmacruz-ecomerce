@@ -56,10 +56,19 @@ async def decompress_request(request: Request) -> Dict[str, Any]:
         body = await request.body()
         if request.headers.get("Content-Encoding") == "gzip":
             print(f"Decompressing GZIP payload: {len(body)/1024:.2f} KB")
-            decompressed = gzip.decompress(body)
-            return json.loads(decompressed.decode('utf-8'))
-        return json.loads(body.decode('utf-8'))
+            try:
+                decompressed = gzip.decompress(body)
+                # Usamos errors='replace' para no fallar por caracteres de FoxPro
+                decoded = decompressed.decode('utf-8', errors='replace')
+                return json.loads(decoded)
+            except gzip.BadGzipFile:
+                raise HTTPException(status_code=400, detail="Corrupted GZIP payload")
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"GZIP/JSON Error: {str(e)}")
+        
+        return json.loads(body.decode('utf-8', errors='replace'))
     except Exception as e:
+        logger.error(f"Request parse error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Decompression/JSON error: {str(e)}")
 
 

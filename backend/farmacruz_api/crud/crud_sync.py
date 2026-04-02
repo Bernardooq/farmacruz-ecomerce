@@ -440,9 +440,15 @@ def limpiar_items_no_sincronizados(db: Session, last_sync: datetime, force: bool
     ).count()
     
     if total_products > 100 and to_deactivate > (total_products * 0.20) and not force:
-        print(f"ALERTA SEGURIDAD: Abortando cleanup. Se desactivarían {to_deactivate} de {total_products} productos (>20%). Use force=True.")
+        msg = (
+            f"SAFETY ABORT: Se intentaron desactivar {to_deactivate} productos de un total de {total_products} "
+            f"({(to_deactivate/total_products)*100:.1f}%). El límite de seguridad es 20%. "
+            f"Esto ocurre si solo sincronizaste una parte pequeña del catálogo. "
+            f"Usa force=True en la petición para confirmar que deseas desactivar el resto."
+        )
+        print(msg)
         return False
-
+        
     # Proceder con la desactivación/eliminación
     # Desactivar productos no actualizados
     db.query(Product).filter(Product.updated_at < last_sync_buffered).update({Product.is_active: False})

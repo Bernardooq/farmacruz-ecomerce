@@ -53,9 +53,9 @@ def upload_compressed_json(endpoint, data, token):
     result = response.json()
     
     if response.status_code == 202 or 'status' in result:
-        print(f"  ✓ Encolado: {result.get('message', 'Procesando en background')}")
+        print(f"  [OK] Encolado: {result.get('message', 'Procesando en background')}")
     elif 'actualizados' in result:
-        print(f"  ✓ Completado: {result['actualizados']} actualizados")
+        print(f"  [OK] Completado: {result['actualizados']} actualizados")
     
     return result
 
