@@ -73,11 +73,11 @@ def process_productos_from_json(
         # En el upsert de stock, permitimos que falten campos descriptivos
         category_id = None
         if p.get('category_name'):
-            category_id = cat_map.get(p['category_name'])
+            category_id = cat_map.get(p.get('category_name'))
         
         # Ensure values are strictly typed and handle missing metadata for stock-only syncs
         updated_prod = {
-            "product_id": p["product_id"],
+            "product_id": p.get("product_id"),
             "codebar": p.get("codebar"),
             "name": p.get("name", "Producto Sincronizado"),
             "description": p.get("description"),      
@@ -133,12 +133,12 @@ def process_listas_precios_from_json(
 
     listas_data = [
         {
-            "price_list_id": int(lista["price_list_id"]),
-            "list_name": lista.get("list_name") or lista.get("name") or f"Lista {lista['price_list_id']}",  # Map input 'list_name' or 'name' to column 'list_name'
+            "price_list_id": int(lista.get("price_list_id", 0)),
+            "list_name": lista.get("list_name") or lista.get("name") or f"Lista {lista.get('price_list_id', 'Unknown')}",  # Map input 'list_name' or 'name' to column 'list_name'
             "is_active": True,
             "updated_at": fecha_sync
         }
-        for lista in listas
+        for lista in listas if lista.get("price_list_id")
     ]
     
     if listas_data:
@@ -177,9 +177,15 @@ def process_items_precios_from_json(
     # but we import LMARGEN as well.
     
     for item in items:
+        p_id = item.get("product_id")
+        l_id = item.get("price_list_id")
+        
+        if not p_id or not l_id:
+            continue
+
         items_data.append({
-            "price_list_id": int(item["price_list_id"]),
-            "product_id": item["product_id"],
+            "price_list_id": int(l_id),
+            "product_id": p_id,
             "markup_percentage": float(item.get("markup_percentage", 0.0)),
             "final_price": float(item.get("final_price", 0.0)),
             "updated_at": fecha_sync
@@ -250,12 +256,14 @@ def process_sellers_from_json(
     
     try:
         # 1. Identify Existing vs New
-        user_ids = [int(s['user_id']) for s in sellers]
+        user_ids = [int(s.get('user_id')) for s in sellers if s.get('user_id')]
         existing_users = db.query(User.user_id).filter(User.user_id.in_(user_ids)).all()
         existing_ids = {u.user_id for u in existing_users}
         
         for s in sellers:
-            if int(s['user_id']) in existing_ids:
+            s_id = s.get('user_id')
+            if not s_id: continue
+            if int(s_id) in existing_ids:
                 actualizados += 1
             else:
                 creados += 1
@@ -270,13 +278,17 @@ def process_sellers_from_json(
         # 3. Prepare Data
         sellers_data = []
         for s in sellers:
+            s_id = s.get('user_id')
+            if not s_id: continue
+            
             pwd_hash = password_hashes.get(s.get('password'))
+            username = s.get('username', f"user_{s_id}")
             
             sellers_data.append({
-                "user_id": int(s['user_id']),
-                "username": s['username'],
-                "email": s.get('email') or f"{s['username']}@farmacruz.local",
-                "full_name": s['full_name'] or s['username'],
+                "user_id": int(s_id),
+                "username": username,
+                "email": s.get('email') or f"{username}@farmacruz.local",
+                "full_name": s.get('full_name') or username,
                 "password_hash": pwd_hash,
                 "role": "seller",
                 "is_active": s.get("is_active", True),
@@ -328,12 +340,14 @@ def process_customers_from_json(
     
     try:
         # 1. Identify Existing
-        customer_ids = [int(c['customer_id']) for c in customers]
+        customer_ids = [int(c.get('customer_id')) for c in customers if c.get('customer_id')]
         existing = db.query(Customer.customer_id).filter(Customer.customer_id.in_(customer_ids)).all()
         existing_ids = {c.customer_id for c in existing}
         
         for c in customers:
-            if int(c['customer_id']) in existing_ids:
+            c_id = c.get('customer_id')
+            if not c_id: continue
+            if int(c_id) in existing_ids:
                 actualizados += 1
             else:
                 creados += 1
@@ -350,13 +364,18 @@ def process_customers_from_json(
         info_data = []
         
         for c in customers:
-            cid = int(c['customer_id'])
+            c_id = c.get('customer_id')
+            if not c_id: continue
+            
+            cid = int(c_id)
+            username = c.get('username', f"cust_{cid}")
+            
             # Customer Table
             customers_data.append({
                 "customer_id": cid,
-                "username": c['username'],
-                "email": c.get('email') or f"{c['username']}@farmacruz.local",
-                "full_name": c.get('full_name') or c['username'],
+                "username": username,
+                "email": c.get('email') or f"{username}@farmacruz.local",
+                "full_name": c.get('full_name') or username,
                 "password_hash": password_hashes.get(c.get('password')),
                 "is_active": True,
                 "agent_id": c.get('agent_id'), # Link to seller
@@ -366,7 +385,7 @@ def process_customers_from_json(
             # CustomerInfo Table
             info_data.append({
                 "customer_id": cid,
-                "business_name": c.get('business_name') or c.get('full_name'),
+                "business_name": c.get('business_name') or c.get('full_name') or username,
                 "rfc": c.get('rfc'),
                 "price_list_id": c.get('price_list_id'),
                 "address_1": c.get('address_1'),
@@ -415,8 +434,8 @@ def process_customers_from_json(
             
         # 5. Group Assignment (Reuse logic)
         customers_with_agents = [
-            {'customer_id': int(c['customer_id']), 'agent_id': int(c['agent_id'])}
-            for c in customers if c.get('agent_id')
+            {'customer_id': int(c.get('customer_id')), 'agent_id': int(c.get('agent_id'))}
+            for c in customers if c.get('agent_id') and c.get('customer_id')
         ]
         
         if customers_with_agents:

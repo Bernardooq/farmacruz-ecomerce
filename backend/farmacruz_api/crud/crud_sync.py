@@ -107,12 +107,12 @@ def bulk_sync_prods(db: Session, productos: List[dict]) -> Tuple[int, int, List[
     
     try:
         # 1. Resolver categorías en bulk
-        category_names = {p['category_name'] for p in productos if p.get('category_name')}
+        category_names = {p.get('category_name') for p in productos if p.get('category_name')}
         categories = db.query(Category).filter(Category.name.in_(category_names)).all()
         cat_map = {c.name: c.category_id for c in categories}
         
         # 2. Obtener IDs de productos existentes para contar
-        product_ids = [p['product_id'] for p in productos]
+        product_ids = [p.get('product_id') for p in productos if p.get('product_id')]
         existing_products = db.query(Product.product_id).filter(
             Product.product_id.in_(product_ids)
         ).all()
@@ -121,24 +121,27 @@ def bulk_sync_prods(db: Session, productos: List[dict]) -> Tuple[int, int, List[
         # 3. Preparar datos para el UPSERT
         prod_data_list = []
         for p in productos:
+            p_id = p.get('product_id')
+            if not p_id: continue
+
             category_id = cat_map.get(p.get('category_name'))
             
             # Contar creados vs actualizados
-            if p['product_id'] in existing_ids:
+            if p_id in existing_ids:
                 actualizados += 1
             else:
                 creados += 1
                 
             prod_data_list.append({
-                "product_id": p['product_id'],
-                "codebar": p['codebar'],
-                "name": p['name'],
+                "product_id": p_id,
+                "codebar": p.get('codebar'),
+                "name": p.get('name', 'Producto Sincronizado'),
                 "description": p.get('description'),
                 "descripcion_2": p.get('descripcion_2'),
                 "unidad_medida": p.get('unidad_medida'),
-                "base_price": p['base_price'],
-                "iva_percentage": p.get('iva_percentage', 0.0),
-                "stock_count": p.get('stock_count', 0),
+                "base_price": float(p.get('base_price', 0.0)),
+                "iva_percentage": float(p.get('iva_percentage', 0.0)),
+                "stock_count": int(p.get('stock_count', 0)),
                 "is_active": p.get('is_active', True),
                 "category_id": category_id,
                 "image_url": p.get('image_url'),
@@ -186,7 +189,7 @@ def bulk_upsert_price_list_items(db: Session, items: List[dict]) -> Tuple[int, i
     try:
         # Filtrar items válidos (productos que existen)
         valid_items = []
-        product_ids = [item['product_id'] for item in items]
+        product_ids = [item.get('product_id') for item in items if item.get('product_id')]
         
         # Obtener productos existentes en una sola query
         existing_products = db.query(Product.product_id).filter(
@@ -196,7 +199,8 @@ def bulk_upsert_price_list_items(db: Session, items: List[dict]) -> Tuple[int, i
         
         # Filtrar solo items con productos válidos
         for item in items:
-            if item['product_id'] in existing_product_ids:
+            p_id = item.get('product_id')
+            if p_id in existing_product_ids:
                 valid_items.append(item)
             else:
                 omitidos += 1
@@ -206,13 +210,13 @@ def bulk_upsert_price_list_items(db: Session, items: List[dict]) -> Tuple[int, i
         
         # Obtener items existentes para saber cuántos son updates vs inserts
         existing_items_query = db.query(PriceListItem.price_list_id, PriceListItem.product_id).filter(
-            PriceListItem.price_list_id.in_([item['price_list_id'] for item in valid_items])
+            PriceListItem.price_list_id.in_([item.get('price_list_id') for item in valid_items if item.get('price_list_id')])
         ).all()
         existing_keys = {(item.price_list_id, item.product_id) for item in existing_items_query}
         
         # Contar creados vs actualizados
         for item in valid_items:
-            key = (item['price_list_id'], item['product_id'])
+            key = (item.get('price_list_id'), item.get('product_id'))
             if key in existing_keys:
                 actualizados += 1
             else:
@@ -252,7 +256,7 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
     
     try:
         # Obtener customer_ids existentes para contar creados vs actualizados
-        customer_ids = [c['customer_id'] for c in customers]
+        customer_ids = [c.get('customer_id') for c in customers if c.get('customer_id')]
         existing_customers = db.query(Customer.customer_id).filter(
             Customer.customer_id.in_(customer_ids)
         ).all()
@@ -260,28 +264,35 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
         
         # Contar creados vs actualizados
         for customer in customers:
-            if customer['customer_id'] in existing_ids:
+            c_id = customer.get('customer_id')
+            if not c_id: continue
+            if c_id in existing_ids:
                 actualizados += 1
             else:
                 creados += 1
         
         # OPTIMIZACIÓN: Hashear contraseñas unicas solamente (en lugar de todas)
-        # Esto reduce 2735 operaciones costosas a solo 1 (si todos usan la misma contraseña)
         password_hashes = {}
         for c in customers:
-            password = c['password']
-            if password not in password_hashes:
+            password = c.get('password')
+            if password and password not in password_hashes:
                 password_hashes[password] = get_password_hash(password)
         
         # Preparar datos de Customer reutilizando hashes pre-calculados
         customers_data = []
         for c in customers:
+            c_id = c.get('customer_id')
+            if not c_id: continue
+            
+            pwd_hash = password_hashes.get(c.get('password'))
+            username = c.get('username', f"cust_{c_id}")
+            
             customers_data.append({
-                "customer_id": c['customer_id'],
-                "username": c['username'],
-                "email": c['email'],
-                "full_name": c['full_name'],
-                "password_hash": password_hashes[c['password']],  # Reutilizar hash
+                "customer_id": c_id,
+                "username": username,
+                "email": c.get('email') or f"{username}@farmacruz.local",
+                "full_name": c.get('full_name') or username,
+                "password_hash": pwd_hash,  # Reutilizar hash
                 "is_active": True,
                 "agent_id": c.get('agent_id'),
                 "updated_at": c.get('updated_at') or datetime.now(timezone.utc)
@@ -304,9 +315,12 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
         # Preparar datos de CustomerInfo
         customers_info_data = []
         for c in customers:
+            c_id = c.get('customer_id')
+            if not c_id: continue
+            
             customers_info_data.append({
-                "customer_id": c['customer_id'],
-                "business_name": c.get('business_name') or c['full_name'],
+                "customer_id": c_id,
+                "business_name": c.get('business_name') or c.get('full_name') or f"Cliente {c_id}",
                 "rfc": c.get('rfc'),
                 "price_list_id": c.get('price_list_id'),
                 "address_1": c.get('address_1'),
@@ -333,8 +347,8 @@ def bulk_upsert_customers(db: Session, customers: List[dict]) -> Tuple[int, int,
         
         # Auto-asignar clientes con agent_id a grupos de vendedores (OPTIMIZADO)
         customers_with_agents = [
-            {'customer_id': c['customer_id'], 'agent_id': c['agent_id']}
-            for c in customers if c.get('agent_id')
+            {'customer_id': c.get('customer_id'), 'agent_id': c.get('agent_id')}
+            for c in customers if c.get('agent_id') and c.get('customer_id')
         ]
         if customers_with_agents:
             from utils.sales_group_utils import bulk_assign_customers_to_agent_groups
@@ -361,7 +375,7 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
     
     try:
         # Obtener user_ids existentes
-        user_ids = [s['user_id'] for s in sellers]
+        user_ids = [s.get('user_id') for s in sellers if s.get('user_id')]
         existing_users = db.query(User.user_id).filter(
             User.user_id.in_(user_ids)
         ).all()
@@ -369,7 +383,9 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
         
         # Contar creados vs actualizados
         for seller in sellers:
-            if seller['user_id'] in existing_ids:
+            s_id = seller.get('user_id')
+            if not s_id: continue
+            if s_id in existing_ids:
                 actualizados += 1
             else:
                 creados += 1
@@ -377,19 +393,25 @@ def bulk_upsert_sellers(db: Session, sellers: List[dict]) -> Tuple[int, int, Lis
         # OPTIMIZACIÓN: Hashear contraseñas únicas solamente
         password_hashes = {}
         for s in sellers:
-            password = s['password']
-            if password not in password_hashes:
+            password = s.get('password')
+            if password and password not in password_hashes:
                 password_hashes[password] = get_password_hash(password)
         
         # Preparar datos de User con contraseñas pre-hasheadas y rol seller
         sellers_data = []
         for s in sellers:
+            s_id = s.get('user_id')
+            if not s_id: continue
+            
+            pwd_hash = password_hashes.get(s.get('password'))
+            username = s.get('username', f"user_{s_id}")
+            
             sellers_data.append({
-                "user_id": s['user_id'],
-                "username": s['username'],
-                "email": s['email'],
-                "full_name": s['full_name'],
-                "password_hash": password_hashes[s['password']],  # Reutilizar hash
+                "user_id": s_id,
+                "username": username,
+                "email": s.get('email') or f"{username}@farmacruz.local",
+                "full_name": s.get('full_name') or username,
+                "password_hash": pwd_hash,  # Reutilizar hash
                 "role": 'seller',
                 "is_active": s.get('is_active', True),
                 "updated_at": s.get('updated_at') or datetime.now(timezone.utc)

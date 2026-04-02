@@ -22,7 +22,7 @@ def test_sync():
     productos_test = [
         {"product_id": "COL14", "stock_count": 227, "updated_at": test_now},
         {"product_id": "BRU40", "stock_count": 1, "updated_at": test_now},
-        {"product_id": "DEG1", "stock_count": 29, "updated_at": test_now},
+        {"product_id": "DEG1", "stock_count": 30, "updated_at": test_now},
         {"product_id": "DEG28", "stock_count": 2, "updated_at": test_now},
         {"product_id": "SON31", "stock_count": 3, "updated_at": test_now}
     ]
