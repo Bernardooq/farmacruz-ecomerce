@@ -254,7 +254,7 @@ class Product(Base):
     __tablename__ = "products"
 
     product_id = Column(String(50), primary_key=True)  # ID tipo "FAR74" (no numerico)
-    codebar = Column(String(100), unique=True, nullable=True, index=True)  # Codigo de barras (puede ser None)
+    codebar = Column(String(100), nullable=True, index=True)  # Codigo de barras (puede ser None)
     name = Column(String(255), nullable=False)  # Nombre del producto
     description = Column(Text)  # Descripcion principal (del DBF/sincronizacion)
     descripcion_2 = Column(Text)  # Descripcion adicional (editable por admin, ej: receta medica)

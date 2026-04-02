@@ -149,7 +149,7 @@ CREATE TABLE categories (
 -- =====================================================
 CREATE TABLE products (
     product_id VARCHAR(50) PRIMARY KEY,
-    codebar VARCHAR(100) UNIQUE,
+    codebar VARCHAR(100),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     descripcion_2 TEXT,

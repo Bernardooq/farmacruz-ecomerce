@@ -99,18 +99,24 @@ def process_productos_from_json(
         for i in range(0, len(productos_cleaned), CHUNK_SIZE):
             chunk = productos_cleaned[i:i + CHUNK_SIZE]
             
-            stmt = insert(Product).values(chunk)
-            stmt = stmt.on_conflict_do_update(
-                index_elements=['product_id'],
-                set_={
-                    'stock_count': stmt.excluded.stock_count,
-                    'is_active': True,
-                    'updated_at': stmt.excluded.updated_at
-                }
-            )
-            db.execute(stmt)
-            db.commit()
-            print(f"[THREAD-SYNC] Products chunk processed: {len(chunk)} items at {datetime.now()}")
+            try:
+                stmt = insert(Product).values(chunk)
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=['product_id'],
+                    set_={
+                        'stock_count': stmt.excluded.stock_count,
+                        'is_active': True,
+                        'updated_at': stmt.excluded.updated_at
+                    }
+                )
+                db.execute(stmt)
+                db.commit()
+                print(f"[THREAD-SYNC] Products chunk processed: {len(chunk)} items at {datetime.now()}")
+            except Exception as e:
+                db.rollback()
+                print(f"[THREAD-SYNC-ERROR] Error processing products chunk around index {i}: {str(e)}")
+                # We continue with the next chunk
+                continue
     
     db.commit()
     
