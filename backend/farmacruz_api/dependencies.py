@@ -36,7 +36,7 @@ def get_db() -> Generator:
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
-):
+) -> User:
     # Obtiene el usuario autenticado actual desde el token JWT
     from db.base import Customer
     from crud.crud_customer import get_customer_by_username

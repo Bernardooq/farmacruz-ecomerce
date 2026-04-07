@@ -246,7 +246,7 @@ export default function InventoryManager() {
                 <th>Producto</th>
                 <th>Codigo de barras</th>
                 <th>Categoría</th>
-                <th>Precio Base</th>
+                {isAdmin && <th>Precio Base</th>}
                 <th>IVA</th>
                 <th>Stock Actual</th>
                 <th>Acciones</th>
@@ -255,7 +255,7 @@ export default function InventoryManager() {
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-8">No se encontraron productos</td>
+                  <td colSpan={isAdmin ? "8" : "7"} className="text-center py-8">No se encontraron productos</td>
                 </tr>
               ) : (
                 products.map((product) => (

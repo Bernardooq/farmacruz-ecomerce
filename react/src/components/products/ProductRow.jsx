@@ -32,7 +32,7 @@ export default function ProductRow({
       <td data-label="Producto">{product.name}</td>
       <td data-label="codebar">{product.codebar}</td>
       <td data-label="Categoría">{product.category?.name || 'N/A'}</td>
-      <td data-label="Precio Base">${basePrice.toFixed(2)}</td>
+      {isAdmin && <td data-label="Precio Base">${basePrice.toFixed(2)}</td>}
       <td data-label="IVA">
         {ivaPercentage.toFixed(0)}%
       </td>

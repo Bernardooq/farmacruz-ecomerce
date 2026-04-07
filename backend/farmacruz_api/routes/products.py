@@ -25,6 +25,7 @@ from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 
 from dependencies import get_db, get_current_admin_user, get_current_user
+from db.base import User
 from schemas.product import ProductCreate, ProductUpdate, Product
 from crud.crud_product import (
     get_products, 
@@ -57,7 +58,8 @@ def read_products(
     sort_by: Optional[str] = Query(None, description="Ordenar por: price, name"),
     sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
     image: Optional[bool] = Query(None, description="Filtrar por imagen"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     # Lista de productos con filtros y ordenamiento
     if search:
@@ -65,11 +67,17 @@ def read_products(
     else:
         products = get_products(db, skip=skip, limit=limit, category_id=category_id, is_active=is_active, stock_filter=stock_filter,
             sort_by=sort_by, sort_order=sort_order, image=image)
+    
+    # Filtrar precio base si no es admin
+    if current_user and current_user.role != "admin":
+        for p in products:
+            p.base_price = None
+            
     return products
 
 """ GET /{id} - Detalle de producto especifico """
 @router.get("/{product_id}", response_model=Product)
-def read_product(product_id: str, db: Session = Depends(get_db)):
+def read_product(product_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Detalle de un producto especifico
     product = get_product(db, product_id=product_id)
     if not product:
@@ -77,11 +85,16 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Producto no encontrado"
         )
+    
+    # Filtrar precio base si no es admin
+    if current_user and current_user.role != "admin":
+        product.base_price = None
+        
     return product
 
 """ GET /codebar/{codebar} - Buscar producto por codebar (codigo unico) """
 @router.get("/codebar/{codebar}", response_model=Product)
-def read_product_by_codebar(codebar: str, db: Session = Depends(get_db)):
+def read_product_by_codebar(codebar: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Buscar producto por codebar (codigo unico) 
     product = get_product_by_codebar(db, codebar=codebar)
     if not product:
@@ -89,6 +102,11 @@ def read_product_by_codebar(codebar: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Producto no encontrado"
         )
+    
+    # Filtrar precio base si no es admin
+    if current_user and current_user.role != "admin":
+        product.base_price = None
+        
     return product
 
 """ POST / - Crear un nuevo producto """
@@ -229,7 +247,7 @@ def read_similar_products(
     limit: int = Query(5, ge=1, le=10, description="Cantidad maxima de productos similares (max 10)"),
     min_similarity: float = Query(0.3, ge=0.1, le=1.0, description="Umbral minimo de similitud (0.1-1.0)"),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Encuentra productos similares basados en componentes activos en descripcion_2.
