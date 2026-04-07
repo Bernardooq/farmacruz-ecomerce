@@ -198,7 +198,7 @@ export default function InventoryManager() {
 
         <div className="filter-group">
           <label className="filter-group__label" htmlFor="filterCategory">Categoría:</label>
-          <select className="select" id="filterCategory" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+          <select className="select" id="filterCategory" value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); setPage(0); }}>
             <option value="">Todas</option>
             {categories.map(cat => (
               <option key={cat.category_id} value={cat.category_id}>{cat.name}</option>
@@ -208,7 +208,7 @@ export default function InventoryManager() {
 
         <div className="filter-group">
           <label className="filter-group__label" htmlFor="filterStock">Stock:</label>
-          <select className="select" id="filterStock" value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
+          <select className="select" id="filterStock" value={stockFilter} onChange={(e) => { setStockFilter(e.target.value); setPage(0); }}>
             <option value="">Todos</option>
             <option value="ok">En Stock</option>
             <option value="low">Bajo Stock</option>
@@ -218,7 +218,7 @@ export default function InventoryManager() {
 
         <div className="filter-group">
           <label className="filter-group__label" htmlFor="filterActive">Estado:</label>
-          <select className="select" id="filterActive" value={isActiveFilter} onChange={(e) => setIsActiveFilter(e.target.value)}>
+          <select className="select" id="filterActive" value={isActiveFilter} onChange={(e) => { setIsActiveFilter(e.target.value); setPage(0); }}>
             <option value="">Todos</option>
             <option value="true">Activos</option>
             <option value="false">Inactivos</option>
@@ -227,7 +227,7 @@ export default function InventoryManager() {
 
         <div className="filter-group">
           <label className="filter-group__label" htmlFor="filterImage">Imagen:</label>
-          <select className="select" id="filterImage" value={imageFilter} onChange={(e) => setImageFilter(e.target.value)}>
+          <select className="select" id="filterImage" value={imageFilter} onChange={(e) => { setImageFilter(e.target.value); setPage(0); }}>
             <option value="">Todos</option>
             <option value="true">Con Imagen</option>
             <option value="false">Sin Imagen</option>

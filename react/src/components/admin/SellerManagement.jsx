@@ -36,28 +36,26 @@ export default function SellerManagement() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 2500);
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(0);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   useEffect(() => {
-    if (debouncedSearchTerm.trim()) {
-      performSearch();
-    } else {
-      loadSellers();
-    }
+    loadSellers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm]);
-
-  useEffect(() => { loadSellers(); }, [page]);
+  }, [page, debouncedSearchTerm]);
 
   const loadSellers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const users = await adminService.getUsers({
-        role: 'seller', skip: page * itemsPerPage, limit: itemsPerPage + 1
-      });
+      const params = { role: 'seller', skip: page * itemsPerPage, limit: itemsPerPage + 1 };
+      if (debouncedSearchTerm) params.search = debouncedSearchTerm;
+      
+      const users = await adminService.getUsers(params);
       const hasMorePages = users.length > itemsPerPage;
       setHasMore(hasMorePages);
       setSellers(hasMorePages ? users.slice(0, itemsPerPage) : users);
@@ -78,23 +76,11 @@ export default function SellerManagement() {
     }
   };
 
-  const performSearch = async () => {
+  const handleSearch = (e) => { 
+    e.preventDefault(); 
+    setDebouncedSearchTerm(searchTerm); 
     setPage(0);
-    try {
-      setLoading(true);
-      setError(null);
-      const users = await adminService.getUsers({ role: 'seller', search: debouncedSearchTerm });
-      setSellers(users);
-      setHasMore(false);
-    } catch (err) {
-      setError('Error al buscar vendedores.');
-      console.error('Search failed:', err);
-    } finally {
-      setLoading(false);
-    }
   };
-
-  const handleSearch = (e) => { e.preventDefault(); setDebouncedSearchTerm(searchTerm); };
 
   const openAddModal = () => {
     setEditingSeller(null);

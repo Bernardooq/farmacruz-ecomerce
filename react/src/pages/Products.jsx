@@ -55,6 +55,12 @@ export default function Products() {
   const [sortOrder, setSortOrder] = useState('relevance');
   const [page, setPage] = useState(0);
 
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery);
+  if (searchQuery !== prevSearchQuery) {
+    setPrevSearchQuery(searchQuery);
+    setPage(0);
+  }
+
   const isCustomer = user?.role === 'customer';
   const isInternalUser = user && ['admin', 'seller', 'marketing'].includes(user.role);
 

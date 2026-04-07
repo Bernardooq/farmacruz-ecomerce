@@ -39,7 +39,10 @@ export default function SalesTeamManagement() {
   const [selectedUserForAssign, setSelectedUserForAssign] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearchTerm(searchTerm); }, 2500);
+    const timer = setTimeout(() => { 
+      setDebouncedSearchTerm(searchTerm);
+      setPage(0);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -371,19 +374,19 @@ export default function SalesTeamManagement() {
         <nav className="dashboard-layout__tabs-nav">
           <button
             className={`dashboard-layout__tab ${activeTab === 'sellers' ? 'dashboard-layout__tab--active' : ''}`}
-            onClick={() => { setActiveTab('sellers'); setPage(0); setSearchTerm(''); }}
+            onClick={() => { setActiveTab('sellers'); setPage(0); setSearchTerm(''); setDebouncedSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUserTie} /> Vendedores
           </button>
           <button
             className={`dashboard-layout__tab ${activeTab === 'marketing' ? 'dashboard-layout__tab--active' : ''}`}
-            onClick={() => { setActiveTab('marketing'); setPage(0); setSearchTerm(''); }}
+            onClick={() => { setActiveTab('marketing'); setPage(0); setSearchTerm(''); setDebouncedSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUsers} /> Marketing
           </button>
           <button
             className={`dashboard-layout__tab ${activeTab === 'groups' ? 'dashboard-layout__tab--active' : ''}`}
-            onClick={() => { setActiveTab('groups'); setPage(0); setSearchTerm(''); }}
+            onClick={() => { setActiveTab('groups'); setPage(0); setSearchTerm(''); setDebouncedSearchTerm(''); }}
           >
             <FontAwesomeIcon icon={faUsersGear} /> Grupos
           </button>
