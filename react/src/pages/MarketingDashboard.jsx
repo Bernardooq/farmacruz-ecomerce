@@ -48,7 +48,8 @@ export default function MarketingDashboard() {
             setSummary({
                 pending_orders: stats.pending_orders,
                 total_products: stats.total_products,
-                low_stock_count: stats.low_stock_count
+                low_stock_count: stats.low_stock_count,
+                out_of_stock_count: stats.out_of_stock_count
             });
         } catch (err) {
             setError('No se pudieron cargar los datos del dashboard. Intenta de nuevo.');

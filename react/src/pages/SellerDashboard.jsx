@@ -58,7 +58,8 @@ export default function SellerDashboard() {
       setSummary({
         pendingOrders: stats.pending_orders,
         catalogCount: stats.total_products,
-        lowStockCount: stats.low_stock_count
+        lowStockCount: stats.low_stock_count,
+        outOfStockCount: stats.out_of_stock_count
       });
     } catch (err) {
       setError('No se pudieron cargar los datos del dashboard. Intenta de nuevo.');
