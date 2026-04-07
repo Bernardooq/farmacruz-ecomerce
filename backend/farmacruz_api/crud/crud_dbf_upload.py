@@ -11,13 +11,15 @@ import math
 
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import text
-
+import logging
 from sqlalchemy import text
 
 from db.base import Product, Category, PriceList, PriceListItem, User, Customer, CustomerInfo
 from crud.crud_customer import get_password_hash
 from utils.sales_group_utils import bulk_assign_customers_to_agent_groups, bulk_ensure_seller_groups
+
+# Configurar logger para este módulo
+logger = logging.getLogger(__name__)
 
 
 def process_productos_from_json(
@@ -31,7 +33,7 @@ def process_productos_from_json(
     fecha_sync = datetime.now(timezone.utc)
     
     # 1. UPSERT CATEGORIAS
-    print(f"Upserting {len(categorias)} categories...")
+    logger.info(f"Upserting {len(categorias)} categories...")
     
     # Build category map: name -> id (deterministic hash)
     cat_map = {}
@@ -63,10 +65,10 @@ def process_productos_from_json(
     
     # Update map: Name -> ID
     cat_map = {c.name: c.category_id for c in db_categories}
-    print(f"Mapped {len(cat_map)} categories to IDs")
+    logger.info(f"Mapped {len(cat_map)} categories to IDs")
     
     # 2. UPSERT PRODUCTOS
-    print(f"Upserting {len(productos)} products...")
+    logger.info(f"Upserting {len(productos)} products...")
     
     productos_cleaned = []
     for p in productos:
@@ -111,10 +113,10 @@ def process_productos_from_json(
                 )
                 db.execute(stmt)
                 db.commit()
-                print(f"[THREAD-SYNC] Products chunk processed: {len(chunk)} items at {datetime.now()}")
+                logger.info(f"[THREAD-SYNC] Products chunk processed: {len(chunk)} items at {datetime.now()}")
             except Exception as e:
                 db.rollback()
-                print(f"[THREAD-SYNC-ERROR] Error processing products chunk around index {i}: {str(e)}")
+                logger.error(f"[THREAD-SYNC-ERROR] Error processing products chunk around index {i}: {str(e)}")
                 # We continue with the next chunk
                 continue
     
@@ -135,7 +137,7 @@ def process_listas_precios_from_json(
     Process unique price lists (Header information).
     """
     fecha_sync = datetime.now(timezone.utc)
-    print(f"Upserting {len(listas)} price lists headers...")
+    logger.info(f"Upserting {len(listas)} price lists headers...")
 
     listas_data = [
         {
@@ -172,7 +174,7 @@ def process_items_precios_from_json(
     Validates logical consistency between markup and final price roughly.
     """
     fecha_sync = datetime.now(timezone.utc)
-    print(f"Processing {len(items)} price list items...")
+    logger.info(f"Processing {len(items)} price list items...")
     
     
     items_data = []
@@ -213,7 +215,7 @@ def process_items_precios_from_json(
             if item["product_id"] in valid_product_ids and item["price_list_id"] in valid_list_ids
         ]
         filtered_count = len(items_data)
-        print(f"DEBUG: Filtered {original_count - filtered_count} orphan price items (Products/Lists not found). Remaining: {filtered_count}")
+        logger.info(f"DEBUG: Filtered {original_count - filtered_count} orphan price items (Products/Lists not found). Remaining: {filtered_count}")
 
         # Process in chunks
         # Passing data to db.execute() instead of values() avoids 'gkpj' error with on_conflict
@@ -254,7 +256,7 @@ def process_sellers_from_json(
     if not sellers:
         return {"creados": 0, "actualizados": 0, "errores": 0}
 
-    print(f"Upserting {len(sellers)} sellers...")
+    logger.info(f"Upserting {len(sellers)} sellers...")
     fecha_sync = datetime.now(timezone.utc)
     
     creados = 0
@@ -322,8 +324,8 @@ def process_sellers_from_json(
         return {"creados": creados, "actualizados": actualizados, "errores": 0}
 
     except Exception as e:
-        print(f"Error upserting sellers: {e}")
-        import traceback; traceback.print_exc()
+        logger.error(f"Error upserting sellers: {e}")
+        logger.exception("Traceback completo de la falla en vendedores:")
         db.rollback()
         return {"creados": 0, "actualizados": 0, "errores": len(sellers)}
 
@@ -338,7 +340,7 @@ def process_customers_from_json(
     if not customers:
         return {"creados": 0, "actualizados": 0, "errores": 0}
 
-    print(f"Upserting {len(customers)} customers...")
+    logger.info(f"Upserting {len(customers)} customers...")
     fecha_sync = datetime.now(timezone.utc)
     
     creados = 0
@@ -451,7 +453,7 @@ def process_customers_from_json(
         return {"creados": creados, "actualizados": actualizados, "errores": 0}
 
     except Exception as e:
-        print(f"Error upserting customers: {e}")
-        import traceback; traceback.print_exc()
+        logger.error(f"Error upserting customers: {e}")
+        logger.exception("Traceback completo de la falla en clientes:")
         db.rollback()
         return {"creados": 0, "actualizados": 0, "errores": len(customers)}

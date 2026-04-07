@@ -25,6 +25,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
+import logging
 
 from dependencies import get_db, get_current_user, get_current_admin_user
 from core.config import ACCESS_TOKEN_EXPIRE_MINUTES, SYNC_TOKEN_EXPIRE_MINUTES, TURNSTILE_SECRET_KEY
@@ -35,6 +36,9 @@ from schemas.user import User, UserCreate
 from db.base import Customer
 
 router = APIRouter()
+
+# Configuración de logger para este módulo
+logger = logging.getLogger(__name__)
 
 """Schemas de respuesta de token"""
 class Token(BaseModel):
