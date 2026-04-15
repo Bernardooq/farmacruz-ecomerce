@@ -27,6 +27,7 @@ from sync_functions import (
     build_lista_precios_dict,
     build_item_lista_dict,
     cargar_descripciones_extra,
+    cargar_existencias,
     dbf_to_dataframe,
     login,
     verificar_imagen_existe,
@@ -86,13 +87,7 @@ def process_and_upload_products(token, sync_time):
     # Descriptions and stock maps
     descripciones = cargar_descripciones_extra(DBF_DIR / "pro_desc.dbf")
     
-    print("Loading stock...")
-    stock_df = dbf_to_dataframe(DBF_DIR / "existe.dbf")
-    stock_map = {}
-    for _, row in stock_df.iterrows():
-        pid = limpiar_texto(row.get('CVE_PROD'))
-        val = row.get('EXISTENCIA') or row.get('EXISTE') or row.get('STOCK') or 0
-        if pid: stock_map[pid] = int(limpiar_numero(val))
+    stock_map = cargar_existencias(DBF_DIR / "existe.dbf")
 
     # Filtering
     print("Applying filters...")

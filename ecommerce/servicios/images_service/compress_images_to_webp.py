@@ -196,7 +196,7 @@ def main():
     
     # Verificar que existe la carpeta origen
     if not SOURCE_FOLDER.exists():
-        print(f"❌ Error: No existe la carpeta {SOURCE_FOLDER}")
+        print(f"[ERROR] No existe la carpeta {SOURCE_FOLDER}")
         return
     
     # Crear carpeta destino
@@ -213,7 +213,7 @@ def main():
         print(f" [!] No se encontraron imágenes en {SOURCE_FOLDER}")
         return
     
-    print(f"📁 Encontradas {len(imagenes)} imágenes")
+    print(f"[INFO] Encontradas {len(imagenes)} imagenes")
     print()
     
     # Comprimir cada imagen

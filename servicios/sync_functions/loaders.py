@@ -41,7 +41,30 @@ def cargar_existencias(dbf_path):
     try:
         print("Loading stock data...")
         dbf = DBF(dbf_path, encoding='latin1', ignore_missing_memofile=True)
-        return {r['CVE_PROD'].strip(): limpiar_numero(r['EXISTENCIA']) for r in dbf}
+        
+        stock_map = {}
+        for r in dbf:
+            pid = r.get('CVE_PROD')
+            if not pid:
+                continue
+            
+            pid = pid.strip()
+            
+            # Obtener el valor de EXISTENCIA previniendo None
+            val = r.get('EXISTENCIA')
+            if val is None: val = r.get('EXISTE')
+            if val is None: val = r.get('STOCK')
+            if val is None: val = 0
+            
+            try:
+                # Convertir a float antes de int por casos como "316.0"
+                cantidad_int = int(float(limpiar_numero(val) or 0))
+            except (ValueError, TypeError):
+                cantidad_int = 0
+                
+            stock_map[pid] = stock_map.get(pid, 0) + cantidad_int
+            
+        return stock_map
     except Exception as e:
         print(f"Error reading stock: {e}")
         return {}
