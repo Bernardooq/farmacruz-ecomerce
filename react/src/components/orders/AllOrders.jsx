@@ -204,12 +204,9 @@ export default function AllOrders() {
               <tr>
                 {(user?.role === 'admin' || user?.role === 'marketing') && <th>Admin</th>}
                 <th>Id Cliente</th>
-                <th>Cliente</th>
-                <th>Contacto</th>
-                <th>Id Pedido</th>
-                <th>Fecha</th>
-                <th>Items</th>
-                <th>Total</th>
+                <th>Cliente / Contacto</th>
+                <th>Pedido / Fecha</th>
+                <th>Montos</th>
                 <th>Vendedor</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -250,7 +247,24 @@ export default function AllOrders() {
 }
 
 function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAssign, onViewDetails, onDownloadTXT, onEdit, userRole, isLoading }) {
-  const formatDate = (dateString) => new Date(dateString).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const renderDate = (dateString) => {
+    const d = new Date(dateString);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const time = d.toLocaleString('es-ES', { 
+      hour: '2-digit', minute: '2-digit', hour12: true 
+    });
+
+    return (
+      <div className="date-stack">
+        <span className="date-stack__date">
+          <strong className="date-stack__day">{day}</strong>/{month}/{year}
+        </span>
+        <span className="date-stack__time">{time}</span>
+      </div>
+    );
+  };
   const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
   const getStatusLabel = (status) => {
@@ -289,13 +303,27 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
         </td>
       )}
       <td data-label="Id Cliente">{clientId}</td>
-      <td data-label="Cliente">{clientName}</td>
-      <td data-label="Contacto">{clientContact}</td>
-      <td data-label="Id Pedido">{order.order_id}</td>
-      <td data-label="Fecha">{formatDate(order.created_at)}</td>
-      <td data-label="Items">{itemCount}</td>
-      <td data-label="Total">{formatCurrency(order.total_amount)}</td>
-      <td data-label="Vendedor">{sellerName}</td>
+      <td data-label="Cliente">
+        <div className="user-cell__info">
+          <span className="user-cell__name">{clientName}</span>
+          <span className="user-cell__email">{clientContact.toLowerCase()}</span>
+        </div>
+      </td>
+      <td data-label="Pedido">
+        <div className="stacked-cell">
+          <span className="stacked-cell__primary stacked-cell__primary--accent" style={{ marginBottom: '4px' }}>#{order.order_id}</span>
+          {renderDate(order.created_at)}
+        </div>
+      </td>
+      <td data-label="Montos">
+        <div className="stacked-cell">
+          <span className="stacked-cell__primary stacked-cell__primary--success">{formatCurrency(order.total_amount)}</span>
+          <span className="stacked-cell__secondary">{itemCount} {itemCount === 1 ? 'artículo' : 'artículos'}</span>
+        </div>
+      </td>
+      <td data-label="Vendedor">
+        <span style={{ fontSize: '0.9em', fontWeight: '500' }}>{sellerName}</span>
+      </td>
       <td data-label="Estado">
         <span className={`status-badge status-badge--${getStatusClass(order.status)}`}>
           {getStatusLabel(order.status)}
