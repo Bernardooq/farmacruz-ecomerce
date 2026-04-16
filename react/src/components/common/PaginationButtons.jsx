@@ -11,7 +11,10 @@ export default function PaginationButtons({
     <nav className="pagination" aria-label="Paginación">
       <button
         className="pagination__btn"
-        onClick={onPrev}
+        onClick={(e) => {
+          if (onPrev) onPrev(e);
+          setTimeout(() => window.scrollTo(0, 0), 10);
+        }}
         disabled={!canGoPrev}
         aria-label="Página anterior"
       >
@@ -20,7 +23,10 @@ export default function PaginationButtons({
 
       <button
         className="pagination__btn"
-        onClick={onNext}
+        onClick={(e) => {
+          if (onNext) onNext(e);
+          setTimeout(() => window.scrollTo(0, 0), 10);
+        }}
         disabled={!canGoNext}
         aria-label="Página siguiente"
       >

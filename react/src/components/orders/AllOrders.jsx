@@ -21,7 +21,7 @@ export default function AllOrders() {
   const [actionLoading, setActionLoading] = useState(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -203,6 +203,7 @@ export default function AllOrders() {
             <thead>
               <tr>
                 {(user?.role === 'admin' || user?.role === 'marketing') && <th>Admin</th>}
+                <th>Id Cliente</th>
                 <th>Cliente</th>
                 <th>Contacto</th>
                 <th>Id Pedido</th>
@@ -261,6 +262,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
     return classes[status] || 'pending';
   };
 
+  const clientId = order.customer_id || order.customer?.customer_id || 'N/A';
   const clientName = order.customer?.full_name || order.customer?.username || 'N/A';
   const clientContact = order.customer?.email || 'N/A';
   const itemCount = order.items?.length || 0;
@@ -286,6 +288,7 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
           )}
         </td>
       )}
+      <td data-label="Id Cliente">{clientId}</td>
       <td data-label="Cliente">{clientName}</td>
       <td data-label="Contacto">{clientContact}</td>
       <td data-label="Id Pedido">{order.order_id}</td>
