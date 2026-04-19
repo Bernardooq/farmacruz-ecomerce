@@ -162,6 +162,7 @@ def clear_user_cart(current_user = Depends(get_current_user), db: Session = Depe
 # --- Pedidos ---
 class CheckoutRequest(BaseModel):
     shipping_address_number: int = 1  # Default to address 1
+    order_notes: Optional[str] = None  # Notas del pedido escritas por el cliente
     # shipping_cost removido - será manejado por el backend
 
 """ POST /checkout - Crear pedido desde el carrito """
@@ -187,7 +188,8 @@ def checkout_cart(checkout_data: CheckoutRequest,
             db, 
             customer_id=customer_id, 
             shipping_address_number=checkout_data.shipping_address_number,
-            shipping_cost=default_shipping_cost  # Costo fijo para clientes
+            shipping_cost=default_shipping_cost,  # Costo fijo para clientes
+            order_notes=checkout_data.order_notes
         )
         return order
     except ValueError as e:
@@ -249,8 +251,14 @@ def create_order_for_customer(
             customer_id=order_data.customer_id,
             items=items_dict,
             shipping_address_number=order_data.shipping_address_number,
-            shipping_cost=Decimal(str(order_data.shipping_cost))
+            shipping_cost=Decimal(str(order_data.shipping_cost)),
+            order_notes=order_data.order_notes
         )
+        # Guardar assignment_notes si se proporcionan
+        if order_data.assignment_notes:
+            order.assignment_notes = order_data.assignment_notes
+            db.commit()
+            db.refresh(order)
         return order
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -288,6 +296,10 @@ def read_orders(
             order.shipping_address = shipping_address or "No especificada"
         else:
             order.shipping_address = "No especificada"
+    
+    # Strip admin-only fields — clientes nunca deben ver price_without_iva ni order_profit
+    if isinstance(current_user, Customer):
+        return [_strip_admin_fields(OrderWithAddress.model_validate(o, from_attributes=True).model_dump()) for o in orders]
     
     return orders
 
@@ -677,7 +689,8 @@ def edit_order_route(order_id: int, edit_data: OrderEditRequest, current_user: U
             order_id=order_id, 
             items=edit_data.items, 
             customer_id=order.customer_id,
-            shipping_cost=edit_data.shipping_cost
+            shipping_cost=edit_data.shipping_cost,
+            assignment_notes=edit_data.assignment_notes
         )
         return edited_order
     except ValueError as e:

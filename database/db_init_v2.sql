@@ -260,6 +260,7 @@ CREATE TABLE orders (
         shipping_address_number BETWEEN 1 AND 3
     ),
     assignment_notes TEXT,
+    order_notes TEXT,
     created_at TIMESTAMP
     WITH
         TIME ZONE DEFAULT CURRENT_TIMESTAMP,

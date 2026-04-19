@@ -238,7 +238,7 @@ export default function AllOrders() {
         <PaginationButtons onPrev={() => setPage(p => Math.max(0, p - 1))} onNext={() => setPage(p => p + 1)} canGoPrev={page > 0} canGoNext={hasMore} />
       )}
 
-      <ModalOrderDetails visible={showModal} order={selectedOrder} isAdmin={user?.role === 'admin'} onClose={() => { setShowModal(false); setSelectedOrder(null); }} />
+      <ModalOrderDetails visible={showModal} order={selectedOrder} isAdmin={user?.role === 'admin'} isStaff={['admin', 'marketing', 'seller'].includes(user?.role)} onClose={() => { setShowModal(false); setSelectedOrder(null); }} />
       <ModalAssignSeller visible={showAssignModal} order={orderToAssign} groupId={assignGroupId} onAssign={handleAssign} onClose={() => { setShowAssignModal(false); setOrderToAssign(null); setAssignGroupId(null); }} />
       <ModalEditOrder visible={showEditModal} order={orderToEdit} onSave={handleSaveEditedOrder} onClose={() => { setShowEditModal(false); setOrderToEdit(null); }} />
       <ModalCreateOrder visible={showCreateModal} onClose={() => setShowCreateModal(false)} onSuccess={handleCreateOrderSuccess} userRole={user?.role} />
@@ -311,7 +311,11 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
       </td>
       <td data-label="Pedido">
         <div className="stacked-cell">
-          <span className="stacked-cell__primary stacked-cell__primary--accent" style={{ marginBottom: '4px' }}>#{order.order_id}</span>
+          <span className="stacked-cell__primary stacked-cell__primary--accent" style={{ marginBottom: '4px' }}>
+            #{order.order_id}
+            {order.order_notes && <span title={`Nota del cliente: ${order.order_notes}`} style={{ marginLeft: '5px', cursor: 'help' }}>📝</span>}
+            {order.assignment_notes && (['admin', 'marketing', 'seller'].includes(userRole)) && <span title={`Nota al vendedor: ${order.assignment_notes}`} style={{ marginLeft: '3px', cursor: 'help' }}>📋</span>}
+          </span>
           {renderDate(order.created_at)}
         </div>
       </td>

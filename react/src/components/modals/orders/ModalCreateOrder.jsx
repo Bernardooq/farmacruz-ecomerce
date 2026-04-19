@@ -11,13 +11,15 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [items, setItems] = useState([]);
     const [shippingCost, setShippingCost] = useState(0);
+    const [orderNotes, setOrderNotes] = useState('');
+    const [assignmentNotes, setAssignmentNotes] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showSimilarModal, setShowSimilarModal] = useState(false);
     const [selectedProductForSimilar, setSelectedProductForSimilar] = useState(null);
     const [stockConflict, setStockConflict] = useState(null); // { productName, stock, existingQty, quantity, totalQty, maxCanAdd, doAdd }
 
-    useEffect(() => { if (!visible) { setSelectedCustomer(null); setItems([]); setShippingCost(0); setError(null); setShowSimilarModal(false); setSelectedProductForSimilar(null); setStockConflict(null); } }, [visible]);
+    useEffect(() => { if (!visible) { setSelectedCustomer(null); setItems([]); setShippingCost(0); setOrderNotes(''); setAssignmentNotes(''); setError(null); setShowSimilarModal(false); setSelectedProductForSimilar(null); setStockConflict(null); } }, [visible]);
 
     const handleQuantityChange = (index, newQuantity) => {
         const newQty = Math.max(1, parseInt(newQuantity) || 1);
@@ -105,7 +107,9 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole
                 customer_id: selectedCustomer.customer_id,
                 items: items.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
                 shipping_address_number: 1,
-                shipping_cost: shippingCost
+                shipping_cost: shippingCost,
+                order_notes: orderNotes || null,
+                assignment_notes: assignmentNotes || null
             });
             onSuccess?.(); onClose();
         } catch (err) { setError(err.response?.data?.detail || err.message || 'Error al crear pedido'); }
@@ -138,6 +142,38 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole
                                 </div>
 
                                 <OrderItemsTable items={items} onQuantityChange={handleQuantityChange} onQuantityBlur={handleQuantityBlur} onRemoveItem={handleRemoveItem} loading={loading} />
+
+                                {/* Notas del Pedido (cliente) */}
+                                <div className="form-group mt-4">
+                                    <label className="form-group__label" htmlFor="create-order-notes">
+                                        Notas del Cliente <span className="text-muted">(Opcional — el cliente las verá)</span>
+                                    </label>
+                                    <textarea
+                                        id="create-order-notes"
+                                        className="input"
+                                        rows={2}
+                                        value={orderNotes}
+                                        onChange={(e) => setOrderNotes(e.target.value)}
+                                        placeholder="Ej: Productos de lotes recientes, revisar fechas de caducidad..."
+                                        disabled={loading}
+                                    />
+                                </div>
+
+                                {/* Notas al Vendedor (internas) */}
+                                <div className="form-group mt-3">
+                                    <label className="form-group__label" htmlFor="create-assignment-notes">
+                                        Notas al Vendedor 📋 <span className="text-muted">(Solo staff interno)</span>
+                                    </label>
+                                    <textarea
+                                        id="create-assignment-notes"
+                                        className="input"
+                                        rows={2}
+                                        value={assignmentNotes}
+                                        onChange={(e) => setAssignmentNotes(e.target.value)}
+                                        placeholder="Ej: Cliente VIP, entregar hoy, requiere factura..."
+                                        disabled={loading}
+                                    />
+                                </div>
 
                                 {/* Resumen del Pedido */}
                                 <div className="order-summary mt-4">

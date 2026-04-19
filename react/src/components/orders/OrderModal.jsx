@@ -35,6 +35,13 @@ export default function OrderModal({ order, onClose }) {
             <p><strong>Dirección de Envío:</strong> {order.shippingAddress}</p>
           )}
 
+          {order.order_notes && (
+            <div className="order-notes mt-4">
+              <strong>📝 Notas del Pedido:</strong>
+              <p>{order.order_notes}</p>
+            </div>
+          )}
+
           <hr className="divider" />
 
           <h3>Artículos:</h3>

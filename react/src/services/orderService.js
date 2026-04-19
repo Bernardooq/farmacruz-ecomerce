@@ -37,9 +37,10 @@ export const orderService = {
   // ==================== Órdenes ====================
 
   // Crear una orden a partir del carrito
-  async checkout(shippingAddressNumber = 1) {
+  async checkout(shippingAddressNumber = 1, orderNotes = '') {
     return apiService.post('/orders/checkout', {
-      shipping_address_number: shippingAddressNumber
+      shipping_address_number: shippingAddressNumber,
+      order_notes: orderNotes || null
       // shipping_cost será manejado por el backend
     })
   },

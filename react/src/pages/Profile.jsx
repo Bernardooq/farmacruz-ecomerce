@@ -129,6 +129,7 @@ export default function Profile() {
         statusClass: STATUS_CLASSES[order.status] || 'pending',
         rawStatus: order.status,
         shippingAddress: order.shipping_address || 'No especificada',
+        order_notes: order.order_notes || null,
         items: (order.items || []).map(item => ({
           name: item.product?.name || 'Producto',
           quantity: item.quantity,

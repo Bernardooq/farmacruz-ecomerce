@@ -380,6 +380,7 @@ class Order(Base):
     shipping_cost = Column(Numeric(10, 2), default=0.00)  # Costo de envío
     shipping_address_number = Column(Integer)  # 1, 2 o 3 (cual de las 3 direcciones usar)
     assignment_notes = Column(Text)  # Notas del admin al asignar vendedor
+    order_notes = Column(Text)  # Notas del cliente al hacer el pedido
     created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     assigned_at = Column(TIMESTAMP(timezone=True))  # Cuando se asigno vendedor
     validated_at = Column(TIMESTAMP(timezone=True))  # Cuando el vendedor lo aprobo

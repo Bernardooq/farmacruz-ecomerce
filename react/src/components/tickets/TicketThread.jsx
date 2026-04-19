@@ -178,7 +178,7 @@ export default function TicketThread({ ticketId, onClose, currentUser }) {
             return (
               <div key={msg.message_id} className={`ticket-thread__message-bubble ${isMe ? 'ticket-thread__message-bubble--me' : 'ticket-thread__message-bubble--other'}`}>
                 <div className="ticket-thread__message-bubble-meta">
-                  {msg.sender_type === 'user' ? 'Agente / Soporte' : 'Cliente'} • {new Date(msg.created_at).toLocaleString()}
+                  {msg.sender_name || (msg.sender_type === 'user' ? 'Agente / Soporte' : 'Cliente')} • {new Date(msg.created_at).toLocaleString()}
                 </div>
                 <div className={`ticket-thread__message-bubble-content ${isMe ? 'ticket-thread__message-bubble-content--me' : 'ticket-thread__message-bubble-content--other'}`}>
                   {msg.content}

@@ -96,6 +96,7 @@ class OrderCreate(OrderBase):
     """
     shipping_address_number: Optional[int] = Field(None, ge=1, le=3)  # Cual direccion usar (1, 2 o 3)
     shipping_cost: Optional[Decimal] = Field(default=Decimal("0.00"), ge=0)  # Costo de envío
+    order_notes: Optional[str] = None  # Notas del pedido escritas por el cliente
 
 
 class OrderUpdate(BaseModel):
@@ -158,6 +159,7 @@ class Order(OrderBase):
     shipping_cost: Decimal = Decimal("0.00")  # Costo de envío
     shipping_address_number: Optional[int] = None  # Que direccion se usa (1, 2 o 3)
     assignment_notes: Optional[str] = None  # Notas de asignacion
+    order_notes: Optional[str] = None  # Notas del pedido escritas por el cliente
     
     # Timestamps
     created_at: datetime  # Cuando se creo el pedido

@@ -169,3 +169,36 @@
         font-weight: var(--font-bold);
     }
 }
+
+// ============================================
+// ORDER NOTES — Nota del cliente en el pedido
+// ============================================
+
+.order-notes {
+    background-color: #fffbea;
+    border: 1px solid #f5a623;
+    border-radius: var(--border-radius);
+    padding: var(--space-4) var(--space-5);
+    color: var(--color-text);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    font-size: var(--text-sm);
+    word-break: break-word;
+
+    // Dark mode adaptation
+    @media (prefers-color-scheme: dark) {
+        background-color: rgba(245, 166, 35, 0.12);
+        border-color: rgba(245, 166, 35, 0.4);
+    }
+
+    // Variante interna (notas al vendedor) — tono azul
+    &--internal {
+        background-color: #eef4ff;
+        border-color: #6fa3ef;
+
+        @media (prefers-color-scheme: dark) {
+            background-color: rgba(111, 163, 239, 0.12);
+            border-color: rgba(111, 163, 239, 0.4);
+        }
+    }
+}

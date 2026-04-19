@@ -8,6 +8,7 @@ import StockConflictBanner from './StockConflictBanner';
 export default function ModalEditOrder({ visible, order, onClose, onSave }) {
     const [items, setItems] = useState([]);
     const [shippingCost, setShippingCost] = useState(0);
+    const [assignmentNotes, setAssignmentNotes] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showSimilarModal, setShowSimilarModal] = useState(false);
@@ -24,8 +25,8 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                 final_price: item.final_price,
                 stock_count: item.product?.stock_count || 0,
             })));
-            // Cargar shipping_cost existente
             setShippingCost(order.shipping_cost || 0);
+            setAssignmentNotes(order.assignment_notes || '');
         }
     }, [order]);
 
@@ -120,7 +121,8 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                     product_id: item.product_id,
                     quantity: item.quantity
                 })),
-                shipping_cost: shippingCost
+                shipping_cost: shippingCost,
+                assignment_notes: assignmentNotes || null
             });
             onClose();
         } catch (err) { setError(err.message || 'Error al guardar cambios'); }
@@ -188,6 +190,30 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                         <p className="text-muted text-sm mt-3">
                             Nota: Los precios se recalcularán automáticamente según la lista de precios del cliente.
                         </p>
+
+                        {/* Notas del Cliente (solo lectura) */}
+                        {order.order_notes && (
+                            <div className="form-group mt-4">
+                                <label className="form-group__label">Notas del Cliente (no editable):</label>
+                                <div className="order-notes">{order.order_notes}</div>
+                            </div>
+                        )}
+
+                        {/* Notas al Vendedor (editable) */}
+                        <div className="form-group mt-3">
+                            <label className="form-group__label" htmlFor="edit-assignment-notes">
+                                Notas al Vendedor 📋 <span className="text-muted">(Solo staff interno)</span>
+                            </label>
+                            <textarea
+                                id="edit-assignment-notes"
+                                className="input"
+                                rows={2}
+                                value={assignmentNotes}
+                                onChange={(e) => setAssignmentNotes(e.target.value)}
+                                placeholder="Ej: Cliente VIP, entregar hoy, requiere factura..."
+                                disabled={loading}
+                            />
+                        </div>
                     </div>
                     <div className="modal__footer">
                         <button type="button" className="btn btn--secondary" onClick={onClose} disabled={loading}>Cancelar</button>

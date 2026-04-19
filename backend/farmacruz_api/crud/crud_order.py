@@ -84,7 +84,7 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[Or
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
 """ Crear un pedido a partir del carrito del cliente """
-def create_order_from_cart(db: Session, customer_id: int, shipping_address_number: int = 1, shipping_cost: Decimal = Decimal("0.00")) -> Order:
+def create_order_from_cart(db: Session, customer_id: int, shipping_address_number: int = 1, shipping_cost: Decimal = Decimal("0.00"), order_notes: Optional[str] = None) -> Order:
     # Validar direccion
     if shipping_address_number not in [1, 2, 3]:
         raise ValueError("Numero de direccion invalido. Debe ser 1, 2 o 3.")
@@ -117,7 +117,8 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
         total_amount=0,  # Se calculara despues
         shipping_cost=float(shipping_cost),  # Costo de envío
         shipping_address_number=shipping_address_number,
-        assigned_seller_id=assigned_seller_id  # Auto-asignar agente
+        assigned_seller_id=assigned_seller_id,  # Auto-asignar agente
+        order_notes=order_notes  # Notas del cliente
     )
     db.add(db_order)
     db.flush()  # Para obtener order_id
@@ -198,7 +199,7 @@ def create_order_from_cart(db: Session, customer_id: int, shipping_address_numbe
     return db_order
 
 
-def create_order_direct(db: Session, customer_id: int, items: List[dict], shipping_address_number: int = 1, shipping_cost: Decimal = Decimal("0.00")) -> Order:
+def create_order_direct(db: Session, customer_id: int, items: List[dict], shipping_address_number: int = 1, shipping_cost: Decimal = Decimal("0.00"), order_notes: Optional[str] = None) -> Order:
     """
     Crea un pedido directamente sin pasar por el carrito.
     
@@ -243,7 +244,8 @@ def create_order_direct(db: Session, customer_id: int, items: List[dict], shippi
         total_amount=0,  # Se calculara despues
         shipping_cost=float(shipping_cost),  # Costo de envío
         shipping_address_number=shipping_address_number,
-        assigned_seller_id=assigned_seller_id
+        assigned_seller_id=assigned_seller_id,
+        order_notes=order_notes  # Notas del cliente
     )
     db.add(db_order)
     db.flush()  # Para obtener order_id

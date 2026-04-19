@@ -124,9 +124,9 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const checkout = async (shippingAddressNumber = 1) => {
+  const checkout = async (shippingAddressNumber = 1, orderNotes = '') => {
     try {
-      const order = await orderService.checkout(shippingAddressNumber); // Sin shipping_cost
+      const order = await orderService.checkout(shippingAddressNumber, orderNotes);
       setItems([]);
       return order;
     } catch (error) {

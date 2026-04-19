@@ -45,6 +45,7 @@ export default function Cart() {
   const [error, setError] = useState(null);
   const [processingCheckout, setProcessingCheckout] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [orderNotes, setOrderNotes] = useState('');
 
   // ============================================
   // EFFECTS
@@ -100,7 +101,7 @@ export default function Cart() {
       setShowConfirmModal(false);
       setProcessingCheckout(true);
       const addressNumber = parseInt(selectedAddress.replace('address_', ''));
-      await checkout(addressNumber); // Sin shipping_cost
+      await checkout(addressNumber, orderNotes);
       navigate('/profile');
     } catch (err) {
       const errorMsg = err.response?.data?.detail || err.message || 'Error al procesar el pedido. Intenta de nuevo.';
@@ -223,6 +224,22 @@ export default function Cart() {
                 <p className="form-group__hint mt-2">
                   {customerInfo?.[selectedAddress] || 'Sin dirección registrada'}
                 </p>
+              </div>
+
+              {/* Campo de notas del pedido (para el cliente) */}
+              <div className="form-group mt-4">
+                <label className="form-group__label" htmlFor="order-notes">
+                  Notas del Pedido <span style={{ fontWeight: 400, opacity: 0.65 }}>(Opcional)</span>
+                </label>
+                <textarea
+                  id="order-notes"
+                  className="input"
+                  rows={3}
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  placeholder="Ej: Quiero productos de lotes recientes, o favor de revisar fechas de caducidad..."
+                  style={{ resize: 'vertical', minHeight: '72px' }}
+                />
               </div>
 
               {/* Advertencia si no hay direcciones */}

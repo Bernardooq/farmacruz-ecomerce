@@ -41,6 +41,7 @@ class OrderEditRequest(BaseModel):
     """
     items: List[OrderItemEdit] = Field(..., description="Lista de items del pedido")
     shipping_cost: Optional[float] = Field(None, ge=0, description="Costo de envío")
+    assignment_notes: Optional[str] = Field(None, description="Notas al vendedor (solo staff interno)")
 
     model_config = {
         "json_schema_extra": {

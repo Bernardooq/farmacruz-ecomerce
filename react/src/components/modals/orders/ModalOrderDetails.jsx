@@ -1,4 +1,4 @@
-export default function ModalOrderDetails({ visible, order, isAdmin = false, onClose }) {
+export default function ModalOrderDetails({ visible, order, isAdmin = false, isStaff = false, onClose }) {
   if (!order) return null;
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -96,6 +96,26 @@ export default function ModalOrderDetails({ visible, order, isAdmin = false, onC
                 )}
               </div>
             </div>
+
+            {/* Notas del Pedido — solo si el cliente dejó un comentario */}
+            {order.order_notes && (
+              <div className="order-details__section">
+                <h3>📝 Notas del Cliente</h3>
+                <div className="order-notes">
+                  {order.order_notes}
+                </div>
+              </div>
+            )}
+
+            {/* Notas al Vendedor — solo visibles para staff (isAdmin prop viene de AllOrders donde user.role !== customer) */}
+            {isStaff && order.assignment_notes && (
+              <div className="order-details__section">
+                <h3>📋 Notas al Vendedor <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'normal', opacity: 0.7 }}>(Solo staff interno)</span></h3>
+                <div className="order-notes order-notes--internal">
+                  {order.assignment_notes}
+                </div>
+              </div>
+            )}
 
             <div className="order-details__section">
               <h3>Productos</h3>
