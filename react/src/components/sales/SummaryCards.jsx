@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
@@ -8,15 +8,21 @@ import {
   faTruck, faTimesCircle, faExclamationTriangle, faClipboardCheck
 } from '@fortawesome/free-solid-svg-icons';
 
-export default function SummaryCards({ summary }) {
+export default function SummaryCards({ summary = {} }) {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount || 0);
   };
 
-  const hasVentas = summary.total_revenue !== undefined || (summary.total_profit !== undefined && summary.total_profit > 0);
-  const hasPedidos = summary.pending_orders !== undefined || summary.delivered_orders !== undefined || summary.shipped_orders !== undefined || summary.cancelled_orders !== undefined || summary.approved_orders !== undefined;
-  const hasPersonal = summary.total_customers !== undefined || summary.total_sellers !== undefined || summary.total_marketing !== undefined;
-  const hasInventario = summary.total_products !== undefined || summary.catalogCount !== undefined || summary.low_stock_count !== undefined || summary.lowStockCount !== undefined;
+  // Visibility Flags (useMemo ensures visibility during minification/build)
+  const visibility = useMemo(() => {
+    const s = summary || {};
+    return {
+      ventas: s.total_revenue !== undefined || (s.total_profit !== undefined && s.total_profit > 0),
+      pedidos: s.pending_orders !== undefined || s.delivered_orders !== undefined || s.shipped_orders !== undefined || s.cancelled_orders !== undefined || s.approved_orders !== undefined,
+      personal: s.total_customers !== undefined || s.total_sellers !== undefined || s.total_marketing !== undefined,
+      inventario: s.total_products !== undefined || s.catalogCount !== undefined || s.low_stock_count !== undefined || s.lowStockCount !== undefined
+    };
+  }, [summary]);
 
   // ESTADO INTERNO PARA MINI-GRÁFICO DE VENTA MENGSUAL/SEMANAL
   const [salesPeriod, setSalesPeriod] = useState('weekly');
@@ -24,6 +30,7 @@ export default function SummaryCards({ summary }) {
   const [periodTotals, setPeriodTotals] = useState({ ventas: 0, ganancia: 0 });
   const [themeTick, setThemeTick] = useState(0);
 
+  // MutationObserver para reaccionar al cambio de tema
   useEffect(() => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -36,8 +43,10 @@ export default function SummaryCards({ summary }) {
     return () => observer.disconnect();
   }, []);
 
+  // Fetch de ventas para el gráfico
   useEffect(() => {
-    if (!hasVentas) return;
+    if (!visibility.ventas) return;
+
     const fetchMiniSales = async () => {
       const end = new Date();
       const start = new Date();
@@ -52,22 +61,25 @@ export default function SummaryCards({ summary }) {
         
         const salesByDate = new Map();
         let totalV = 0, totalG = 0;
-        report.orders.forEach(order => {
-           const dateStr = order.order_date.split(' ')[0];
-           if(!salesByDate.has(dateStr)) {
-              const d = new Date(dateStr + 'T12:00:00Z');
-              salesByDate.set(dateStr, {
-                 dateStr,
-                 label: d.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' }),
-                 Ventas: 0,
-                 Ganancia: 0
-              });
-           }
-           salesByDate.get(dateStr).Ventas += order.total_amount;
-           salesByDate.get(dateStr).Ganancia += order.order_profit || 0;
-           totalV += order.total_amount;
-           totalG += order.order_profit || 0;
-        });
+        
+        if (report && report.orders) {
+          report.orders.forEach(order => {
+            const dateStr = order.order_date.split(' ')[0];
+            if(!salesByDate.has(dateStr)) {
+                const d = new Date(dateStr + 'T12:00:00Z');
+                salesByDate.set(dateStr, {
+                  dateStr,
+                  label: d.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' }),
+                  Ventas: 0,
+                  Ganancia: 0
+                });
+            }
+            salesByDate.get(dateStr).Ventas += order.total_amount;
+            salesByDate.get(dateStr).Ganancia += order.order_profit || 0;
+            totalV += order.total_amount;
+            totalG += order.order_profit || 0;
+          });
+        }
         
         const data = Array.from(salesByDate.values()).sort((a,b) => a.dateStr.localeCompare(b.dateStr));
         setSalesChartData(data);
@@ -77,9 +89,11 @@ export default function SummaryCards({ summary }) {
       }
     };
     fetchMiniSales();
-  }, [salesPeriod, hasVentas]);
+  }, [salesPeriod, visibility.ventas]);
 
-  const getChartColors = () => {
+  const colors = useMemo(() => {
+    // eslint-disable-next-line no-unused-vars
+    const _ = themeTick; // Trigger recalculation on theme change
     const style = getComputedStyle(document.documentElement);
     const get = (v) => style.getPropertyValue(v).trim();
     return {
@@ -88,9 +102,7 @@ export default function SummaryCards({ summary }) {
       border:  get('--color-border')     || '#e5e7eb',
       surface: get('--color-surface')    || '#fff',
     };
-  };
-
-  const colors = getChartColors();
+  }, [themeTick]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -111,21 +123,21 @@ export default function SummaryCards({ summary }) {
   };
 
   // DATOS PARA GRÁFICOS
-  const pedidosData = [
+  const pedidosData = useMemo(() => [
     { name: 'Pendientes', value: summary.pending_orders || summary.pendingOrders || 0, fill: '#f59e0b' },
     { name: 'Aprobados', value: summary.approved_orders || 0, fill: '#34d399' },
     { name: 'Enviados', value: summary.shipped_orders || 0, fill: '#3b82f6' },
     { name: 'Entregados', value: summary.delivered_orders || 0, fill: '#8b5cf6' },
     { name: 'Cancelados', value: summary.cancelled_orders || 0, fill: '#ef4444' }
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [summary]);
 
-  const personalData = [
+  const personalData = useMemo(() => [
     { name: 'Clientes', value: summary.total_customers || 0, fill: '#3b82f6' },
     { name: 'Vendedores', value: summary.total_sellers || 0, fill: '#10b981' },
     { name: 'Marketing', value: summary.total_marketing || 0, fill: '#f59e0b' }
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [summary]);
 
-  const inventarioData = (() => {
+  const inventarioData = useMemo(() => {
     const total = summary.total_products || summary.catalogCount || 0;
     const low = summary.low_stock_count || summary.lowStockCount || 0;
     const out = summary.out_of_stock_count || summary.outOfStockCount || 0;
@@ -135,13 +147,13 @@ export default function SummaryCards({ summary }) {
       { name: 'Bajo Stock', value: low, fill: '#f59e0b' },
       { name: 'Agotados', value: out, fill: '#ef4444' }
     ].filter(d => d.value > 0);
-  })();
+  }, [summary]);
 
   return (
     <div className="stat-dashboard-wrapper">
 
       {/* 1. VENTAS Y FINANZAS */}
-      {hasVentas && (
+      {visibility.ventas && (
         <div className="stat-group">
           <h3 className="stat-group__title">
             <FontAwesomeIcon icon={faChartLine} className="stat-group__icon" /> Ventas y Finanzas
@@ -186,7 +198,7 @@ export default function SummaryCards({ summary }) {
             </div>
             {salesChartData.length > 0 ? (
               <div style={{ width: '100%', height: 260 }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer minWidth={0}>
                   <BarChart data={salesChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={colors.border} />
                     <XAxis dataKey="label" stroke={colors.muted} fontSize={11} tickLine={false} axisLine={{stroke: colors.border}} />
@@ -206,7 +218,7 @@ export default function SummaryCards({ summary }) {
       )}
 
       {/* 2. PEDIDOS */}
-      {hasPedidos && (
+      {visibility.pedidos && (
         <div className="stat-group">
           <h3 className="stat-group__title">
             <FontAwesomeIcon icon={faBox} className="stat-group__icon" /> Gestión de Pedidos
@@ -261,7 +273,7 @@ export default function SummaryCards({ summary }) {
 
           {pedidosData.length > 0 && (
             <div style={{ marginTop: '1.5rem', width: '100%', height: 220, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer minWidth={0}>
                 <PieChart>
                   <Pie data={pedidosData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" stroke="none">
                     {pedidosData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
@@ -276,7 +288,7 @@ export default function SummaryCards({ summary }) {
       )}
 
       {/* 3. PERSONAL Y CLIENTES */}
-      {hasPersonal && (
+      {visibility.personal && (
         <div className="stat-group">
           <h3 className="stat-group__title">
             <FontAwesomeIcon icon={faUserFriends} className="stat-group__icon" /> Personal y Clientes
@@ -313,7 +325,7 @@ export default function SummaryCards({ summary }) {
 
           {personalData.length > 0 && (
             <div style={{ marginTop: '1.5rem', width: '100%', height: 200, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer minWidth={0}>
                 <BarChart data={personalData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={colors.border} />
                   <XAxis type="number" hide />
@@ -330,7 +342,7 @@ export default function SummaryCards({ summary }) {
       )}
 
       {/* 4. INVENTARIO */}
-      {hasInventario && (
+      {visibility.inventario && (
         <div className="stat-group">
           <h3 className="stat-group__title">
             <FontAwesomeIcon icon={faWarehouse} className="stat-group__icon" /> Inventario
@@ -361,7 +373,7 @@ export default function SummaryCards({ summary }) {
 
           {inventarioData.length > 0 && (
             <div style={{ marginTop: '1.5rem', width: '100%', height: 220, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer minWidth={0}>
                 <PieChart>
                   <Pie data={inventarioData} cx="50%" cy="50%" outerRadius={80} dataKey="value" stroke={colors.surface} strokeWidth={2}>
                     {inventarioData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
