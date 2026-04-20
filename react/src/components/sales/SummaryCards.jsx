@@ -272,14 +272,14 @@ export default function SummaryCards({ summary = {} }) {
           </section>
 
           {pedidosData.length > 0 && (
-            <div style={{ marginTop: '1.5rem', width: '100%', height: 220, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+            <div style={{ marginTop: '1.5rem', width: '100%', height: 300, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
               <ResponsiveContainer minWidth={0}>
                 <PieChart>
-                  <Pie data={pedidosData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" stroke="none">
+                  <Pie data={pedidosData} cx="50%" cy="45%" innerRadius={40} outerRadius={70} paddingAngle={2} dataKey="value" stroke="none">
                     {pedidosData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                   </Pie>
                   <RechartsTooltip content={<CustomTooltip />} />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', color: colors.text }} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', color: colors.text, paddingTop: '10px' }} verticalAlign="bottom" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -324,7 +324,7 @@ export default function SummaryCards({ summary = {} }) {
           </section>
 
           {personalData.length > 0 && (
-            <div style={{ marginTop: '1.5rem', width: '100%', height: 200, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+            <div style={{ marginTop: '1.5rem', width: '100%', height: 260, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
               <ResponsiveContainer minWidth={0}>
                 <BarChart data={personalData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={colors.border} />
@@ -372,14 +372,14 @@ export default function SummaryCards({ summary = {} }) {
           </section>
 
           {inventarioData.length > 0 && (
-            <div style={{ marginTop: '1.5rem', width: '100%', height: 220, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+            <div style={{ marginTop: '1.5rem', width: '100%', height: 300, padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
               <ResponsiveContainer minWidth={0}>
                 <PieChart>
-                  <Pie data={inventarioData} cx="50%" cy="50%" outerRadius={80} dataKey="value" stroke={colors.surface} strokeWidth={2}>
+                  <Pie data={inventarioData} cx="50%" cy="45%" outerRadius={70} dataKey="value" stroke={colors.surface} strokeWidth={2}>
                     {inventarioData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                   </Pie>
                   <RechartsTooltip content={<CustomTooltip />} />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', color: colors.text }} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', color: colors.text, paddingTop: '10px' }} verticalAlign="bottom" />
                 </PieChart>
               </ResponsiveContainer>
             </div>

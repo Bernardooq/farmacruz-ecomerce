@@ -122,7 +122,7 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                     quantity: item.quantity
                 })),
                 shipping_cost: shippingCost,
-                assignment_notes: assignmentNotes || null
+                assignment_notes: assignmentNotes
             });
             onClose();
         } catch (err) { setError(err.message || 'Error al guardar cambios'); }
