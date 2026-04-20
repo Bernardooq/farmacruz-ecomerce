@@ -37,7 +37,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./react
       dockerfile: Dockerfile
     ports:
       - "3000:80"   # Nginx sirve en puerto 80, mapeamos a 3000 en host
