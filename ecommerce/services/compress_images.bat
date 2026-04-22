@@ -1,4 +1,11 @@
 @echo off
+set "logfile=C:\ecommerce\services\compress_images_log.txt"
+
+call :main >> "%logfile%" 2>&1
+exit /b
+
+:main
+echo [%date% %time%] Inicio
 cd /d "C:\ecommerce"
 echo ===================================================
 echo Iniciando Compresion de Imagenes a WebP
@@ -9,4 +16,7 @@ echo Ejecutando script Python...
 
 echo.
 echo Proceso finalizado.
+echo [%date% %time%] Fin
+echo ---------------------------------------------------
+goto :eof
 

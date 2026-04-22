@@ -143,8 +143,19 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole
 
                                 <OrderItemsTable items={items} onQuantityChange={handleQuantityChange} onQuantityBlur={handleQuantityBlur} onRemoveItem={handleRemoveItem} loading={loading} />
 
+                                {stockConflict && (
+                                    <StockConflictBanner
+                                        conflict={stockConflict}
+                                        onOverride={() => stockConflict.doAdd(stockConflict.quantity)}
+                                        onAdjust={() => stockConflict.doAdd(stockConflict.maxCanAdd)}
+                                        onCancel={() => setStockConflict(null)}
+                                    />
+                                )}
+
+                                <ProductSearchGrid customerId={selectedCustomer.customer_id} onAddToOrder={handleAddProductToOrder} onShowSimilar={handleShowSimilar} />
+
                                 {/* Notas del Pedido (cliente) */}
-                                <div className="form-group mt-4">
+                                <div className="form-group mt-6">
                                     <label className="form-group__label" htmlFor="create-order-notes">
                                         Notas del Cliente <span className="text-muted">(Opcional — el cliente las verá)</span>
                                     </label>
@@ -204,16 +215,6 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole
                                         </span>
                                     </div>
                                 </div>
-
-                                {stockConflict && (
-                                    <StockConflictBanner
-                                        conflict={stockConflict}
-                                        onOverride={() => stockConflict.doAdd(stockConflict.quantity)}
-                                        onAdjust={() => stockConflict.doAdd(stockConflict.maxCanAdd)}
-                                        onCancel={() => setStockConflict(null)}
-                                    />
-                                )}
-                                <ProductSearchGrid customerId={selectedCustomer.customer_id} onAddToOrder={handleAddProductToOrder} onShowSimilar={handleShowSimilar} />
                             </>
                         )}
                     </div>

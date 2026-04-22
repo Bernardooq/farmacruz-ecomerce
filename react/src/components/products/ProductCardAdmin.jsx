@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import { getProductImageUrl } from '../../utils/imageUtils';
 
 /**
  * ProductCardAdmin Component
@@ -40,7 +41,7 @@ export default function ProductCardAdmin({ product, onAddToOrder, onShowSimilar 
         <article className="product-card product-card--admin">
             {/* Imagen del producto */}
             <img
-                src={product.image_url || '../../images/default-product.jpg'}
+                src={getProductImageUrl(product)}
                 alt={product.name}
                 className="product-card__image"
             />

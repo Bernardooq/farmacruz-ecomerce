@@ -170,14 +170,17 @@ def get_products_not_in_price_list(db: Session, price_list_id: int, skip: int = 
     )
     # Busqueda opcional
     if search:
-        search_term = f"%{search}%"
-        query = query.filter(
-            or_(
-                Product.product_id == search,
-                Product.name.ilike(search_term),
-                Product.codebar.ilike(search_term)
-            )
-        )
+        search_terms = search.strip().lower().split()
+        if search_terms:
+            word_filters = []
+            for term in search_terms:
+                pattern = f"%{term}%"
+                word_filters.append(
+                    (Product.product_id.ilike(pattern)) |
+                    (Product.name.ilike(pattern)) |
+                    (Product.codebar.ilike(pattern))
+                )
+            query = query.filter(and_(*word_filters))
     return query.offset(skip).limit(limit).all()
 
 """ Obtiene productos que SI estan en una lista de precios con detalles calculados """
@@ -192,14 +195,17 @@ def get_products_in_price_list_with_details(db: Session, price_list_id: int, ski
     
     # Busqueda opcional
     if search:
-        search_term = f"%{search}%"
-        query = query.filter(
-            or_(
-                Product.product_id == search,
-                Product.name.ilike(search_term),
-                Product.codebar.ilike(search_term)
-            )
-        )
+        search_terms = search.strip().lower().split()
+        if search_terms:
+            word_filters = []
+            for term in search_terms:
+                pattern = f"%{term}%"
+                word_filters.append(
+                    (Product.product_id.ilike(pattern)) |
+                    (Product.name.ilike(pattern)) |
+                    (Product.codebar.ilike(pattern))
+                )
+            query = query.filter(and_(*word_filters))
     
     # Ejecutar query con paginacion
     results = query.offset(skip).limit(limit).all()

@@ -1,36 +1,42 @@
 @echo off
+set "logfile=%~dp0aws_s3_sync_images_log.txt"
+
+call :main >> "%logfile%" 2>&1
+exit /b
+
+:main
+echo [%date% %time%] Inicio
+setlocal
 cd /d "%~dp0.."
+
+:: Credenciales de AWS (Para Task Scheduler)
+set AWS_ACCESS_KEY_ID=PONER_AQUI_ACCESS_KEY
+set AWS_SECRET_ACCESS_KEY=PONER_AQUI_SECRET_KEY
+set AWS_DEFAULT_REGION=us-east-1
+
 echo ===================================================
 echo Sincronizacion de Imagenes a S3 (farmacruz-imgs)
 echo ===================================================
-echo.
-echo Este script cargara el CONTENIDO de tu carpeta local al bucket.
-echo.
 
 set LOCAL_DIR="C:\Users\berna\Downloads\CompressedImg"
 
-if "%LOCAL_DIR%"=="" goto error
-
-echo.
-echo Sincronizando: "%LOCAL_DIR%" -> s3://farmacruz-imgs
-echo Perfil AWS: s3-sync-farmacruz
+echo Sincronizando: %LOCAL_DIR% -> s3://farmacruz-imgs
 echo.
 
-aws s3 sync "%LOCAL_DIR%" s3://farmacruz-imgs --profile s3-sync-farmacruz
+:: Ejecucion usando variables de entorno
+aws s3 sync %LOCAL_DIR% s3://farmacruz-imgs
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo [ERROR] Hubo un problema al sincronizar. Revisa tus credenciales o la ruta.
+    echo [ERROR] Hubo un problema al sincronizar.
 ) else (
     echo.
-    echo [EXITO] Sincronizacion completada.
+    echo [EXITO] Sincronizacion completada con exito.
 )
-goto end
 
-:error
 echo.
-echo [ERROR] No ingresaste ninguna ruta. Intentalo de nuevo.
-
-:end
-echo.
+echo [%date% %time%] FIN
+endlocal
+echo ---------------------------------------------------
+goto :eof
 

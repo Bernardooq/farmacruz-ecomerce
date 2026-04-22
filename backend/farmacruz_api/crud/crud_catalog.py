@@ -9,7 +9,7 @@ Precio final = (precio_base × (1 + markup%)) × (1 + IVA%)
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
+from sqlalchemy import func, and_, or_
 from typing import List, Optional, Tuple
 from decimal import Decimal
 from utils.price_utils import get_product_final_price, calculate_final_price_with_markup, apply_iva
@@ -82,6 +82,7 @@ def _build_catalog_product(product: Product, final_price: Decimal, iva_percentag
         'category_id': product.category_id,
         'category': product.category,
         'final_price': final_price,  # ← Precio que el cliente paga (CON IVA)
+        'image_version': product.image_version,
     }
     
     return catalog_product_data
@@ -106,14 +107,19 @@ def get_catalog_products(db: Session, current_user, skip: int = 0, limit: int = 
     
     # Filtros opcionales
     if search:
-        # Aseguramos case-insensitivity y busqueda parcial en todos los campos
-        term = f"%{search.strip().lower()}%"
-        query = query.filter(
-            (func.lower(Product.name).ilike(term)) |
-            (func.lower(Product.description).ilike(term)) |
-            (func.lower(Product.descripcion_2).ilike(term)) |
-            (func.lower(Product.codebar).ilike(term))
-        )
+        search_terms = search.strip().lower().split()
+        if search_terms:
+            word_filters = []
+            for term in search_terms:
+                pattern = f"%{term}%"
+                word_filters.append(
+                    (func.lower(Product.name).ilike(pattern)) |
+                    (func.lower(Product.description).ilike(pattern)) |
+                    (func.lower(Product.descripcion_2).ilike(pattern)) |
+                    (func.lower(Product.codebar).ilike(pattern)) |
+                    (Product.product_id.ilike(pattern))
+                )
+            query = query.filter(and_(*word_filters))
     
     if category_id:
         query = query.filter(Product.category_id == category_id)
@@ -205,15 +211,19 @@ def get_customer_catalog_products(db: Session, customer_id: int, skip: int = 0, 
     
     # Filtros opcionales
     if search:
-        # Aseguramos case-insensitivity y busqueda parcial en todos los campos
-        term = f"%{search.strip().lower()}%"
-        query = query.filter(
-            (Product.product_id == search) |
-            (func.lower(Product.codebar).ilike(term)) |
-            (func.lower(Product.name).ilike(term)) |
-            (func.lower(Product.description).ilike(term)) |
-            (func.lower(Product.descripcion_2).ilike(term))
-        )
+        search_terms = search.strip().lower().split()
+        if search_terms:
+            word_filters = []
+            for term in search_terms:
+                pattern = f"%{term}%"
+                word_filters.append(
+                    (func.lower(Product.name).ilike(pattern)) |
+                    (func.lower(Product.description).ilike(pattern)) |
+                    (func.lower(Product.descripcion_2).ilike(pattern)) |
+                    (func.lower(Product.codebar).ilike(pattern)) |
+                    (Product.product_id.ilike(pattern))
+                )
+            query = query.filter(and_(*word_filters))
     
     if category_id:
         query = query.filter(Product.category_id == category_id)

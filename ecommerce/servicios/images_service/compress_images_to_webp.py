@@ -17,6 +17,7 @@ from pathlib import Path
 from PIL import Image
 import os
 import sys
+import requests
 
 # Agregar la carpeta 'servicios' al path para poder importar config.py
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,14 +47,55 @@ TARGET_SIZE_KB = 50
 # Formatos de imagen soportados
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'}
 
+# Backend Integration
+from config import BACKEND_URL, ADMIN_USERNAME, ADMIN_PASSWORD
+TOKEN = None
+
 # ============================================================================
 # FUNCIONES
 # ============================================================================
-
 def crear_carpeta_destino():
     """Crea la carpeta de salida si no existe"""
     OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
     print(f"[OK] Carpeta destino: {OUTPUT_FOLDER}")
+
+
+def login_backend():
+    """Obtiene token de acceso al backend"""
+    global TOKEN
+    try:
+        response = requests.post(
+            f"{BACKEND_URL}/login/access-token",
+            data={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD}
+        )
+        if response.status_code == 200:
+            TOKEN = response.json().get("access_token")
+            return True
+        print(f" [!] Error de autenticación: {response.status_code}")
+    except Exception as e:
+        print(f" [!] Error conectando al backend: {e}")
+    return False
+
+
+def notificar_cambio_imagen(product_id):
+    """Notifica al backend que la imagen de un producto cambió"""
+    if not TOKEN:
+        return
+    
+    headers = {"Authorization": f"Bearer {TOKEN}"}
+    try:
+        response = requests.patch(
+            f"{BACKEND_URL}/products/{product_id}/image-version",
+            headers=headers
+        )
+        if response.status_code == 200:
+            print(f" [API] Versión de imagen actualizada para {product_id}")
+        else:
+            # Silencioso si el producto no existe en el catálogo aún
+            if response.status_code != 404:
+                print(f" [API] Error {response.status_code} al actualizar {product_id}")
+    except Exception as e:
+        print(f" [API] Error de red: {e}")
 
 
 def obtener_tamaño_mb(ruta):
@@ -78,10 +120,13 @@ def comprimir_a_webp_adaptativo(imagen_path):
         nombre_base = imagen_path.stem
         webp_path = OUTPUT_FOLDER / f"{nombre_base}.webp"
         
-        # Si ya existe, saltar
+        # Si ya existe, verificar si el original es más reciente
         if webp_path.exists():
-            print(f" [SKIP] Ya existe: {nombre_base}.webp")
-            return False, 0, 0
+            if webp_path.stat().st_mtime >= imagen_path.stat().st_mtime:
+                # El archivo comprimido ya está actualizado, saltar silenciosamente
+                return False, 0, 0
+            else:
+                print(f" [UPDATE] Actualizando: {nombre_base}.webp (el original es más reciente)")
         
         # Abrir imagen
         with Image.open(imagen_path) as img:
@@ -158,6 +203,9 @@ def comprimir_a_webp_adaptativo(imagen_path):
                     else:
                         print()
                     
+                    # Notificar al backend
+                    notificar_cambio_imagen(nombre_base)
+                    
                     return True, tamaño_original_mb, tamaño_final_mb
                 
                 # No alcanzamos el objetivo, siguiente intento
@@ -178,6 +226,9 @@ def comprimir_a_webp_adaptativo(imagen_path):
             reduccion = ((tamaño_original_mb - tamaño_final_mb) / tamaño_original_mb) * 100
             
             print(f" [!] {nombre_base}: {tamaño_original_mb:.2f}MB -> {tamaño_final_kb:.1f}KB ({reduccion:.0f}%) [excede {TARGET_SIZE_KB}KB]")
+            
+            # Notificar al backend incluso si excede el tamaño objetivo (porque se actualizó)
+            notificar_cambio_imagen(nombre_base)
             
             return True, tamaño_original_mb, tamaño_final_mb
             
@@ -201,6 +252,14 @@ def main():
     
     # Crear carpeta destino
     crear_carpeta_destino()
+    print()
+    
+    # Login al backend
+    print("[INFO] Autenticando con el backend...")
+    if not login_backend():
+        print("[WARN] No se pudo conectar al backend. El control de versiones de imagen no funcionará.")
+    else:
+        print("[OK] Autenticado correctamente")
     print()
     
     # Obtener todas las imágenes

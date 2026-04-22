@@ -78,10 +78,13 @@ def comprimir_a_webp_adaptativo(imagen_path):
         nombre_base = imagen_path.stem
         webp_path = OUTPUT_FOLDER / f"{nombre_base}.webp"
         
-        # Si ya existe, saltar
+        # Si ya existe, verificar si el original es más reciente
         if webp_path.exists():
-            print(f"[SKIP] Ya existe: {nombre_base}.webp")
-            return False, 0, 0
+            if webp_path.stat().st_mtime >= imagen_path.stat().st_mtime:
+                # El archivo comprimido ya está actualizado, saltar silenciosamente
+                return False, 0, 0
+            else:
+                print(f"[UPDATE] Actualizando: {nombre_base}.webp (el original es más reciente)")
         
         # Abrir imagen
         with Image.open(imagen_path) as img:

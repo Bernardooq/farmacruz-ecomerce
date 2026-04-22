@@ -262,6 +262,7 @@ class Product(Base):
     base_price = Column(Numeric(10, 2), nullable=False, default=0.00)  # Precio base sin markup ni IVA
     iva_percentage = Column(Numeric(5, 2), default=0.00)  # % de IVA (ej: 16.00)
     image_url = Column(String(255), default=None)  # URL de la imagen del producto (puede ser None)
+    image_version = Column(Integer, default=1)  # Version de la imagen para control de cache
     stock_count = Column(Integer, default=0)  # Cantidad en inventario
     is_active = Column(Boolean, default=True, index=True)  # Para ocultar productos sin eliminarlos
     category_id = Column(Integer, ForeignKey("categories.category_id"), index=True)

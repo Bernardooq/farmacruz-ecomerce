@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../context/AuthContext';
 import SimilarProducts from '../../products/SimilarProducts';
+import { getProductImageUrl } from '../../../utils/imageUtils';
 
 const MESSAGE_TIMEOUT = 3000;
 const SUCCESS_CLOSE_DELAY = 1500;
@@ -58,7 +59,7 @@ export default function ModalProductDetails({ product, isOpen, onClose, onProduc
         <div className="modal__body modal__body--scroll">
           <div className="product-details">
             <div className="product-details__image">
-              <img src={product.image_url || '../../../images/default-product.jpg'} loading='lazy' alt={product.name} />
+              <img src={getProductImageUrl(product)} loading='lazy' alt={product.name} />
             </div>
             <div className="product-details__info">
               <div>

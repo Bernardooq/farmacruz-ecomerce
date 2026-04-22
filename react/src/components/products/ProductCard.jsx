@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { getProductImageUrl } from '../../utils/imageUtils';
 
 const MESSAGE_TIMEOUT = 3000;
 const SUCCESS_TIMEOUT = 2000;
@@ -66,7 +67,7 @@ export default function ProductCard({ product, onProductClick }) {
   return (
     <article className="product-card">
       <img
-        src={image_url || '../../images/default-product.jpg'}
+        src={getProductImageUrl(product)}
         alt={name}
         className="product-card__image"
       />

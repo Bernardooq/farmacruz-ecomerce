@@ -42,6 +42,7 @@ class ProductBase(BaseModel):
     stock_count: Optional[int] = Field(None, ge=0)  # Cantidad en inventario
     is_active: bool = True  # Si el producto esta visible
     category_id: Optional[int] = None  # ID de la categoria (opcional)
+    image_version: int = 1  # Version de la imagen para cache-busting
 
 
 class ProductCreate(BaseModel):

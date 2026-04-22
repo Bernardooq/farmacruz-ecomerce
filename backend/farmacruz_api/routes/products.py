@@ -240,6 +240,24 @@ def adjust_product_stock(
     return db_product
 
 
+""" PATCH /{product_id}/image-version - Incrementar la version de la imagen """
+@router.patch("/{product_id}/image-version", response_model=Product)
+def increment_image_version_route(
+    product_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin_user)
+):
+    # Incrementa la version de la imagen para forzar refresco de cache
+    from crud.crud_product import increment_image_version
+    db_product = increment_image_version(db, product_id=product_id)
+    if not db_product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Producto no encontrado"
+        )
+    return db_product
+
+
 """ GET /{product_id}/similar - Obtiene productos similares basados en componentes activos """
 @router.get("/{product_id}/similar")
 def read_similar_products(

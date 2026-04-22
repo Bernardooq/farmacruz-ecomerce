@@ -1,4 +1,11 @@
 @echo off
+set "logfile=%~dp0upload_product_zip_log.txt"
+
+call :main >> "%logfile%" 2>&1
+exit /b
+
+:main
+echo [%date% %time%] Inicio
 cd /d "%~dp0.."
 echo ===================================================
 echo Subiendo ZIP de Productos
@@ -9,4 +16,7 @@ echo Ejecutando script Python...
 
 echo.
 echo Proceso finalizado.
+echo [%date% %time%] Fin
+echo ---------------------------------------------------
+goto :eof
 

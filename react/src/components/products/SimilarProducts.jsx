@@ -5,6 +5,7 @@ import { productService } from '../../services/productService';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { getProductImageUrl } from '../../utils/imageUtils';
 
 const MSG_TIMEOUT = 2500;
 
@@ -179,7 +180,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                         <div key={product.product_id} className="similar-product-card">
                             <div className="similar-product-card__image">
                                 {product.image_url ? (
-                                    <img src={product.image_url} loading="lazy" alt={product.name} />
+                                    <img src={getProductImageUrl(product)} loading="lazy" alt={product.name} />
                                 ) : (
                                     <div className="similar-product-card__no-image">
                                         <FontAwesomeIcon icon={faCapsules} />

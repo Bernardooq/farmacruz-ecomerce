@@ -157,6 +157,7 @@ CREATE TABLE products (
     base_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     iva_percentage NUMERIC(5, 2) DEFAULT 0.00,
     image_url VARCHAR(255),
+    image_version INTEGER DEFAULT 1,
     stock_count INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT TRUE,
     category_id INTEGER REFERENCES categories (category_id),

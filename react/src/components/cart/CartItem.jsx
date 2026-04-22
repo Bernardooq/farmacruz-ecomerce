@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { getProductImageUrl } from '../../utils/imageUtils';
 
 export default function CartItem({ item, onQuantityChange, onRemove }) {
   // ============================================
@@ -75,7 +76,7 @@ export default function CartItem({ item, onQuantityChange, onRemove }) {
   return (
     <article className="cart-item">
       {/* Producto */}
-      <img src={image} alt={name} className="cart-item__image" loading='lazy'/>
+      <img src={getProductImageUrl(product)} alt={name} className="cart-item__image" loading='lazy'/>
 
       <div className="cart-item__info">
         <h3 className="cart-item__name">{name}</h3>
