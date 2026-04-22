@@ -20,6 +20,7 @@ import catalogService from '../services/catalogService';
 import { categoryService } from '../services/categoryService';
 import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/layout/SearchBar';
+import HelpGuide from '../components/common/HelpGuide';
 import Footer from '../components/layout/Footer';
 import FiltersBar from '../components/products/FiltersBar';
 import ProductGrid from '../components/products/ProductGrid';
@@ -174,9 +175,21 @@ export default function Products() {
       <main className="page__content">
         <div className="page-container">
           {/* Título de la página */}
-          <h1 className="section-title mb-6">
-            {searchQuery ? `Resultados para: "${searchQuery}"` : 'Nuestro Catálogo'}
-          </h1>
+          <div className="d-flex items-center justify-between mb-6">
+            <h1 className="section-title">
+              {searchQuery ? `Resultados para: "${searchQuery}"` : 'Nuestro Catálogo'}
+            </h1>
+            <HelpGuide
+              title="Guía del Catálogo"
+              items={[
+                "Búsqueda: Utiliza la barra superior para encontrar productos.",
+                "Ordenamiento: Puedes ordenar por precio o alfabéticamente usando el menú 'Ordenar por'.",
+                "Similares: Haz clic en cualquier producto para ver sus detalles y recomendaciones de productos similares.",
+                "Compra: Desde el detalle del producto, agrégalo a tu carrito para iniciar tu pedido.",
+                "Categorías: Filtra los productos por su familia o categoría para navegar más fácil."
+              ]}
+            />
+          </div>
 
           {/* Mensaje de error */}
           {error && (

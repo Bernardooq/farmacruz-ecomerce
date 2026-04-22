@@ -23,6 +23,7 @@ import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
 import CartItemList from '../components/cart/CartItemList';
 import CartSummary from '../components/cart/CartSummary';
+import HelpGuide from '../components/common/HelpGuide';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 
@@ -146,7 +147,20 @@ export default function Cart() {
 
       <main className="page__content">
         <div className="page-container">
-          <h1 className="section-title mb-6">Mi Carrito</h1>
+          <div className="d-flex items-center justify-between mb-6">
+            <h1 className="section-title">Mi Carrito</h1>
+            <HelpGuide
+              title="Guía del Carrito"
+              items={[
+                "Cantidades: Puedes aumentar o disminuir la cantidad de cada producto. El sistema validará automáticamente si hay stock suficiente.",
+                "Eliminar: Haz clic en el icono de bote de basura si ya no deseas un producto.",
+                "Dirección: Al finalizar el pedido, podrás elegir entre tus direcciones registradas.",
+                "Pagos: Una vez realizado el pago de tu pedido, este será validado y enviado. Puedes contactar a tu agente de marketing asignado para acelerar el proceso o simplemente esperar a que nuestro equipo te contacte.",
+                "Finalizar: Haz clic en 'Finalizar Pedido' para enviar tu orden y recibir las instrucciones de pago.",
+                "Notas: Puedes agregar comentarios especiales a tu pedido (ej: fechas de caducidad específicas)."
+              ]}
+            />
+          </div>
 
           {/* Mensaje de error */}
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}

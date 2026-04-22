@@ -20,6 +20,7 @@ import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
 import OrderHistory from '../components/orders/OrderHistory';
 import PaginationButtons from '../components/common/PaginationButtons';
+import HelpGuide from '../components/common/HelpGuide';
 import OrderModal from '../components/orders/OrderModal';
 import MyTickets from '../components/tickets/MyTickets';
 import { userService } from '../services/userService';
@@ -201,7 +202,19 @@ export default function Profile() {
 
       <main className="page__content">
         <div className="page-container">
-          <h1 className="section-title mb-6">Panel de Cliente</h1>
+          <div className="d-flex items-center justify-between mb-6">
+            <h1 className="section-title">Panel de Cliente</h1>
+            <HelpGuide
+              title="Guía de Usuario"
+              items={[
+                "Pedidos: Aquí puedes ver todo tu historial de compras y el estado actual de tus pedidos.",
+                "Cancelación: Puedes cancelar un pedido tú mismo siempre que esté en estado 'Validando'. Una vez aprobado o enviado, deberás contactar a soporte.",
+                "Password: Para cambiar tu contraseña, haz clic en el icono de llave (🔑) que se encuentra en la barra superior, a la derecha de tu nombre.",
+                "Soporte: Si tienes problemas con un pedido, puedes levantar un ticket en la sección de Soporte al final de esta página.",
+                "Direcciones: Revisa que tus 3 direcciones sean correctas para que tus pedidos lleguen sin problemas."
+              ]}
+            />
+          </div>
 
           {/* ============================================ */}
           {/* SECCIÓN DE INFORMACIÓN DEL PERFIL           */}
