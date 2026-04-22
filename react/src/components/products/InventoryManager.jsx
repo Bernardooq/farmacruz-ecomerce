@@ -32,6 +32,8 @@ export default function InventoryManager() {
   const [stockFilter, setStockFilter] = useState('');
   const [imageFilter, setImageFilter] = useState('');
   const [isActiveFilter, setIsActiveFilter] = useState('true');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -62,7 +64,7 @@ export default function InventoryManager() {
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, selectedCategory, stockFilter, debouncedSearchName, debouncedSearchcodebar, imageFilter, isActiveFilter]);
+  }, [page, selectedCategory, stockFilter, debouncedSearchName, debouncedSearchcodebar, imageFilter, isActiveFilter, sortBy, sortOrder]);
 
   const loadCategories = async () => {
     try {
@@ -84,6 +86,8 @@ export default function InventoryManager() {
       }
       if (imageFilter !== '') params.image = imageFilter === 'true';
       if (isActiveFilter !== '') params.is_active = isActiveFilter === 'true';
+      if (sortBy) params.sort_by = sortBy;
+      if (sortOrder) params.sort_order = sortOrder;
 
       const data = await productService.getProducts(params);
       if (!Array.isArray(data)) { setProducts([]); setLoading(false); return; }
@@ -224,13 +228,28 @@ export default function InventoryManager() {
             <option value="false">Inactivos</option>
           </select>
         </div>
-
         <div className="filter-group">
           <label className="filter-group__label" htmlFor="filterImage">Imagen:</label>
           <select className="select" id="filterImage" value={imageFilter} onChange={(e) => { setImageFilter(e.target.value); setPage(0); }}>
             <option value="">Todos</option>
             <option value="true">Con Imagen</option>
             <option value="false">Sin Imagen</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label className="filter-group__label" htmlFor="filterSort">Orden:</label>
+          <select className="select" id="filterSort" value={`${sortBy}-${sortOrder}`} onChange={(e) => { 
+            const [field, order] = e.target.value.split('-');
+            setSortBy(field);
+            setSortOrder(order);
+            setPage(0); 
+          }}>
+            <option value="name-asc">Nombre (A-Z)</option>
+            <option value="name-desc">Nombre (Z-A)</option>
+            <option value="price-asc">Precio (Menor a Mayor)</option>
+            <option value="price-desc">Precio (Mayor a Menor)</option>
+            <option value="product_id-desc">Más Recientes</option>
           </select>
         </div>
       </div>

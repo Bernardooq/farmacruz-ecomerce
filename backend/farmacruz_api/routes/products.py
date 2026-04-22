@@ -34,9 +34,9 @@ from crud.crud_product import (
     create_product,
     update_product,
     delete_product,
-    search_products,
     update_stock,
-    get_similar_products
+    get_similar_products,
+    increment_image_version
 )
 
 router = APIRouter()
@@ -61,12 +61,19 @@ def read_products(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Lista de productos con filtros y ordenamiento
-    if search:
-        products = search_products(db, search=search, skip=skip, limit=limit)
-    else:
-        products = get_products(db, skip=skip, limit=limit, category_id=category_id, is_active=is_active, stock_filter=stock_filter,
-            sort_by=sort_by, sort_order=sort_order, image=image)
+    # Lista de productos con filtros y ordenamiento (Búsqueda integrada)
+    products = get_products(
+        db, 
+        skip=skip, 
+        limit=limit, 
+        category_id=category_id, 
+        is_active=is_active, 
+        stock_filter=stock_filter,
+        sort_by=sort_by, 
+        sort_order=sort_order, 
+        image=image,
+        search=search
+    )
     
     # Filtrar precio base si no es admin
     if current_user and current_user.role != "admin":

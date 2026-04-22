@@ -32,11 +32,14 @@ def get_product_by_codebar(db: Session, codebar: str) -> Optional[Product]:
     ).filter(Product.codebar == codebar).first()
 
 """ Obtiene lista de productos con filtros y ordenamiento """
-def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Optional[int] = None, is_active: Optional[bool] = None, stock_filter: Optional[str] = None,
-    sort_by: Optional[str] = None, sort_order: Optional[str] = "asc", image: Optional[bool] = None  ) -> List[Product]:
+def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Optional[int] = None, 
+                 is_active: Optional[bool] = None, stock_filter: Optional[str] = None,
+                 sort_by: Optional[str] = None, sort_order: Optional[str] = "asc", 
+                 image: Optional[bool] = None, search: Optional[str] = None) -> List[Product]:
     LOW_STOCK_THRESHOLD = 10  # Umbral para considerar bajo stock
     query = db.query(Product).options(joinedload(Product.category))
-    # Filtros
+    
+    # Filtros base
     if category_id is not None:
         query = query.filter(Product.category_id == category_id)
     
@@ -45,42 +48,40 @@ def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Opti
     
     if image is not None:
         if image:
-            # Tiene imagen: image_url no es NULL ni string vacío
-            query = query.filter(
-                Product.image_url.isnot(None),
-                Product.image_url != ""
-            )
+            query = query.filter(Product.image_url.isnot(None), Product.image_url != "")
         else:
-            # Sin imagen: image_url es NULL o string vacío
-            query = query.filter(
-                (Product.image_url.is_(None)) | (Product.image_url == "")
-            )
+            query = query.filter((Product.image_url.is_(None)) | (Product.image_url == ""))
+    
+    # Filtro de Búsqueda (Multi-palabra)
+    if search:
+        search_terms = search.strip().split()
+        if search_terms:
+            word_filters = []
+            for term in search_terms:
+                pattern = f"%{term}%"
+                word_filters.append(
+                    (Product.product_id.ilike(pattern)) |
+                    (Product.name.ilike(pattern)) |
+                    (Product.description.ilike(pattern)) |
+                    (Product.descripcion_2.ilike(pattern)) |
+                    (Product.codebar.ilike(pattern))
+                )
+            query = query.filter(and_(*word_filters))
     
     # Filtrar por nivel de stock
     if stock_filter:
         if stock_filter == "out_of_stock":
             query = query.filter(Product.stock_count == 0)
         elif stock_filter == "low_stock":
-            query = query.filter(
-                Product.stock_count > 0,
-                Product.stock_count < LOW_STOCK_THRESHOLD
-            )
+            query = query.filter(Product.stock_count > 0, Product.stock_count < LOW_STOCK_THRESHOLD)
         elif stock_filter == "in_stock":
             query = query.filter(Product.stock_count >= LOW_STOCK_THRESHOLD)
     
     # Ordenamiento
     if sort_by == "price":
-        # Ordenar por precio base
-        if sort_order == "desc":
-            query = query.order_by(Product.base_price.desc())
-        else:
-            query = query.order_by(Product.base_price.asc())
+        query = query.order_by(Product.base_price.desc()) if sort_order == "desc" else query.order_by(Product.base_price.asc())
     elif sort_by == "name":
-        # Ordenar por nombre
-        if sort_order == "desc":
-            query = query.order_by(Product.name.desc())
-        else:
-            query = query.order_by(Product.name.asc())
+        query = query.order_by(Product.name.desc()) if sort_order == "desc" else query.order_by(Product.name.asc())
     else:
         # Orden por defecto: mas recientes primero
         query = query.order_by(Product.product_id.desc())
