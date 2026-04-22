@@ -88,27 +88,6 @@ def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Opti
     
     return query.offset(skip).limit(limit).all()
 
-""" Busca productos por ID, nombre o descripcion (Soporta múltiples palabras) """
-def search_products(db: Session, search: str, skip: int = 0, limit: int = 100) -> List[Product]:
-    search_terms = search.strip().split()
-    if not search_terms:
-        return db.query(Product).offset(skip).limit(limit).all()
-    
-    # Cada palabra debe estar presente en al menos uno de los campos
-    word_filters = []
-    for term in search_terms:
-        pattern = f"%{term}%"
-        word_filters.append(
-            (Product.product_id.ilike(pattern)) |
-            (Product.name.ilike(pattern)) |
-            (Product.description.ilike(pattern)) |
-            (Product.descripcion_2.ilike(pattern))
-        )
-    
-    return db.query(Product).options(
-        joinedload(Product.category)
-    ).filter(and_(*word_filters)).offset(skip).limit(limit).all()
-
 """ Crea un nuevo producto en el catalogo """
 def create_product(db: Session, product: ProductCreate) -> Product:
     product_data = product.model_dump()
