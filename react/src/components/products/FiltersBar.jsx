@@ -38,6 +38,8 @@ export default function FiltersBar({
           onChange={e => onSortChange(e.target.value)}
         >
           <option value="relevance">Más Recientes</option>
+          <option value="price_asc">Precio: Menor a Mayor</option>
+          <option value="price_desc">Precio: Mayor a Menor</option>
           <option value="name_asc">Nombre: A-Z</option>
           <option value="name_desc">Nombre: Z-A</option>
         </select>

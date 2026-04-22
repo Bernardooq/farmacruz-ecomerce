@@ -122,27 +122,41 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
     )
 
 """Obtiene estadisticas simplificadas para el dashboard de vendedores y marketing"""
-def get_seller_marketing_dashboard_stats(db: Session) -> SellerMarketingDashboardStats:
+def get_seller_marketing_dashboard_stats(db: Session, current_user: User) -> SellerMarketingDashboardStats:
     # Obtiene estadisticas simplificadas para el dashboard de vendedores y marketing
+    # Si no es admin, filtramos por sus grupos de venta
     
-    # Total de productos activos en catalogo
-    total_products = db.query(func.count(Product.product_id)).filter(
-        Product.is_active == True
-    ).scalar()
+    # Obtener IDs de grupos del usuario
+    group_ids = []
+    if current_user.role == UserRole.marketing:
+        from db.base import GroupMarketingManager
+        group_ids = [g.sales_group_id for g in db.query(GroupMarketingManager).filter(GroupMarketingManager.marketing_id == current_user.user_id).all()]
+    elif current_user.role == UserRole.seller:
+        from db.base import GroupSeller
+        group_ids = [g.sales_group_id for g in db.query(GroupSeller).filter(GroupSeller.seller_id == current_user.user_id).all()]
+
+    # Query base para pedidos
+    from db.base import CustomerInfo
+    order_query = db.query(func.count(Order.order_id))
     
-    # Productos con bajo stock (menos de 10 unidades)
+    if current_user.role != UserRole.admin:
+        # Unir con CustomerInfo para filtrar por sales_group_id
+        order_query = order_query.join(CustomerInfo, Order.customer_id == CustomerInfo.customer_id).filter(CustomerInfo.sales_group_id.in_(group_ids))
+
+    # Pedidos por estado
+    pending_orders = order_query.filter(Order.status == OrderStatus.pending_validation).scalar()
+    approved_orders = order_query.filter(Order.status == OrderStatus.approved).scalar()
+    shipped_orders = order_query.filter(Order.status == OrderStatus.shipped).scalar()
+    delivered_orders = order_query.filter(Order.status == OrderStatus.delivered).scalar()
+    cancelled_orders = order_query.filter(Order.status == OrderStatus.cancelled).scalar()
+    
+    # INVENTARIO (Global por ahora, o podria ser filtrado por productos vendidos por sus grupos si fuera necesario)
+    total_products = db.query(func.count(Product.product_id)).filter(Product.is_active == True).scalar()
     low_stock_count = db.query(func.count(Product.product_id)).filter(
         Product.stock_count < 10,
-        Product.stock_count > 0,  # No contar productos sin stock
+        Product.stock_count > 0,
         Product.is_active == True
     ).scalar()
-    
-    # Pedidos pendientes de validacion
-    pending_orders = db.query(func.count(Order.order_id)).filter(
-        Order.status == OrderStatus.pending_validation
-    ).scalar()
-
-    # Productos agotados
     out_of_stock_count = db.query(func.count(Product.product_id)).filter(
         Product.stock_count <= 0,
         Product.is_active == True
@@ -150,6 +164,10 @@ def get_seller_marketing_dashboard_stats(db: Session) -> SellerMarketingDashboar
     
     return SellerMarketingDashboardStats(
         pending_orders=pending_orders,
+        approved_orders=approved_orders,
+        shipped_orders=shipped_orders,
+        delivered_orders=delivered_orders,
+        cancelled_orders=cancelled_orders,
         total_products=total_products,
         low_stock_count=low_stock_count,
         out_of_stock_count=out_of_stock_count

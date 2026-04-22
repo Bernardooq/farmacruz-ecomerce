@@ -23,6 +23,7 @@ import CategoryManagement from '../components/products/CategoryManagement';
 import TicketDashboard from '../components/tickets/TicketDashboard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
+import HelpGuide from '../components/common/HelpGuide';
 
 const MARKETING_TABS = [
     { id: 'pedidos', label: 'Pedidos', icon: '📦' },
@@ -30,6 +31,54 @@ const MARKETING_TABS = [
     { id: 'grupos', label: 'Grupos de Ventas', icon: '👥' },
     { id: 'soporte', label: 'Soporte', icon: '🎫' }
 ];
+
+const HELP_CONTENT = {
+    pedidos: {
+        title: "Documentación: Seguimiento de Pedidos",
+        description: "Monitoreo de ventas para tus grupos y vendedores asignados.",
+        items: [
+            "Validación: Tu equipo es responsable de validar los pedidos una vez confirmado el pago.",
+            "Visibilidad: Consulta todos los pedidos realizados por vendedores en tus grupos.",
+            "Estados: Filtra por pedidos pendientes, pagados o entregados para dar seguimiento.",
+            "Zonas: Identifica tendencias de venta por grupo de venta.",
+            "Detalles: Revisa productos y montos.",
+            "Seguimiento: Monitorea el estado de cada pedido en tiempo real.",
+            "TXT: Genera archivos de texto compatibles con el ERP para validación de pedidos.",
+            "Asignación: Por defecto se asignan al agente que vende, pero pueden reasignarse a otro miembro del grupo (ej. chóferes) para la entrega."
+        ]
+    },
+    inventario: {
+        title: "Documentación: Consulta de Catálogo",
+        description: "Visualización de productos y stock (Modo lectura).",
+        items: [
+            "Catálogo: Revisa la lista completa de productos farmacéuticos.",
+            "Stock: Verifica existencias para asesorar a tu equipo de ventas.",
+            "Categorías: Filtra productos por familia para análisis de mercado.",
+            "Imágenes: Asegúrate de que los productos tengan fotografías actualizadas."
+        ]
+    },
+    grupos: {
+        title: "Documentación: Estructura Comercial",
+        description: "Visualización de jerarquías y equipos asignados.",
+        items: [
+            "Supervisión: Como marketing, puedes supervisar múltiples grupos de venta.",
+            "Clientes: Cada cliente dentro de tus grupos pertenece a un único grupo.",
+            "Vendedores: Consulta quiénes integran cada grupo de venta bajo tu mando.",
+            "Cartera: Ve los clientes vinculados a cada grupo de ventas.",
+            "Organización: Los cambios estructurales se solicitan al administrador."
+        ]
+    },
+    soporte: {
+        title: "Documentación: Panel de Soporte",
+        description: "Gestión de dudas e incidencias de tu equipo.",
+        items: [
+            "Tickets: Visualiza problemas reportados por tus vendedores.",
+            "Atención: Ayuda a resolver dudas sobre pedidos o clientes.",
+            "Escalación: Los problemas técnicos críticos deben escalarse al administrador.",
+            "Historial: Revisa soluciones previas para optimizar la atención."
+        ]
+    }
+};
 
 export default function MarketingDashboard() {
     const { user } = useAuth();
@@ -47,6 +96,10 @@ export default function MarketingDashboard() {
             const stats = await dashboardService.getSellerMarketingStats();
             setSummary({
                 pending_orders: stats.pending_orders,
+                approved_orders: stats.approved_orders,
+                shipped_orders: stats.shipped_orders,
+                delivered_orders: stats.delivered_orders,
+                cancelled_orders: stats.cancelled_orders,
                 total_products: stats.total_products,
                 low_stock_count: stats.low_stock_count,
                 out_of_stock_count: stats.out_of_stock_count
@@ -61,11 +114,26 @@ export default function MarketingDashboard() {
     const renderContent = () => {
         switch (activeTab) {
             case 'pedidos':
-                return <AllOrders />;
+                return (
+                    <>
+                        <SummaryCards summary={{
+                            pending_orders: summary.pending_orders,
+                            approved_orders: summary.approved_orders,
+                            shipped_orders: summary.shipped_orders,
+                            delivered_orders: summary.delivered_orders,
+                            cancelled_orders: summary.cancelled_orders
+                        }} />
+                        <AllOrders />
+                    </>
+                );
             case 'inventario':
                 return (
                     <>
-                        <SummaryCards summary={summary} />
+                        <SummaryCards summary={{
+                            total_products: summary.total_products,
+                            low_stock_count: summary.low_stock_count,
+                            out_of_stock_count: summary.out_of_stock_count
+                        }} />
                         <InventoryManager />
                         <CategoryManagement />
                     </>
@@ -75,7 +143,18 @@ export default function MarketingDashboard() {
             case 'soporte':
                 return <TicketDashboard />;
             default:
-                return <AllOrders />;
+                return (
+                    <>
+                        <SummaryCards summary={{
+                            pending_orders: summary.pending_orders,
+                            approved_orders: summary.approved_orders,
+                            shipped_orders: summary.shipped_orders,
+                            delivered_orders: summary.delivered_orders,
+                            cancelled_orders: summary.cancelled_orders
+                        }} />
+                        <AllOrders />
+                    </>
+                );
         }
     };
 
@@ -117,6 +196,13 @@ export default function MarketingDashboard() {
                         </nav>
 
                         <div className="dashboard-layout__tabs-content">
+                            {HELP_CONTENT[activeTab] && (
+                                <HelpGuide
+                                    title={HELP_CONTENT[activeTab].title}
+                                    description={HELP_CONTENT[activeTab].description}
+                                    items={HELP_CONTENT[activeTab].items}
+                                />
+                            )}
                             {renderContent()}
                         </div>
                     </div>

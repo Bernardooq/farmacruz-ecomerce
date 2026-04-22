@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faTrashAlt, faBoxes } from '@fortawesome/free-solid-svg-icons';
+import { faPencilAlt, faTrashAlt, faBoxes, faEye } from '@fortawesome/free-solid-svg-icons';
 
 const LOW_STOCK_THRESHOLD = 10;
 const DEFAULT_IVA = 16;
@@ -9,6 +9,7 @@ export default function ProductRow({
   onEdit,
   onDelete,
   onUpdateStock,
+  onView,
   isAdmin = true
 }) {
   const getStockClass = (stock) => {
@@ -42,37 +43,45 @@ export default function ProductRow({
         </span>
       </td>
       <td data-label="Acciones" className="actions-cell">
-        {isAdmin ? (
-          <>
-            <button
-              className="btn btn--icon btn--ghost"
-              aria-label="Actualizar Stock"
-              onClick={(e) => { e.stopPropagation(); onUpdateStock(product); }}
-              title="Actualizar Stock"
-            >
-              <FontAwesomeIcon icon={faBoxes} />
-            </button>
-            <button
-              className="btn btn--icon btn--ghost"
-              aria-label="Editar Producto"
-              onClick={(e) => { e.stopPropagation(); onEdit(product); }}
-              title="Editar Producto"
-            >
-              <FontAwesomeIcon icon={faPencilAlt} />
-            </button>
-            <button
-              className="btn btn--icon btn--danger"
-              aria-label="Eliminar Producto"
-              onClick={(e) => { e.stopPropagation(); onDelete(product); }}
-              title="Eliminar Producto"
-            >
-              <FontAwesomeIcon icon={faTrashAlt} />
-            </button>
-          </>
-        ) : (
-          <span className="text-muted text-italic">Solo lectura</span>
-        )}
+        <div className="d-flex gap-1">
+          <button
+            className="btn btn--icon btn--ghost"
+            onClick={(e) => { e.stopPropagation(); onView(product); }}
+            title="Ver Detalles"
+          >
+            <FontAwesomeIcon icon={faEye} />
+          </button>
+
+          {isAdmin && (
+            <>
+              <button
+                className="btn btn--icon btn--ghost"
+                aria-label="Actualizar Stock"
+                onClick={(e) => { e.stopPropagation(); onUpdateStock(product); }}
+                title="Actualizar Stock"
+              >
+                <FontAwesomeIcon icon={faBoxes} />
+              </button>
+              <button
+                className="btn btn--icon btn--ghost"
+                aria-label="Editar Producto"
+                onClick={(e) => { e.stopPropagation(); onEdit(product); }}
+                title="Editar Producto"
+              >
+                <FontAwesomeIcon icon={faPencilAlt} />
+              </button>
+              <button
+                className="btn btn--icon btn--danger"
+                aria-label="Eliminar Producto"
+                onClick={(e) => { e.stopPropagation(); onDelete(product); }}
+                title="Eliminar Producto"
+              >
+                <FontAwesomeIcon icon={faTrashAlt} />
+              </button>
+            </>
+          )}
+        </div>
       </td>
     </tr>
   );
-}
+}

@@ -38,7 +38,7 @@ def get_seller_marketing_dashboard_stats_route(
     db: Session = Depends(get_db)
 ):
     # Obtiene estadisticas del dashboard para vendedores de marketing
-    return get_seller_marketing_dashboard_stats(db)
+    return get_seller_marketing_dashboard_stats(db, current_user)
 
 """ GET /reports/sales - Reporte de ventas por rango de fechas """
 @router.get("/reports/sales", response_model=SalesReport)

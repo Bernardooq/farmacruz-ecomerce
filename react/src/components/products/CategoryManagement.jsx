@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPencilAlt, faTrashAlt, faTag } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPencilAlt, faTrashAlt, faTag, faEye } from '@fortawesome/free-solid-svg-icons';
 import { categoryService } from '../../services/categoryService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
@@ -145,7 +145,9 @@ export default function CategoryManagement() {
                           </button>
                         </>
                       ) : (
-                        <span className="text-muted text-italic">Solo lectura</span>
+                        <button className="btn btn--icon btn--ghost" onClick={() => openEditModal(category)} aria-label="Ver categoría" title="Ver Detalle">
+                          <FontAwesomeIcon icon={faEye} />
+                        </button>
                       )}
                     </td>
                   </tr>

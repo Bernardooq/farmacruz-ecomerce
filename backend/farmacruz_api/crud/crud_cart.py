@@ -14,15 +14,13 @@ from typing import List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
-from utils.price_utils import get_product_final_price, apply_iva
-
-
+from utils.price_utils import get_catalog_product_info
 from db.base import CartCache, CustomerInfo, PriceListItem, Product
 
 """Obtiene todos los items en el carrito de un cliente con detalles del producto y precios"""
-def get_cart(db: Session, customer_id: int) -> List[CartCache]: 
+def get_cart(db: Session, customer_id: int) -> List[dict]: 
     cart_items = db.query(CartCache).options(
-        joinedload(CartCache.product)
+        joinedload(CartCache.product).joinedload(Product.category)
     ).filter(
         CartCache.customer_id == customer_id
     ).all()
@@ -31,54 +29,47 @@ def get_cart(db: Session, customer_id: int) -> List[CartCache]:
         CustomerInfo.customer_id == customer_id
     ).first()
     
-    # Enriquecer con informacion del producto en formato anidado
+    # Enriquecer con informacion del producto en formato anidado usando middleware
     result = []
     for item in cart_items:
-        # Obtener precio del producto para este cliente
-        final_price = None
-        markup_percentage = 0.0
-        
-        if item.product and customer_info and customer_info.price_list_id:
+        if not item.product:
+            continue
             
-            price_data = get_product_final_price(
-                db=db,
-                product=item.product,
-                price_list_id=customer_info.price_list_id
-            )
+        product_data = None
+        if customer_info and customer_info.price_list_id:
+            product_data = get_catalog_product_info(db, item.product, customer_info.price_list_id)
+        
+        # Si no hay lista de precios o no se encontro el item, construir dict basico seguro
+        if not product_data:
+            product_data = {
+                'product_id': item.product.product_id,
+                'codebar': item.product.codebar,
+                'name': item.product.name,
+                'description': item.product.description,
+                'descripcion_2': item.product.descripcion_2,
+                'unidad_medida': item.product.unidad_medida,
+                'iva_percentage': float(item.product.iva_percentage or 0),
+                'image_url': item.product.image_url,
+                'stock_count': item.product.stock_count,
+                'is_active': item.product.is_active,
+                'category_id': item.product.category_id,
+                'category': {
+                    'category_id': item.product.category.category_id,
+                    'name': item.product.category.name
+                } if item.product.category else None,
+                'final_price': None,
+                'image_version': item.product.image_version,
+            }
             
-            if price_data:
-                price_without_iva = price_data["final_price"]
-                markup_percentage = float(price_data["markup_percentage"])
-                
-                # Aplicar IVA al precio (base_price * markup * iva)
-                iva_percentage = item.product.iva_percentage or 0
-                final_price = float(apply_iva(price_without_iva, iva_percentage))
-        
-        # Si no se pudo calcular precio, usar base_price
-        if final_price is None and item.product:
-            final_price = float(item.product.base_price or 0)
-        
-        cart_data = {
+        result.append({
             "cart_cache_id": item.cart_cache_id,
             "customer_id": item.customer_id,
             "product_id": item.product_id,
             "quantity": item.quantity,
             "added_at": item.added_at,
             "updated_at": item.updated_at,
-            "product": {
-                "product_id": item.product.product_id,
-                "name": item.product.name,
-                "codebar": item.product.codebar,
-                # base_price: EXCLUIDO por seguridad - cliente no debe ver costos
-                # iva_percentage: EXCLUIDO - ya incluido en final_price
-                "final_price": final_price,
-                "markup_percentage": markup_percentage,
-                "image_url": item.product.image_url,
-                "stock_count": item.product.stock_count,
-                "is_active": item.product.is_active
-            } if item.product else None
-        }
-        result.append(cart_data)
+            "product": product_data
+        })
     
     return result
 

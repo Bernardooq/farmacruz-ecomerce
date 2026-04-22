@@ -105,6 +105,8 @@ export default function Products() {
 
       if (isCustomer) {
         const sortConfig = {
+          'price_asc': { sort_by: 'price', sort_order: 'asc' },
+          'price_desc': { sort_by: 'price', sort_order: 'desc' },
           'name_asc': { sort_by: 'name', sort_order: 'asc' },
           'name_desc': { sort_by: 'name', sort_order: 'desc' },
           'relevance': {}

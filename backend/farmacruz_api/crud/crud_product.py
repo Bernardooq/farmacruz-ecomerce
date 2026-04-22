@@ -147,7 +147,7 @@ def increment_image_version(db: Session, product_id: str) -> Optional[Product]:
         db.refresh(db_product)
     return db_product
 
-
+from utils.price_utils import get_catalog_product_info
 
 def get_similar_products(
     db: Session,
@@ -157,9 +157,8 @@ def get_similar_products(
     min_similarity: float = 0.3
 ) -> List[dict]:
     """
-    Versión Optimizada v2.1: 
-    Usa la tabla pre-calculada 'product_recommendations' para encontrar similitudes.
-    Retorna productos en formato seguro (sin base_price) igual que el catálogo.
+    Versión Optimizada v2.2: 
+    Usa la tabla pre-calculada 'product_recommendations' y el middleware de precios.
     """
     
     recommendations = (
@@ -180,51 +179,43 @@ def get_similar_products(
     results = []
     
     for rec in recommendations:
-        product = rec.recommended_product  # Usar recommended_product, no target_product 
+        product = rec.recommended_product
         
         if not product.is_active:
             continue
 
-        # Obtener precio si el cliente tiene price_list
-        final_price = None
-        markup_percentage = 0.0
-        iva_pct = 0.0
-        
+        # Obtener datos del producto formateados para el catálogo (incluyendo precios si hay price_list_id)
+        product_data = None
         if price_list_id:
-            price_data = get_product_final_price(db, product, price_list_id)
-            if price_data:
-                price_without_iva = price_data["final_price"]  # Precio con markup, SIN IVA
-                markup_percentage = price_data["markup_percentage"]
-                iva_pct = float(product.iva_percentage or 0)
-                # Aplicar IVA para obtener precio final
-                from decimal import Decimal
-                final_price = float(apply_iva(Decimal(str(price_without_iva)), Decimal(str(iva_pct))))
+            product_data = get_catalog_product_info(db, product, price_list_id)
         
-        # Construir dict del producto SIN base_price (igual que catálogo)
-        product_dict = {
-            'product_id': product.product_id,
-            'codebar': product.codebar,
-            'name': product.name,
-            'description': product.description,
-            'descripcion_2': product.descripcion_2,
-            'unidad_medida': product.unidad_medida,
-            # base_price: EXCLUIDO - información sensible
-            # markup_percentage: EXCLUIDO - información sensible
-            'iva_percentage': iva_pct,
-            'image_url': product.image_url,
-            'stock_count': product.stock_count,
-            'is_active': product.is_active,
-            'category_id': product.category_id,
-            'category': product.category,
-            'final_price': final_price,  # CON IVA
-            'image_version': product.image_version,
-        }
+        # Si no hay lista de precios o no se encontró el item, construimos un dict básico seguro
+        if not product_data:
+            # Reutilizamos build_catalog_product_dict con precio 0 o None si es necesario, 
+            # pero mejor lo construimos aquí para casos donde no hay precio.
+            product_data = {
+                'product_id': product.product_id,
+                'codebar': product.codebar,
+                'name': product.name,
+                'description': product.description,
+                'descripcion_2': product.descripcion_2,
+                'unidad_medida': product.unidad_medida,
+                'iva_percentage': float(product.iva_percentage or 0),
+                'image_url': product.image_url,
+                'stock_count': product.stock_count,
+                'is_active': product.is_active,
+                'category_id': product.category_id,
+                'category': {
+                    'category_id': product.category.category_id,
+                    'name': product.category.name
+                } if product.category else None,
+                'final_price': None,
+                'image_version': product.image_version,
+            }
         
-        result = {
-            "product": product_dict,  # ← Ahora es dict seguro, no ORM object
+        results.append({
+            "product": product_data,
             "similarity_score": round(float(rec.score), 3)
-        }
-        
-        results.append(result)
+        })
 
     return results

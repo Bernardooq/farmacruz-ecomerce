@@ -168,3 +168,69 @@ def apply_iva(price: Decimal, iva_percentage: Decimal) -> Decimal:
     
     two_places = Decimal('0.01')
     return price_with_iva.quantize(two_places, rounding=ROUND_HALF_UP)
+
+
+def calculate_catalog_price(product: Product, price_item: PriceListItem) -> Decimal:
+    """
+    Calcula el precio final (CON IVA) para el catálogo, usando el markup de la lista.
+    
+    Esta es la función 'middleware' centralizada para evitar duplicación.
+    """
+    base_price = Decimal(str(product.base_price or 0))
+    markup_percentage = Decimal(str(price_item.markup_percentage or 0))
+    stored_final_price = Decimal(str(price_item.final_price)) if price_item.final_price else None
+    iva_percentage = Decimal(str(product.iva_percentage or 0))
+    
+    # 1. Precio con markup, SIN IVA
+    price_without_iva = calculate_final_price_with_markup(
+        base_price=base_price,
+        markup_percentage=markup_percentage,
+        stored_final_price=stored_final_price
+    )
+    
+    # 2. Precio final CON IVA
+    return apply_iva(price_without_iva, iva_percentage)
+
+
+def build_catalog_product_dict(product: Product, final_price: Decimal) -> dict:
+    """
+    Construye el diccionario de producto para el catálogo (OCULTANDO datos sensibles).
+    
+    Hitos de Seguridad:
+    - Oculta base_price
+    - Oculta markup_percentage (el cliente no debe saber cuánto ganamos)
+    """
+    return {
+        'product_id': product.product_id,
+        'codebar': product.codebar,
+        'name': product.name,
+        'description': product.description,
+        'descripcion_2': product.descripcion_2,
+        'unidad_medida': product.unidad_medida,
+        'iva_percentage': float(product.iva_percentage or 0),
+        'image_url': product.image_url,
+        'stock_count': product.stock_count,
+        'is_active': product.is_active,
+        'category_id': product.category_id,
+        'category': {
+            'category_id': product.category.category_id,
+            'name': product.category.name
+        } if product.category else None,
+        'final_price': float(final_price),
+        'image_version': product.image_version,
+    }
+
+
+def get_catalog_product_info(db: Session, product: Product, price_list_id: int) -> Optional[dict]:
+    """
+    Obtiene la información completa del catálogo para un producto y lista de precios.
+    Útil para productos similares o detalles individuales.
+    """
+    price_data = get_product_final_price(db, product, price_list_id)
+    if not price_data:
+        return None
+    
+    iva_percentage = Decimal(str(product.iva_percentage or 0))
+    final_price_with_iva = apply_iva(price_data["final_price"], iva_percentage)
+    
+    return build_catalog_product_dict(product, final_price_with_iva)

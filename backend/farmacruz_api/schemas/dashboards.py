@@ -41,6 +41,10 @@ class SellerMarketingDashboardStats(BaseModel):
     Muestra metricas simplificadas relevantes para estos roles.
     """
     pending_orders: int  # Pedidos pendientes de validación
+    approved_orders: int = 0  # Pedidos aprobados
+    shipped_orders: int = 0  # Pedidos enviados
+    delivered_orders: int = 0  # Pedidos entregados
+    cancelled_orders: int = 0  # Pedidos cancelados
     total_products: int  # Total de productos en catálogo
     low_stock_count: int  # Productos con bajo inventario (< 10 unidades)
     out_of_stock_count: int  # Productos sin stock (0 unidades)

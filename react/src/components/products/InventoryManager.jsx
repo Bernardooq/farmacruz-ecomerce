@@ -8,6 +8,7 @@ import adminService from '../../services/adminService';
 import ProductRow from './ProductRow';
 import ModalAddProduct from '../modals/products/ModalAddProduct';
 import ModalEditProduct from '../modals/products/ModalEditProduct';
+import ModalViewProduct from '../modals/products/ModalViewProduct';
 import ModalUpdateStock from '../modals/products/ModalUpdateStock';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
@@ -40,6 +41,7 @@ export default function InventoryManager() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -263,7 +265,7 @@ export default function InventoryManager() {
               <tr>
                 <th>ID</th>
                 <th>Producto</th>
-                <th>Codigo de barras</th>
+                <th>Código de barras</th>
                 <th>Categoría</th>
                 {isAdmin && <th>Precio Base</th>}
                 <th>IVA</th>
@@ -281,6 +283,7 @@ export default function InventoryManager() {
                   <ProductRow
                     key={product.product_id}
                     product={product}
+                    onView={(p) => { setSelectedProduct(p); setShowViewModal(true); }}
                     onEdit={(p) => { setShowAddModal(false); setShowStockModal(false); setSelectedProduct(p); setShowEditModal(true); }}
                     onDelete={handleDeleteProduct}
                     onUpdateStock={(p) => { setShowAddModal(false); setShowEditModal(false); setSelectedProduct(p); setShowStockModal(true); }}
@@ -298,6 +301,9 @@ export default function InventoryManager() {
       )}
       {showEditModal && (
         <ModalEditProduct isOpen={showEditModal} onClose={() => { setShowEditModal(false); setSelectedProduct(null); }} onSubmit={handleEditProduct} product={selectedProduct} />
+      )}
+      {showViewModal && (
+        <ModalViewProduct isOpen={showViewModal} onClose={() => { setShowViewModal(true); setShowViewModal(false); setSelectedProduct(null); }} product={selectedProduct} />
       )}
       {showStockModal && (
         <ModalUpdateStock isOpen={showStockModal} onClose={() => { setShowStockModal(false); setSelectedProduct(null); }} onSubmit={handleUpdateStock} product={selectedProduct} />

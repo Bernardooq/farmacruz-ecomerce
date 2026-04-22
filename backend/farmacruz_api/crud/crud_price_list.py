@@ -25,7 +25,12 @@ from schemas.price_list import (
     PriceListCreate, PriceListUpdate,
     PriceListItemCreate, PriceListItemUpdate
 )
-from utils.price_utils import get_product_final_price, format_price_info, calculate_final_price_with_markup
+from utils.price_utils import (
+    get_product_final_price, 
+    format_price_info, 
+    calculate_final_price_with_markup,
+    calculate_catalog_price
+)
 
 """ Obtiene una lista de precios por ID """
 def get_price_list(db: Session, price_list_id: int) -> Optional[PriceList]:
@@ -101,11 +106,20 @@ def get_price_list_item(db: Session, price_list_id: int, product_id: str) -> Opt
 """ Crea o actualiza un item en la lista de precios """
 def create_price_list_item(db: Session, price_list_id: int, item: PriceListItemCreate) -> PriceListItem:
     existing = get_price_list_item(db, price_list_id, item.product_id)
-    base_price = db.query(Product).filter(Product.product_id == item.product_id).first().base_price or 0
+    product = db.query(Product).filter(Product.product_id == item.product_id).first()
+    base_price = Decimal(str(product.base_price or 0))
+    markup_percentage = Decimal(str(item.markup_percentage or 0))
+    
+    # Calcular el precio sin IVA usando el middleware (para consistencia)
+    final_price_calculated = calculate_final_price_with_markup(
+        base_price=base_price,
+        markup_percentage=markup_percentage
+    )
+    
     if existing:
         # Actualizar markup existente
         existing.markup_percentage = item.markup_percentage
-        existing.final_price = base_price * (1 + item.markup_percentage / 100)
+        existing.final_price = final_price_calculated
         db.commit()
         db.refresh(existing)
         return existing
@@ -115,7 +129,7 @@ def create_price_list_item(db: Session, price_list_id: int, item: PriceListItemC
             price_list_id=price_list_id,
             product_id=item.product_id,
             markup_percentage=item.markup_percentage,
-            final_price=base_price * (1 + item.markup_percentage / 100)
+            final_price=final_price_calculated
         )
         db.add(db_item)
         db.commit()
@@ -210,28 +224,31 @@ def get_products_in_price_list_with_details(db: Session, price_list_id: int, ski
     # Ejecutar query con paginacion
     results = query.offset(skip).limit(limit).all()
     
-    # Formatear resultados con cálculo de precios
+    # Formatear resultados con cálculo de precios unificado
     formatted_results = []
     for price_list_item, product in results:
-        # Calcular precio usando utilidad centralizada
+        # Usar el middleware centralizado para el catálogo (CON IVA)
+        final_price_with_iva = calculate_catalog_price(product, price_list_item)
+        
+        # También calculamos el subtotal (SIN IVA) para que el admin vea el desglose
         base_price = Decimal(str(product.base_price or 0))
         markup_percentage = Decimal(str(price_list_item.markup_percentage or 0))
         stored_final_price = Decimal(str(price_list_item.final_price)) if price_list_item.final_price else None
         
-        final_price = calculate_final_price_with_markup(
+        price_without_iva = calculate_final_price_with_markup(
             base_price=base_price,
             markup_percentage=markup_percentage,
             stored_final_price=stored_final_price
         )
         
-        markup_amount = final_price - base_price
-        
         formatted_results.append({
             "product": product,
             "base_price": round(float(base_price), 2),
             "markup_percentage": round(float(markup_percentage), 2),
-            "markup_amount": round(float(markup_amount), 2),
-            "final_price": round(float(final_price), 2),
+            "markup_amount": round(float(price_without_iva - base_price), 2), # Ganancia sin IVA
+            "price_with_markup": round(float(price_without_iva), 2), # Subtotal sin IVA
+            "iva_percentage": float(product.iva_percentage or 0),
+            "final_price": round(float(final_price_with_iva), 2), # Total con IVA (Middleware)
             "price_list_item_id": price_list_item.price_list_item_id
         })
     
