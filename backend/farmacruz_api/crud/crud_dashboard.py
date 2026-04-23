@@ -175,44 +175,27 @@ def get_seller_marketing_dashboard_stats(db: Session, current_user: User) -> Sel
 
 """Genera un reporte de ventas para un rango de fechas"""
 def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Optional[str] = None) -> SalesReport:
-    # Genera un reporte de ventas para un rango de fechas
-    try:
-        if start_date:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        else:
-            # Default: primer dia del mes actual a las 00:00:00
-            start_dt = datetime.now(timezone.utc).replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
-            )
-
-        if end_date:
-            # Incluir todo el dia final (hasta las 23:59:59)
-            end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(
-                hour=23, minute=59, second=59
-            )
-        else:
-            # Default: hoy a las 23:59:59
-            end_dt = datetime.now(timezone.utc).replace(
-                hour=23, minute=59, second=59
-            )
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato de fecha invalido. Use YYYY-MM-DD"
-        )
+    # Genera un reporte de ventas para un rango de fechas (Solo por Dia/Mes/Año)
+    if not start_date:
+        # Default: primer dia del mes actual
+        start_date = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+    
+    if not end_date:
+        # Default: hoy
+        end_date = datetime.now().strftime("%Y-%m-%d")
 
     # OBTENER PEDIDOS
     # Solo incluir pedidos completados (approved, shipped, delivered)
-    # Excluir pedidos pendientes o cancelados
+    # Filtramos usando func.date() para ignorar las horas
     orders = db.query(Order).filter(
-        Order.created_at >= start_dt,
-        Order.created_at <= end_dt,
+        func.date(Order.created_at) >= start_date,
+        func.date(Order.created_at) <= end_date,
         Order.status.in_([
             OrderStatus.approved,
             OrderStatus.shipped,
             OrderStatus.delivered
         ])
-    ).order_by(Order.created_at.desc()).all()  # Mas recientes primero
+    ).order_by(Order.created_at.desc()).all()
 
     # CALCULAR TOTALES 
     total_orders = len(orders)
@@ -245,8 +228,8 @@ def get_sales_report(db: Session, start_date: Optional[str] = None, end_date: Op
         ))
 
     return SalesReport(
-        start_date=start_dt.strftime("%Y-%m-%d"),
-        end_date=end_dt.strftime("%Y-%m-%d"),
+        start_date=start_date,
+        end_date=end_date,
         total_orders=total_orders,
         total_revenue=total_revenue,
         total_profit=total_profit,

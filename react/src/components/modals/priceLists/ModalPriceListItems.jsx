@@ -171,7 +171,7 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                       const ivaPercentage = parseFloat(item.product?.iva_percentage || 0);
                       let priceWithoutIva, markupAmount, ivaAmount, finalPriceWithIva;
                       if (isEditing) { markupAmount = basePrice * (markup / 100); priceWithoutIva = basePrice + markupAmount; }
-                      else { priceWithoutIva = item.final_price ?? 0; markupAmount = item.markup_amount ?? 0; }
+                      else { priceWithoutIva = item.price_with_markup ?? 0; markupAmount = item.markup_amount ?? 0; }
                       ivaAmount = priceWithoutIva * (ivaPercentage / 100);
                       finalPriceWithIva = priceWithoutIva + ivaAmount;
 
