@@ -65,7 +65,7 @@ def login_backend():
     global TOKEN
     try:
         response = requests.post(
-            f"{BACKEND_URL}/login/access-token",
+            f"{BACKEND_URL}/auth/login/sync",
             data={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD}
         )
         if response.status_code == 200:
