@@ -176,13 +176,6 @@ export default function AdminDashboard() {
       case 'pedidos':
         return (
           <>
-            <SummaryCards summary={{
-              pending_orders: summary.pending_orders,
-              approved_orders: summary.approved_orders,
-              shipped_orders: summary.shipped_orders,
-              delivered_orders: summary.delivered_orders,
-              cancelled_orders: summary.cancelled_orders
-            }} />
             <AllOrders />
           </>
         );

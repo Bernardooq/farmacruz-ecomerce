@@ -87,7 +87,8 @@ export default function InventoryManager() {
         params.stock_filter = filterMap[stockFilter];
       }
       if (imageFilter !== '') params.image = imageFilter === 'true';
-      if (isActiveFilter !== '') params.is_active = isActiveFilter === 'true';
+      if (isActiveFilter === 'true') params.is_active = true;
+      if (isActiveFilter === 'false') params.is_active = false;
       if (sortBy) params.sort_by = sortBy;
       if (sortOrder) params.sort_order = sortOrder;
 

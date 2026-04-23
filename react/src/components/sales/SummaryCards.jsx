@@ -8,7 +8,7 @@ import {
   faTruck, faTimesCircle, faExclamationTriangle, faClipboardCheck
 } from '@fortawesome/free-solid-svg-icons';
 
-export default function SummaryCards({ summary = {} }) {
+export default function SummaryCards({ summary = {}, showTitles = true }) {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount || 0);
   };
@@ -155,9 +155,11 @@ export default function SummaryCards({ summary = {} }) {
       {/* 1. VENTAS Y FINANZAS */}
       {visibility.ventas && (
         <div className="stat-group">
-          <h3 className="stat-group__title">
-            <FontAwesomeIcon icon={faChartLine} className="stat-group__icon" /> Ventas y Finanzas
-          </h3>
+          {showTitles && (
+            <h3 className="stat-group__title">
+              <FontAwesomeIcon icon={faChartLine} className="stat-group__icon" /> Ventas y Finanzas
+            </h3>
+          )}
           <section className="stat-grid" style={{ marginBottom: '1.5rem' }}>
             {summary.total_revenue !== undefined && (
               <div className="stat-card">
@@ -220,9 +222,11 @@ export default function SummaryCards({ summary = {} }) {
       {/* 2. PEDIDOS */}
       {visibility.pedidos && (
         <div className="stat-group">
-          <h3 className="stat-group__title">
-            <FontAwesomeIcon icon={faBox} className="stat-group__icon" /> Gestión de Pedidos
-          </h3>
+          {showTitles && (
+            <h3 className="stat-group__title">
+              <FontAwesomeIcon icon={faBox} className="stat-group__icon" /> Gestión de Pedidos
+            </h3>
+          )}
           <section className="stat-grid">
             {summary.pending_orders !== undefined && (
               <div className="stat-card">
@@ -290,9 +294,11 @@ export default function SummaryCards({ summary = {} }) {
       {/* 3. PERSONAL Y CLIENTES */}
       {visibility.personal && (
         <div className="stat-group">
-          <h3 className="stat-group__title">
-            <FontAwesomeIcon icon={faUserFriends} className="stat-group__icon" /> Personal y Clientes
-          </h3>
+          {showTitles && (
+            <h3 className="stat-group__title">
+              <FontAwesomeIcon icon={faUserFriends} className="stat-group__icon" /> Personal y Clientes
+            </h3>
+          )}
           <section className="stat-grid">
             {summary.total_customers !== undefined && (
               <div className="stat-card">
@@ -344,9 +350,11 @@ export default function SummaryCards({ summary = {} }) {
       {/* 4. INVENTARIO */}
       {visibility.inventario && (
         <div className="stat-group">
-          <h3 className="stat-group__title">
-            <FontAwesomeIcon icon={faWarehouse} className="stat-group__icon" /> Inventario
-          </h3>
+          {showTitles && (
+            <h3 className="stat-group__title">
+              <FontAwesomeIcon icon={faWarehouse} className="stat-group__icon" /> Inventario
+            </h3>
+          )}
           <section className="stat-grid">
             <div className="stat-card">
               <div className="stat-card__icon"><FontAwesomeIcon icon={faBoxOpen} /></div>
