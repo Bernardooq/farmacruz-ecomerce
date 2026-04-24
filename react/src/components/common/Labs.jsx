@@ -1,5 +1,5 @@
 // Importa todas las imagenes de laboratorios desde la carpeta especificada
-const modules = import.meta.glob('../../images/labs/*.jpg', { eager: true });
+const modules = import.meta.glob('../../images/labs/*.webp', { eager: true });
 
 /**
  * Convierte los modulos importados en un array de objetos
