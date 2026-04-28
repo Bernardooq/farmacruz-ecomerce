@@ -33,8 +33,7 @@ DROP TABLE IF EXISTS customers CASCADE;
 
 DROP TABLE IF EXISTS users CASCADE;
 
--- gen_random_uuid() es nativa en PostgreSQL 13+ — no requiere extensión
--- (uuid-ossp requería permisos de superusuario en AWS RDS, ya no es necesaria)
+-- UUID generation is natively supported in PostgreSQL 13+ via gen_random_uuid()
 
 -- =====================================================
 -- EXTENSIONES NECESARIAS
@@ -62,7 +61,7 @@ CREATE INDEX idx_users_username ON users (username);
 
 CREATE INDEX idx_users_email ON users (email);
 
--- GIN indexes para busquedas ILIKE en crud_user.py y crud_sales_group.py
+-- GIN indexes for full-text ILIKE searches
 CREATE INDEX idx_users_full_name_gin ON users USING gin (full_name gin_trgm_ops);
 CREATE INDEX idx_users_username_gin ON users USING gin (username gin_trgm_ops);
 CREATE INDEX idx_users_email_gin ON users USING gin (email gin_trgm_ops);
@@ -80,22 +79,18 @@ CREATE TABLE customers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
--- NUEVO: Agente/vendedor asignado desde DBF
-
-
-agent_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+    agent_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
     
     CONSTRAINT customers_username_unique UNIQUE (username)
-    -- Removido: CONSTRAINT customers_email_unique UNIQUE (email)
 );
 
 CREATE INDEX idx_customers_username ON customers (username);
 
 CREATE INDEX idx_customers_email ON customers (email);
--- Mantener index para búsquedas rápidas
+-- Foreign key indexing
 CREATE INDEX idx_customers_agent_id ON customers (agent_id);
 
--- GIN indexes para busquedas ILIKE en crud_order.py y crud_sales_group.py
+-- GIN indexes for full-text ILIKE searches
 CREATE INDEX idx_customers_full_name_gin ON customers USING gin (full_name gin_trgm_ops);
 CREATE INDEX idx_customers_username_gin ON customers USING gin (username gin_trgm_ops);
 CREATE INDEX idx_customers_email_gin ON customers USING gin (email gin_trgm_ops);
@@ -113,7 +108,7 @@ CREATE TABLE salesgroups (
         TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- GIN index para busquedas ILIKE en crud_sales_group.py
+-- GIN indexes for full-text ILIKE searches
 CREATE INDEX idx_salesgroups_group_name_gin ON salesgroups USING gin (group_name gin_trgm_ops);
 
 -- =====================================================
@@ -162,7 +157,7 @@ CREATE TABLE categories (
         TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- GIN indexes para busquedas ILIKE en crud_category.py
+-- GIN indexes for full-text ILIKE searches
 CREATE INDEX idx_categories_name_gin ON categories USING gin (name gin_trgm_ops);
 CREATE INDEX idx_categories_description_gin ON categories USING gin (description gin_trgm_ops);
 
@@ -194,7 +189,7 @@ CREATE INDEX idx_products_is_active ON products (is_active);
 
 CREATE INDEX idx_products_category ON products (category_id);
 
--- GIN indexes para busquedas ILIKE en crud_catalog.py, crud_product.py y crud_price_list.py
+-- GIN indexes for full-text ILIKE searches
 CREATE INDEX idx_products_product_id_gin ON products USING gin (product_id gin_trgm_ops);
 CREATE INDEX idx_products_codebar_gin ON products USING gin (codebar gin_trgm_ops);
 CREATE INDEX idx_products_name_gin ON products USING gin (name gin_trgm_ops);
@@ -381,22 +376,18 @@ CREATE INDEX idx_prod_rec_source ON product_recommendations (product_id);
 CREATE INDEX idx_prod_rec_recommended ON product_recommendations (recommended_product_id);
 
 -- =====================================================
--- INDICES ADICIONALES PARA OPTIMIZACION DE UPSERTS
+-- ADDITIONAL INDEXES FOR UPSERT & SYNC OPTIMIZATION
 -- =====================================================
--- Agregados para mejorar performance de sincronizaciones ERP
--- y soportar operaciones de cleanup basadas en updated_at
+-- Indexes added to support performance during ERP synchronizations
+-- and cleanup operations based on updated_at timestamps.
 
--- Products: Optimizar búsquedas y sincronizaciones
+-- Product Sync Optimization
 CREATE INDEX idx_products_updated_at ON products (updated_at);
 
--- NOTA: idx_products_name_search removido a favor de idx_products_name_gin para queries ILIKE
-
--- PriceListItems: Optimizar UPSERT masivo de 18k items
+-- PriceListItems Massive UPSERT Optimization
 CREATE INDEX idx_pricelistitems_updated_at ON pricelistitems (updated_at);
 
--- NOTA: idx_pricelistitems_composite removido por redundancia con el constraint unique_pricelist_product
-
--- Customers: Optimizar sincronización de clientes
+-- Customer Sync Optimization
 CREATE INDEX idx_customers_updated_at ON customers (updated_at);
 
 CREATE INDEX idx_customers_active ON customers (is_active);
@@ -482,10 +473,10 @@ CREATE INDEX idx_ticket_messages_ticket ON ticket_messages (ticket_id);
 CREATE INDEX idx_ticket_messages_created_at ON ticket_messages (created_at ASC);
 
 -- =====================================================
--- OPTIMIZACIONES DE MANTENIMIENTO (AUTOVACUUM)
+-- MAINTENANCE & AUTOVACUUM TUNING
 -- =====================================================
--- Estas tablas sufren muchos UPDATEs (cambio de status) o DELETEs (carritos temporales).
--- Ajustar el scale_factor a 5% fuerza al barrendero (autovacuum) a limpiarlas más seguido,
--- evitando que las "Dead Tuples" saturen el disco y ralenticen las consultas.
+-- Optimize autovacuum settings for tables with high mutation rates (UPDATE/DELETE).
+-- Reducing the scale factor to 5% prevents Dead Tuple accumulation, 
+-- ensuring optimal disk usage and query latency.
 ALTER TABLE orders SET (autovacuum_vacuum_scale_factor = 0.05);
 ALTER TABLE cartcache SET (autovacuum_vacuum_scale_factor = 0.05);
