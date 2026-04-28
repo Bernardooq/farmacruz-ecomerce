@@ -17,6 +17,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
 import LoginForm from '../components/users/LoginForm';
+import SEO from '../components/common/SEO';
 
 export default function Login() {
   // ============================================
@@ -24,6 +25,11 @@ export default function Login() {
   // ============================================
   return (
     <div className="page">
+      <SEO 
+        title="Iniciar Sesión - Farmacruz" 
+        description="Accede a tu cuenta de Farmacruz para gestionar tus pedidos B2B."
+        noindex={true} 
+      />
       <main className="auth-layout">
         <div className="auth-card">
           {/* Logo de la empresa */}

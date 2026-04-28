@@ -10,15 +10,15 @@ Allow: /contact$
 Allow: /terms$
 Allow: /privacy$
 
-# Bloquear rutas privadas (requieren autenticación)
-Disallow: /products
-Disallow: /profile
-Disallow: /cart
-Disallow: /checkout
-Disallow: /admindash
-Disallow: /sellerdash
-Disallow: /marketingdash
-Disallow: /login
+# Rutas privadas (Google podrá rastrearlas para ver la etiqueta noindex)
+# Disallow: /products
+# Disallow: /profile
+# Disallow: /cart
+# Disallow: /checkout
+# Disallow: /admindash
+# Disallow: /sellerdash
+# Disallow: /marketingdash
+# Disallow: /login
 
 # Bloquear API
 Disallow: /api/
