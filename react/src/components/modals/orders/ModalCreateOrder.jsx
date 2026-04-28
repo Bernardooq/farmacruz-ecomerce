@@ -103,7 +103,7 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole
         if (items.length === 0) { setError('El pedido debe tener al menos un producto'); return; }
         setLoading(true); setError(null);
         try {
-            await orderService.createOrderForCustomer({
+            const newOrder = await orderService.createOrderForCustomer({
                 customer_id: selectedCustomer.customer_id,
                 items: items.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
                 shipping_address_number: 1,
@@ -111,6 +111,7 @@ export default function ModalCreateOrder({ visible, onClose, onSuccess, userRole
                 order_notes: orderNotes || null,
                 assignment_notes: assignmentNotes || null
             });
+            window.alert(`✅ ¡Pedido #${newOrder.order_id || 'creado'} exitosamente!\n\nEl pedido se ha guardado en el sistema.\n(Nota: Si el cliente tiene otro vendedor por defecto, es posible que este pedido no aparezca en tu tabla personal).`);
             onSuccess?.(); onClose();
         } catch (err) { setError(err.response?.data?.detail || err.message || 'Error al crear pedido'); }
         finally { setLoading(false); }
