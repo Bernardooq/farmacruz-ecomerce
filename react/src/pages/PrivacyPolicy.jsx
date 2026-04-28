@@ -71,7 +71,6 @@ export default function PrivacyPolicy() {
               <li>Tipo de navegador</li>
               <li>Páginas visitadas</li>
               <li>Tiempo de navegación</li>
-              <li>Tiempo de navegación</li>
               <li>Datos de almacenamiento local (LocalStorage) para gestión de sesiones</li>
             </ul>
           </section>

@@ -83,24 +83,26 @@ def get_admin_dashboard_stats(db: Session) -> DashboardStats:
         Order.status == OrderStatus.pending_validation
     ).scalar()
 
-    # INGRESOS
-    # Calcular revenue total de ordenes completadas
-    # Solo se cuentan pedidos en estados: approved, shipped, delivered
+    # INGRESOS (YTD - Year To Date)
+    # Calcular revenue total de ordenes completadas del año en curso
+    current_year = datetime.now(timezone.utc).year
     total_revenue = db.query(func.sum(Order.total_amount)).filter(
         Order.status.in_([
             OrderStatus.approved,
             OrderStatus.shipped,
             OrderStatus.delivered
-        ])
+        ]),
+        func.extract('year', Order.created_at) == current_year
     ).scalar() or 0  # Usar 0 si no hay pedidos completados
     
-    # Calcular ganancia total estimada
+    # Calcular ganancia total estimada del año en curso
     total_profit = db.query(func.sum(Order.order_profit)).filter(
         Order.status.in_([
             OrderStatus.approved,
             OrderStatus.shipped,
             OrderStatus.delivered
-        ])
+        ]),
+        func.extract('year', Order.created_at) == current_year
     ).scalar() or 0
     
     return DashboardStats(

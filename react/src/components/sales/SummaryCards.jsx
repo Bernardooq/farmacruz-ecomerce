@@ -127,7 +127,7 @@ export default function SummaryCards({ summary = {}, showTitles = true }) {
     { name: 'Pendientes', value: summary.pending_orders || summary.pendingOrders || 0, fill: '#f59e0b' },
     { name: 'Aprobados', value: summary.approved_orders || 0, fill: '#34d399' },
     { name: 'Enviados', value: summary.shipped_orders || 0, fill: '#3b82f6' },
-    { name: 'Entregados', value: summary.delivered_orders || 0, fill: '#8b5cf6' },
+    // { name: 'Entregados', value: summary.delivered_orders || 0, fill: '#8b5cf6' }, // Eliminado del gráfico a petición
     { name: 'Cancelados', value: summary.cancelled_orders || 0, fill: '#ef4444' }
   ].filter(d => d.value > 0), [summary]);
 
@@ -166,7 +166,7 @@ export default function SummaryCards({ summary = {}, showTitles = true }) {
                 <div className="stat-card__icon"><FontAwesomeIcon icon={faDollarSign} /></div>
                 <div className="stat-card__content">
                   <span className="stat-card__value">{formatCurrency(summary.total_revenue)}</span>
-                  <span className="stat-card__label">Ingresos Históricos</span>
+                  <span className="stat-card__label">Ingresos Anuales</span>
                 </div>
               </div>
             )}
@@ -175,7 +175,7 @@ export default function SummaryCards({ summary = {}, showTitles = true }) {
                 <div className="stat-card__icon"><FontAwesomeIcon icon={faChartPie} /></div>
                 <div className="stat-card__content">
                   <span className="stat-card__value text-success">{formatCurrency(summary.total_profit)}</span>
-                  <span className="stat-card__label">Ganancia Histórica Estimada</span>
+                  <span className="stat-card__label">Ganancia Anual Estimada</span>
                 </div>
               </div>
             )}

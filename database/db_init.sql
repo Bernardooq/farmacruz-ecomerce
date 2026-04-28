@@ -37,6 +37,11 @@ DROP TABLE IF EXISTS users CASCADE;
 -- (uuid-ossp requería permisos de superusuario en AWS RDS, ya no es necesaria)
 
 -- =====================================================
+-- EXTENSIONES NECESARIAS
+-- =====================================================
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- =====================================================
 -- TABLA: users (Usuarios internos: admin, marketing, seller)
 -- =====================================================
 CREATE TABLE users (
@@ -56,6 +61,11 @@ CONSTRAINT check_user_id_positive CHECK (user_id > 0) );
 CREATE INDEX idx_users_username ON users (username);
 
 CREATE INDEX idx_users_email ON users (email);
+
+-- GIN indexes para busquedas ILIKE en crud_user.py y crud_sales_group.py
+CREATE INDEX idx_users_full_name_gin ON users USING gin (full_name gin_trgm_ops);
+CREATE INDEX idx_users_username_gin ON users USING gin (username gin_trgm_ops);
+CREATE INDEX idx_users_email_gin ON users USING gin (email gin_trgm_ops);
 
 -- =====================================================
 -- TABLA: customers (Clientes del e-commerce)
@@ -85,6 +95,11 @@ CREATE INDEX idx_customers_email ON customers (email);
 -- Mantener index para búsquedas rápidas
 CREATE INDEX idx_customers_agent_id ON customers (agent_id);
 
+-- GIN indexes para busquedas ILIKE en crud_order.py y crud_sales_group.py
+CREATE INDEX idx_customers_full_name_gin ON customers USING gin (full_name gin_trgm_ops);
+CREATE INDEX idx_customers_username_gin ON customers USING gin (username gin_trgm_ops);
+CREATE INDEX idx_customers_email_gin ON customers USING gin (email gin_trgm_ops);
+
 -- =====================================================
 -- TABLA: salesgroups (Grupos de ventas)
 -- =====================================================
@@ -97,6 +112,9 @@ CREATE TABLE salesgroups (
     WITH
         TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- GIN index para busquedas ILIKE en crud_sales_group.py
+CREATE INDEX idx_salesgroups_group_name_gin ON salesgroups USING gin (group_name gin_trgm_ops);
 
 -- =====================================================
 -- TABLA: groupmarketingmanagers (Relación N:M)
@@ -144,6 +162,10 @@ CREATE TABLE categories (
         TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- GIN indexes para busquedas ILIKE en crud_category.py
+CREATE INDEX idx_categories_name_gin ON categories USING gin (name gin_trgm_ops);
+CREATE INDEX idx_categories_description_gin ON categories USING gin (description gin_trgm_ops);
+
 -- =====================================================
 -- TABLA: products (Productos del catálogo)
 -- =====================================================
@@ -172,7 +194,12 @@ CREATE INDEX idx_products_is_active ON products (is_active);
 
 CREATE INDEX idx_products_category ON products (category_id);
 
-CREATE INDEX idx_products_desc2 ON products (descripcion_2);
+-- GIN indexes para busquedas ILIKE en crud_catalog.py, crud_product.py y crud_price_list.py
+CREATE INDEX idx_products_product_id_gin ON products USING gin (product_id gin_trgm_ops);
+CREATE INDEX idx_products_codebar_gin ON products USING gin (codebar gin_trgm_ops);
+CREATE INDEX idx_products_name_gin ON products USING gin (name gin_trgm_ops);
+CREATE INDEX idx_products_description_gin ON products USING gin (description gin_trgm_ops);
+CREATE INDEX idx_products_descripcion_2_gin ON products USING gin (descripcion_2 gin_trgm_ops);
 
 -- =====================================================
 -- TABLA: pricelists (Listas de precios)
@@ -212,6 +239,8 @@ CREATE INDEX idx_pricelistitems_list ON pricelistitems (price_list_id);
 
 CREATE INDEX idx_pricelistitems_product ON pricelistitems (product_id);
 
+-- NOTA: Se eliminó idx_pricelistitems_composite ya que el CONSTRAINT unique_pricelist_product crea un índice B-Tree idéntico implícitamente.
+
 -- =====================================================
 -- TABLA: customerinfo (Información comercial de clientes)
 -- =====================================================
@@ -236,6 +265,9 @@ CREATE INDEX idx_customerinfo_customer ON customerinfo (customer_id);
 CREATE INDEX idx_customerinfo_group ON customerinfo (sales_group_id);
 
 CREATE INDEX idx_customerinfo_pricelist ON customerinfo (price_list_id);
+
+-- GIN index para busquedas ILIKE en crud_sales_group.py
+CREATE INDEX idx_customerinfo_rfc_gin ON customerinfo USING gin (rfc gin_trgm_ops);
 
 -- =====================================================
 -- TABLA: orders (Pedidos)
@@ -357,12 +389,12 @@ CREATE INDEX idx_prod_rec_recommended ON product_recommendations (recommended_pr
 -- Products: Optimizar búsquedas y sincronizaciones
 CREATE INDEX idx_products_updated_at ON products (updated_at);
 
-CREATE INDEX idx_products_name_search ON products (name);
+-- NOTA: idx_products_name_search removido a favor de idx_products_name_gin para queries ILIKE
 
 -- PriceListItems: Optimizar UPSERT masivo de 18k items
 CREATE INDEX idx_pricelistitems_updated_at ON pricelistitems (updated_at);
 
-CREATE INDEX idx_pricelistitems_composite ON pricelistitems (price_list_id, product_id);
+-- NOTA: idx_pricelistitems_composite removido por redundancia con el constraint unique_pricelist_product
 
 -- Customers: Optimizar sincronización de clientes
 CREATE INDEX idx_customers_updated_at ON customers (updated_at);
@@ -448,3 +480,12 @@ CREATE TABLE ticket_messages (
 CREATE INDEX idx_ticket_messages_ticket ON ticket_messages (ticket_id);
 
 CREATE INDEX idx_ticket_messages_created_at ON ticket_messages (created_at ASC);
+
+-- =====================================================
+-- OPTIMIZACIONES DE MANTENIMIENTO (AUTOVACUUM)
+-- =====================================================
+-- Estas tablas sufren muchos UPDATEs (cambio de status) o DELETEs (carritos temporales).
+-- Ajustar el scale_factor a 5% fuerza al barrendero (autovacuum) a limpiarlas más seguido,
+-- evitando que las "Dead Tuples" saturen el disco y ralenticen las consultas.
+ALTER TABLE orders SET (autovacuum_vacuum_scale_factor = 0.05);
+ALTER TABLE cartcache SET (autovacuum_vacuum_scale_factor = 0.05);

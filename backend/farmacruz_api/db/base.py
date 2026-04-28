@@ -16,6 +16,7 @@ from sqlalchemy import (
     ForeignKey, Numeric, TIMESTAMP, func, Text, UniqueConstraint, CheckConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+import uuid6
 from sqlalchemy.orm import relationship, declarative_base
 
 # Clase base de la que heredan todos los modelos
@@ -408,7 +409,9 @@ class OrderItem(Base):
     """
     __tablename__ = "orderitems"
 
-    order_item_id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())
+    # Se usa UUIDv7 en backend (Python) para las nuevas filas. Esto ordena temporalmente los datos,
+    # eliminando la fragmentacion en el índice B-Tree causada por UUIDv4, conservando los UUIDv4 anteriores sin problema.
+    order_item_id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid6.uuid7, server_default=func.uuid_generate_v4())
     order_id = Column(BigInteger, ForeignKey("orders.order_id", ondelete="CASCADE"), nullable=False, index=True)
     product_id = Column(String(50), ForeignKey("products.product_id"), nullable=False, index=True)
     quantity = Column(Integer, nullable=False)  # Cantidad del producto
