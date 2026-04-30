@@ -19,7 +19,7 @@ cd $REPO_DIR
 # Limpiamos cualquier cambio local y traemos lo nuevo
 echo "Bajando cambios de GitHub..."
 git fetch origin main
-git reset --hard origin main
+git reset --hard origin/main
 
 # 3. Actualizar entorno virtual del Backend
 echo "Actualizando dependencias de Python..."
