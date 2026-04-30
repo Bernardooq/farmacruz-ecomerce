@@ -149,7 +149,7 @@ def sincronizar_productos(productos: List[ProductCreate2], usuario_actual: User 
     # Convertir productos de Pydantic a dict para bulk upsert
     productos_dict = [
         {
-            "product_id": p.product_id,
+            "product_id": p.product_id.strip(),
             "codebar": p.codebar,
             "name": p.name,
             "description": p.description if p.description else None,
@@ -199,9 +199,9 @@ def sincronizar_items(items: List[PriceListItemSync],
     items_dict = [
         {
             "price_list_id": item.price_list_id,
-            "product_id": item.product_id,
+            "product_id": item.product_id.strip(),
             "markup_percentage": float(item.markup_percentage),
-            "final_price": float(item.final_price) if item.final_price else None,
+            "final_price": float(item.final_price) if item.final_price is not None else 0.0,
             "updated_at": item.updated_at or datetime.now(timezone.utc)
         }
         for item in items

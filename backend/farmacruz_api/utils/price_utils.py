@@ -58,17 +58,12 @@ def calculate_final_price_with_markup(
     
     stored_final_price = Decimal(str(stored_final_price))
     
-    # Calcular diferencia porcentual
-    if stored_final_price > 0:
-        diff = abs(calculated_price - stored_final_price)
-        diff_percentage = diff / stored_final_price
-        
-        # Si la diferencia es menor al 1%, usar el almacenado
-        if diff_percentage <= PRICE_TOLERANCE_PERCENTAGE:
-            return stored_final_price
-    
-    # Si difieren mucho o stored_final_price es 0, usar el calculado
-    return calculated_price
+    # Lógica de Protección de Margen:
+    # 1. Si el precio del ERP es menor al calculado (Costo + Markup), 
+    #    confiamos en el cálculo para no perder margen.
+    # 2. Si el precio del ERP es igual o más elevado, confiamos en el ERP.
+    # Resultado: Tomamos el mayor de los dos (max).
+    return max(calculated_price, stored_final_price)
 
 
 def get_product_final_price(

@@ -106,8 +106,16 @@ def process_productos_from_json(
                 stmt = stmt.on_conflict_do_update(
                     index_elements=['product_id'],
                     set_={
+                        'codebar': stmt.excluded.codebar,
+                        'name': stmt.excluded.name,
+                        'description': stmt.excluded.description,
+                        'unidad_medida': stmt.excluded.unidad_medida,
+                        'base_price': stmt.excluded.base_price,
+                        'iva_percentage': stmt.excluded.iva_percentage,
                         'stock_count': stmt.excluded.stock_count,
                         'is_active': True,
+                        'category_id': stmt.excluded.category_id,
+                        'image_url': stmt.excluded.image_url,
                         'updated_at': stmt.excluded.updated_at
                     }
                 )
