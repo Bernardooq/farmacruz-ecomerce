@@ -258,31 +258,38 @@ def get_users_by_role(db: Session, role: UserRole) -> List[User]:
     ).all()
 
 
-""" Obtener todos los usuarios sellers """
+""" Obtener todos los usuarios aptos para ser asignados como agentes (Sellers y Marketing) """
 def get_sellers(db: Session) -> List[User]:
     return db.query(User).filter(
-        User.role == UserRole.seller,
+        User.role.in_([UserRole.seller, UserRole.marketing]),
         User.is_active == True
     ).all()
 
-""" Obtener vendedores asociados a los grupos de un usuario marketing """
+""" Obtener vendedores y marketing managers asociados a los grupos de un usuario marketing """
 def get_sellers_in_marketing_groups(db: Session, marketing_id: int) -> List[User]:
+    from db.base import GroupMarketingManager
+    
     # Obtener ids de grupos del usuario marketing
     user_groups = get_user_groups(db, marketing_id)
     
     if not user_groups:
         return []
     
-    # Filtrar vendedores que esten en esos grupos
+    # 1. IDs de Sellers en esos grupos
     seller_ids = db.query(GroupSeller.seller_id).filter(
-        GroupSeller.sales_group_id.in_([group for group in user_groups])
-    ).distinct().all()
-    
-    seller_ids = [sid[0] for sid in seller_ids]
-    
-    sellers = db.query(User).filter(
-        User.user_id.in_(seller_ids),
-        User.is_active == True
+        GroupSeller.sales_group_id.in_(user_groups)
     ).all()
     
-    return sellers
+    # 2. IDs de Marketing Managers en esos mismos grupos
+    marketing_ids = db.query(GroupMarketingManager.marketing_id).filter(
+        GroupMarketingManager.sales_group_id.in_(user_groups)
+    ).all()
+    
+    # Combinar y desduplicar IDs
+    all_assignable_ids = list(set([r[0] for r in seller_ids] + [r[0] for r in marketing_ids]))
+    
+    # Retornar usuarios activos
+    return db.query(User).filter(
+        User.user_id.in_(all_assignable_ids),
+        User.is_active == True
+    ).all()

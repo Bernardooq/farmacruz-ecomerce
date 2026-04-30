@@ -280,13 +280,25 @@ def get_group_sellers(db: Session, group_id: int) -> List[User]:
         GroupSeller.sales_group_id == group_id
     ).all()
 
-""" Obtiene vendedores paginados con busqueda """
+""" Obtiene vendedores y marketing managers de un grupo (para asignacion) con paginacion y busqueda """
 def get_group_sellers_paginated(db: Session, group_id: int, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[User]:
-    query = db.query(User).join(
-        GroupSeller,
-        User.user_id == GroupSeller.seller_id
-    ).filter(
+    # Obtener IDs de sellers en el grupo
+    seller_ids_query = db.query(GroupSeller.seller_id).filter(
         GroupSeller.sales_group_id == group_id
+    )
+    
+    # Obtener IDs de marketing managers en el grupo
+    marketing_ids_query = db.query(GroupMarketingManager.marketing_id).filter(
+        GroupMarketingManager.sales_group_id == group_id
+    )
+    
+    # Unir ambos conjuntos de IDs
+    all_member_ids = seller_ids_query.union(marketing_ids_query)
+    
+    # Query de usuarios activos que esten en esa lista
+    query = db.query(User).filter(
+        User.user_id.in_(all_member_ids),
+        User.is_active == True
     )
     
     if search:
@@ -294,7 +306,8 @@ def get_group_sellers_paginated(db: Session, group_id: int, skip: int = 0, limit
         query = query.filter(
             or_(
                 User.full_name.ilike(search_term),
-                User.username.ilike(search_term)
+                User.username.ilike(search_term),
+                User.email.ilike(search_term)
             )
         )
     

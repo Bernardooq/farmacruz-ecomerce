@@ -83,7 +83,7 @@ export default function ModalAssignSeller({ visible, order, groupId, onAssign, o
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal modal--sm" onClick={(e) => e.stopPropagation()}>
                 <div className="modal__header">
-                    <h2>Asignar Vendedor</h2>
+                    <h2>Asignar Agente</h2>
                     <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">&times;</button>
                 </div>
                 <div className="modal__body">
@@ -97,7 +97,7 @@ export default function ModalAssignSeller({ visible, order, groupId, onAssign, o
                     {/* Búsqueda de vendedor */}
                     <div className="form-group mb-3">
                         <label className="form-group__label" htmlFor="seller-search">
-                            Buscar vendedor
+                            Buscar agente (Vendedor/Marketing)
                         </label>
                         <form className="search-bar" onSubmit={handleSearch}>
                             <input
@@ -121,7 +121,7 @@ export default function ModalAssignSeller({ visible, order, groupId, onAssign, o
                     <form onSubmit={handleSubmit} className="modal__form">
                         <div className="form-group">
                             <label className="form-group__label" htmlFor="seller-select">
-                                Seleccionar Vendedor *
+                                Seleccionar Agente (Vendedor/Marketing) *
                                 {sellers.length > 0 && (
                                     <span className="form-group__hint" style={{ float: 'right', fontWeight: 400 }}>
                                         {sellers.length}{hasMore ? '+' : ''} resultado(s)
