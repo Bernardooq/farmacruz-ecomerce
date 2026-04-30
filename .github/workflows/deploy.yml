@@ -8,7 +8,7 @@ jobs:
   deploy:
     name: Trigger AWS Refresh
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -24,7 +24,7 @@ jobs:
         run: |
           # Sustituye 'NOMBRE_DE_TU_ASG' por el nombre real en la consola de AWS
           aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name NOMBRE_DE_TU_ASG \
+            --auto-scaling-group-name FarmacruzAGGroup \
             --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 60}'
-          
-          echo "🚀 Instance Refresh iniciado. AWS reemplazará las instancias viejas por nuevas con el último código."
+
+          echo "Instance Refresh iniciado. AWS reemplazará las instancias viejas por nuevas con el último código."
