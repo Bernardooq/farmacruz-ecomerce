@@ -67,18 +67,21 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100, status: Optional[Or
     
     # Busqueda
     if search:
-        query = query.join(Order.customer)
+        # Join con Customer y el Vendedor asignado (User)
+        # Usamos outerjoin porque puede haber pedidos sin vendedor aun
+        query = query.outerjoin(Order.customer).outerjoin(User, Order.assigned_seller_id == User.user_id)
         
         # Si es numero puro, buscar solo por order_id exacto
         try:
             search_int = int(search)
             query = query.filter(Order.order_id == search_int)
         except (ValueError, AttributeError):
-            # No es numero, buscar por nombre de cliente
+            # No es numero, buscar por nombre de cliente o vendedor
             search_term = f"%{search}%"
             query = query.filter(or_(
                 Customer.full_name.ilike(search_term),
-                Customer.username.ilike(search_term)
+                Customer.username.ilike(search_term),
+                User.full_name.ilike(search_term)  # Buscar por nombre del vendedor
             ))
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
@@ -452,20 +455,21 @@ def get_orders_for_user_groups(db: Session, user_id: int, user_role,
     
     # Busqueda
     if search:
-        # Re-join con Customer si no se hizo antes
-        if user_role == UserRole.admin:
-            query = query.join(Order.customer)
+        # Join con Customer y el Vendedor asignado (User)
+        # Se usa outerjoin para no excluir pedidos sin vendedor
+        query = query.outerjoin(Order.customer).outerjoin(User, Order.assigned_seller_id == User.user_id)
         
         # Si es numero puro, buscar solo por order_id exacto
         try:
             search_int = int(search)
             query = query.filter(Order.order_id == search_int)
         except (ValueError, AttributeError):
-            # No es numero, buscar por nombre de cliente
+            # No es numero, buscar por nombre de cliente o vendedor
             search_term = f"%{search}%"
             query = query.filter(or_(
                 Customer.full_name.ilike(search_term),
-                Customer.username.ilike(search_term)
+                Customer.username.ilike(search_term),
+                User.full_name.ilike(search_term)  # Buscar por nombre del vendedor
             ))
     
     return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()

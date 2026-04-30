@@ -166,7 +166,7 @@ export default function AllOrders() {
         )}
 
         <form className="search-bar" onSubmit={handleSearch}>
-          <input className="input" type="search" placeholder="Buscar por N° de Pedido o Nombre de Cliente..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <input className="input" type="search" placeholder="Buscar por N° de Pedido, Cliente o Vendedor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           <button type="submit" className="btn btn--primary" aria-label="Buscar">
             <FontAwesomeIcon icon={faSearch} />
           </button>
@@ -252,8 +252,8 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
-    const time = d.toLocaleString('es-ES', { 
-      hour: '2-digit', minute: '2-digit', hour12: true 
+    const time = d.toLocaleString('es-ES', {
+      hour: '2-digit', minute: '2-digit', hour12: true
     });
 
     return (

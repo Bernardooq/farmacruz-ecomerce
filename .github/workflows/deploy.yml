@@ -1,0 +1,30 @@
+name: Deploy to AWS ASG
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Trigger AWS Refresh
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Ajusta si usas otra region
+
+      - name: Trigger ASG Instance Refresh
+        run: |
+          # Sustituye 'NOMBRE_DE_TU_ASG' por el nombre real en la consola de AWS
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name NOMBRE_DE_TU_ASG \
+            --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 60}'
+          
+          echo "🚀 Instance Refresh iniciado. AWS reemplazará las instancias viejas por nuevas con el último código."
