@@ -81,6 +81,7 @@ export default function InventoryManager() {
       setError(null);
       const params = { skip: page * ITEMS_PER_PAGE, limit: ITEMS_PER_PAGE + 1 };
       if (debouncedSearchName) params.search = debouncedSearchName;
+      if (debouncedSearchcodebar) params.codebar_search = debouncedSearchcodebar;
       if (selectedCategory) params.category_id = parseInt(selectedCategory);
       if (stockFilter) {
         const filterMap = { 'ok': 'in_stock', 'low': 'low_stock', 'out': 'out_of_stock' };
@@ -97,8 +98,7 @@ export default function InventoryManager() {
 
       const hasMorePages = data.length > ITEMS_PER_PAGE;
       setHasMore(hasMorePages);
-      let pageProducts = hasMorePages ? data.slice(0, ITEMS_PER_PAGE) : data;
-      pageProducts = applyClientFilters(pageProducts);
+      const pageProducts = hasMorePages ? data.slice(0, ITEMS_PER_PAGE) : data;
       setProducts(pageProducts);
     } catch (err) {
       setError('No se pudieron cargar los productos. Intenta de nuevo.');
@@ -106,16 +106,6 @@ export default function InventoryManager() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const applyClientFilters = (productList) => {
-    let filtered = [...productList];
-    if (debouncedSearchcodebar) {
-      filtered = filtered.filter(p =>
-        p.codebar && p.codebar.toLowerCase().includes(debouncedSearchcodebar.toLowerCase())
-      );
-    }
-    return filtered;
   };
 
   const handleAddProduct = async (productData) => {
@@ -143,6 +133,23 @@ export default function InventoryManager() {
       setError(errorMsg);
       alert(`Error: ${errorMsg}`);
     }
+  };
+
+  const handleExportExcel = () => {
+    const exportParams = {};
+    if (selectedCategory) exportParams.category_id = parseInt(selectedCategory);
+    if (isActiveFilter === 'true') exportParams.is_active = true;
+    if (isActiveFilter === 'false') exportParams.is_active = false;
+    if (stockFilter) {
+      const filterMap = { 'ok': 'in_stock', 'low': 'low_stock', 'out': 'out_of_stock' };
+      exportParams.stock_filter = filterMap[stockFilter];
+    }
+    if (imageFilter !== '') exportParams.image = imageFilter === 'true';
+    if (debouncedSearchName) exportParams.search = debouncedSearchName;
+    if (debouncedSearchcodebar) exportParams.codebar_search = debouncedSearchcodebar;
+    if (sortBy) exportParams.sort_by = sortBy;
+    if (sortOrder) exportParams.sort_order = sortOrder;
+    adminService.exportXLSX('productos', exportParams);
   };
 
   const handleSearch = (e) => {
@@ -173,7 +180,7 @@ export default function InventoryManager() {
         <h2 className="section-title">Gestión de Inventario</h2>
         {isAdmin && (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn--secondary btn--sm" onClick={() => adminService.exportXLSX('productos')} title="Exportar a Excel">
+            <button className="btn btn--secondary btn--sm" onClick={handleExportExcel} title="Exportar a Excel">
               <FontAwesomeIcon icon={faFileExport} /> Exportar Excel
             </button>
             <button

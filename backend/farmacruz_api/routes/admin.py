@@ -35,6 +35,7 @@ from db.base import (
     Customer, CustomerInfo, SalesGroup, GroupMarketingManager, GroupSeller,
     Category, Product, PriceList, PriceListItem
 )
+from crud.crud_product import get_products
 
 router = APIRouter()
 
@@ -226,6 +227,15 @@ def promote_user(
 @router.get("/export-xlsx")
 def export_data_xlsx(
     type: str = Query(..., description="Tipo de datos: clientes, vendedores, marketing, grupos, productos, precios"),
+    # Filtros para productos (solo aplican cuando type=productos)
+    category_id: Optional[int] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    stock_filter: Optional[str] = Query(None),
+    image: Optional[bool] = Query(None),
+    search: Optional[str] = Query(None),
+    codebar_search: Optional[str] = Query(None),
+    sort_by: Optional[str] = Query(None),
+    sort_order: Optional[str] = Query("asc"),
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
@@ -340,7 +350,20 @@ def export_data_xlsx(
             "ID", "Código Barras", "Nombre", "Descripción", "Desc. 2", "Unidad",
             "Precio Base", "IVA %", "Stock", "Activo", "Categoría ID"
         ])
-        for p in db.query(Product).order_by(Product.product_id).all():
+        productos = get_products(
+            db,
+            skip=0,
+            limit=99999,
+            category_id=category_id,
+            is_active=is_active,
+            stock_filter=stock_filter,
+            image=image,
+            search=search,
+            codebar_search=codebar_search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
+        for p in productos:
             ws.append([
                 p.product_id, p.codebar, p.name, p.description, p.descripcion_2,
                 p.unidad_medida, float(p.base_price) if p.base_price else 0,

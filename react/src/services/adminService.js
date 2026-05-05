@@ -59,10 +59,14 @@ export const adminService = {
 
   // Descargar XLSX con data del sistema por tipo (solo admin)
   // exportType: 'clientes' | 'vendedores' | 'marketing' | 'grupos' | 'productos' | 'precios'
-  async exportXLSX(exportType) {
+  async exportXLSX(exportType, extraParams = {}) {
     const { API_BASE } = await import('../config/api')
     const token = localStorage.getItem('token')
-    const response = await fetch(`${API_BASE}/admin/export-xlsx?type=${exportType}`, {
+    const qs = new URLSearchParams({ type: exportType })
+    Object.entries(extraParams).forEach(([k, v]) => {
+      if (v !== null && v !== undefined && v !== '') qs.append(k, v)
+    })
+    const response = await fetch(`${API_BASE}/admin/export-xlsx?${qs.toString()}`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${token}` }
     })

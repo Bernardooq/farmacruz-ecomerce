@@ -35,7 +35,8 @@ def get_product_by_codebar(db: Session, codebar: str) -> Optional[Product]:
 def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Optional[int] = None, 
                  is_active: Optional[bool] = None, stock_filter: Optional[str] = None,
                  sort_by: Optional[str] = None, sort_order: Optional[str] = "asc", 
-                 image: Optional[bool] = None, search: Optional[str] = None) -> List[Product]:
+                 image: Optional[bool] = None, search: Optional[str] = None,
+                 codebar_search: Optional[str] = None) -> List[Product]:
     LOW_STOCK_THRESHOLD = 10  # Umbral para considerar bajo stock
     query = db.query(Product).options(joinedload(Product.category))
     
@@ -68,6 +69,10 @@ def get_products(db: Session, skip: int = 0, limit: int = 100, category_id: Opti
                 )
             query = query.filter(and_(*word_filters))
     
+    # Filtro por código de barras exacto/parcial
+    if codebar_search:
+        query = query.filter(Product.codebar.ilike(f"%{codebar_search}%"))
+
     # Filtrar por nivel de stock
     if stock_filter:
         if stock_filter == "out_of_stock":
@@ -147,7 +152,8 @@ def increment_image_version(db: Session, product_id: str) -> Optional[Product]:
         db.refresh(db_product)
     return db_product
 
-from utils.price_utils import get_catalog_product_info
+
+from utils.price_utils import get_catalog_product_info
 
 def get_similar_products(
     db: Session,

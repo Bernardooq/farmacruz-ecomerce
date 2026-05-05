@@ -54,6 +54,7 @@ def read_products(
     category_id: Optional[int] = Query(None, description="Filtrar por categoria"),
     is_active: Optional[bool] = Query(None, description="Filtrar por estado: True=activos, False=inactivos, None=todos"),
     search: Optional[str] = Query(None, description="Buscar por nombre/descripcion"),
+    codebar_search: Optional[str] = Query(None, description="Buscar por codigo de barras"),
     stock_filter: Optional[str] = Query(None, description="Filtrar por stock: in_stock, out_of_stock, low_stock"),
     sort_by: Optional[str] = Query(None, description="Ordenar por: price, name"),
     sort_order: Optional[str] = Query("asc", description="Orden: asc o desc"),
@@ -72,7 +73,8 @@ def read_products(
         sort_by=sort_by, 
         sort_order=sort_order, 
         image=image,
-        search=search
+        search=search,
+        codebar_search=codebar_search
     )
     
     # Filtrar precio base si no es admin
