@@ -19,7 +19,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:8000
+    command: uvicorn farmacruz_api.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./backend:/app
     ports:
@@ -38,9 +38,9 @@ services:
   frontend:
     build:
       context: ./react
-      dockerfile: Dockerfile
+    command: npm run dev -- --host 0.0.0.0
     ports:
-      - "3000:80"   # Nginx sirve en puerto 80, mapeamos a 3000 en host
+      - "3000:5173"   # Vite dev server corre en 5173, mapeamos a 3000
     networks:
       - frontend-net
     depends_on:
