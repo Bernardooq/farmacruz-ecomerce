@@ -41,7 +41,8 @@ from . import (
     catalog,
     sync_dbf,
     sync_dbf_upload,
-    tickets
+    tickets,
+    favorites
 )
 
 # Router principal que agrupa todos los modulos
@@ -146,4 +147,11 @@ api_router.include_router(
     tickets.router,
     prefix="/tickets",
     tags=["Tickets de Soporte"]
+)
+
+# === LISTAS DE FAVORITOS ===
+api_router.include_router(
+    favorites.router,
+    prefix="/favorites",
+    tags=["Favoritos"]
 )

@@ -31,6 +31,7 @@ export default function SearchBar() {
             <Link to="/products" onClick={(e) => { e.preventDefault(); navigate('/products'); }}>Inicio</Link>
             <Link to="/products">Productos</Link>
             <Link to="/profile">Perfil</Link>
+            <Link to="/favorites">Favoritos</Link>
           </nav>
           <form className="search-bar" onSubmit={handleSearch}>
             <input className="input" type="search" placeholder="Buscar en todo el catálogo..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />

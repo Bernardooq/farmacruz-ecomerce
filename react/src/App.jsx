@@ -7,7 +7,10 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
+import FavoriteLists from './pages/FavoriteLists';
+import FavoriteListDetails from './pages/FavoriteListDetails';
 import Profile from './pages/Profile';
+
 import SellerDashboard from './pages/SellerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import MarketingDashboard from './pages/MarketingDashboard';
@@ -37,6 +40,22 @@ function App() {
           element={
             <ProtectedRoute>
               <Cart />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/favorites"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <FavoriteLists />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/favorites/:id"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <FavoriteListDetails />
             </ProtectedRoute>
           }
         />

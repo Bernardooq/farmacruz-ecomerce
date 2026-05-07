@@ -2,17 +2,22 @@ import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { getProductImageUrl } from '../../utils/imageUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeart } from '@fortawesome/free-solid-svg-icons';
+import ModalAddFavorite from '../modals/products/ModalAddFavorite';
 
 const MESSAGE_TIMEOUT = 3000;
 const SUCCESS_TIMEOUT = 2000;
 
 export default function ProductCard({ product, onProductClick }) {
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState('');
   const [lastWasWarning, setLastWasWarning] = useState(false);
+  const [showFavoriteModal, setShowFavoriteModal] = useState(false);
+
 
   const {
     product_id, image_url, name, category_id,
@@ -155,8 +160,27 @@ export default function ProductCard({ product, onProductClick }) {
           >
             {adding ? 'Agregando...' : 'Agregar al Carrito'}
           </button>
+
+          {user?.role === 'customer' && (
+            <button
+              className="btn btn--icon btn--ghost text-danger"
+              onClick={() => setShowFavoriteModal(true)}
+              title="Guardar en Favoritos"
+            >
+              <FontAwesomeIcon icon={faHeart} />
+            </button>
+          )}
         </div>
       </div>
+
+      {showFavoriteModal && (
+        <ModalAddFavorite
+          isOpen={showFavoriteModal}
+          onClose={() => setShowFavoriteModal(false)}
+          product={product}
+          quantity={quantity}
+        />
+      )}
     </article>
   );
-}
+}

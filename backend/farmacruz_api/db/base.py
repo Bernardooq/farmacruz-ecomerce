@@ -146,6 +146,8 @@ class Customer(Base):
     cart_cache = relationship("CartCache", back_populates="customer", cascade="all, delete")
     # Agente/vendedor asignado a este cliente
     agent = relationship("User", back_populates="customers_as_agent", foreign_keys=[agent_id])
+    # Listas de compras favoritas
+    favorite_lists = relationship("FavoriteList", back_populates="customer", cascade="all, delete-orphan")
 
     # Propiedades para aplanar el acceso a CustomerInfo (facilita serializacion Pydantic)
     @property
@@ -275,6 +277,7 @@ class Product(Base):
     cart_entries = relationship("CartCache", back_populates="product")  # Items en carritos
     price_list_items = relationship("PriceListItem", back_populates="product", cascade="all, delete-orphan", passive_deletes=True)  # Markup por lista
     suggested_products = relationship("ProductRecommendation", foreign_keys="[ProductRecommendation.product_id]", back_populates="product", cascade="all, delete-orphan")
+    favorite_list_items = relationship("FavoriteListItem", back_populates="product", cascade="all, delete-orphan")
 
 
 class PriceList(Base):
@@ -517,3 +520,65 @@ class TicketMessage(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), index=True)
 
     ticket = relationship("Ticket", back_populates="messages")
+
+
+class FavoriteList(Base):
+    """
+    Listas de compras preestablecidas (Favoritos) de los clientes
+    """
+    __tablename__ = "favoritelists"
+
+    list_id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid6.uuid7, server_default=func.uuid_generate_v4())
+    customer_id = Column(Integer, ForeignKey("customers.customer_id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('customer_id', 'name', name='unique_list_name_per_customer'),
+    )
+
+    # Relaciones
+    customer = relationship("Customer", back_populates="favorite_lists")
+    items = relationship("FavoriteListItem", back_populates="favorite_list", cascade="all, delete-orphan")
+
+
+class FavoriteListItem(Base):
+    """
+    Items individuales dentro de una lista de favoritos
+    """
+    __tablename__ = "favoritelistitems"
+
+    list_item_id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid6.uuid7, server_default=func.uuid_generate_v4())
+    list_id = Column(PG_UUID(as_uuid=True), ForeignKey("favoritelists.list_id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id = Column(String(50), ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False, index=True)
+    quantity = Column(Integer, nullable=False, default=1)
+    added_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('list_id', 'product_id', name='unique_product_per_list'),
+        CheckConstraint('quantity > 0', name='check_fav_quantity_positive'),
+    )
+
+    # Relaciones
+    favorite_list = relationship("FavoriteList", back_populates="items")
+    product = relationship("Product", back_populates="favorite_list_items")
+
+    @property
+    def product_name(self):
+        return self.product.name if self.product else None
+
+    @property
+    def product_image_url(self):
+        return self.product.image_url if self.product else None
+
+    @property
+    def product_stock(self):
+        return self.product.stock_count if self.product else 0
+
+    @property
+    def is_active(self):
+        return self.product.is_active if self.product else False
+
