@@ -15,7 +15,11 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileExcel } from '@fortawesome/free-solid-svg-icons';
+
+
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/userService';
@@ -40,6 +44,8 @@ export default function Cart() {
   const { items, loading, updateQuantity, removeItem, checkout, refreshCart, importFromExcel } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
 
   const [customerInfo, setCustomerInfo] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(DEFAULT_ADDRESS);
@@ -66,6 +72,16 @@ export default function Cart() {
     };
     if (user) loadCustomerInfo();
   }, [user]);
+
+  // Capturar notificaciones enviadas desde Listas de Favoritos
+  useEffect(() => {
+    if (location.state?.importNotifications) {
+      setImportNotifications(location.state.importNotifications);
+      // Limpiar el estado para que no vuelva a salir al refrescar
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
 
   // ============================================
   // EVENT HANDLERS
@@ -178,7 +194,8 @@ export default function Cart() {
         <div className="page-container">
           <div className="d-flex items-center justify-between mb-6">
             <div className="d-flex items-center gap-4">
-              <h1 className="section-title mb-0" style={{ margin: 0 }}>Mi Carrito</h1>
+              <h1 className="section-title mb-0">Mi Carrito</h1>
+
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -187,13 +204,15 @@ export default function Cart() {
                 onChange={handleFileChange} 
               />
               <button 
-                className="btn btn--outline" 
+                className="btn btn--excel" 
                 onClick={handleImportClick}
                 disabled={importing}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
               >
-                {importing ? 'Importando...' : '📄 Importar Excel'}
+                <FontAwesomeIcon icon={faFileExcel} />
+                {importing ? 'Importando...' : 'Importar Excel'}
               </button>
+
+
             </div>
             <HelpGuide
               title="Guía del Carrito"
@@ -343,24 +362,21 @@ export default function Cart() {
               {importNotifications.length === 0 ? (
                 <p>No se realizaron cambios.</p>
               ) : (
-                <ul style={{ listStyleType: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {importNotifications.map((notif, idx) => (
-                    <li key={idx} style={{ 
-                      padding: '12px', 
-                      borderRadius: '8px', 
-                      background: notif.includes('✅') ? 'rgba(76, 175, 80, 0.1)' : 
-                                  notif.includes('⚠️') ? 'rgba(255, 152, 0, 0.1)' : 
-                                  'rgba(244, 67, 54, 0.1)',
-                      border: '1px solid',
-                      borderColor: notif.includes('✅') ? 'rgba(76, 175, 80, 0.3)' : 
-                                   notif.includes('⚠️') ? 'rgba(255, 152, 0, 0.3)' : 
-                                   'rgba(244, 67, 54, 0.3)'
-                    }}>
-                      {notif}
-                    </li>
-                  ))}
+                <ul className="notification-list">
+                  {importNotifications.map((notif, idx) => {
+                    const isSuccess = notif.includes('✅');
+                    const isWarning = notif.includes('⚠️');
+                    const type = isSuccess ? 'success' : (isWarning ? 'warning' : 'error');
+                    
+                    return (
+                      <li key={idx} className={`notification-item notification-item--${type}`}>
+                        {notif}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
+
             </div>
             <div className="modal__footer">
               <button className="btn btn--primary" onClick={() => setImportNotifications(null)}>

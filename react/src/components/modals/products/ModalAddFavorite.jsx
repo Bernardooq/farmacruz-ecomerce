@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+
 import { favoriteService } from '../../../services/favoriteService';
 import LoadingSpinner from '../../common/LoadingSpinner';
 
@@ -74,9 +76,9 @@ export default function ModalAddFavorite({ isOpen, onClose, product, quantity = 
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--sm" onClick={e => e.stopPropagation()}>
+      <div className="modal modal--md" onClick={e => e.stopPropagation()}>
         <div className="modal__header">
           <h2>Agregar a Favoritos</h2>
           <button className="modal__close" onClick={onClose}>&times;</button>
@@ -157,6 +159,7 @@ export default function ModalAddFavorite({ isOpen, onClose, product, quantity = 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

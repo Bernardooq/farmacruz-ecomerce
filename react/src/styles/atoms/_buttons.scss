@@ -161,4 +161,17 @@
             color: var(--color-info-text);
         }
     }
+
+    &--excel {
+        background: transparent;
+        color: var(--color-success);
+        border: var(--border-width) solid var(--color-success);
+        padding: var(--space-2) var(--space-4);
+        font-size: var(--text-sm);
+
+        &:hover {
+            background: var(--color-success);
+            color: #fff;
+        }
+    }
 }

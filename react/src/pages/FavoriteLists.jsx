@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
+import HelpGuide from '../components/common/HelpGuide';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import { favoriteService } from '../services/favoriteService';
@@ -94,8 +95,18 @@ export default function FavoriteLists() {
       
       <main className="page__content">
         <div className="page-container">
-          <div className="d-flex items-center justify-between mb-6">
+          <div className="d-flex items-center justify-between mb-8">
             <h1 className="section-title mb-0">Mis Listas de Favoritos</h1>
+            <HelpGuide 
+              title="Guía de Favoritos"
+              items={[
+                "Crear Listas: Usa el panel superior para dar nombre a una nueva lista (ej: Compras Quincenales).",
+                "Organización: Haz clic en cualquier tarjeta para ver y editar los productos dentro de esa lista.",
+                "Cantidades: Dentro de cada lista puedes definir la cantidad exacta que sueles comprar de cada item.",
+                "Carga Rápida: Usa el botón 'Cargar' en la tarjeta para pasar todos los productos de esa lista directamente a tu carrito.",
+                "Gestión: Puedes eliminar listas completas usando el icono de basura que aparece al pasar el mouse sobre la tarjeta."
+              ]}
+            />
           </div>
 
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
@@ -113,7 +124,7 @@ export default function FavoriteLists() {
               <button 
                 type="submit" 
                 className="btn btn--primary"
-                disabled={creating || !newListName.trim()}
+                disabled={creating}
               >
                 <FontAwesomeIcon icon={faPlus} className="mr-2" />
                 Crear Lista
@@ -134,13 +145,24 @@ export default function FavoriteLists() {
               {lists.map(list => (
                 <div 
                   key={list.list_id} 
-                  className="card p-4 cursor-pointer hover-lift"
+                  className="card p-5 cursor-pointer hover-lift border-hover"
                   onClick={() => navigate(`/favorites/${list.list_id}`)}
                 >
                   <div className="d-flex items-start justify-between mb-4">
-                    <h3 className="text-lg font-medium">{list.name}</h3>
+                    <div className="d-flex items-center gap-3">
+                      <div className="icon-badge icon-badge--primary">
+                        <FontAwesomeIcon icon={faListAlt} />
+                      </div>
+                      <div>
+
+                        <h3 className="text-lg font-bold mb-0">{list.name}</h3>
+                        <span className="text-xs text-secondary font-medium">
+                          {list.items?.length || 0} productos guardados
+                        </span>
+                      </div>
+                    </div>
                     <button 
-                      className="btn btn--icon btn--ghost text-danger" 
+                      className="btn btn--icon btn--ghost text-danger opacity-0 hover-opacity-100 transition-all" 
                       onClick={(e) => handleDeleteList(e, list.list_id)}
                       title="Eliminar lista"
                     >
@@ -148,17 +170,18 @@ export default function FavoriteLists() {
                     </button>
                   </div>
                   
-                  <p className="text-secondary text-sm mb-4">
-                    Actualizada: {new Date(list.updated_at).toLocaleDateString()}
-                  </p>
-                  
-                  <button 
-                    className="btn btn--outline btn--full"
-                    onClick={(e) => handleLoadToCart(e, list.list_id)}
-                  >
-                    <FontAwesomeIcon icon={faShoppingCart} className="mr-2" />
-                    Cargar al Carrito
-                  </button>
+                  <div className="d-flex items-center justify-between mt-6 pt-4 border-t border-dashed">
+                    <span className="text-xs text-secondary">
+                      Act: {new Date(list.updated_at).toLocaleDateString()}
+                    </span>
+                    <button 
+                      className="btn btn--primary btn--sm"
+                      onClick={(e) => handleLoadToCart(e, list.list_id)}
+                    >
+                      <FontAwesomeIcon icon={faShoppingCart} className="mr-2" />
+                      Cargar
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

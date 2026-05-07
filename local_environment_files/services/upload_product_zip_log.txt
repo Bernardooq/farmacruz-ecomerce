@@ -1,0 +1,111 @@
+[07/05/2026 13:24:56.49] Inicio
+===================================================
+Subiendo ZIP de Productos
+===================================================
+Ejecutando script Python...
+STARTING PRODUCTS SYNC 2026-05-07 13:24:57.321830
+
+--- STEP 1: PRODUCTS ---
+Reading producto.dbf...
+Loading extra descriptions...
+Loading stock data...
+Applying filters...
+Products: 3555 -> 1907
+  Uploading /sync-upload/productos-json...
+  Size: 0.76MB -> 0.10MB (86.9% savings)
+  [OK] Encolado: Procesando 1907 productos en thread pool
+
+--- STEP 2: PRICE LISTS (HEADERS) ---
+Reading PRECIPROD.DBF...
+  Uploading /sync-upload/listas-precios-json...
+  Size: 0.00MB -> 0.00MB (85.0% savings)
+  [OK] Encolado: Procesando 10 listas en thread pool
+
+--- STEP 3: PRICE LIST ITEMS ---
+Reading PRECIPROD.DBF...
+  Uploading /sync-upload/items-precios-json...
+  Size: 3.65MB -> 0.20MB (94.5% savings)
+  [OK] Encolado: Procesando 27748 items en thread pool
+
+--- CLEANUP: PRODUCTS ---
+  [OK] Productos/categorias/listas no sincronizados limpiados
+
+COMPLETED IN 13.60s
+
+Proceso finalizado.
+[07/05/2026 13:25:11.01] Fin
+---------------------------------------------------
+[07/05/2026 13:29:12.82] Inicio
+===================================================
+Subiendo ZIP de Productos
+===================================================
+Ejecutando script Python...
+STARTING PRODUCTS SYNC 2026-05-07 13:29:13.560152
+
+--- STEP 1: PRODUCTS ---
+Reading producto.dbf...
+Loading extra descriptions...
+Loading stock data...
+Applying filters...
+Products: 3555 -> 1907
+  Uploading /sync-upload/productos-json...
+  Size: 0.76MB -> 0.10MB (86.9% savings)
+  [OK] Encolado: Procesando 1907 productos en thread pool
+
+--- STEP 2: PRICE LISTS (HEADERS) ---
+Reading PRECIPROD.DBF...
+  Uploading /sync-upload/listas-precios-json...
+  Size: 0.00MB -> 0.00MB (85.0% savings)
+  [OK] Encolado: Procesando 10 listas en thread pool
+
+--- STEP 3: PRICE LIST ITEMS ---
+Reading PRECIPROD.DBF...
+  Uploading /sync-upload/items-precios-json...
+  Size: 3.65MB -> 0.20MB (94.5% savings)
+  [OK] Encolado: Procesando 27748 items en thread pool
+
+--- CLEANUP: PRODUCTS ---
+  [OK] Productos/categorias/listas no sincronizados limpiados
+
+COMPLETED IN 13.64s
+
+Proceso finalizado.
+[07/05/2026 13:29:27.28] Fin
+---------------------------------------------------
+[07/05/2026 13:34:51.32] Inicio
+===================================================
+Subiendo ZIP de Productos
+===================================================
+Ejecutando script Python...
+STARTING PRODUCTS SYNC 2026-05-07 13:34:52.720486
+
+--- STEP 1: PRODUCTS ---
+Reading producto.dbf...
+Loading extra descriptions...
+Loading stock data...
+Applying filters...
+Products: 3555 -> 1907
+  Uploading /sync-upload/productos-json...
+  Size: 0.76MB -> 0.10MB (86.9% savings)
+  [OK] Encolado: Procesando 1907 productos en thread pool
+
+--- STEP 2: PRICE LISTS (HEADERS) ---
+Reading PRECIPROD.DBF...
+  Uploading /sync-upload/listas-precios-json...
+  Size: 0.00MB -> 0.00MB (85.0% savings)
+  [OK] Encolado: Procesando 10 listas en thread pool
+
+--- STEP 3: PRICE LIST ITEMS ---
+Reading PRECIPROD.DBF...
+  Uploading /sync-upload/items-precios-json...
+  Size: 3.65MB -> 0.20MB (94.5% savings)
+  [OK] Encolado: Procesando 27748 items en thread pool
+
+--- CLEANUP: PRODUCTS ---
+  [OK] Productos/categorias/listas no sincronizados limpiados
+
+COMPLETED IN 4.01s
+
+Proceso finalizado.
+[07/05/2026 13:34:56.88] Fin
+---------------------------------------------------

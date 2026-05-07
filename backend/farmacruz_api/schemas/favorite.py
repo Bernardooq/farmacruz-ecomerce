@@ -19,7 +19,9 @@ class FavoriteListItem(FavoriteListItemBase):
     added_at: datetime
     # Info para el frontend
     product_name: Optional[str] = None
+    product_codebar: Optional[str] = None
     product_image_url: Optional[str] = None
+
     product_stock: Optional[int] = None
     is_active: Optional[bool] = True
 
@@ -41,6 +43,8 @@ class FavoriteList(FavoriteListBase):
     created_at: datetime
     updated_at: datetime
     items: List[FavoriteListItem] = []
+    total_items: Optional[int] = 0
 
     class Config:
         from_attributes = True
+

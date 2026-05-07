@@ -39,6 +39,8 @@ DROP TABLE IF EXISTS users CASCADE;
 -- EXTENSIONES NECESARIAS
 -- =====================================================
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 
 -- =====================================================
 -- TABLA: users (Usuarios internos: admin, marketing, seller)
@@ -485,6 +487,10 @@ CREATE TABLE favoritelists (
 );
 
 CREATE INDEX idx_favoritelists_customer ON favoritelists (customer_id);
+
+-- GIN index for partial/case-insensitive searches (ILIKE)
+CREATE INDEX idx_favoritelists_name_gin ON favoritelists USING gin (name gin_trgm_ops);
+
 
 -- =====================================================
 -- TABLA: favoritelistitems (Productos en las listas)

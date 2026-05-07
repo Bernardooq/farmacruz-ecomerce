@@ -7,9 +7,15 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import { favoriteService } from '../services/favoriteService';
 import { useCart } from '../context/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faShoppingCart, faArrowLeft, faBox } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faShoppingCart, faArrowLeft, faBox, faSave } from '@fortawesome/free-solid-svg-icons';
+import PaginationButtons from '../components/common/PaginationButtons';
+
+
+
+const ITEMS_PER_PAGE = 15;
 
 export default function FavoriteListDetails() {
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { refreshCart } = useCart();
@@ -17,11 +23,13 @@ export default function FavoriteListDetails() {
   const [list, setList] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(0);
+
 
   const fetchListDetails = async () => {
     try {
       setLoading(true);
-      const data = await favoriteService.getFavoriteListDetails(id);
+      const data = await favoriteService.getFavoriteListDetails(id, page * ITEMS_PER_PAGE, ITEMS_PER_PAGE);
       setList(data);
     } catch (err) {
       setError(err.message || 'Error al cargar la lista');
@@ -35,7 +43,23 @@ export default function FavoriteListDetails() {
 
   useEffect(() => {
     fetchListDetails();
-  }, [id]);
+  }, [id, page]);
+
+
+  const handleUpdateQuantity = async (productId, newQuantity) => {
+    if (newQuantity < 1) return;
+    try {
+      await favoriteService.addFavoriteItem(id, productId, newQuantity);
+      setList(prev => ({
+        ...prev,
+        items: prev.items.map(item => 
+          item.product_id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      }));
+    } catch (err) {
+      setError('No se pudo actualizar la cantidad');
+    }
+  };
 
   const handleRemoveItem = async (productId) => {
     if (!window.confirm('¿Eliminar producto de esta lista?')) return;
@@ -51,16 +75,23 @@ export default function FavoriteListDetails() {
     }
   };
 
+
   const handleLoadToCart = async () => {
     try {
       const result = await favoriteService.loadListToCart(id);
       await refreshCart();
-      alert(`Se agregaron ${result.added_count} productos al carrito.\nRevisa las notificaciones en el carrito si hubo algún ajuste por stock.`);
-      navigate('/cart');
+      // Pasamos las notificaciones al carrito vía state para que se muestren allá
+      navigate('/cart', { 
+        state: { 
+          importNotifications: result.notifications,
+          fromFavorites: true 
+        } 
+      });
     } catch (err) {
       setError(err.message || 'Error al cargar la lista al carrito');
     }
   };
+
 
   if (loading) {
     return (
@@ -128,7 +159,8 @@ export default function FavoriteListDetails() {
                     
                     <div className="cart-item__info">
                       <h3 className="cart-item__title">{item.product_name}</h3>
-                      <p className="cart-item__code">Cod: {item.product_id}</p>
+                      <p className="cart-item__code">Cod: {item.product_codebar || 'N/A'}</p>
+
                       
                       {!item.is_active && (
                          <p className="text-danger text-sm mt-1">
@@ -144,8 +176,20 @@ export default function FavoriteListDetails() {
                     </div>
 
                     <div className="cart-item__quantity">
-                      <span className="font-medium">Cant: {item.quantity}</span>
+                      <div className="d-flex items-center gap-2">
+                        <span className="text-sm text-secondary">Cant:</span>
+                        <input 
+                          type="number" 
+                          min="1" 
+                          className="input input--sm input--qty" 
+                          value={item.quantity}
+                          onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value) || 1)}
+                        />
+
+
+                      </div>
                     </div>
+
                     
                     <div className="cart-item__actions">
                       <button 
@@ -159,8 +203,16 @@ export default function FavoriteListDetails() {
                   </div>
                 ))}
               </div>
+              <PaginationButtons 
+                onPrev={() => setPage(p => Math.max(0, p - 1))}
+                onNext={() => setPage(p => p + 1)}
+                canGoPrev={page > 0}
+                canGoNext={list.items.length === ITEMS_PER_PAGE && (page + 1) * ITEMS_PER_PAGE < list.total_items}
+              />
             </div>
           )}
+
+
         </div>
       </main>
 

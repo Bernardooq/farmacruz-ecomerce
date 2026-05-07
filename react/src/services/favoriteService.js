@@ -10,9 +10,10 @@ export const favoriteService = {
     return await apiService.post('/favorites', { name });
   },
 
-  getFavoriteListDetails: async (listId) => {
-    return await apiService.get(`/favorites/${listId}`);
+  getFavoriteListDetails: async (listId, skip = 0, limit = 15) => {
+    return await apiService.get(`/favorites/${listId}?skip=${skip}&limit=${limit}`);
   },
+
 
   updateFavoriteList: async (listId, name) => {
     return await apiService.put(`/favorites/${listId}`, { name });

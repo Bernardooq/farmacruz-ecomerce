@@ -42,3 +42,57 @@
         color: var(--color-primary);
     }
 }
+
+.icon-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+
+    &--primary {
+        background-color: var(--color-primary-subtle);
+        color: var(--color-primary);
+    }
+
+    &--success {
+        background-color: var(--color-success-bg);
+        color: var(--color-success);
+    }
+}
+
+.notification-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-item {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    border: 1px solid transparent;
+
+    &--success {
+        background-color: #f0fdf4;
+        color: #166534;
+        border-color: #bbf7d0;
+    }
+
+    &--warning {
+        background-color: #fffbeb;
+        color: #92400e;
+        border-color: #fef3c7;
+    }
+
+    &--error {
+        background-color: #fff1f2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+}

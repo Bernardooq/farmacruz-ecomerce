@@ -1,0 +1,72 @@
+[07/05/2026 13:25:12.92] Inicio
+===================================================
+Subiendo ZIP de Usuarios
+===================================================
+Ejecutando script Python...
+STARTING USERS SYNC 2026-05-07 13:25:13.668046
+
+--- STEP 1: SELLERS (AGENTS) ---
+Reading agentes.dbf...
+  Uploading /sync-upload/sellers-json...
+  Size: 0.01MB -> 0.00MB (79.6% savings)
+  [OK] Encolado: Procesando 40 vendedores en thread pool
+
+--- STEP 2: CUSTOMERS ---
+Reading clientes.dbf...
+  Uploading /sync-upload/customers-json...
+  Size: 1.09MB -> 0.23MB (79.0% savings)
+  [OK] Encolado: Procesando 2735 clientes en thread pool
+
+COMPLETED IN 7.01s
+
+Proceso finalizado.
+[07/05/2026 13:25:20.79] Fin
+---------------------------------------------------
+[07/05/2026 13:29:34.03] Inicio
+===================================================
+Subiendo ZIP de Usuarios
+===================================================
+Ejecutando script Python...
+STARTING USERS SYNC 2026-05-07 13:29:34.801218
+
+--- STEP 1: SELLERS (AGENTS) ---
+Reading agentes.dbf...
+  Uploading /sync-upload/sellers-json...
+  Size: 0.01MB -> 0.00MB (79.6% savings)
+  [OK] Encolado: Procesando 40 vendedores en thread pool
+
+--- STEP 2: CUSTOMERS ---
+Reading clientes.dbf...
+  Uploading /sync-upload/customers-json...
+  Size: 1.09MB -> 0.23MB (79.0% savings)
+  [OK] Encolado: Procesando 2735 clientes en thread pool
+
+COMPLETED IN 7.00s
+
+Proceso finalizado.
+[07/05/2026 13:29:41.94] Fin
+---------------------------------------------------
+[07/05/2026 13:35:01.76] Inicio
+===================================================
+Subiendo ZIP de Usuarios
+===================================================
+Ejecutando script Python...
+STARTING USERS SYNC 2026-05-07 13:35:02.729334
+
+--- STEP 1: SELLERS (AGENTS) ---
+Reading agentes.dbf...
+  Uploading /sync-upload/sellers-json...
+  Size: 0.01MB -> 0.00MB (79.6% savings)
+  [OK] Encolado: Procesando 40 vendedores en thread pool
+
+--- STEP 2: CUSTOMERS ---
+Reading clientes.dbf...
+  Uploading /sync-upload/customers-json...
+  Size: 1.09MB -> 0.23MB (79.0% savings)
+  [OK] Encolado: Procesando 2735 clientes en thread pool
+
+COMPLETED IN 0.99s
+
+Proceso finalizado.
+[07/05/2026 13:35:03.82] Fin
+---------------------------------------------------

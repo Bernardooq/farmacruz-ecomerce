@@ -184,11 +184,13 @@ export default function Products() {
               items={[
                 "Búsqueda: Utiliza la barra superior para encontrar productos.",
                 "Ordenamiento: Puedes ordenar por precio o alfabéticamente usando el menú 'Ordenar por'.",
+                "Favoritos: Haz clic en el icono de corazón en cada producto para guardarlo en tus listas personalizadas.",
                 "Similares: Haz clic en cualquier producto para ver sus detalles y recomendaciones de productos similares.",
                 "Compra: Desde el detalle del producto, agrégalo a tu carrito para iniciar tu pedido.",
                 "Categorías: Filtra los productos por su familia o categoría para navegar más fácil."
               ]}
             />
+
           </div>
 
           {/* Mensaje de error */}

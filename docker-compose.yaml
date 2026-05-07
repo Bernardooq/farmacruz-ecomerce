@@ -12,6 +12,8 @@ services:
       - POSTGRES_PASSWORD=supersecretpassword
     networks:
       - backend-net
+    ports:
+      - "5432:5432"
     expose:
       - "5432"
 
@@ -29,6 +31,7 @@ services:
       - POSTGRES_USER=farmacruz_user
       - POSTGRES_PASSWORD=supersecretpassword
       - POSTGRES_HOST=db
+      - DATABASE_URL=postgresql://farmacruz_user:supersecretpassword@db:5432/farmacruz_db
     networks:
       - frontend-net
       - backend-net

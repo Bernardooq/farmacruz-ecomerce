@@ -575,6 +575,11 @@ class FavoriteListItem(Base):
         return self.product.image_url if self.product else None
 
     @property
+    def product_codebar(self):
+        return self.product.codebar if self.product else None
+
+
+    @property
     def product_stock(self):
         return self.product.stock_count if self.product else 0
 
