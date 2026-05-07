@@ -146,6 +146,53 @@ class ApiService {
     })
   }
 
+  async postForm(endpoint, formData) {
+    const url = `${this.baseURL}${endpoint}`
+    const token = localStorage.getItem('token')
+    
+    // Para FormData NO debemos setear el Content-Type, el navegador lo hace automáticamente con el boundary
+    const headers = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+
+      if (response.status === 401) {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+        throw new Error('Tu sesión expiró, inicia sesión de nuevo.')
+      }
+
+      if (!response.ok) {
+        let errorMessage = 'Algo salió mal con la solicitud'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.detail || errorData.message || errorMessage
+        } catch {
+          errorMessage = response.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      if (response.status === 204) return null
+      return await response.json()
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('El servidor tardó demasiado en responder.')
+      }
+      console.error('API Error:', error)
+      throw error
+    }
+  }
   async put(endpoint, data) {
     return this.request(endpoint, {
       method: 'PUT',

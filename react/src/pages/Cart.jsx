@@ -14,7 +14,7 @@
  * Permisos: Solo para clientes autenticados
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -37,7 +37,7 @@ export default function Cart() {
   // ============================================
   // HOOKS & STATE
   // ============================================
-  const { items, loading, updateQuantity, removeItem, checkout, refreshCart } = useCart();
+  const { items, loading, updateQuantity, removeItem, checkout, refreshCart, importFromExcel } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -47,6 +47,10 @@ export default function Cart() {
   const [processingCheckout, setProcessingCheckout] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
+  
+  const fileInputRef = useRef(null);
+  const [importNotifications, setImportNotifications] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   // ============================================
   // EFFECTS
@@ -125,6 +129,31 @@ export default function Cart() {
 
   const hasAnyAddress = () => customerInfo?.address_1 || customerInfo?.address_2 || customerInfo?.address_3;
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setImporting(true);
+      setError(null);
+      const result = await importFromExcel(file);
+      if (result && result.notifications) {
+        setImportNotifications(result.notifications);
+      }
+    } catch (err) {
+      setError(err.message || 'Error al importar Excel');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   // ============================================
   // RENDER - LOADING STATE
   // ============================================
@@ -148,7 +177,24 @@ export default function Cart() {
       <main className="page__content">
         <div className="page-container">
           <div className="d-flex items-center justify-between mb-6">
-            <h1 className="section-title">Mi Carrito</h1>
+            <div className="d-flex items-center gap-4">
+              <h1 className="section-title mb-0" style={{ margin: 0 }}>Mi Carrito</h1>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                accept=".xlsx, .xls"
+                onChange={handleFileChange} 
+              />
+              <button 
+                className="btn btn--outline" 
+                onClick={handleImportClick}
+                disabled={importing}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+              >
+                {importing ? 'Importando...' : '📄 Importar Excel'}
+              </button>
+            </div>
             <HelpGuide
               title="Guía del Carrito"
               items={[
@@ -275,6 +321,50 @@ export default function Cart() {
                 disabled={!hasAnyAddress() || processingCheckout}
               >
                 {processingCheckout ? 'Procesando...' : 'Confirmar Pedido'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================ */}
+      {/* MODAL DE NOTIFICACIONES DE IMPORTACIÓN      */}
+      {/* ============================================ */}
+      {importNotifications && (
+        <div className="modal-overlay" onClick={() => setImportNotifications(null)}>
+          <div className="modal modal--md" onClick={(e) => e.stopPropagation()}>
+            <div className="modal__header">
+              <h2>Resultados de Importación</h2>
+              <button className="modal__close" onClick={() => setImportNotifications(null)} aria-label="Cerrar modal">
+                &times;
+              </button>
+            </div>
+            <div className="modal__body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {importNotifications.length === 0 ? (
+                <p>No se realizaron cambios.</p>
+              ) : (
+                <ul style={{ listStyleType: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {importNotifications.map((notif, idx) => (
+                    <li key={idx} style={{ 
+                      padding: '12px', 
+                      borderRadius: '8px', 
+                      background: notif.includes('✅') ? 'rgba(76, 175, 80, 0.1)' : 
+                                  notif.includes('⚠️') ? 'rgba(255, 152, 0, 0.1)' : 
+                                  'rgba(244, 67, 54, 0.1)',
+                      border: '1px solid',
+                      borderColor: notif.includes('✅') ? 'rgba(76, 175, 80, 0.3)' : 
+                                   notif.includes('⚠️') ? 'rgba(255, 152, 0, 0.3)' : 
+                                   'rgba(244, 67, 54, 0.3)'
+                    }}>
+                      {notif}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="modal__footer">
+              <button className="btn btn--primary" onClick={() => setImportNotifications(null)}>
+                Entendido
               </button>
             </div>
           </div>

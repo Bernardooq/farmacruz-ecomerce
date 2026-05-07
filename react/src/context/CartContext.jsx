@@ -135,6 +135,24 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const importFromExcel = async (file) => {
+    try {
+      setLoading(true);
+      const result = await orderService.importCartExcel(file);
+      if (result.cart) {
+        setItems(result.cart);
+      } else {
+        await loadCart();
+      }
+      return result;
+    } catch (error) {
+      console.error('Failed to import from Excel:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Computed values
   const itemCount = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const total = items.reduce((sum, item) => {
@@ -153,6 +171,7 @@ export const CartProvider = ({ children }) => {
     removeItem,
     clearCart,
     checkout,
+    importFromExcel,
     refreshCart: loadCart
   };
 

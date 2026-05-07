@@ -34,6 +34,13 @@ export const orderService = {
     return apiService.delete('/orders/cart')
   },
 
+  // Importar productos al carrito desde un archivo Excel
+  async importCartExcel(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiService.postForm('/orders/cart/import-excel', formData)
+  },
+
   // ==================== Órdenes ====================
 
   // Crear una orden a partir del carrito

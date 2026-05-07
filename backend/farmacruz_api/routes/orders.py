@@ -29,7 +29,7 @@ Sistema de Permisos:
 """
 
 from decimal import Decimal
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -49,7 +49,7 @@ from crud.crud_order import (assign_order_seller, calculate_order_shipping_addre
 
 from crud.crud_order_edit import edit_order_items
 
-from crud.crud_cart import (get_cart, add_to_cart, update_cart_item, remove_from_cart, clear_cart)
+from crud.crud_cart import (get_cart, add_to_cart, update_cart_item, remove_from_cart, clear_cart, import_cart_from_excel)
 
 from crud.crud_sales_group import get_user_groups, user_can_manage_order
 
@@ -106,6 +106,31 @@ def add_item_to_cart(item: CartItemAdd, current_user = Depends(get_current_user)
         return cart_item
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+""" POST /cart/import-excel - Importar productos al carrito desde Excel """
+@router.post("/cart/import-excel")
+async def import_excel_to_cart(file: UploadFile = File(...), current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if isinstance(current_user, Customer):
+        customer_id = current_user.customer_id
+    else:
+        customer_id = getattr(current_user, 'user_id', None)
+        
+    if not customer_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No se pudo identificar el cliente")
+        
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El archivo debe ser un Excel (.xlsx o .xls)")
+        
+    try:
+        content = await file.read()
+        result = import_cart_from_excel(db, customer_id=customer_id, file_content=content)
+        # Refrescar carrito para enviarlo actualizado
+        result["cart"] = get_cart(db, customer_id=customer_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al procesar el archivo: {str(e)}")
 
 """ PUT /cart/{id} - Actualizar cantidad de un item en el carrito """
 @router.put("/cart/{cart_id}")

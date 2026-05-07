@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from utils.price_utils import get_catalog_product_info
 from db.base import CartCache, CustomerInfo, PriceListItem, Product
+import pandas as pd
+import io
 
 """Obtiene todos los items en el carrito de un cliente con detalles del producto y precios"""
 def get_cart(db: Session, customer_id: int) -> List[dict]: 
@@ -156,3 +158,93 @@ def get_cart_item_count(db: Session, customer_id: int) -> int:
     return db.query(func.count(CartCache.cart_cache_id)).filter(
         CartCache.customer_id == customer_id
     ).scalar() or 0
+
+"""Importa productos al carrito desde un archivo Excel"""
+def import_cart_from_excel(db: Session, customer_id: int, file_content: bytes) -> dict:
+    try:
+        df = pd.read_excel(io.BytesIO(file_content), header=None)
+    except Exception as e:
+        raise ValueError(f"Error al leer el archivo Excel: {str(e)}")
+
+    notifications = []
+    
+    for index, row in df.iterrows():
+        # Validar que existan al menos 2 columnas
+        if len(row) < 2:
+            continue
+            
+        codebar_raw = row[0]
+        qty_raw = row[1]
+        
+        # Ignorar filas vacías o donde la cantidad no sea un número (posible header)
+        if pd.isna(codebar_raw) or pd.isna(qty_raw):
+            continue
+            
+        try:
+            qty = int(qty_raw)
+            if qty <= 0:
+                continue
+        except (ValueError, TypeError):
+            # Si la cantidad no se puede convertir a int, probablemente sea un header
+            continue
+            
+        codebar = str(codebar_raw).strip()
+        if codebar.endswith(".0"):
+            codebar = codebar[:-2]
+            
+        # Buscar el producto
+        product = db.query(Product).filter(
+            Product.codebar == codebar
+        ).first()
+        
+        if not product:
+            notifications.append(f"Código '{codebar}': Producto no encontrado.")
+            continue
+            
+        if not product.is_active:
+            notifications.append(f"'{product.name}': El producto no está activo.")
+            continue
+            
+        if product.stock_count <= 0:
+            notifications.append(f"'{product.name}': Producto sin stock disponible.")
+            continue
+            
+        # Verificar si el item ya está en el carrito
+        cart_item = db.query(CartCache).filter(
+            CartCache.customer_id == customer_id,
+            CartCache.product_id == product.product_id
+        ).first()
+        
+        current_qty = cart_item.quantity if cart_item else 0
+        total_qty = current_qty + qty
+        
+        # Ajustar por límite de stock
+        if total_qty > product.stock_count:
+            added_qty = product.stock_count - current_qty
+            if added_qty <= 0:
+                notifications.append(f"{product.name}': Ya tienes el máximo stock en tu carrito.")
+                continue
+            else:
+                total_qty = product.stock_count
+                notifications.append(f"'{product.name}': Cantidad ajustada al máximo disponible ({product.stock_count}).")
+        else:
+            notifications.append(f"'{product.name}': {qty} unidades agregadas.")
+            
+        # Actualizar o crear item en el carrito
+        if cart_item:
+            cart_item.quantity = total_qty
+            cart_item.updated_at = datetime.now(timezone.utc)
+        else:
+            new_cart_item = CartCache(
+                customer_id=customer_id,
+                product_id=product.product_id,
+                quantity=total_qty
+            )
+            db.add(new_cart_item)
+            
+    db.commit()
+    
+    return {
+        "message": "Importación finalizada",
+        "notifications": notifications
+    }
