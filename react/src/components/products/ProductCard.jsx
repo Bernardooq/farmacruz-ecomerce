@@ -71,6 +71,19 @@ export default function ProductCard({ product, onProductClick }) {
 
   return (
     <article className="product-card">
+      {user?.role === 'customer' && (
+        <button
+          className="product-card__favorite"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowFavoriteModal(true);
+          }}
+          title="Guardar en Favoritos"
+        >
+          <FontAwesomeIcon icon={faHeart} />
+        </button>
+      )}
+
       <img
         src={getProductImageUrl(product)}
         alt={name}
@@ -160,16 +173,6 @@ export default function ProductCard({ product, onProductClick }) {
           >
             {adding ? 'Agregando...' : 'Agregar al Carrito'}
           </button>
-
-          {user?.role === 'customer' && (
-            <button
-              className="btn btn--icon btn--ghost text-danger"
-              onClick={() => setShowFavoriteModal(true)}
-              title="Guardar en Favoritos"
-            >
-              <FontAwesomeIcon icon={faHeart} />
-            </button>
-          )}
         </div>
       </div>
 

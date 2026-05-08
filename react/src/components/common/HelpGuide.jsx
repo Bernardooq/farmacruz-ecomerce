@@ -6,7 +6,14 @@ import { faInfoCircle, faLightbulb, faTimes } from '@fortawesome/free-solid-svg-
  * Reusable Help Guide component that shows an inline info button
  * to explain specific section functionality.
  */
-export default function HelpGuide({ title, description, items = [], isInline = true }) {
+export default function HelpGuide({ 
+  title, 
+  description, 
+  items = [], 
+  isInline = true,
+  label = 'Ayuda',
+  icon = faInfoCircle
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleGuide = () => setIsOpen(!isOpen);
@@ -14,11 +21,11 @@ export default function HelpGuide({ title, description, items = [], isInline = t
   return (
     <div className={`help-guide-wrapper ${isInline ? 'help-guide-wrapper--inline' : ''}`}>
       <button 
-        className="help-guide-btn" 
+        className={`help-guide-btn ${!label ? 'help-guide-btn--icon-only' : ''}`}
         onClick={toggleGuide}
-        title="Ver ayuda de esta sección"
+        title={label || title || "Ver ayuda"}
       >
-        <FontAwesomeIcon icon={faInfoCircle} /> <span>Ayuda</span>
+        <FontAwesomeIcon icon={icon} /> {label && <span>{label}</span>}
       </button>
 
       {isOpen && (

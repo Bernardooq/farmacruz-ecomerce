@@ -14,6 +14,7 @@
     @include transition;
     display: flex;
     flex-direction: column;
+    position: relative; // Para posicionar el corazón favorito
 
     &:hover {
         box-shadow: var(--shadow-md);
@@ -204,6 +205,43 @@
 
     &--in-list {
         border-left: 4px solid var(--color-primary);
+    }
+
+    &__favorite {
+        position: absolute;
+        top: var(--space-3);
+        right: var(--space-3);
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-sm);
+        z-index: 10;
+        border: none;
+        cursor: pointer;
+        color: var(--color-danger);
+        @include transition;
+
+        &:hover {
+            transform: scale(1.1);
+            background: #fff;
+            box-shadow: var(--shadow-md);
+            color: #ff3b30; // Un rojo más vibrante
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
+
+        // Si ya está en una lista (opcional visual)
+        &--active {
+            background: var(--color-danger);
+            color: #fff;
+        }
     }
 }
 

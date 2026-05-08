@@ -70,8 +70,8 @@ class OrderItem(OrderItemBase):
     """
     order_item_id: UUID  # ID unico del item
     # Precios congelados (snapshot al momento del pedido)
-    base_price: Decimal  # Precio base del producto cuando se ordeno
-    markup_percentage: Decimal  # % de markup cuando se ordeno
+    base_price: Optional[Decimal] = None  # Precio base (solo admin)
+    markup_percentage: Optional[Decimal] = None  # % de markup (solo admin)
     iva_percentage: Decimal  # % de IVA cuando se ordeno
     price_without_iva: Optional[Decimal] = None  # Precio con markup SIN IVA (solo admin)
     final_price: Decimal  # Precio final CON IVA

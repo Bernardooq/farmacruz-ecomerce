@@ -17,7 +17,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileExcel } from '@fortawesome/free-solid-svg-icons';
+import { faFileExcel, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 
 
 import { useCart } from '../context/CartContext';
@@ -53,7 +53,7 @@ export default function Cart() {
   const [processingCheckout, setProcessingCheckout] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
-  
+
   const fileInputRef = useRef(null);
   const [importNotifications, setImportNotifications] = useState(null);
   const [importing, setImporting] = useState(false);
@@ -196,15 +196,15 @@ export default function Cart() {
             <div className="d-flex items-center gap-4">
               <h1 className="section-title mb-0">Mi Carrito</h1>
 
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                style={{ display: 'none' }} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
                 accept=".xlsx, .xls"
-                onChange={handleFileChange} 
+                onChange={handleFileChange}
               />
-              <button 
-                className="btn btn--excel" 
+              <button
+                className="btn btn--excel"
                 onClick={handleImportClick}
                 disabled={importing}
               >
@@ -212,7 +212,73 @@ export default function Cart() {
                 {importing ? 'Importando...' : 'Importar Excel'}
               </button>
 
-
+              <HelpGuide
+                label={null}
+                icon={faQuestionCircle}
+                title="Ayuda: Importación Excel"
+                description={
+                  <div className="mt-2">
+                    <p className="mb-2">Ejemplo del formato esperado:</p>
+                    <table className="excel-simulator">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>A</th>
+                          <th>B</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="excel-simulator__header-row">
+                          <td className="excel-simulator__col-header">1</td>
+                          <td>Codigo Barras</td>
+                          <td>Cantidad</td>
+                        </tr>
+                        <tr>
+                          <td className="excel-simulator__col-header">2</td>
+                          <td>75010011</td>
+                          <td>12</td>
+                        </tr>
+                        <tr>
+                          <td className="excel-simulator__col-header">3</td>
+                          <td>75010022</td>
+                          <td>5</td>
+                        </tr>
+                        <tr>
+                          <td className="excel-simulator__col-header">4</td>
+                          <td>75010033</td>
+                          <td>24</td>
+                        </tr>
+                        <tr>
+                          <td className="excel-simulator__col-header">5</td>
+                          <td>75010044</td>
+                          <td>10</td>
+                        </tr>
+                        <tr>
+                          <td className="excel-simulator__col-header">6</td>
+                          <td>75010055</td>
+                          <td>8</td>
+                        </tr>
+                        <tr>
+                          <td className="excel-simulator__col-header">7</td>
+                          <td>75010066</td>
+                          <td>15</td>
+                        </tr>
+                        <tr>
+                          <td className="excel-simulator__col-header">...</td>
+                          <td className="text-center">...</td>
+                          <td className="text-center">...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                }
+                items={[
+                  "Formato: El archivo debe ser .xlsx o .xls.",
+                  "Columnas: Solo necesitas dos columnas: Código de Barras (Columna A) y Cantidad (Columna B).",
+                  "Encabezado: No es obligatorio, el sistema lee desde la primera fila.",
+                  "Validación: El sistema verificará automáticamente el stock y si el producto está activo."
+                ]}
+              />
             </div>
             <HelpGuide
               title="Guía del Carrito"
@@ -367,7 +433,7 @@ export default function Cart() {
                     const isSuccess = notif.includes('✅');
                     const isWarning = notif.includes('⚠️');
                     const type = isSuccess ? 'success' : (isWarning ? 'warning' : 'error');
-                    
+
                     return (
                       <li key={idx} className={`notification-item notification-item--${type}`}>
                         {notif}

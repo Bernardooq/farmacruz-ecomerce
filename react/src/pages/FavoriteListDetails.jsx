@@ -160,6 +160,12 @@ export default function FavoriteListDetails() {
                     <div className="cart-item__info">
                       <h3 className="cart-item__title">{item.product_name}</h3>
                       <p className="cart-item__code">Cod: {item.product_codebar || 'N/A'}</p>
+                      
+                      {item.final_price && (
+                        <p className="cart-item__price text-primary fw-bold">
+                          ${item.final_price.toFixed(2)} MXN
+                        </p>
+                      )}
 
                       
                       {!item.is_active && (
@@ -175,20 +181,23 @@ export default function FavoriteListDetails() {
                       )}
                     </div>
 
-                    <div className="cart-item__quantity">
-                      <div className="d-flex items-center gap-2">
-                        <span className="text-sm text-secondary">Cant:</span>
-                        <input 
-                          type="number" 
-                          min="1" 
-                          className="input input--sm input--qty" 
-                          value={item.quantity}
-                          onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value) || 1)}
-                        />
-
-
+                      <div className="d-flex flex-column items-end gap-1">
+                        <div className="d-flex items-center gap-2">
+                          <span className="text-sm text-secondary">Cant:</span>
+                          <input 
+                            type="number" 
+                            min="1" 
+                            className="input input--sm input--qty" 
+                            value={item.quantity}
+                            onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value) || 1)}
+                          />
+                        </div>
+                        {item.final_price && (
+                          <span className="text-xs text-secondary">
+                            Subtotal: ${(item.final_price * item.quantity).toFixed(2)}
+                          </span>
+                        )}
                       </div>
-                    </div>
 
                     
                     <div className="cart-item__actions">

@@ -62,6 +62,8 @@ def _strip_admin_fields(order_dict: dict) -> dict:
     if "items" in order_dict:
         for item in order_dict["items"]:
             item.pop("price_without_iva", None)
+            item.pop("base_price", None)
+            item.pop("markup_percentage", None)
     return order_dict
 
 # === CARRITO DE COMPRAS ===

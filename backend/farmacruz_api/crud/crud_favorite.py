@@ -6,12 +6,28 @@ from typing import List, Optional
 from datetime import datetime, timezone
 from uuid import UUID
 
-from db.base import FavoriteList, FavoriteListItem, Product, CartCache
+from db.base import FavoriteList, FavoriteListItem, Product, CartCache, CustomerInfo, PriceListItem
 from schemas.favorite import FavoriteListCreate, FavoriteListUpdate, FavoriteListItemCreate
 from crud.crud_cart import add_to_cart
+from utils.price_utils import calculate_catalog_price
 
 def get_favorite_lists(db: Session, customer_id: int) -> List[FavoriteList]:
     return db.query(FavoriteList).filter(FavoriteList.customer_id == customer_id).all()
+
+def _enrich_favorite_item(db: Session, item: FavoriteListItem, customer_id: int):
+    """Calcula e inyecta el final_price en un item de favoritos para el cliente."""
+    customer_info = db.query(CustomerInfo).filter(CustomerInfo.customer_id == customer_id).first()
+    price_list_id = customer_info.price_list_id if customer_info else None
+    
+    if price_list_id and item.product:
+        price_item = db.query(PriceListItem).filter(
+            PriceListItem.price_list_id == price_list_id,
+            PriceListItem.product_id == item.product_id
+        ).first()
+        
+        if price_item:
+            item.final_price = float(calculate_catalog_price(item.product, price_item))
+    return item
 
 def get_favorite_list(db: Session, list_id: UUID, customer_id: int) -> Optional[FavoriteList]:
     return db.query(FavoriteList).filter(
@@ -41,6 +57,10 @@ def get_favorite_list_details(db: Session, list_id: UUID, customer_id: int, skip
     items = db.query(FavoriteListItem).filter(
         FavoriteListItem.list_id == list_id
     ).offset(skip).limit(limit).all()
+    
+    # Enriquecer items con el precio final para el cliente
+    for item in items:
+        _enrich_favorite_item(db, item, customer_id)
     
     # Construir objeto para el schema
     return {
@@ -117,7 +137,7 @@ def add_item_to_favorite_list(db: Session, list_id: UUID, customer_id: int, item
         existing_item.quantity = item_in.quantity # Seteamos la cantidad en lugar de incrementar para listas preestablecidas
         db.commit()
         db.refresh(existing_item)
-        return existing_item
+        return _enrich_favorite_item(db, existing_item, customer_id)
     
     try:
         db_item = FavoriteListItem(
@@ -128,14 +148,15 @@ def add_item_to_favorite_list(db: Session, list_id: UUID, customer_id: int, item
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
-        return db_item
+        return _enrich_favorite_item(db, db_item, customer_id)
     except IntegrityError:
         db.rollback()
         # Si llega aquí es porque otro proceso lo insertó justo antes
-        return db.query(FavoriteListItem).filter(
+        item = db.query(FavoriteListItem).filter(
             FavoriteListItem.list_id == list_id,
             FavoriteListItem.product_id == item_in.product_id
         ).first()
+        return _enrich_favorite_item(db, item, customer_id)
 
 
 def remove_item_from_favorite_list(db: Session, list_id: UUID, customer_id: int, product_id: str) -> bool:

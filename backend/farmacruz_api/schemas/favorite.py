@@ -23,6 +23,7 @@ class FavoriteListItem(FavoriteListItemBase):
     product_image_url: Optional[str] = None
 
     product_stock: Optional[int] = None
+    final_price: Optional[float] = None
     is_active: Optional[bool] = True
 
     class Config:

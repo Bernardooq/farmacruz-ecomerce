@@ -249,11 +249,11 @@ export default function InventoryManager() {
 
         <div className="filter-group">
           <label className="filter-group__label" htmlFor="filterSort">Orden:</label>
-          <select className="select" id="filterSort" value={`${sortBy}-${sortOrder}`} onChange={(e) => { 
+          <select className="select" id="filterSort" value={`${sortBy}-${sortOrder}`} onChange={(e) => {
             const [field, order] = e.target.value.split('-');
             setSortBy(field);
             setSortOrder(order);
-            setPage(0); 
+            setPage(0);
           }}>
             <option value="name-asc">Nombre (A-Z)</option>
             <option value="name-desc">Nombre (Z-A)</option>
