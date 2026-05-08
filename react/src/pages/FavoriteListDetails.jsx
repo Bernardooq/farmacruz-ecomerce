@@ -7,7 +7,7 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import { favoriteService } from '../services/favoriteService';
 import { useCart } from '../context/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faShoppingCart, faArrowLeft, faBox, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faShoppingCart, faArrowLeft, faBox, faSave, faEdit, faTimes } from '@fortawesome/free-solid-svg-icons';
 import PaginationButtons from '../components/common/PaginationButtons';
 
 
@@ -19,7 +19,7 @@ export default function FavoriteListDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { refreshCart } = useCart();
-  
+
   const [list, setList] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,7 +52,7 @@ export default function FavoriteListDetails() {
       await favoriteService.addFavoriteItem(id, productId, newQuantity);
       setList(prev => ({
         ...prev,
-        items: prev.items.map(item => 
+        items: prev.items.map(item =>
           item.product_id === productId ? { ...item, quantity: newQuantity } : item
         )
       }));
@@ -60,6 +60,7 @@ export default function FavoriteListDetails() {
       setError('No se pudo actualizar la cantidad');
     }
   };
+
 
   const handleRemoveItem = async (productId) => {
     if (!window.confirm('¿Eliminar producto de esta lista?')) return;
@@ -81,11 +82,11 @@ export default function FavoriteListDetails() {
       const result = await favoriteService.loadListToCart(id);
       await refreshCart();
       // Pasamos las notificaciones al carrito vía state para que se muestren allá
-      navigate('/cart', { 
-        state: { 
+      navigate('/cart', {
+        state: {
           importNotifications: result.notifications,
-          fromFavorites: true 
-        } 
+          fromFavorites: true
+        }
       });
     } catch (err) {
       setError(err.message || 'Error al cargar la lista al carrito');
@@ -108,20 +109,21 @@ export default function FavoriteListDetails() {
   return (
     <div className="page">
       <SearchBar />
-      
+
       <main className="page__content">
         <div className="page-container">
           <div className="mb-6">
-            <button 
-              className="btn btn--ghost btn--sm mb-4" 
+            <button
+              className="btn btn--ghost btn--sm mb-4"
               onClick={() => navigate('/favorites')}
             >
               <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
               Volver a mis listas
             </button>
-            <div className="d-flex items-center justify-between">
+            <div className="d-flex items-center justify-between flex-wrap gap-4">
               <h1 className="section-title mb-0">{list.name}</h1>
-              <button 
+
+              <button
                 className="btn btn--primary"
                 onClick={handleLoadToCart}
                 disabled={list.items.length === 0}
@@ -156,53 +158,53 @@ export default function FavoriteListDetails() {
                         <div className="cart-item__image-placeholder">💊</div>
                       )}
                     </div>
-                    
+
                     <div className="cart-item__info">
                       <h3 className="cart-item__title">{item.product_name}</h3>
                       <p className="cart-item__code">Cod: {item.product_codebar || 'N/A'}</p>
-                      
+
                       {item.final_price && (
                         <p className="cart-item__price text-primary fw-bold">
                           ${item.final_price.toFixed(2)} MXN
                         </p>
                       )}
 
-                      
+
                       {!item.is_active && (
-                         <p className="text-danger text-sm mt-1">
-                           ⚠️ Este producto ya no está activo.
-                         </p>
+                        <p className="text-danger text-sm mt-1">
+                          ⚠️ Este producto ya no está activo.
+                        </p>
                       )}
-                      
+
                       {item.product_stock === 0 && item.is_active && (
-                         <p className="text-warning text-sm mt-1">
-                           ⚠️ Producto sin stock temporalmente.
-                         </p>
+                        <p className="text-warning text-sm mt-1">
+                          ⚠️ Producto sin stock temporalmente.
+                        </p>
                       )}
                     </div>
 
-                      <div className="d-flex flex-column items-end gap-1">
-                        <div className="d-flex items-center gap-2">
-                          <span className="text-sm text-secondary">Cant:</span>
-                          <input 
-                            type="number" 
-                            min="1" 
-                            className="input input--sm input--qty" 
-                            value={item.quantity}
-                            onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value) || 1)}
-                          />
-                        </div>
-                        {item.final_price && (
-                          <span className="text-xs text-secondary">
-                            Subtotal: ${(item.final_price * item.quantity).toFixed(2)}
-                          </span>
-                        )}
+                    <div className="d-flex flex-column items-end gap-1">
+                      <div className="d-flex items-center gap-2">
+                        <span className="text-sm text-secondary">Cant:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          className="input input--sm input--qty"
+                          value={item.quantity}
+                          onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value) || 1)}
+                        />
                       </div>
+                      {item.final_price && (
+                        <span className="text-xs text-secondary">
+                          Subtotal: ${(item.final_price * item.quantity).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
 
-                    
+
                     <div className="cart-item__actions">
-                      <button 
-                        className="btn btn--icon btn--ghost text-danger" 
+                      <button
+                        className="btn btn--icon btn--ghost text-danger"
                         onClick={() => handleRemoveItem(item.product_id)}
                         title="Eliminar de la lista"
                       >
@@ -212,7 +214,7 @@ export default function FavoriteListDetails() {
                   </div>
                 ))}
               </div>
-              <PaginationButtons 
+              <PaginationButtons
                 onPrev={() => setPage(p => Math.max(0, p - 1))}
                 onNext={() => setPage(p => p + 1)}
                 canGoPrev={page > 0}

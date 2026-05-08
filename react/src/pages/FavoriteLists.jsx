@@ -8,7 +8,7 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import { favoriteService } from '../services/favoriteService';
 import { useCart } from '../context/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faShoppingCart, faListAlt } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faShoppingCart, faListAlt, faEdit, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 export default function FavoriteLists() {
   const [lists, setLists] = useState([]);
@@ -16,6 +16,9 @@ export default function FavoriteLists() {
   const [error, setError] = useState(null);
   const [newListName, setNewListName] = useState('');
   const [creating, setCreating] = useState(false);
+
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState('');
   
   const { refreshCart } = useCart();
   const navigate = useNavigate();
@@ -53,6 +56,30 @@ export default function FavoriteLists() {
     }
   };
 
+  const handleUpdateName = async (e, listId) => {
+    e.stopPropagation();
+    if (!editValue.trim()) return;
+    
+    try {
+      await favoriteService.updateFavoriteList(listId, editValue.trim());
+      setEditingId(null);
+      fetchLists();
+    } catch (err) {
+      setError(err.message || 'Error al actualizar el nombre');
+    }
+  };
+
+  const startEditing = (e, list) => {
+    e.stopPropagation();
+    setEditingId(list.list_id);
+    setEditValue(list.name);
+  };
+
+  const cancelEditing = (e) => {
+    e.stopPropagation();
+    setEditingId(null);
+  };
+
   const handleDeleteList = async (e, listId) => {
     e.stopPropagation(); // Evitar navegar a la lista
     if (!window.confirm('¿Estás seguro de eliminar esta lista?')) return;
@@ -68,12 +95,16 @@ export default function FavoriteLists() {
   const handleLoadToCart = async (e, listId) => {
     e.stopPropagation();
     try {
-      // Usar loading en estado local para esta fila si quisieramos, 
-      // por ahora bloqueamos la pantalla
       const result = await favoriteService.loadListToCart(listId);
       await refreshCart();
-      alert(`Se agregaron ${result.added_count} productos al carrito.\nRevisa las notificaciones en el carrito si hubo algún ajuste por stock.`);
-      navigate('/cart');
+      
+      // Mostrar notificaciones del carrito (esto ya lo manejamos centralizado en el Cart si lo mandamos por state)
+      navigate('/cart', { 
+        state: { 
+          importNotifications: result.notifications,
+          fromFavorites: true 
+        } 
+      });
     } catch (err) {
       setError(err.message || 'Error al cargar la lista al carrito');
     }
@@ -111,7 +142,7 @@ export default function FavoriteLists() {
 
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
-          <div className="card mb-6 p-4">
+          <div className="card mb-8 p-6 fav-list-create-card">
             <form onSubmit={handleCreateList} className="d-flex items-center gap-4">
               <input 
                 type="text" 
@@ -145,24 +176,53 @@ export default function FavoriteLists() {
               {lists.map(list => (
                 <div 
                   key={list.list_id} 
-                  className="card p-5 cursor-pointer hover-lift border-hover"
+                  className="fav-list-card"
                   onClick={() => navigate(`/favorites/${list.list_id}`)}
                 >
-                  <div className="d-flex items-start justify-between mb-4">
-                    <div className="d-flex items-center gap-3">
-                      <div className="icon-badge icon-badge--primary">
+                  <div className="fav-list-card__header">
+                    <div className="fav-list-card__info-group">
+                      <div className="fav-list-card__icon">
                         <FontAwesomeIcon icon={faListAlt} />
                       </div>
-                      <div>
-
-                        <h3 className="text-lg font-bold mb-0">{list.name}</h3>
-                        <span className="text-xs text-secondary font-medium">
-                          {list.items?.length || 0} productos guardados
-                        </span>
+                      <div className="fav-list-card__titles">
+                        {editingId === list.list_id ? (
+                          <div className="d-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <input 
+                              type="text" 
+                              className="input input--sm" 
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleUpdateName(e, list.list_id)}
+                              autoFocus
+                            />
+                            <button className="btn btn--primary btn--icon btn--xs" onClick={(e) => handleUpdateName(e, list.list_id)}>
+                              <FontAwesomeIcon icon={faSave} />
+                            </button>
+                            <button className="btn btn--secondary btn--icon btn--xs" onClick={cancelEditing}>
+                              <FontAwesomeIcon icon={faTimes} />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="d-flex items-center gap-2">
+                              <h3 className="fav-list-card__name">{list.name}</h3>
+                              <button 
+                                className="fav-list-card__edit-btn" 
+                                onClick={(e) => startEditing(e, list)}
+                                title="Editar nombre"
+                              >
+                                <FontAwesomeIcon icon={faEdit} />
+                              </button>
+                            </div>
+                            <span className="fav-list-card__count">
+                              {list.items?.length || 0} productos guardados
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <button 
-                      className="btn btn--icon btn--ghost text-danger opacity-0 hover-opacity-100 transition-all" 
+                      className="fav-list-card__delete-btn" 
                       onClick={(e) => handleDeleteList(e, list.list_id)}
                       title="Eliminar lista"
                     >
@@ -170,8 +230,8 @@ export default function FavoriteLists() {
                     </button>
                   </div>
                   
-                  <div className="d-flex items-center justify-between mt-6 pt-4 border-t border-dashed">
-                    <span className="text-xs text-secondary">
+                  <div className="fav-list-card__footer">
+                    <span className="fav-list-card__date">
                       Act: {new Date(list.updated_at).toLocaleDateString()}
                     </span>
                     <button 

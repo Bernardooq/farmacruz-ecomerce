@@ -192,8 +192,8 @@ export default function Cart() {
 
       <main className="page__content">
         <div className="page-container">
-          <div className="d-flex items-center justify-between mb-6">
-            <div className="d-flex items-center gap-4">
+          <div className="d-flex items-center justify-between flex-wrap gap-4 mb-6">
+            <div className="d-flex items-center flex-wrap gap-4">
               <h1 className="section-title mb-0">Mi Carrito</h1>
 
               <input
@@ -203,85 +203,88 @@ export default function Cart() {
                 accept=".xlsx, .xls"
                 onChange={handleFileChange}
               />
-              <button
-                className="btn btn--excel"
-                onClick={handleImportClick}
-                disabled={importing}
-              >
-                <FontAwesomeIcon icon={faFileExcel} />
-                {importing ? 'Importando...' : 'Importar Excel'}
-              </button>
+              <div className="d-flex items-center flex-wrap gap-2">
+                <button
+                  className="btn btn--excel"
+                  onClick={handleImportClick}
+                  disabled={importing}
+                >
+                  <FontAwesomeIcon icon={faFileExcel} />
+                  {importing ? 'Importando...' : 'Importar Excel'}
+                </button>
 
-              <HelpGuide
-                label={null}
-                icon={faQuestionCircle}
-                title="Ayuda: Importación Excel"
-                description={
-                  <div className="mt-2">
-                    <p className="mb-2">Ejemplo del formato esperado:</p>
-                    <table className="excel-simulator">
-                      <thead>
-                        <tr>
-                          <th></th>
-                          <th>A</th>
-                          <th>B</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="excel-simulator__header-row">
-                          <td className="excel-simulator__col-header">1</td>
-                          <td>Codigo Barras</td>
-                          <td>Cantidad</td>
-                        </tr>
-                        <tr>
-                          <td className="excel-simulator__col-header">2</td>
-                          <td>75010011</td>
-                          <td>12</td>
-                        </tr>
-                        <tr>
-                          <td className="excel-simulator__col-header">3</td>
-                          <td>75010022</td>
-                          <td>5</td>
-                        </tr>
-                        <tr>
-                          <td className="excel-simulator__col-header">4</td>
-                          <td>75010033</td>
-                          <td>24</td>
-                        </tr>
-                        <tr>
-                          <td className="excel-simulator__col-header">5</td>
-                          <td>75010044</td>
-                          <td>10</td>
-                        </tr>
-                        <tr>
-                          <td className="excel-simulator__col-header">6</td>
-                          <td>75010055</td>
-                          <td>8</td>
-                        </tr>
-                        <tr>
-                          <td className="excel-simulator__col-header">7</td>
-                          <td>75010066</td>
-                          <td>15</td>
-                        </tr>
-                        <tr>
-                          <td className="excel-simulator__col-header">...</td>
-                          <td className="text-center">...</td>
-                          <td className="text-center">...</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                }
-                items={[
-                  "Formato: El archivo debe ser .xlsx o .xls.",
-                  "Columnas: Solo necesitas dos columnas: Código de Barras (Columna A) y Cantidad (Columna B).",
-                  "Encabezado: No es obligatorio, el sistema lee desde la primera fila.",
-                  "Validación: El sistema verificará automáticamente el stock y si el producto está activo."
-                ]}
-              />
+                <HelpGuide
+                  label="¿Cómo importar mi Excel?"
+                  icon={faQuestionCircle}
+                  title="Ayuda: Importación Excel"
+                  description={
+                    <div className="mt-2">
+                      <p className="mb-2">Ejemplo del formato esperado:</p>
+                      <table className="excel-simulator">
+                        <thead>
+                          <tr>
+                            <th></th>
+                            <th>A</th>
+                            <th>B</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="excel-simulator__header-row">
+                            <td className="excel-simulator__col-header">1</td>
+                            <td>Codigo Barras</td>
+                            <td>Cantidad</td>
+                          </tr>
+                          <tr>
+                            <td className="excel-simulator__col-header">2</td>
+                            <td>75010011</td>
+                            <td>12</td>
+                          </tr>
+                          <tr>
+                            <td className="excel-simulator__col-header">3</td>
+                            <td>75010022</td>
+                            <td>5</td>
+                          </tr>
+                          <tr>
+                            <td className="excel-simulator__col-header">4</td>
+                            <td>75010033</td>
+                            <td>24</td>
+                          </tr>
+                          <tr>
+                            <td className="excel-simulator__col-header">5</td>
+                            <td>75010044</td>
+                            <td>10</td>
+                          </tr>
+                          <tr>
+                            <td className="excel-simulator__col-header">6</td>
+                            <td>75010055</td>
+                            <td>8</td>
+                          </tr>
+                          <tr>
+                            <td className="excel-simulator__col-header">7</td>
+                            <td>75010066</td>
+                            <td>15</td>
+                          </tr>
+                          <tr>
+                            <td className="excel-simulator__col-header">...</td>
+                            <td className="text-center">...</td>
+                            <td className="text-center">...</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                  items={[
+                    "Formato: El archivo debe ser .xlsx o .xls.",
+                    "Columnas: Solo necesitas dos columnas: Código de Barras (Columna A) y Cantidad (Columna B).",
+                    "Encabezado: No es obligatorio, el sistema lee desde la primera fila.",
+                    "Validación: El sistema verificará automáticamente el stock y si el producto está activo."
+                  ]}
+                />
+              </div>
             </div>
-            <HelpGuide
-              title="Guía del Carrito"
+            <div className="flex-shrink-0">
+              <HelpGuide
+                title="Guía del Carrito"
               items={[
                 "Cantidades: Puedes aumentar o disminuir la cantidad de cada producto. El sistema validará automáticamente si hay stock suficiente.",
                 "Eliminar: Haz clic en el icono de bote de basura si ya no deseas un producto.",
@@ -292,8 +295,9 @@ export default function Cart() {
               ]}
             />
           </div>
+        </div>
 
-          {/* Mensaje de error */}
+        {/* Mensaje de error */}
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
 
           {/* Estado: Carrito vacío */}
