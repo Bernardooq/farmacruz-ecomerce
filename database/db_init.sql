@@ -39,7 +39,6 @@ DROP TABLE IF EXISTS users CASCADE;
 -- EXTENSIONES NECESARIAS
 -- =====================================================
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 
 -- =====================================================
@@ -478,7 +477,7 @@ CREATE INDEX idx_ticket_messages_created_at ON ticket_messages (created_at ASC);
 -- TABLA: favoritelists (Listas de compras preestablecidas)
 -- =====================================================
 CREATE TABLE favoritelists (
-    list_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    list_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id INTEGER NOT NULL REFERENCES customers (customer_id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -496,7 +495,7 @@ CREATE INDEX idx_favoritelists_name_gin ON favoritelists USING gin (name gin_trg
 -- TABLA: favoritelistitems (Productos en las listas)
 -- =====================================================
 CREATE TABLE favoritelistitems (
-    list_item_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    list_item_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     list_id UUID NOT NULL REFERENCES favoritelists (list_id) ON DELETE CASCADE,
     product_id VARCHAR(50) NOT NULL REFERENCES products (product_id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
