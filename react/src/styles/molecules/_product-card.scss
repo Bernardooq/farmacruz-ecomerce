@@ -223,14 +223,14 @@
         z-index: 10;
         border: none;
         cursor: pointer;
-        color: var(--color-danger);
+        color: var(--color-text-muted); // Gris neutro por defecto
         @include transition;
 
         &:hover {
             transform: scale(1.1);
             background: #fff;
             box-shadow: var(--shadow-md);
-            color: #ff3b30; // Un rojo más vibrante
+            color: var(--color-primary); // Azul/Teal al pasar el mouse
         }
 
         &:active {

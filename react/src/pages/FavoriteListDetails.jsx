@@ -18,7 +18,8 @@ export default function FavoriteListDetails() {
 
   const { id } = useParams();
   const navigate = useNavigate();
-  const { refreshCart } = useCart();
+  const { addToCart, refreshCart } = useCart();
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const [list, setList] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +47,8 @@ export default function FavoriteListDetails() {
   }, [id, page]);
 
 
+  const [tempQuantities, setTempQuantities] = useState({});
+
   const handleUpdateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
     try {
@@ -59,6 +62,20 @@ export default function FavoriteListDetails() {
     } catch (err) {
       setError('No se pudo actualizar la cantidad');
     }
+  };
+
+  const handleTempQuantityChange = (productId, value) => {
+    setTempQuantities(prev => ({ ...prev, [productId]: value }));
+  };
+
+  const handleQuantityBlur = (productId, finalValue) => {
+    const qty = parseInt(finalValue) || 1;
+    handleUpdateQuantity(productId, qty);
+    setTempQuantities(prev => {
+      const next = { ...prev };
+      delete next[productId];
+      return next;
+    });
   };
 
 
@@ -90,6 +107,17 @@ export default function FavoriteListDetails() {
       });
     } catch (err) {
       setError(err.message || 'Error al cargar la lista al carrito');
+    }
+  };
+
+  const handleAddToCartIndividual = async (product) => {
+    try {
+      setError(null);
+      await addToCart(product.product_id, product.quantity);
+      setSuccessMessage(`¡${product.product_name} agregado al carrito!`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setError(err.message || 'Error al agregar al carrito');
     }
   };
 
@@ -135,6 +163,12 @@ export default function FavoriteListDetails() {
           </div>
 
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
+          {successMessage && (
+            <div className="alert alert--success mb-4 d-flex justify-between items-center">
+              <span>{successMessage}</span>
+              <button className="btn btn--ghost btn--sm" onClick={() => setSuccessMessage(null)}>&times;</button>
+            </div>
+          )}
 
           {list.items.length === 0 ? (
             <div className="empty-state">
@@ -190,8 +224,12 @@ export default function FavoriteListDetails() {
                           type="number"
                           min="1"
                           className="input input--sm input--qty"
-                          value={item.quantity}
-                          onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value) || 1)}
+                          value={tempQuantities[item.product_id] !== undefined ? tempQuantities[item.product_id] : item.quantity}
+                          onChange={(e) => handleTempQuantityChange(item.product_id, e.target.value)}
+                          onBlur={(e) => handleQuantityBlur(item.product_id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleQuantityBlur(item.product_id, e.target.value);
+                          }}
                         />
                       </div>
                       {item.final_price && (
@@ -202,7 +240,15 @@ export default function FavoriteListDetails() {
                     </div>
 
 
-                    <div className="cart-item__actions">
+                    <div className="cart-item__actions d-flex gap-2">
+                      <button
+                        className="btn btn--icon btn--ghost text-primary"
+                        onClick={() => handleAddToCartIndividual(item)}
+                        title="Agregar solo este producto al carrito"
+                        disabled={!item.is_active || item.product_stock === 0}
+                      >
+                        <FontAwesomeIcon icon={faShoppingCart} />
+                      </button>
                       <button
                         className="btn btn--icon btn--ghost text-danger"
                         onClick={() => handleRemoveItem(item.product_id)}

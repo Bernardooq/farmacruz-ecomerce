@@ -3,7 +3,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { getProductImageUrl } from '../../utils/imageUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark } from '@fortawesome/free-solid-svg-icons';
 import ModalAddFavorite from '../modals/products/ModalAddFavorite';
 
 const MESSAGE_TIMEOUT = 3000;
@@ -78,9 +78,9 @@ export default function ProductCard({ product, onProductClick }) {
             e.stopPropagation();
             setShowFavoriteModal(true);
           }}
-          title="Guardar en Favoritos"
+          title="Guardar en una lista"
         >
-          <FontAwesomeIcon icon={faHeart} />
+          <FontAwesomeIcon icon={faBookmark} />
         </button>
       )}
 
