@@ -7,8 +7,8 @@ const API_CONFIG = {
   // Solo usa HTTP para desarrollo local (localhost).
 
   // Desarrollo local (usa HTTP)
-  BASE_URL: 'http://localhost:8000',
-  // BASE_URL: 'https://api.farmacruz.com.mx',
+  // BASE_URL: 'http://localhost:8000',
+  BASE_URL: 'https://api.farmacruz.com.mx',
 
   API_VERSION: '/api/v1',
   TIMEOUT: 10000,
