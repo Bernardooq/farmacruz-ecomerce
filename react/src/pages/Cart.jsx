@@ -17,7 +17,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileExcel, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import { faFileExcel, faQuestionCircle, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 
 
 import { useCart } from '../context/CartContext';
@@ -41,7 +41,7 @@ export default function Cart() {
   // ============================================
   // HOOKS & STATE
   // ============================================
-  const { items, loading, updateQuantity, removeItem, checkout, refreshCart, importFromExcel } = useCart();
+  const { items, loading, updateQuantity, removeItem, clearCart, checkout, refreshCart, importFromExcel } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -109,6 +109,19 @@ export default function Cart() {
     } catch (err) {
       setError('Error al eliminar producto. Intenta de nuevo.');
       console.error('Failed to remove item:', err);
+    }
+  };
+
+  const handleClearCart = async () => {
+    if (items.length === 0) return;
+    if (!window.confirm('¿Estás seguro de que deseas vaciar todo tu carrito?')) return;
+    
+    try {
+      setError(null);
+      await clearCart();
+    } catch (err) {
+      setError('Error al vaciar el carrito. Intenta de nuevo.');
+      console.error('Failed to clear cart:', err);
     }
   };
 
@@ -193,9 +206,9 @@ export default function Cart() {
       <main className="page__content">
         <div className="page-container">
           <div className="d-flex items-center justify-between flex-wrap gap-4 mb-6">
-            <div className="d-flex items-center flex-wrap gap-4">
-              <h1 className="section-title mb-0">Mi Carrito</h1>
+            <h1 className="section-title mb-0">Mi Carrito</h1>
 
+            <div className="d-flex items-center flex-wrap gap-3">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -203,7 +216,9 @@ export default function Cart() {
                 accept=".xlsx, .xls"
                 onChange={handleFileChange}
               />
-              <div className="d-flex items-center flex-wrap gap-2">
+              
+              {/* Grupo de Importación */}
+              <div className="d-flex items-center gap-2">
                 <button
                   className="btn btn--excel"
                   onClick={handleImportClick}
@@ -214,7 +229,7 @@ export default function Cart() {
                 </button>
 
                 <HelpGuide
-                  label="¿Cómo importar mi Excel?"
+                  label="¿Cómo importar?"
                   icon={faQuestionCircle}
                   title="Ayuda: Importación Excel"
                   description={
@@ -281,21 +296,32 @@ export default function Cart() {
                   ]}
                 />
               </div>
-            </div>
-            <div className="flex-shrink-0">
+
+              {/* Botón de Vaciar */}
+              {items.length > 0 && (
+                <button
+                  className="btn btn--danger"
+                  onClick={handleClearCart}
+                >
+                  <FontAwesomeIcon icon={faTrashAlt} />
+                  Vaciar Carrito
+                </button>
+              )}
+
+              {/* Ayuda General */}
               <HelpGuide
-                title="Guía del Carrito"
-              items={[
-                "Cantidades: Puedes aumentar o disminuir la cantidad de cada producto. El sistema validará automáticamente si hay stock suficiente.",
-                "Eliminar: Haz clic en el icono de bote de basura si ya no deseas un producto.",
-                "Dirección: Al finalizar el pedido, podrás elegir entre tus direcciones registradas.",
-                "Pagos: Una vez realizado el pago de tu pedido, este será validado y enviado. Puedes contactar a tu agente de marketing asignado para acelerar el proceso o simplemente esperar a que nuestro equipo te contacte.",
-                "Finalizar: Haz clic en 'Finalizar Pedido' para enviar tu orden y recibir las instrucciones de pago.",
-                "Notas: Puedes agregar comentarios especiales a tu pedido (ej: fechas de caducidad específicas)."
-              ]}
-            />
+                title="Ayuda"
+                items={[
+                  "Cantidades: Puedes aumentar o disminuir la cantidad de cada producto. El sistema validará automáticamente si hay stock suficiente.",
+                  "Eliminar: Haz clic en el icono de bote de basura si ya no deseas un producto.",
+                  "Dirección: Al finalizar el pedido, podrás elegir entre tus direcciones registradas.",
+                  "Pagos: Una vez realizado el pago de tu pedido, este será validado y enviado. Puedes contactar a tu agente de marketing asignado para acelerar el proceso o simplemente esperar a que nuestro equipo te contacte.",
+                  "Finalizar: Haz clic en 'Finalizar Pedido' para enviar tu orden y recibir las instrucciones de pago.",
+                  "Notas: Puedes agregar comentarios especiales a tu pedido (ej: fechas de caducidad específicas)."
+                ]}
+              />
+            </div>
           </div>
-        </div>
 
         {/* Mensaje de error */}
           {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
