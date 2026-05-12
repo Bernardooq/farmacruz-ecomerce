@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { formatCurrency } from '../../utils/formatUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
@@ -9,9 +10,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function SummaryCards({ summary = {}, showTitles = true }) {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount || 0);
-  };
 
   // Visibility Flags (useMemo ensures visibility during minification/build)
   const visibility = useMemo(() => {

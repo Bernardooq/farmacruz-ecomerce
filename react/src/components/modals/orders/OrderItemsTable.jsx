@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency } from '../../../utils/formatUtils';
 
 export default function OrderItemsTable({ items, onQuantityChange, onQuantityBlur, onRemoveItem, loading }) {
     const calculateTotal = () => items.reduce((sum, item) => sum + (item.final_price * item.quantity), 0);
@@ -31,11 +32,11 @@ export default function OrderItemsTable({ items, onQuantityChange, onQuantityBlu
                                             {item.product?.description || item.description || item.product?.descripcion_2 || '—'}
                                         </span>
                                     </td>
-                                    <td data-label="Precio Unit.">${parseFloat(item.final_price).toFixed(2)}</td>
+                                    <td data-label="Precio Unit.">{formatCurrency(item.final_price)}</td>
                                     <td data-label="Cantidad">
                                         <input className="input input--sm" type="number" value={item.quantity} onChange={(e) => onQuantityChange(index, e.target.value)} onBlur={() => onQuantityBlur?.(index)} min="1" disabled={loading} style={{ width: '80px' }} />
                                     </td>
-                                    <td data-label="Subtotal">${(item.final_price * item.quantity).toFixed(2)}</td>
+                                    <td data-label="Subtotal">{formatCurrency(item.final_price * item.quantity)}</td>
                                     <td data-label="Acciones">
                                         <button className="btn btn--icon btn--danger" onClick={() => onRemoveItem(index)} title="Eliminar producto" disabled={loading}>
                                             <FontAwesomeIcon icon={faTrash} />
@@ -48,7 +49,7 @@ export default function OrderItemsTable({ items, onQuantityChange, onQuantityBlu
                 </table>
             </div>
             <div className="text-right text-lg font-bold mt-4">
-                Total: ${calculateTotal().toFixed(2)}
+                Total: {formatCurrency(calculateTotal())}
             </div>
         </>
     );

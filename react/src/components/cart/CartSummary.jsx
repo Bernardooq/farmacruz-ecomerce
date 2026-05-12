@@ -1,3 +1,5 @@
+import { formatCurrency } from '../../utils/formatUtils';
+
 export default function CartSummary({
   items,
   onCheckout,
@@ -24,7 +26,7 @@ export default function CartSummary({
       {/* Subtotal */}
       <div className="cart-summary-card__row">
         <span>Subtotal:</span>
-        <span>${subtotal.toFixed(2)}</span>
+        <span>{formatCurrency(subtotal)}</span>
       </div>
 
       <div className="cart-summary-card__row">
@@ -35,7 +37,7 @@ export default function CartSummary({
       {/* Total (sin costo de envío visible para clientes) */}
       <div className="cart-summary-card__row cart-summary-card__row--total">
         <span>Total:</span>
-        <span>${total.toFixed(2)}</span>
+        <span>{formatCurrency(total)}</span>
       </div>
 
       {/* Botón de Checkout */}

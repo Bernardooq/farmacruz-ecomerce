@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatCurrency } from '../utils/formatUtils';
 import { useParams, useNavigate } from 'react-router-dom';
 import SearchBar from '../components/layout/SearchBar';
 import Footer from '../components/layout/Footer';
@@ -199,7 +200,7 @@ export default function FavoriteListDetails() {
 
                       {item.final_price && (
                         <p className="cart-item__price text-primary fw-bold">
-                          ${item.final_price.toFixed(2)} MXN
+                          {formatCurrency(item.final_price)} MXN
                         </p>
                       )}
 
@@ -234,7 +235,7 @@ export default function FavoriteListDetails() {
                       </div>
                       {item.final_price && (
                         <span className="text-xs text-secondary">
-                          Subtotal: ${(item.final_price * item.quantity).toFixed(2)}
+                          Subtotal: {formatCurrency(item.final_price * item.quantity)}
                         </span>
                       )}
                     </div>

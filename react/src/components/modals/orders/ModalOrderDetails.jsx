@@ -1,8 +1,9 @@
+import { formatCurrency } from '../../../utils/formatUtils';
+
 export default function ModalOrderDetails({ visible, order, isAdmin = false, isStaff = false, onClose }) {
   if (!order) return null;
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
   const getStatusLabel = (status) => ({ 'pending_validation': 'Pendiente de Validación', 'approved': 'Aprobado', 'shipped': 'Enviado', 'delivered': 'Entregado', 'cancelled': 'Cancelado' }[status] || status);
 
@@ -20,7 +21,7 @@ export default function ModalOrderDetails({ visible, order, isAdmin = false, isS
 
   return (
     <div className={`modal-overlay ${visible ? '' : 'hidden'}`}>
-      <div className="modal modal--lg">
+      <div className="modal modal--xl">
         <div className="modal__header">
           <h2>Detalles del Pedido #{order.order_id}</h2>
           <button className="modal__close" onClick={onClose} aria-label="Cerrar modal">&times;</button>

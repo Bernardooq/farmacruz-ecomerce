@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { formatCurrency } from '../utils/formatUtils';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/layout/SearchBar';
@@ -122,7 +123,7 @@ export default function Profile() {
         id: `FC-${order.order_id}`,
         orderId: order.order_id,
         date: new Date(order.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }),
-        total: `$${parseFloat(order.total_amount).toFixed(2)} MXN`,
+        total: `${formatCurrency(order.total_amount)} MXN`,
         totalAmount: parseFloat(order.total_amount),
         subtotal: (order.items || []).reduce((sum, item) => sum + (parseFloat(item.final_price) * item.quantity), 0),
         shippingCost: parseFloat(order.shipping_cost || 0),

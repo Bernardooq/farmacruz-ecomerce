@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrashAlt, faBoxes, faEye } from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency } from '../../utils/formatUtils';
 
 const LOW_STOCK_THRESHOLD = 10;
 const DEFAULT_IVA = 16;
@@ -33,7 +34,7 @@ export default function ProductRow({
       <td data-label="Producto">{product.name}</td>
       <td data-label="codebar">{product.codebar}</td>
       <td data-label="Categoría">{product.category?.name || 'N/A'}</td>
-      {isAdmin && <td data-label="Precio Base">${basePrice.toFixed(2)}</td>}
+      {isAdmin && <td data-label="Precio Base">{formatCurrency(basePrice)}</td>}
       <td data-label="IVA">
         {ivaPercentage.toFixed(0)}%
       </td>

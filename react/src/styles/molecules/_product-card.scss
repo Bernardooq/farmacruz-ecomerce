@@ -81,6 +81,21 @@
         font-weight: var(--font-medium);
     }
 
+    &__location {
+        font-size: var(--text-xs);
+        color: var(--color-primary); // Using primary color to make it subtly stand out
+        background: var(--color-primary-light, rgba(var(--color-primary-rgb), 0.1));
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        display: inline-block;
+        width: fit-content;
+        margin-top: -2px;
+        
+        strong {
+            font-weight: var(--font-bold);
+        }
+    }
+
     &__stock {
         font-size: var(--text-xs);
         color: var(--color-text-muted);

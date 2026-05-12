@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { getProductImageUrl } from '../../utils/imageUtils';
+import { formatCurrency } from '../../utils/formatUtils';
 
 const MSG_TIMEOUT = 2500;
 
@@ -176,6 +177,14 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                     const { product, similarity_score } = item;
                     const similarityPercent = Math.round(similarity_score * 100);
 
+                    // Extract "Caja" info from description
+                    const extractCaja = (desc) => {
+                        if (!desc) return null;
+                        const match = desc.match(/Caja:\s*([^|]+)/i);
+                        return match ? match[1].trim() : null;
+                    };
+                    const cajaInfo = extractCaja(product.description);
+
                     return (
                         <div key={product.product_id} className="similar-product-card">
                             <div className="similar-product-card__image">
@@ -191,6 +200,12 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                             <div className="similar-product-card__content">
                                 <h4 className="similar-product-card__name">{product.name}</h4>
 
+                                {cajaInfo && (
+                                    <div className="similar-product-card__location">
+                                        Caja: {cajaInfo}
+                                    </div>
+                                )}
+
                                 {product.descripcion_2 && (
                                     <p className="similar-product-card__components">{product.descripcion_2}</p>
                                 )}
@@ -202,7 +217,7 @@ export default function SimilarProducts({ productId, onProductSelect }) {
                                 <div className="similar-product-card__price">
                                     <span className="price-label">Precio:</span>
                                     <span className="price-value">
-                                        {product.final_price != null ? `$${product.final_price.toFixed(2)}` : 'No disponible'}
+                                        {product.final_price != null ? formatCurrency(product.final_price) : 'No disponible'}
                                     </span>
                                 </div>
 

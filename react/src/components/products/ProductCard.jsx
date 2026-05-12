@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getProductImageUrl } from '../../utils/imageUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency } from '../../utils/formatUtils';
 import ModalAddFavorite from '../modals/products/ModalAddFavorite';
 
 const MESSAGE_TIMEOUT = 3000;
@@ -21,8 +22,17 @@ export default function ProductCard({ product, onProductClick }) {
 
   const {
     product_id, image_url, name, category_id,
-    stock_count, is_active, final_price, base_price
+    stock_count, is_active, final_price, base_price, description
   } = product;
+
+  // Extract "Caja" info from description (e.g., "Costo Público: 360.19 | Caja: CAJA192")
+  const extractCaja = (desc) => {
+    if (!desc) return null;
+    const match = desc.match(/Caja:\s*([^|]+)/i);
+    return match ? match[1].trim() : null;
+  };
+
+  const cajaInfo = extractCaja(description);
 
   const isAvailable = stock_count > 0 && is_active;
   const displayPrice = final_price !== null && final_price !== undefined ? final_price : base_price;
@@ -96,10 +106,16 @@ export default function ProductCard({ product, onProductClick }) {
           {product.category?.name ?? `Categoría ${product.category_id}`}
         </p>
 
+        {cajaInfo && (
+          <p className="product-card__location">
+            <strong>Caja:</strong> {cajaInfo}
+          </p>
+        )}
+
         {displayPrice !== undefined && displayPrice !== null && (
           <div className="product-card__price-container">
             <p className="product-card__price">
-              ${Number(displayPrice).toFixed(2)} MXN
+              {formatCurrency(displayPrice)} MXN
             </p>
             {final_price !== undefined && (
               <small className="product-card__price-label">{priceLabel}</small>

@@ -1,3 +1,5 @@
+import { formatCurrency } from '../../utils/formatUtils';
+
 export default function OrderModal({ order, onClose }) {
   if (!order) return null;
 
@@ -8,12 +10,12 @@ export default function OrderModal({ order, onClose }) {
         if (typeof item === 'string') {
           return `<tr><td>${i + 1}</td><td colspan="3">${item}</td></tr>`;
         } else {
-          return `<tr><td>${i + 1}</td><td>${item.name}</td><td style="text-align:center;">${item.price.toFixed(2)}</td><td style="text-align:center;">${item.quantity}</td><td style="text-align:right;">${item.subtotal.toFixed(2)}</td></tr>`;
+          return `<tr><td>${i + 1}</td><td>${item.name}</td><td style="text-align:center;">${formatCurrency(item.price)}</td><td style="text-align:center;">${item.quantity}</td><td style="text-align:right;">${formatCurrency(item.subtotal)}</td></tr>`;
         }
       }).join('')
       : '<tr><td colspan="5" style="text-align:center;">No hay artículos en este pedido</td></tr>';
 
-    const content = `<!DOCTYPE html><html><head><title>Pedido ${order.id}</title><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;padding:40px;max-width:900px;margin:0 auto;color:#333}h1{color:#2c3e50;border-bottom:3px solid #3498db;padding-bottom:10px;margin-bottom:30px}.info-section{margin:20px 0;padding:15px;background-color:#f8f9fa;border-radius:5px}.info-row{display:flex;padding:8px 0;border-bottom:1px solid #eee}.info-row:last-child{border-bottom:none}.info-label{font-weight:bold;width:180px;color:#555}.items-table{width:100%;border-collapse:collapse;margin-top:20px}.items-table th,.items-table td{border:1px solid #ddd;padding:12px;text-align:left}.items-table th{background-color:#3498db;color:white;font-weight:bold;text-align:center}.items-table tr:nth-child(even){background-color:#f8f9fa}.total-section{margin-top:30px;text-align:right;font-size:1.1em}.total-row{padding:8px 0;border-bottom:1px solid #ddd}.total-amount{font-weight:bold;color:#27ae60;font-size:1.3em;padding-top:10px}@media print{body{padding:20px}}</style></head><body><h1>Detalles del Pedido</h1><div class="info-section"><div class="info-row"><span class="info-label">Número de Pedido:</span><span>${order.id}</span></div><div class="info-row"><span class="info-label">Fecha:</span><span>${order.date}</span></div><div class="info-row"><span class="info-label">Estado:</span><span>${order.status}</span></div>${order.shippingAddress ? `<div class="info-row"><span class="info-label">Dirección de Envío:</span><span>${order.shippingAddress}</span></div>` : ''}</div><h2>Artículos del Pedido</h2><table class="items-table"><thead><tr><th style="width:50px;">#</th><th>Producto</th><th style="width:120px;">Precio Unit.</th><th style="width:100px;">Cantidad</th><th style="width:120px;">Subtotal</th></tr></thead><tbody>${itemsHTML}</tbody></table><div class="total-section"><div class="total-row"><span class="info-label">Subtotal Productos:</span><span>${order.subtotal?.toFixed(2) || '0.00'} MXN</span></div><div class="total-row"><span class="info-label">Costo de Envío:</span><span>${order.shippingCost?.toFixed(2) || '0.00'} MXN</span></div><div class="total-amount"><span class="info-label">Total:</span><span>${order.totalAmount?.toFixed(2) || order.total} MXN</span></div></div><script>window.onload=function(){window.print();}</script></body></html>`;
+    const content = `<!DOCTYPE html><html><head><title>Pedido ${order.id}</title><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;padding:40px;max-width:900px;margin:0 auto;color:#333}h1{color:#2c3e50;border-bottom:3px solid #3498db;padding-bottom:10px;margin-bottom:30px}.info-section{margin:20px 0;padding:15px;background-color:#f8f9fa;border-radius:5px}.info-row{display:flex;padding:8px 0;border-bottom:1px solid #eee}.info-row:last-child{border-bottom:none}.info-label{font-weight:bold;width:180px;color:#555}.items-table{width:100%;border-collapse:collapse;margin-top:20px}.items-table th,.items-table td{border:1px solid #ddd;padding:12px;text-align:left}.items-table th{background-color:#3498db;color:white;font-weight:bold;text-align:center}.items-table tr:nth-child(even){background-color:#f8f9fa}.total-section{margin-top:30px;text-align:right;font-size:1.1em}.total-row{padding:8px 0;border-bottom:1px solid #ddd}.total-amount{font-weight:bold;color:#27ae60;font-size:1.3em;padding-top:10px}@media print{body{padding:20px}}</style></head><body><h1>Detalles del Pedido</h1><div class="info-section"><div class="info-row"><span class="info-label">Número de Pedido:</span><span>${order.id}</span></div><div class="info-row"><span class="info-label">Fecha:</span><span>${order.date}</span></div><div class="info-row"><span class="info-label">Estado:</span><span>${order.status}</span></div>${order.shippingAddress ? `<div class="info-row"><span class="info-label">Dirección de Envío:</span><span>${order.shippingAddress}</span></div>` : ''}</div><h2>Artículos del Pedido</h2><table class="items-table"><thead><tr><th style="width:50px;">#</th><th>Producto</th><th style="width:120px;">Precio Unit.</th><th style="width:100px;">Cantidad</th><th style="width:120px;">Subtotal</th></tr></thead><tbody>${itemsHTML}</tbody></table><div class="total-section"><div class="total-row"><span class="info-label">Subtotal Productos:</span><span>${formatCurrency(order.subtotal || 0)} MXN</span></div><div class="total-row"><span class="info-label">Costo de Envío:</span><span>${formatCurrency(order.shippingCost || 0)} MXN</span></div><div class="total-amount"><span class="info-label">Total:</span><span>${formatCurrency(order.totalAmount || order.total || 0)} MXN</span></div></div><script>window.onload=function(){window.print();}</script></body></html>`;
 
     printWindow.document.write(content);
     printWindow.document.close();
@@ -71,9 +73,9 @@ export default function OrderModal({ order, onClose }) {
                         <tr key={i}>
                           <td>{i + 1}</td>
                           <td>{item.name}</td>
-                          <td className="text-center">${item.price.toFixed(2)}</td>
+                          <td className="text-center">{formatCurrency(item.price)}</td>
                           <td className="text-center">{item.quantity}</td>
-                          <td className="text-right">${item.subtotal.toFixed(2)}</td>
+                          <td className="text-right">{formatCurrency(item.subtotal)}</td>
                         </tr>
                       );
                     }
@@ -89,15 +91,15 @@ export default function OrderModal({ order, onClose }) {
           <div className="order-summary mt-4">
             <div className="order-summary__row">
               <span>Subtotal Productos:</span>
-              <span>${order.subtotal?.toFixed(2) || '0.00'} MXN</span>
+              <span>{formatCurrency(order.subtotal || 0)} MXN</span>
             </div>
             <div className="order-summary__row">
               <span>Costo de Envío:</span>
-              <span>${order.shippingCost?.toFixed(2) || '0.00'} MXN</span>
+              <span>{formatCurrency(order.shippingCost || 0)} MXN</span>
             </div>
             <div className="order-summary__row order-summary__total">
               <strong>Total:</strong>
-              <span className="order-summary__total-amount">${order.totalAmount?.toFixed(2) || order.total} MXN</span>
+              <span className="order-summary__total-amount">{formatCurrency(order.totalAmount || order.total || 0)} MXN</span>
             </div>
           </div>
         </div>

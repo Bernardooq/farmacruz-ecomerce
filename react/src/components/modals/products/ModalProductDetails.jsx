@@ -3,6 +3,7 @@ import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../context/AuthContext';
 import SimilarProducts from '../../products/SimilarProducts';
 import { getProductImageUrl } from '../../../utils/imageUtils';
+import { formatCurrency } from '../../../utils/formatUtils';
 
 const MESSAGE_TIMEOUT = 3000;
 const SUCCESS_CLOSE_DELAY = 1500;
@@ -65,7 +66,7 @@ export default function ModalProductDetails({ product, isOpen, onClose, onProduc
               <div>
                 <span className="product-details__codebar">Codigo: {product.codebar}</span>
               </div>
-              <div className="product-details__price">${Number(product.final_price || product.base_price || 0).toFixed(2)} MXN</div>
+              <div className="product-details__price">{formatCurrency(product.final_price || product.base_price || 0)} MXN</div>
 
               <div className={`stock-badge ${isAvailable ? 'stock-badge--in-stock' : 'stock-badge--out-of-stock'}`}>
                 {isAvailable ? (

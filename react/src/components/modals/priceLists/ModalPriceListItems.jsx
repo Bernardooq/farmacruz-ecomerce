@@ -4,6 +4,7 @@ import { faSearch, faPlus, faTrashAlt, faPencilAlt, faCheck, faTimes } from '@fo
 import priceListService from '../../../services/priceListService';
 import LoadingSpinner from '../../common/LoadingSpinner';
 import ErrorMessage from '../../common/ErrorMessage';
+import { formatCurrency, formatNumber } from '../../../utils/formatUtils';
 import PaginationButtons from '../../common/PaginationButtons';
 
 
@@ -136,7 +137,7 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                         <div className="product-card__info">
                           <div className="product-card__name">{product.name}</div>
                           <div className="product-card__meta">Codigo de barras: {product.codebar}</div>
-                          <div className="product-card__price">Precio Base: ${parseFloat(product.base_price).toFixed(2)}</div>
+                          <div className="product-card__price">Precio Base: {formatCurrency(product.base_price)}</div>
                         </div>
                         <div className="product-card__actions justify-between">
                           <input className="input input--sm" type="number" placeholder="Markup %" value={newItemMarkup[product.product_id] || ''} onChange={(e) => setNewItemMarkup(prev => ({ ...prev, [product.product_id]: e.target.value }))} step="0.01" min="0" style={{ width: '90px' }} />
@@ -180,16 +181,16 @@ export default function ModalPriceListItems({ isOpen, onClose, priceList }) {
                           <div className="product-card__info">
                             <div className="product-card__name">{item.product?.name}</div>
                             <div className="product-card__meta">Codigo de barras: {item.product?.codebar}</div>
-                            <div className="product-card__price text-sm">Base: ${basePrice.toFixed(2)}</div>
+                            <div className="product-card__price text-sm">Base: {formatCurrency(basePrice)}</div>
                             <div className="product-card__meta my-1">
                               {isEditing ? (
                                 <input className="input input--sm" type="number" value={editMarkup} onChange={(e) => setEditMarkup(e.target.value)} step="0.01" min="0" autoFocus style={{ width: '90px' }} />
                               ) : (
-                                <span>Markup: {markup.toFixed(2)}% (${markupAmount.toFixed(2)})</span>
+                                <span>Markup: {formatNumber(markup)}% ({formatCurrency(markupAmount)})</span>
                               )}
                             </div>
-                            <div className="product-card__meta">IVA: {ivaPercentage.toFixed(0)}% (${ivaAmount.toFixed(2)})</div>
-                            <div className="product-card__price"><strong>Final: ${finalPriceWithIva.toFixed(2)}</strong></div>
+                            <div className="product-card__meta">IVA: {ivaPercentage.toFixed(0)}% ({formatCurrency(ivaAmount)})</div>
+                            <div className="product-card__price"><strong>Final: {formatCurrency(finalPriceWithIva)}</strong></div>
                           </div>
                           <div className="product-card__actions justify-end">
                             {isEditing ? (

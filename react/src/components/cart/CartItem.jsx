@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { getProductImageUrl } from '../../utils/imageUtils';
+import { formatCurrency } from '../../utils/formatUtils';
 
 export default function CartItem({ item, onQuantityChange, onRemove }) {
   // ============================================
@@ -32,7 +33,7 @@ export default function CartItem({ item, onQuantityChange, onRemove }) {
   // ============================================
   // CALCULATIONS
   // ============================================
-  const total = (price * quantity).toFixed(2);
+  const total = price * quantity;
 
   // ============================================
   // EVENT HANDLERS
@@ -80,7 +81,7 @@ export default function CartItem({ item, onQuantityChange, onRemove }) {
 
       <div className="cart-item__info">
         <h3 className="cart-item__name">{name}</h3>
-        <p className="cart-item__price">${price.toFixed(2)} MXN</p>
+        <p className="cart-item__price">{formatCurrency(price)} MXN</p>
       </div>
 
       {/* Selector de cantidad */}
@@ -120,7 +121,7 @@ export default function CartItem({ item, onQuantityChange, onRemove }) {
       </div>
 
       {/* Total del item */}
-      <p className="cart-item__price">${total}</p>
+      <p className="cart-item__price">{formatCurrency(total)}</p>
 
       {/* Botón remover */}
       <button

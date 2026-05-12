@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 import { getProductImageUrl } from '../../utils/imageUtils';
+import { formatCurrency } from '../../utils/formatUtils';
 
 /**
  * ProductCardAdmin Component
@@ -61,7 +62,7 @@ export default function ProductCardAdmin({ product, onAddToOrder, onShowSimilar 
                 {/* Precio y stock en una fila */}
                 <div className="product-card__price-row">
                     <p className="product-card__price">
-                        ${Number(product.final_price || product.base_price).toFixed(2)}
+                        {formatCurrency(product.final_price || product.base_price)}
                     </p>
                     <p className={`product-card__stock ${isOutOfStock ? 'product-card__stock--out' : ''}`}>
                         {isOutOfStock ? (

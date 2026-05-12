@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ErrorMessage from '../../common/ErrorMessage';
+import { formatCurrency } from '../../../utils/formatUtils';
 import OrderItemsTable from './OrderItemsTable';
 import ProductSearchGrid from './ProductSearchGrid';
 import SimilarProductsModal from './SimilarProductsModal';
@@ -151,7 +152,7 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                         <div className="order-summary mt-4">
                             <div className="order-summary__row">
                                 <span>Subtotal Productos:</span>
-                                <span>${items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0).toFixed(2)}</span>
+                                <span>{formatCurrency(items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0))}</span>
                             </div>
                             <div className="order-summary__row">
                                 <span>Costo de Envío:</span>
@@ -172,7 +173,7 @@ export default function ModalEditOrder({ visible, order, onClose, onSave }) {
                             <div className="order-summary__row order-summary__total">
                                 <strong>Total:</strong>
                                 <span className="order-summary__total-amount">
-                                    ${(items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0) + Number(shippingCost)).toFixed(2)}
+                                    {formatCurrency(items.reduce((sum, item) => sum + (item.quantity * item.final_price), 0) + Number(shippingCost))}
                                 </span>
                             </div>
                         </div>

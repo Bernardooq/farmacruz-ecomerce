@@ -202,3 +202,34 @@
         }
     }
 }
+
+// ─── Table Specific Enhancements ──────────
+.order-details {
+    .table-container {
+        margin-top: var(--space-4);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+    }
+
+    .data-table {
+        th, td {
+            &[data-label="Subtotal"],
+            &[data-label="Precio Unit."],
+            &[data-label="Precio s/IVA"] {
+                white-space: nowrap;
+                text-align: right;
+                min-width: 100px;
+            }
+
+            &[data-label="Cantidad"] {
+                text-align: center;
+                width: 80px;
+            }
+            
+            &[data-label="Descripción"] {
+                min-width: 200px;
+                max-width: 400px;
+            }
+        }
+    }
+}

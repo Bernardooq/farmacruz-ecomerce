@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes, faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency } from '../../utils/formatUtils';
 
 export default function OrderRowAdmin({
   order,
@@ -12,8 +13,6 @@ export default function OrderRowAdmin({
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
   };
-
-  const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
   const clientName = order.customer?.full_name || order.customer?.username || 'N/A';
   const clientContact = order.customer?.email || 'N/A';

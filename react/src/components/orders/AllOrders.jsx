@@ -10,6 +10,7 @@ import ModalEditOrder from '../modals/orders/ModalEditOrder';
 import ModalCreateOrder from '../modals/orders/ModalCreateOrder';
 import PaginationButtons from '../common/PaginationButtons';
 import { useAuth } from '../../context/AuthContext';
+import { formatCurrency } from '../../utils/formatUtils';
 
 export default function AllOrders() {
   const { user } = useAuth();
@@ -265,7 +266,6 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
       </div>
     );
   };
-  const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
   const getStatusLabel = (status) => {
     const labels = { 'pending_validation': 'Pendiente', 'assigned': 'Asignado', 'approved': 'Aprobado', 'shipped': 'Enviado', 'delivered': 'Entregado', 'cancelled': 'Cancelado' };
