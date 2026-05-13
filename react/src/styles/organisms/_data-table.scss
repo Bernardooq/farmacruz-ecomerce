@@ -280,6 +280,15 @@
         color: var(--color-text-muted);
         word-break: break-all;
     }
+
+    &__username {
+        font-size: 0.7rem;
+        opacity: 0.6;
+        font-weight: var(--font-bold);
+        color: var(--color-primary);
+        display: block;
+        margin: 1px 0;
+    }
 }
 
 // Stacked data within a cell (e.g., Pedido + Fecha, or Montos + Items)

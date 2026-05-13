@@ -306,6 +306,11 @@ function OrderRowAllOrders({ order, onApprove, onShip, onDeliver, onCancel, onAs
       <td data-label="Cliente">
         <div className="user-cell__info">
           <span className="user-cell__name">{clientName}</span>
+          {order.customer?.username && (
+            <span className="user-cell__username">
+              @{order.customer.username}
+            </span>
+          )}
           <span className="user-cell__email">{clientContact.toLowerCase()}</span>
         </div>
       </td>

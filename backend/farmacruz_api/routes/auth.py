@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 import logging
+import httpx
 
 from dependencies import get_db, get_current_user, get_current_admin_user
 from core.config import ACCESS_TOKEN_EXPIRE_MINUTES, SYNC_TOKEN_EXPIRE_MINUTES, TURNSTILE_SECRET_KEY
@@ -84,42 +85,50 @@ def login(
 ):
     # Validar Turnstile CAPTCHA (si está configurado)
     if TURNSTILE_SECRET_KEY:
-        import httpx
         captcha_token = request.headers.get("X-Turnstile-Token", "")
         
-        if not captcha_token:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Verificación CAPTCHA requerida"
-            )
-        
-        # Validar contra la API de Cloudflare
+        # Validar contra la API de Cloudflare con estrategia Fail-Open
         try:
+            # Siempre intentamos contactar a Cloudflare. 
+            # Si el token falta, mandamos un valor dummy para verificar si el servicio está en línea.
             response = httpx.post(
                 "https://challenges.cloudflare.com/turnstile/v0/siteverify",
                 data={
                     "secret": TURNSTILE_SECRET_KEY,
-                    "response": captcha_token
+                    "response": captcha_token or "ping-healthcheck"
                 },
-                timeout=10.0
+                timeout=5.0 # Timeout reducido para no bloquear al usuario en caso de lentitud de red
             )
             
-            # Si Cloudflare responde un error 500 o rate limit, dejamos pasar
-            if response.status_code != 200:
-                logger.warning(f"Turnstile API falló con status {response.status_code}. Permitiendo login por fallback.")
-                pass
-            else:
+            if response.status_code == 200:
                 result = response.json()
-                # Solo bloqueamos si explícitamente Cloudflare dice que es inválido
-                if not result.get("success"):
+                
+                # Caso 1: El usuario envió un token pero Cloudflare dice que es INVÁLIDO
+                # Bloqueamos porque es un posible ataque o token expirado.
+                if captcha_token and not result.get("success"):
                     logger.warning(f"Turnstile rechazó el token: {result.get('error-codes')}")
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Verificación CAPTCHA fallida. Intenta de nuevo."
                     )
-        except httpx.RequestError as e:
-            # Si no se puede contactar a Cloudflare (caída, timeout de RED, etc), permitir el login
-            logger.warning(f"Error de red contactando Turnstile: {str(e)}. Permitiendo login por fallback.")
+                
+                # Caso 2: NO se envió token y Cloudflare está FUNCIONANDO (respondió 200 OK)
+                # Bloqueamos porque el usuario se saltó el captcha intencionalmente.
+                elif not captcha_token:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Verificación CAPTCHA requerida"
+                    )
+                
+                # Caso 3: Todo bien (token válido) -> El flujo continúa normal.
+            else:
+                # Si Cloudflare responde un error 500 o rate limit (429), permitimos el paso por precaución operativa
+                logger.warning(f"Turnstile API falló con status {response.status_code}. Permitiendo login por fallback de seguridad.")
+                
+        except (httpx.RequestError, httpx.TimeoutException) as e:
+            # FALLBACK CRÍTICO: Si no se puede contactar a Cloudflare (caída de red, DNS, caída de CF), 
+            # permitimos el login para no detener la operación del negocio.
+            logger.warning(f"Cloudflare inalcanzable ({type(e).__name__}). Bypass de seguridad activado por resiliencia.")
             pass
     
     # Autenticacion con username y password
